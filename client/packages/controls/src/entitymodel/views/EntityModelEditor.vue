@@ -77,16 +77,158 @@
         </div>
       </div>
 
-      <!-- Public Data Card -->
-      <div class="card bg-base-100 shadow-xl">
+      <!-- Model Properties Card -->
+      <div v-if="!isNew && modelData" class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <h3 class="card-title">Entity Model Data (JSON)</h3>
-          <textarea
-            v-model="publicDataJson"
-            class="textarea textarea-bordered font-mono text-sm w-full"
-            rows="20"
-            placeholder="Enter JSON data for entity model"
-          ></textarea>
+          <h3 class="card-title">Model Properties</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Type -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Type</span>
+              </label>
+              <input
+                v-model="modelData.type"
+                type="text"
+                class="input input-bordered input-sm"
+                placeholder="Entity type"
+              />
+            </div>
+
+            <!-- Model Path -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Model Path</span>
+              </label>
+              <input
+                v-model="modelData.modelPath"
+                type="text"
+                class="input input-bordered input-sm"
+                placeholder="models/entity/..."
+              />
+            </div>
+
+            <!-- Pose Type -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Pose Type</span>
+              </label>
+              <select v-model="modelData.poseType" class="select select-bordered select-sm">
+                <option value="2-Legs">2-Legs</option>
+                <option value="4-Legs">4-Legs</option>
+                <option value="6-Legs">6-Legs</option>
+                <option value="Wings">Wings</option>
+                <option value="Fish">Fish</option>
+                <option value="Snake">Snake</option>
+                <option value="Humanoid">Humanoid</option>
+                <option value="Slime">Slime</option>
+              </select>
+            </div>
+
+            <!-- Max Pitch -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Max Pitch</span>
+              </label>
+              <input
+                v-model.number="modelData.maxPitch"
+                type="number"
+                class="input input-bordered input-sm"
+                placeholder="90"
+              />
+            </div>
+          </div>
+
+          <!-- Scale (Vector3) -->
+          <div class="mt-4">
+            <label class="label">
+              <span class="label-text font-medium">Scale</span>
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <input
+                v-model.number="modelData.scale.x"
+                type="number"
+                step="0.1"
+                class="input input-bordered input-sm"
+                placeholder="X"
+              />
+              <input
+                v-model.number="modelData.scale.y"
+                type="number"
+                step="0.1"
+                class="input input-bordered input-sm"
+                placeholder="Y"
+              />
+              <input
+                v-model.number="modelData.scale.z"
+                type="number"
+                step="0.1"
+                class="input input-bordered input-sm"
+                placeholder="Z"
+              />
+            </div>
+          </div>
+
+          <!-- Position Offset (Vector3) -->
+          <div class="mt-4">
+            <label class="label">
+              <span class="label-text font-medium">Position Offset</span>
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <input
+                v-model.number="modelData.positionOffset.x"
+                type="number"
+                step="0.1"
+                class="input input-bordered input-sm"
+                placeholder="X"
+              />
+              <input
+                v-model.number="modelData.positionOffset.y"
+                type="number"
+                step="0.1"
+                class="input input-bordered input-sm"
+                placeholder="Y"
+              />
+              <input
+                v-model.number="modelData.positionOffset.z"
+                type="number"
+                step="0.1"
+                class="input input-bordered input-sm"
+                placeholder="Z"
+              />
+            </div>
+          </div>
+
+          <!-- Rotation Offset (Vector3) -->
+          <div class="mt-4">
+            <label class="label">
+              <span class="label-text font-medium">Rotation Offset</span>
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <input
+                v-model.number="modelData.rotationOffset.x"
+                type="number"
+                step="1"
+                class="input input-bordered input-sm"
+                placeholder="X (degrees)"
+              />
+              <input
+                v-model.number="modelData.rotationOffset.y"
+                type="number"
+                step="1"
+                class="input input-bordered input-sm"
+                placeholder="Y (degrees)"
+              />
+              <input
+                v-model.number="modelData.rotationOffset.z"
+                type="number"
+                step="1"
+                class="input input-bordered input-sm"
+                placeholder="Z (degrees)"
+              />
+            </div>
+          </div>
+
           <div class="card-actions justify-end mt-4">
             <button
               type="button"
@@ -95,7 +237,158 @@
               :disabled="saving"
             >
               <span v-if="saving" class="loading loading-spinner loading-xs"></span>
-              <span v-else>Save Model Data</span>
+              <span v-else>Save Properties</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dimensions Card -->
+      <div v-if="!isNew && modelData" class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h3 class="card-title">Collision Dimensions</h3>
+          <p class="text-sm text-base-content/70 mb-4">Define collision box dimensions for different movement states</p>
+
+          <div class="space-y-4">
+            <!-- Walk Dimensions -->
+            <div class="border border-base-300 rounded-lg p-3">
+              <h4 class="font-semibold text-sm mb-2">Walk</h4>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Height</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('walk').height"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="1.8"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Width</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('walk').width"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.6"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Footprint</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('walk').footprint"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.6"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Crouch Dimensions -->
+            <div class="border border-base-300 rounded-lg p-3">
+              <h4 class="font-semibold text-sm mb-2">Crouch</h4>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Height</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('crouch').height"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="1.2"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Width</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('crouch').width"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.6"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Footprint</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('crouch').footprint"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.6"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Swim Dimensions -->
+            <div class="border border-base-300 rounded-lg p-3">
+              <h4 class="font-semibold text-sm mb-2">Swim</h4>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Height</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('swim').height"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.6"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Width</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('swim').width"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.6"
+                  />
+                </div>
+                <div class="form-control">
+                  <label class="label py-1">
+                    <span class="label-text-alt">Footprint</span>
+                  </label>
+                  <input
+                    v-model.number="ensureDimension('swim').footprint"
+                    type="number"
+                    step="0.1"
+                    class="input input-bordered input-sm"
+                    placeholder="0.6"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions justify-end mt-4">
+            <button
+              type="button"
+              class="btn btn-sm btn-primary"
+              @click="handleSavePublicData"
+              :disabled="saving"
+            >
+              <span v-if="saving" class="loading loading-spinner loading-xs"></span>
+              <span v-else>Save All Properties</span>
             </button>
           </div>
         </div>
@@ -140,7 +433,7 @@ const formData = ref({
   enabled: true,
 });
 
-const publicDataJson = ref('{}');
+const modelData = ref<any>(null);
 
 const loadEntityModel = () => {
   if (isNew.value) {
@@ -148,7 +441,19 @@ const loadEntityModel = () => {
       modelId: '',
       enabled: true,
     };
-    publicDataJson.value = JSON.stringify({ id: '', displayName: '' }, null, 2);
+    modelData.value = {
+      id: '',
+      type: '',
+      modelPath: '',
+      positionOffset: { x: 0, y: 0, z: 0 },
+      rotationOffset: { x: 0, y: 0, z: 0 },
+      scale: { x: 1, y: 1, z: 1 },
+      maxPitch: 90,
+      poseType: 'Humanoid',
+      poseMapping: {},
+      modelModifierMapping: {},
+      dimensions: {},
+    };
     return;
   }
 
@@ -157,7 +462,22 @@ const loadEntityModel = () => {
     modelId: model.modelId,
     enabled: model.enabled,
   };
-  publicDataJson.value = JSON.stringify(model.publicData, null, 2);
+  modelData.value = model.publicData || {};
+  // Ensure Vector3 objects exist
+  if (!modelData.value.scale) modelData.value.scale = { x: 1, y: 1, z: 1 };
+  if (!modelData.value.positionOffset) modelData.value.positionOffset = { x: 0, y: 0, z: 0 };
+  if (!modelData.value.rotationOffset) modelData.value.rotationOffset = { x: 0, y: 0, z: 0 };
+  if (!modelData.value.dimensions) modelData.value.dimensions = {};
+};
+
+const ensureDimension = (state: string) => {
+  if (!modelData.value.dimensions) {
+    modelData.value.dimensions = {};
+  }
+  if (!modelData.value.dimensions[state]) {
+    modelData.value.dimensions[state] = { height: 1.8, width: 0.6, footprint: 0.6 };
+  }
+  return modelData.value.dimensions[state];
 };
 
 const handleSave = async () => {
@@ -213,18 +533,14 @@ const handleSavePublicData = async () => {
   successMessage.value = null;
 
   try {
-    const publicData = JSON.parse(publicDataJson.value);
+    // Update publicData from form fields
     await entityModelService.updateEntityModel(currentWorldId.value, formData.value.modelId, {
-      publicData,
+      publicData: modelData.value,
     });
-    successMessage.value = 'Model data updated successfully';
+    successMessage.value = 'Model properties updated successfully';
   } catch (e) {
-    if (e instanceof SyntaxError) {
-      error.value = 'Invalid JSON format';
-    } else {
-      error.value = e instanceof Error ? e.message : 'Failed to save model data';
-    }
-    console.error('[EntityModelEditor] Failed to save model data:', e);
+    error.value = e instanceof Error ? e.message : 'Failed to save properties';
+    console.error('[EntityModelEditor] Failed to save properties:', e);
   } finally {
     saving.value = false;
   }

@@ -23,11 +23,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import RegionList from './views/RegionList.vue';
 import RegionEditor from './views/RegionEditor.vue';
 
-const selectedRegionId = ref<string | null>(null);
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
+const selectedRegionId = ref<string | null>(getIdFromUrl());
 
 const handleRegionSelect = (id: string) => {
   selectedRegionId.value = id;

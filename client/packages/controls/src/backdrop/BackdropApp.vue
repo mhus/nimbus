@@ -43,15 +43,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useWorld } from '@/composables/useWorld';
 import WorldSelector from '@material/components/WorldSelector.vue';
 import BackdropList from './views/BackdropList.vue';
 import BackdropEditor from './views/BackdropEditor.vue';
-import type { BackdropData } from './services/BackdropService';
+import { backdropService, type BackdropData } from './services/BackdropService';
 
 const { currentWorldId } = useWorld();
+
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
 const selectedBackdrop = ref<BackdropData | 'new' | null>(null);
+const urlBackdropId = getIdFromUrl();
+
+// Load backdrop from URL if provided
+const loadBackdropFromUrl = async () => {
+  if (!urlBackdropId || !currentWorldId.value) return;
+
+  try {
+    const publicData = await backdropService.getBackdrop(currentWorldId.value, urlBackdropId);
+    selectedBackdrop.value = {
+      backdropId: urlBackdropId,
+      publicData,
+      worldId: currentWorldId.value,
+      enabled: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (e) {
+    console.error('[BackdropApp] Failed to load backdrop from URL:', e);
+  }
+};
 
 const handleBackdropSelect = (backdrop: BackdropData) => {
   selectedBackdrop.value = backdrop;
@@ -68,4 +95,11 @@ const handleBack = () => {
 const handleSaved = () => {
   selectedBackdrop.value = null;
 };
+
+// Watch for world changes and load backdrop if URL param exists
+watch(currentWorldId, () => {
+  if (urlBackdropId && currentWorldId.value && !selectedBackdrop.value) {
+    loadBackdropFromUrl();
+  }
+}, { immediate: true });
 </script>

@@ -7,8 +7,14 @@ import { ref, computed } from 'vue';
 import { regionService } from '../region/services/RegionService';
 import type { Region } from '../region/services/RegionService';
 
+// Read regionId from URL query parameter
+const getRegionIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('regionId') || params.get('region');
+};
+
 // Shared state across all instances
-const currentRegionId = ref<string | null>(null);
+const currentRegionId = ref<string | null>(getRegionIdFromUrl());
 const regions = ref<Region[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);

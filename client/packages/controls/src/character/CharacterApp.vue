@@ -47,16 +47,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRegion } from '@/composables/useRegion';
 import RegionSelector from './components/RegionSelector.vue';
 import CharacterList from './views/CharacterList.vue';
 import CharacterEditor from './views/CharacterEditor.vue';
-import type { Character } from './services/CharacterService';
+import { characterService, type Character } from './services/CharacterService';
 
 const { currentRegionId } = useRegion();
 
+// Read id and userId from URL
+const getUrlParams = () => {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    id: params.get('id'),
+    userId: params.get('userId'),
+  };
+};
+
 const selectedCharacter = ref<Character | 'new' | null>(null);
+const urlParams = getUrlParams();
+
+// Load character from URL if provided
+const loadCharacterFromUrl = async () => {
+  if (!urlParams.id || !urlParams.userId || !currentRegionId.value) return;
+
+  try {
+    const character = await characterService.getCharacter(
+      currentRegionId.value,
+      urlParams.id,
+      urlParams.userId,
+      urlParams.id // name = id for now
+    );
+    selectedCharacter.value = character;
+  } catch (e) {
+    console.error('[CharacterApp] Failed to load character from URL:', e);
+  }
+};
 
 const handleCharacterSelect = (character: Character) => {
   selectedCharacter.value = character;
@@ -73,4 +100,11 @@ const handleBack = () => {
 const handleSaved = () => {
   selectedCharacter.value = null;
 };
+
+// Watch for region changes and load character if URL params exist
+watch(currentRegionId, () => {
+  if (urlParams.id && currentRegionId.value && !selectedCharacter.value) {
+    loadCharacterFromUrl();
+  }
+}, { immediate: true });
 </script>

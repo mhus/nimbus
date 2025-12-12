@@ -25,27 +25,29 @@
     </div>
 
     <!-- ItemType List -->
-    <div v-else class="space-y-2">
+    <div v-else>
       <div v-if="itemTypes.length === 0" class="text-center text-base-content/50 py-8">
         No ItemTypes found
       </div>
 
-      <div
-        v-for="itemType in itemTypes"
-        :key="itemType.type"
-        class="card bg-base-200 hover:bg-base-300 cursor-pointer transition-colors"
-        @click="selectItemType(itemType.type)"
-      >
-        <div class="card-body p-4">
-          <h3 class="card-title text-lg">{{ itemType.name || itemType.type }}</h3>
-          <p v-if="itemType.description" class="text-sm text-base-content/70">
-            {{ itemType.description }}
-          </p>
-          <div class="flex gap-2 text-xs text-base-content/50 mt-2">
-            <span class="badge badge-sm">ID: {{ itemType.type }}</span>
-            <span v-if="itemType.modifier?.texture" class="badge badge-sm badge-primary">
-              Has Texture
-            </span>
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div
+          v-for="itemType in itemTypes"
+          :key="itemType.type"
+          class="card bg-base-100 shadow hover:shadow-lg transition-shadow cursor-pointer"
+          @click="selectItemType(itemType.type)"
+        >
+          <div class="card-body p-4">
+            <h3 class="card-title text-sm">{{ itemType.name || itemType.type }}</h3>
+            <p v-if="itemType.description" class="text-xs text-base-content/70 line-clamp-2">
+              {{ itemType.description }}
+            </p>
+            <div class="flex flex-wrap gap-1 text-xs text-base-content/50 mt-2">
+              <span class="badge badge-xs">{{ itemType.type }}</span>
+              <span v-if="itemType.modifier?.texture" class="badge badge-xs badge-primary">
+                Texture
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -59,13 +61,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import type { ItemType } from '@nimbus/shared';
 import { searchItemTypes } from '../services/itemTypeApiService';
+import { useWorld } from '@/composables/useWorld';
 
 const emit = defineEmits<{
   select: [itemTypeId: string];
 }>();
+
+const { currentWorldId } = useWorld();
 
 const searchQuery = ref('');
 const itemTypes = ref<ItemType[]>([]);
@@ -75,11 +80,16 @@ const error = ref<string | null>(null);
 let searchTimeout: NodeJS.Timeout | null = null;
 
 async function loadItemTypes(query?: string) {
+  if (!currentWorldId.value) {
+    itemTypes.value = [];
+    return;
+  }
+
   loading.value = true;
   error.value = null;
 
   try {
-    itemTypes.value = await searchItemTypes(query);
+    itemTypes.value = await searchItemTypes(query, currentWorldId.value);
   } catch (err) {
     error.value = (err as Error).message;
     console.error('Failed to load ItemTypes:', err);
@@ -105,7 +115,8 @@ function selectItemType(itemTypeId: string) {
   console.info('[ItemTypeListView] emit completed');
 }
 
-onMounted(() => {
+// Watch for world changes
+watch(currentWorldId, () => {
   loadItemTypes();
-});
+}, { immediate: true });
 </script>

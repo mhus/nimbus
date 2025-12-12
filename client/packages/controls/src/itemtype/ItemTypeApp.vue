@@ -6,6 +6,8 @@
         <h1 class="text-xl font-bold ml-4">ItemType Editor</h1>
       </div>
       <div class="flex-none gap-2 mr-4">
+        <!-- World Selector -->
+        <WorldSelector />
         <button
           v-if="!selectedItemTypeId"
           class="btn btn-sm btn-primary"
@@ -56,8 +58,16 @@
 import { ref } from 'vue';
 import ItemTypeListView from './views/ItemTypeListView.vue';
 import ItemTypeEditorView from './views/ItemTypeEditorView.vue';
+import WorldSelector from '@material/components/WorldSelector.vue';
 
-const selectedItemTypeId = ref<string | null>(null);
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
+const urlItemTypeId = getIdFromUrl();
+const selectedItemTypeId = ref<string | null>(urlItemTypeId);
 const isNewItemType = ref(false);
 
 function createNewItemType() {

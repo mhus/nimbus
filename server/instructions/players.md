@@ -94,14 +94,52 @@ Ein parameter steuert ob diese felder bearbeitet werden keonnen (nur im editor a
 - Beim setzen wird automatisch licenseFixed auf true gesetzt.
 ```text
  Neuer Endpunkt: GET License Info
-  - GET /api/worlds/{worldId}/assetinfo/{assetPath}/license
+  - GET /api/worlds/{worldId}/assetlicense/{assetPath}
   - Returns: { source, author, license }
   - Gibt leere Strings zurück wenn Asset nicht existiert
 
   Neuer Endpunkt: SET License Info
-  - PUT /api/worlds/{worldId}/assetinfo/{assetPath}/license
+  - PUT /api/worlds/{worldId}/assetlicense/{assetPath}
   - Body: { source, author, license }
   - Setzt automatisch licenseFixed = true
   - Returns: { source, author, license, licenseFixed: true }
 ```
 
+[?] bei allen editoren, soll es mit url query paramtern moeglich sein
+- worldId zu setzen (wie in material-editor)
+- bzw. die regionId im world-editor
+- die id (string) des items das bearbeitet werden soll, das item wird dann gleich geladen
+- z.b. .../world-editor.html?regionId=123&id=bla456
+- Es kann bereits url parameter geben (bei aelteren editoren), die bleiben dann so!
+
+```text
+  - ✅ useWorld() - Liest ?world= oder ?worldId=
+  - ✅ useRegion() - Liest ?regionId= oder ?region=
+
+  Editoren mit ?id= Parameter:
+
+  Region-basiert:
+  - ✅ region-editor - ?id={regionId}
+  - ✅ user-editor - ?id={username}
+  - ✅ character-editor - ?regionId={region}&id={characterId}&userId={userId}
+  - ✅ world-editor - ?regionId={region}&id={worldId}
+
+  World-basiert:
+  - ✅ item-editor - ?world={worldId}&id={itemId}
+  - ✅ itemtype-editor - ?world={worldId}&id={itemTypeId}
+  - ✅ scrawl-editor - ?world={worldId}&id={scriptId}
+  - ✅ entity-editor - ?world={worldId}&id={entityId}
+  - ✅ entitymodel-editor - ?world={worldId}&id={modelId}
+  - ✅ backdrop-editor - ?world={worldId}&id={backdropId}
+
+  Beispiel-URLs:
+
+  world-editor.html?regionId=earth616&id=main-world-1
+  character-editor.html?regionId=earth616&userId=ecb&id=blade
+  entity-editor.html?world=test-world-1&id=npc-001
+  item-editor.html?world=test-world-1&id=sword_iron
+```
+
+[?] Bei allen editoren soll unten ein JSON Button sein, da geht ein Dialog mit dem Json auf.
+Genauso wie bei material-editor. - nur die neuen editoren haben das noch nicht.
+- Manchmal hast du 'Advanced (JSON)' gemacht, das kann dann weg.

@@ -62,7 +62,14 @@ import ItemListView from './views/ItemListView.vue';
 import ItemEditorView from './views/ItemEditorView.vue';
 import WorldSelector from '@material/components/WorldSelector.vue';
 
-const selectedItemId = ref<string | null>(null);
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
+const urlItemId = getIdFromUrl();
+const selectedItemId = ref<string | null>(urlItemId);
 const isNewItem = ref(false);
 
 function createNewItem() {

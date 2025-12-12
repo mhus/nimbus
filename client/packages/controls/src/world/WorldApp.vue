@@ -47,16 +47,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRegion } from '@/composables/useRegion';
 import RegionSelector from './components/RegionSelector.vue';
 import WorldList from './views/WorldList.vue';
 import WorldEditor from './views/WorldEditor.vue';
-import type { World } from './services/WorldServiceFrontend';
+import { worldServiceFrontend, type World } from './services/WorldServiceFrontend';
 
 const { currentRegionId } = useRegion();
 
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
 const selectedWorld = ref<World | 'new' | null>(null);
+const urlWorldId = getIdFromUrl();
+
+// Load world from URL parameter if provided
+const loadWorldFromUrl = async () => {
+  if (!urlWorldId || !currentRegionId.value) return;
+
+  try {
+    const world = await worldServiceFrontend.getWorld(currentRegionId.value, urlWorldId);
+    selectedWorld.value = world;
+  } catch (e) {
+    console.error('[WorldApp] Failed to load world from URL:', e);
+  }
+};
 
 const handleWorldSelect = (world: World) => {
   selectedWorld.value = world;
@@ -73,4 +92,11 @@ const handleBack = () => {
 const handleSaved = () => {
   selectedWorld.value = null;
 };
+
+// Watch for region changes and load world if URL param exists
+watch(currentRegionId, () => {
+  if (urlWorldId && currentRegionId.value && !selectedWorld.value) {
+    loadWorldFromUrl();
+  }
+}, { immediate: true });
 </script>

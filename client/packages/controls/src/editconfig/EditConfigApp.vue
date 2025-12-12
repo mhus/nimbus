@@ -12,16 +12,53 @@
 
     <!-- Main Content - Compact for iframe -->
     <main class="flex-1 px-1 py-2">
-      <!-- Error Display -->
-      <div v-if="error" class="alert alert-error alert-sm mb-2 text-xs">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ error }}</span>
+      <!-- Session ID Input (when missing) -->
+      <div v-if="!sessionId" class="flex items-center justify-center min-h-[400px]">
+        <div class="card bg-base-100 shadow-xl max-w-md w-full">
+          <div class="card-body">
+            <h2 class="card-title">Session ID Required</h2>
+            <p class="text-sm text-base-content/70 mb-4">
+              Please enter your session ID to continue using the editor.
+            </p>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Session ID</span>
+              </label>
+              <input
+                v-model="sessionIdInput"
+                type="text"
+                placeholder="Enter session ID..."
+                class="input input-bordered w-full"
+                @keyup.enter="applySessionId"
+              />
+            </div>
+
+            <div class="card-actions justify-end mt-4">
+              <button
+                @click="applySessionId"
+                class="btn btn-primary"
+                :disabled="!sessionIdInput.trim()"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Two column layout -->
-      <div class="grid gap-1" style="grid-template-columns: 50% 50%;">
+      <!-- Main Editor (when sessionId exists) -->
+      <div v-else>
+        <!-- Error Display -->
+        <div v-if="error" class="alert alert-error alert-sm mb-2 text-xs">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+
+        <!-- Two column layout -->
+        <div class="grid gap-1" style="grid-template-columns: 50% 50%;">
         <!-- Left Column: Edit Action, Navigator, Selected Block -->
         <div class="space-y-1">
           <!-- Edit Action Configuration - Compact -->
@@ -498,6 +535,7 @@
           </div>
         </div>
       </div>
+      </div><!-- end v-else -->
     </main>
 
     <!-- Footer (hidden in embedded mode) -->
@@ -550,7 +588,24 @@ const { isEmbedded } = useModal();
 const params = new URLSearchParams(window.location.search);
 const worldId = ref(params.get('worldId') || import.meta.env.VITE_WORLD_ID || 'main');
 const sessionId = ref(params.get('sessionId') || '');
+const sessionIdInput = ref('');
 const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043'); // world-control
+
+// Function to apply session ID
+function applySessionId() {
+  if (sessionIdInput.value.trim()) {
+    sessionId.value = sessionIdInput.value.trim();
+    // Update URL parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('sessionId', sessionId.value);
+    window.history.pushState({}, '', url);
+    // Initialize after setting sessionId
+    fetchLayers();
+    fetchEditState();
+    loadEditSettings();
+    startMarkedBlockPolling();
+  }
+}
 
 // Edit State (unified)
 const editState = ref({
@@ -800,7 +855,7 @@ watch(currentEditAction, (newAction) => {
 // Lifecycle hooks
 onMounted(async () => {
   if (!sessionId.value) {
-    error.value = 'No session ID provided in URL';
+    // Show input form instead of error
     return;
   }
 

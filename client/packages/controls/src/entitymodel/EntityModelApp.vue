@@ -47,16 +47,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useWorld } from '@/composables/useWorld';
 import WorldSelector from '@material/components/WorldSelector.vue';
 import EntityModelList from './views/EntityModelList.vue';
 import EntityModelEditor from './views/EntityModelEditor.vue';
-import type { EntityModelData } from './services/EntityModelService';
+import { entityModelService, type EntityModelData } from './services/EntityModelService';
 
 const { currentWorldId } = useWorld();
 
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
 const selectedEntityModel = ref<EntityModelData | 'new' | null>(null);
+const urlModelId = getIdFromUrl();
+
+// Load entity model from URL if provided
+const loadEntityModelFromUrl = async () => {
+  if (!urlModelId || !currentWorldId.value) return;
+
+  try {
+    const publicData = await entityModelService.getEntityModel(currentWorldId.value, urlModelId);
+    selectedEntityModel.value = {
+      modelId: urlModelId,
+      publicData,
+      worldId: currentWorldId.value,
+      enabled: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (e) {
+    console.error('[EntityModelApp] Failed to load entity model from URL:', e);
+  }
+};
 
 const handleEntityModelSelect = (entityModel: EntityModelData) => {
   selectedEntityModel.value = entityModel;
@@ -73,4 +99,11 @@ const handleBack = () => {
 const handleSaved = () => {
   selectedEntityModel.value = null;
 };
+
+// Watch for world changes and load entity model if URL param exists
+watch(currentWorldId, () => {
+  if (urlModelId && currentWorldId.value && !selectedEntityModel.value) {
+    loadEntityModelFromUrl();
+  }
+}, { immediate: true });
 </script>

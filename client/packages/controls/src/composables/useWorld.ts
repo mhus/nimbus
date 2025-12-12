@@ -9,8 +9,16 @@ import { getLogger, type WorldInfo } from '@nimbus/shared';
 
 const logger = getLogger('useWorld');
 
+// Read worldId from URL query parameter
+const getWorldIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('world') || params.get('worldId');
+};
+
 // Shared state across all instances
-const currentWorldId = ref<string>(import.meta.env.VITE_WORLD_ID || 'test-world-1');
+const currentWorldId = ref<string>(
+  getWorldIdFromUrl() || import.meta.env.VITE_WORLD_ID || 'test-world-1'
+);
 const worlds = ref<WorldInfo[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);

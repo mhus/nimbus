@@ -27,7 +27,13 @@ import { ref } from 'vue';
 import UserList from './views/UserList.vue';
 import UserEditor from './views/UserEditor.vue';
 
-const selectedUsername = ref<string | null>(null);
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
+const selectedUsername = ref<string | null>(getIdFromUrl());
 
 const handleUserSelect = (username: string) => {
   selectedUsername.value = username;

@@ -48,12 +48,25 @@ import WorldSelector from '@material/components/WorldSelector.vue';
 import { ApiService } from '../services/ApiService';
 import { useWorld } from '@/composables/useWorld';
 
+// Read id from URL query parameter
+const getIdFromUrl = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id');
+};
+
 const apiService = new ApiService();
 const { currentWorldId } = useWorld();
+const urlScriptId = getIdFromUrl();
 const selectedScript = ref<ScrawlScript | null>(null);
 const isNewScript = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
+
+// Load script from URL if provided
+if (urlScriptId) {
+  selectedScript.value = { id: urlScriptId, root: { kind: 'Sequence', steps: [] } };
+  // The actual loading will happen in ScrawlAppEmbedded
+}
 
 function createNewScript() {
   selectedScript.value = {

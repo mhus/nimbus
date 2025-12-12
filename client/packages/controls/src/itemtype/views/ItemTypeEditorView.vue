@@ -16,10 +16,17 @@
     <!-- Editor Form -->
     <div v-else class="space-y-6">
       <!-- Header -->
-      <div class="flex justify-between items-center">
+      <div class="flex items-center justify-between">
+        <button class="btn btn-ghost gap-2" @click="handleCancel">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to List
+        </button>
         <h2 class="text-2xl font-bold">
           {{ isNew ? 'New ItemType' : `Edit ItemType: ${itemType.name}` }}
         </h2>
+        <div class="w-32"></div><!-- Spacer for centering -->
       </div>
 
       <!-- Basic Properties -->
@@ -192,25 +199,6 @@
         </div>
       </div>
 
-      <!-- Parameters -->
-      <div class="card bg-base-200">
-        <div class="card-body">
-          <h3 class="card-title text-lg">Custom Parameters (JSON)</h3>
-
-          <div class="form-control">
-            <textarea
-              v-model="parametersJson"
-              placeholder='{"key": "value"}'
-              class="textarea textarea-bordered font-mono h-32"
-              @blur="validateParameters"
-            />
-            <label v-if="parametersError" class="label">
-              <span class="label-text-alt text-error">{{ parametersError }}</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
       <!-- Action Buttons -->
       <div class="flex gap-2 justify-end">
         <button
@@ -273,6 +261,7 @@ import {
   deleteItemType,
 } from '../services/itemTypeApiService';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
+import { useWorld } from '@/composables/useWorld';
 
 const props = defineProps<{
   itemTypeId: string;
@@ -284,6 +273,8 @@ const emit = defineEmits<{
   close: [];
   delete: [];
 }>();
+
+const { currentWorldId } = useWorld();
 
 const itemType = ref<ItemType>({
   type: '',
@@ -301,8 +292,6 @@ const itemType = ref<ItemType>({
   parameters: {},
 });
 
-const parametersJson = ref('{}');
-const parametersError = ref<string | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
@@ -312,25 +301,9 @@ const isValid = computed(() => {
   return (
     itemType.value.type.length > 0 &&
     itemType.value.name.length > 0 &&
-    /^[a-zA-Z0-9_]+$/.test(itemType.value.type) &&
-    !parametersError.value
+    /^[a-zA-Z0-9_]+$/.test(itemType.value.type)
   );
 });
-
-function validateParameters() {
-  try {
-    if (parametersJson.value.trim()) {
-      const parsed = JSON.parse(parametersJson.value);
-      itemType.value.parameters = parsed;
-      parametersError.value = null;
-    } else {
-      itemType.value.parameters = {};
-      parametersError.value = null;
-    }
-  } catch (err) {
-    parametersError.value = 'Invalid JSON';
-  }
-}
 
 async function loadItemType() {
   if (props.isNew) {
@@ -350,17 +323,32 @@ async function loadItemType() {
       },
       parameters: {},
     };
-    parametersJson.value = '{}';
     return;
   }
 
   loading.value = true;
   error.value = null;
 
+  if (!currentWorldId.value) {
+    error.value = 'No world selected';
+    loading.value = false;
+    return;
+  }
+
   try {
-    const data = await getItemType(props.itemTypeId);
+    const data = await getItemType(props.itemTypeId, currentWorldId.value);
+    // Ensure modifier and offset are properly initialized
+    if (!data.modifier) {
+      data.modifier = {};
+    }
+    if (!data.modifier.offset || !Array.isArray(data.modifier.offset)) {
+      data.modifier.offset = [0, 0, 0];
+    }
+    // Ensure offset has 3 elements
+    while (data.modifier.offset.length < 3) {
+      data.modifier.offset.push(0);
+    }
     itemType.value = data;
-    parametersJson.value = JSON.stringify(data.parameters || {}, null, 2);
   } catch (err) {
     error.value = (err as Error).message;
     console.error('Failed to load ItemType:', err);
@@ -372,18 +360,19 @@ async function loadItemType() {
 async function handleSave() {
   if (!isValid.value) return;
 
-  // Validate parameters one more time
-  validateParameters();
-  if (parametersError.value) return;
+  if (!currentWorldId.value) {
+    error.value = 'No world selected';
+    return;
+  }
 
   saving.value = true;
   error.value = null;
 
   try {
     if (props.isNew) {
-      await createItemType(itemType.value);
+      await createItemType(itemType.value, currentWorldId.value);
     } else {
-      await updateItemType(props.itemTypeId, itemType.value);
+      await updateItemType(props.itemTypeId, itemType.value, currentWorldId.value);
     }
 
     emit('save');
@@ -400,11 +389,15 @@ async function handleDelete() {
     return;
   }
 
+  if (!currentWorldId.value) {
+    return;
+  }
+
   saving.value = true;
   error.value = null;
 
   try {
-    await deleteItemType(props.itemTypeId);
+    await deleteItemType(props.itemTypeId, currentWorldId.value);
     emit('delete');
   } catch (err) {
     error.value = (err as Error).message;
@@ -420,7 +413,6 @@ function handleCancel() {
 
 function handleJsonApply(updatedItemType: ItemType) {
   itemType.value = updatedItemType;
-  parametersJson.value = JSON.stringify(updatedItemType.parameters || {}, null, 2);
   showJsonEditor.value = false;
 }
 

@@ -5,60 +5,32 @@
  */
 
 import type { ItemType } from '@nimbus/shared';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const WORLD_ID = 'main'; // Default world ID
+import { apiService } from '@/services/ApiService';
 
 /**
  * Search ItemTypes
  */
-export async function searchItemTypes(query?: string): Promise<ItemType[]> {
-  const url = query
-    ? `${API_BASE_URL}/api/worlds/${WORLD_ID}/itemtypes?query=${encodeURIComponent(query)}`
-    : `${API_BASE_URL}/api/worlds/${WORLD_ID}/itemtypes`;
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to search ItemTypes: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.itemTypes;
+export async function searchItemTypes(query: string | undefined, worldId: string): Promise<ItemType[]> {
+  const params = query ? { query } : {};
+  const response = await apiService.get<{ itemTypes: ItemType[] }>(
+    `/api/worlds/${worldId}/itemtypes`,
+    params
+  );
+  return response.itemTypes;
 }
 
 /**
  * Get ItemType by ID
  */
-export async function getItemType(itemTypeId: string): Promise<ItemType> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/worlds/${WORLD_ID}/itemtypes/${itemTypeId}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to load ItemType: ${response.statusText}`);
-  }
-
-  return response.json();
+export async function getItemType(itemTypeId: string, worldId: string): Promise<ItemType> {
+  return apiService.get<ItemType>(`/api/worlds/${worldId}/itemtypes/${itemTypeId}`);
 }
 
 /**
  * Create new ItemType
  */
-export async function createItemType(itemType: ItemType): Promise<ItemType> {
-  const response = await fetch(`${API_BASE_URL}/api/worlds/${WORLD_ID}/itemtypes`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(itemType),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || `Failed to create ItemType: ${response.statusText}`);
-  }
-
-  return response.json();
+export async function createItemType(itemType: ItemType, worldId: string): Promise<ItemType> {
+  return apiService.post<ItemType>(`/api/worlds/${worldId}/itemtypes`, itemType);
 }
 
 /**
@@ -66,40 +38,15 @@ export async function createItemType(itemType: ItemType): Promise<ItemType> {
  */
 export async function updateItemType(
   itemTypeId: string,
-  updates: Partial<ItemType>
+  updates: Partial<ItemType>,
+  worldId: string
 ): Promise<ItemType> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/worlds/${WORLD_ID}/itemtypes/${itemTypeId}`,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || `Failed to update ItemType: ${response.statusText}`);
-  }
-
-  return response.json();
+  return apiService.put<ItemType>(`/api/worlds/${worldId}/itemtypes/${itemTypeId}`, updates);
 }
 
 /**
  * Delete ItemType
  */
-export async function deleteItemType(itemTypeId: string): Promise<void> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/worlds/${WORLD_ID}/itemtypes/${itemTypeId}`,
-    {
-      method: 'DELETE',
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || `Failed to delete ItemType: ${response.statusText}`);
-  }
+export async function deleteItemType(itemTypeId: string, worldId: string): Promise<void> {
+  return apiService.delete<void>(`/api/worlds/${worldId}/itemtypes/${itemTypeId}`);
 }
