@@ -50,9 +50,21 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - Aehnlich wie in material-editor.html soll erst eine liste von welten suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
 
-[?] In item-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
+[x] In item-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
 
-[ ] In scrawl-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
+[x] In scrawl-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
+
+[?] Es wird noch ein Editor fuer WEntity benoetigt.
+- Erstelle in ../client/packages/controls ein neue entity-editor.html und einen entsprechenden editor
+- Erstelle in entity-control REST Endpunkt /api/worlds/{worldId}/entities/{entityId} zum holen und speichern der Entity
+- Aehnlich wie in material-editor.html soll erst eine liste von entitys suchbar sein, dann bei click editierbar
+- Aehnlich wie bei material editor soll oben eine auswahl der welt sein
+
+[ ] Es wird noch ein Editor fuer WEntityModel benoetigt.
+- Erstelle in ../client/packages/controls ein neue entity-editor.html und einen entsprechenden editor
+- Erstelle in entity-control REST Endpunkt /api/worlds/{worldId}/entitymodels/{entityId} zum holen und speichern der Entity
+- Aehnlich wie in material-editor.html soll erst eine liste von entitys suchbar sein, dann bei click editierbar
+- Aehnlich wie bei material editor soll oben eine auswahl der welt sein
 
 [ ] In Asset Info Editor soll neben dem festen description feld noch die felder fest geben:
 - source
@@ -60,3 +72,14 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - license
 Ein parameter steuert ob diese felder bearbeitet werden keonnen (nur im editor ausgegraut, keine tiefe funktionalitaet)
 - 'licenseFixed': true/false - dieses feld wird auch nicht in der key/value liste angezeigt - default ist false
+
+[ ] Erstelle eine index.html mit lins auf alle editoren
+- region-editor
+- user-editor
+- character-editor
+- world-editor
+- material-editor
+- item-editor
+- item-type-editor
+
+- scrawl-editor

@@ -6,6 +6,8 @@
         <h1 class="text-xl font-bold ml-4">Scrawl Script Editor</h1>
       </div>
       <div class="flex-none gap-2 mr-4">
+        <!-- World Selector -->
+        <WorldSelector />
         <button class="btn btn-sm btn-primary" @click="createNewScript">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -42,9 +44,12 @@ import { ref } from 'vue';
 import type { ScrawlScript } from '@nimbus/shared';
 import ScriptListView from './views/ScriptListView.vue';
 import ScrawlAppEmbedded from './ScrawlAppEmbedded.vue';
+import WorldSelector from '@material/components/WorldSelector.vue';
 import { ApiService } from '../services/ApiService';
+import { useWorld } from '@/composables/useWorld';
 
 const apiService = new ApiService();
+const { currentWorldId } = useWorld();
 const selectedScript = ref<ScrawlScript | null>(null);
 const isNewScript = ref(false);
 const saving = ref(false);
@@ -80,12 +85,15 @@ async function saveScript(script: ScrawlScript) {
     return;
   }
 
+  if (!currentWorldId.value) {
+    alert('No world selected');
+    return;
+  }
+
   saving.value = true;
   error.value = null;
 
   try {
-    const worldId = apiService.getCurrentWorldId();
-
     // Remove .scrawl.json if already present, then add it
     let scriptId = script.id.replace(/\.scrawl\.json$/i, '');
     const filename = `${scriptId}.scrawl.json`;
@@ -94,7 +102,7 @@ async function saveScript(script: ScrawlScript) {
     const blob = new Blob([scriptJson], { type: 'application/json' });
 
     // Save as asset using PUT (creates if not exists, updates if exists)
-    await apiService.updateBinary(`/api/worlds/${worldId}/assets/${assetPath}`, blob, 'application/json');
+    await apiService.updateBinary(`/api/worlds/${currentWorldId.value}/assets/${assetPath}`, blob, 'application/json');
 
     console.log('Script saved:', scriptId);
     selectedScript.value = null;
@@ -121,11 +129,14 @@ async function deleteScript(scriptId: string) {
     return;
   }
 
+  if (!currentWorldId.value) {
+    return;
+  }
+
   try {
-    const worldId = apiService.getCurrentWorldId();
     const assetPath = `scrawl/${scriptId}.scrawl.json`;
 
-    await apiService.delete(`/api/worlds/${worldId}/assets/${assetPath}`);
+    await apiService.delete(`/api/worlds/${currentWorldId.value}/assets/${assetPath}`);
 
     console.log('Script deleted:', scriptId);
     selectedScript.value = null;

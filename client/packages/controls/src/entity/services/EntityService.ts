@@ -1,0 +1,58 @@
+import { apiService } from '@/services/ApiService';
+
+export interface EntityData {
+  entityId: string;
+  publicData: any;
+  worldId: string;
+  chunk: string;
+  modelId: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EntityListResponse {
+  entities: any[];
+  count: number;
+  limit: number;
+  offset: number;
+}
+
+export interface CreateEntityRequest {
+  entityId: string;
+  publicData: any;
+  modelId: string;
+}
+
+export interface UpdateEntityRequest {
+  publicData?: any;
+  modelId?: string;
+  enabled?: boolean;
+}
+
+class EntityService {
+  async listEntities(worldId: string, query?: string, offset: number = 0, limit: number = 50): Promise<EntityListResponse> {
+    const params: any = { offset, limit };
+    if (query) params.query = query;
+
+    return apiService.get<EntityListResponse>(`/api/worlds/${worldId}/entity`, params);
+  }
+
+  async getEntity(worldId: string, entityId: string): Promise<any> {
+    return apiService.get<any>(`/api/worlds/${worldId}/entity/${entityId}`);
+  }
+
+  async createEntity(worldId: string, request: CreateEntityRequest): Promise<any> {
+    return apiService.post<any>(`/api/worlds/${worldId}/entity`, request);
+  }
+
+  async updateEntity(worldId: string, entityId: string, request: UpdateEntityRequest): Promise<any> {
+    return apiService.put<any>(`/api/worlds/${worldId}/entity/${entityId}`, request);
+  }
+
+  async deleteEntity(worldId: string, entityId: string): Promise<void> {
+    return apiService.delete<void>(`/api/worlds/${worldId}/entity/${entityId}`);
+  }
+}
+
+export const entityService = new EntityService();

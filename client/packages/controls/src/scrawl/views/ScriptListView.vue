@@ -57,9 +57,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { ScrawlScript } from '@nimbus/shared';
 import { ApiService } from '../../services/ApiService';
+import { useWorld } from '@/composables/useWorld';
 
 const emit = defineEmits<{
   select: [script: ScrawlScript];
@@ -73,6 +74,7 @@ interface ScriptAsset {
 }
 
 const apiService = new ApiService();
+const { currentWorldId } = useWorld();
 const searchQuery = ref('');
 const scripts = ref<ScriptAsset[]>([]);
 const loading = ref(false);
@@ -90,16 +92,19 @@ const filteredScripts = computed(() => {
 });
 
 async function loadScripts() {
+  if (!currentWorldId.value) {
+    scripts.value = [];
+    return;
+  }
+
   loading.value = true;
   error.value = null;
 
   try {
-    const worldId = apiService.getCurrentWorldId();
-
     // Get all .scrawl.json files from assets
     // Filter by query=scrawl to get files in scrawl/ directory
     const response = await apiService.get<{ assets: any[] }>(
-      `/api/worlds/${worldId}/assets?query=scrawl`
+      `/api/worlds/${currentWorldId.value}/assets?query=scrawl`
     );
 
     const assets = response.assets || [];
@@ -114,7 +119,7 @@ async function loadScripts() {
     for (const asset of scrawlAssets) {
       try {
         // Fetch script content
-        const scriptUrl = `${apiService.getBaseUrl()}/api/worlds/${worldId}/assets/${asset.path}`;
+        const scriptUrl = `${apiService.getBaseUrl()}/api/worlds/${currentWorldId.value}/assets/${asset.path}`;
         const scriptResponse = await fetch(scriptUrl);
         const script: ScrawlScript = await scriptResponse.json();
 
@@ -137,7 +142,8 @@ async function loadScripts() {
   }
 }
 
-onMounted(() => {
+// Watch for world changes
+watch(currentWorldId, () => {
   loadScripts();
-});
+}, { immediate: true });
 </script>
