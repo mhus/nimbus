@@ -1,7 +1,7 @@
 
 # Players
 
-[ ] Ziel ist es PlayerProvider in world-player zu entfernen und dafuer im PlayerService Entities zu nutzen
+[x] Ziel ist es PlayerProvider in world-player zu entfernen und dafuer im PlayerService Entities zu nutzen
 - Es gibt in world-shread RUser/RUserService. Hier sollen die 'Settings' als userSettings Map<String,Settings> gespeichert werden.
   - key ist der Client Type (src/main/java/de/mhus/nimbus/generated/network/ClientType.java) aber als String
   - Hilfsfunktionen in RUserService um Settings zu holen/setzen
@@ -14,7 +14,7 @@
 - Erweitere PlayerService so, das er die Daten aus RUser und RCharacter/RUserItems nutzt.
 - Entferne PlayerProvider
 
-[ ] Bonus!
+[x] Bonus!
 Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einstellungen zu speichern.
   - key: String
   - value: String
@@ -26,3 +26,30 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
   - updatedAt: Date
 - Erstelle SSettingsService mit Hilfsfunktionen um Einstellungen zu holen/setzen
 - erstelle getStringValue(key), getBooleanValue(key), getIntValue(key)
+
+[?] Es wird ein Editor für RRegion entities benoetigt.
+- Erstelle in ../client/packages/controls ein neue region-editor.html und einen entsprechenden editor
+- Erstelle in region-control REST Endpunkt /api/region bzw. /api/region/{regionId} zum holen und speichern der Region Entity
+- Aehnlich wie in material-editor.html soll erst eine liste von regionen suchbar sein, dann bei click editierbar
+
+[ ] Es wird ein Editor für RUser entities benoetigt.
+- Erstelle in ../client/packages/controls ein neue user-editor.html und einen entsprechenden editor
+- Erstelle in user-control REST Endpunkt /api/user bzw. /api/user/{userId} zum holen und speichern der User Entity
+- Aehnlich wie in material-editor.html soll erst eine liste von usern suchbar sein, dann bei click editierbar
+- die 'settings' im User editierbar sein. edit, new, delete 
+
+[ ] Es wird ein Editor für RCharacter entities benoetigt.
+- Erstelle in ../client/packages/controls ein neue character-editor.html und einen entsprechenden editor
+- Erstelle in character-control REST Endpunkt /api/character bzw. /api/character/{characterId} zum holen und speichern der Character Entity
+- Aehnlich wie in material-editor.html soll erst eine liste von charactern suchbar sein, dann bei click editierbar
+- Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
+
+[ ] Es wird ein Editor für WWorld entities benoetigt.
+- Erstelle in ../client/packages/controls ein neue woirld-editor.html und einen entsprechenden editor
+- Erstelle in world-control REST Endpunkt /api/world (nicht worlds) bzw. /api/world/{worldId} zum holen und speichern der World Entity
+- Aehnlich wie in material-editor.html soll erst eine liste von welten suchbar sein, dann bei click editierbar
+- Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
+
+[ ] In item-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
+
+[ ] In scrawl-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
