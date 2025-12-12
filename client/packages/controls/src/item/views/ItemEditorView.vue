@@ -174,6 +174,7 @@ import type { Item } from '@nimbus/shared';
 import { ItemApiService } from '../services/itemApiService';
 import ScriptActionEditor from '../components/ScriptActionEditor.vue';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
+import { useWorld } from '@/composables/useWorld';
 
 // Alias for backward compatibility
 type ItemData = Item;
@@ -182,6 +183,8 @@ const props = defineProps<{
   itemId: string;
   isNew: boolean;
 }>();
+
+const { currentWorldId } = useWorld();
 
 const emit = defineEmits<{
   save: [];
@@ -265,11 +268,16 @@ async function loadItem() {
     return;
   }
 
+  if (!currentWorldId.value) {
+    error.value = 'No world selected';
+    return;
+  }
+
   loading.value = true;
   error.value = null;
 
   try {
-    const serverItem = await ItemApiService.getItem(props.itemId);
+    const serverItem = await ItemApiService.getItem(props.itemId, currentWorldId.value);
     if (!serverItem) {
       error.value = 'Item not found';
       return;
@@ -290,16 +298,16 @@ async function loadItem() {
 }
 
 async function save() {
-  if (!localItem.value) return;
+  if (!localItem.value || !currentWorldId.value) return;
 
   loading.value = true;
   error.value = null;
 
   try {
     if (props.isNew) {
-      await ItemApiService.createItem(localItem.value);
+      await ItemApiService.createItem(localItem.value, currentWorldId.value);
     } else {
-      await ItemApiService.updateItem(localItem.value.id, localItem.value);
+      await ItemApiService.updateItem(localItem.value.id, localItem.value, currentWorldId.value);
     }
     emit('save');
   } catch (e: any) {
@@ -315,11 +323,15 @@ async function confirmDelete() {
     return;
   }
 
+  if (!currentWorldId.value) {
+    return;
+  }
+
   loading.value = true;
   error.value = null;
 
   try {
-    await ItemApiService.deleteItem(props.itemId);
+    await ItemApiService.deleteItem(props.itemId, currentWorldId.value);
     emit('delete');
   } catch (e: any) {
     error.value = e.message || 'Failed to delete item';

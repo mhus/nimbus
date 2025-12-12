@@ -69,7 +69,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, watch } from 'vue';
+import { useWorld } from '@/composables/useWorld';
 import { ItemApiService } from '../services/itemApiService';
 import type { ItemSearchResult } from '../services/itemApiService';
 
@@ -79,17 +80,24 @@ const emit = defineEmits<{
   delete: [itemId: string];
 }>();
 
+const { currentWorldId } = useWorld();
+
 const searchQuery = ref('');
 const items = ref<ItemSearchResult[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
 async function loadItems() {
+  if (!currentWorldId.value) {
+    items.value = [];
+    return;
+  }
+
   loading.value = true;
   error.value = null;
 
   try {
-    items.value = await ItemApiService.searchItems(searchQuery.value);
+    items.value = await ItemApiService.searchItems(searchQuery.value, currentWorldId.value);
   } catch (e: any) {
     error.value = e.message || 'Failed to load items';
     console.error('Failed to load items:', e);
@@ -107,8 +115,12 @@ async function handleDelete(itemId: string) {
     return;
   }
 
+  if (!currentWorldId.value) {
+    return;
+  }
+
   try {
-    await ItemApiService.deleteItem(itemId);
+    await ItemApiService.deleteItem(itemId, currentWorldId.value);
     await loadItems();
   } catch (e: any) {
     error.value = e.message || 'Failed to delete item';
@@ -116,7 +128,8 @@ async function handleDelete(itemId: string) {
   }
 }
 
-onMounted(() => {
+// Watch for world changes
+watch(currentWorldId, () => {
   loadItems();
-});
+}, { immediate: true });
 </script>

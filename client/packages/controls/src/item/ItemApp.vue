@@ -6,6 +6,8 @@
         <h1 class="text-xl font-bold ml-4">Item Editor</h1>
       </div>
       <div class="flex-none gap-2 mr-4">
+        <!-- World Selector -->
+        <WorldSelector />
         <button
           v-if="!selectedItemId"
           class="btn btn-sm btn-primary"
@@ -58,6 +60,7 @@
 import { ref } from 'vue';
 import ItemListView from './views/ItemListView.vue';
 import ItemEditorView from './views/ItemEditorView.vue';
+import WorldSelector from '@material/components/WorldSelector.vue';
 
 const selectedItemId = ref<string | null>(null);
 const isNewItem = ref(false);

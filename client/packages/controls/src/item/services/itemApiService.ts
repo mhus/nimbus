@@ -18,15 +18,10 @@ export interface ItemSearchResult {
 export class ItemApiService {
   private static apiService = new ApiService();
 
-  private static getWorldId(): string {
-    return this.apiService.getCurrentWorldId();
-  }
-
   /**
    * Search for items
    */
-  static async searchItems(query: string = ''): Promise<ItemSearchResult[]> {
-    const worldId = this.getWorldId();
+  static async searchItems(query: string = '', worldId: string): Promise<ItemSearchResult[]> {
     const queryParam = query ? `?query=${encodeURIComponent(query)}` : '';
     const url = `/api/worlds/${worldId}/items${queryParam}`;
 
@@ -37,8 +32,7 @@ export class ItemApiService {
   /**
    * Get item data by ID
    */
-  static async getItem(itemId: string): Promise<ItemData | null> {
-    const worldId = this.getWorldId();
+  static async getItem(itemId: string, worldId: string): Promise<ItemData | null> {
     const url = `/api/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
 
     try {
@@ -54,8 +48,7 @@ export class ItemApiService {
   /**
    * Create a new item
    */
-  static async createItem(item: ItemData): Promise<void> {
-    const worldId = this.getWorldId();
+  static async createItem(item: ItemData, worldId: string): Promise<void> {
     const url = `/api/worlds/${worldId}/items`;
 
     await this.apiService.post(url, item);
@@ -64,8 +57,7 @@ export class ItemApiService {
   /**
    * Update an existing item
    */
-  static async updateItem(itemId: string, item: ItemData): Promise<void> {
-    const worldId = this.getWorldId();
+  static async updateItem(itemId: string, item: ItemData, worldId: string): Promise<void> {
     const url = `/api/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
 
     await this.apiService.put(url, item);
@@ -74,8 +66,7 @@ export class ItemApiService {
   /**
    * Delete an item
    */
-  static async deleteItem(itemId: string): Promise<void> {
-    const worldId = this.getWorldId();
+  static async deleteItem(itemId: string, worldId: string): Promise<void> {
     const url = `/api/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
 
     try {

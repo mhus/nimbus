@@ -50,7 +50,7 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - Aehnlich wie in material-editor.html soll erst eine liste von welten suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
 
-[ ] In item-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
+[?] In item-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
 
 [ ] In scrawl-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
 
