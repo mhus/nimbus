@@ -21,7 +21,8 @@
       "Bash(xargs basename:*)",
       "Bash(paste:*)",
       "Bash(python3:*)",
-      "Bash(javap:*)"
+      "Bash(javap:*)",
+      "Bash(xargs ls:*)"
     ],
     "deny": [],
     "ask": []

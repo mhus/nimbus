@@ -15,7 +15,10 @@ export:
   world-id: ${EXPORT_WORLD_ID:*}
 
   # Collections to export
-  collections: s_assets,storage_data,worlds,w_backdrops,w_chunks,w_layers,w_blocktypes,w_items,w_entities,w_entity_models,w_item_positions,w_itemtypes,w_layer_terrain,w_layer_models
+  collections: |
+    s_assets,storage_data,worlds,w_backdrops,w_chunks,w_layers,w_blocktypes,w_items,w_entities,
+    w_entity_models,w_item_positions,w_itemtypes,w_layer_terrain,w_layer_models,
+    r_users,characters,r_regions
 
 logging:
   level:

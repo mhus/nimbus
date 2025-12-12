@@ -1,8 +1,14 @@
 package de.mhus.nimbus.world.shared.region;
 
+import de.mhus.nimbus.generated.configs.PlayerBackpack;
+import de.mhus.nimbus.generated.types.PlayerInfo;
 import de.mhus.nimbus.generated.types.RegionItemInfo; // geändert
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.PlayerCharacter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -13,10 +19,12 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-@Document(collection = "characters")
+@Document(collection = "r_characters")
 @ActualSchemaVersion("1.0.0")
 @CompoundIndex(def = "{userId:1, regionId:1, name:1}", unique = true)
 @Data
+@Builder
+@AllArgsConstructor
 public class RCharacter {
 
     @Id
@@ -31,11 +39,8 @@ public class RCharacter {
     @CreatedDate
     private Instant createdAt;
 
-    // Inventar (beliebige Slots -> RegionItemInfo)
-    private Map<String, RegionItemInfo> backpack;
-
-    // Ausgerüstete Items (z.B. Slotnummer -> RegionItemInfo)
-    private Map<Integer, RegionItemInfo> wearing;
+    private PlayerInfo publicData;
+    private PlayerBackpack backpack;
 
     // Skills (Skill-Name -> Level)
     private Map<String, Integer> skills;
@@ -51,15 +56,7 @@ public class RCharacter {
         this.display = display;
     }
 
-    public Map<String, RegionItemInfo> getBackpack() { if (backpack == null) backpack = new HashMap<>(); return backpack; }
-    public Map<Integer, RegionItemInfo> getWearing() { if (wearing == null) wearing = new HashMap<>(); return wearing; }
     public Map<String, Integer> getSkills() { if (skills == null) skills = new HashMap<>(); return skills; }
-
-    public void putBackpackItem(String key, RegionItemInfo item) { getBackpack().put(key, item); }
-    public RegionItemInfo removeBackpackItem(String key) { return getBackpack().remove(key); }
-
-    public void putWearingItem(Integer slot, RegionItemInfo item) { getWearing().put(slot, item); }
-    public RegionItemInfo removeWearingItem(Integer slot) { return getWearing().remove(slot); }
 
     public void setSkill(String skill, int level) {
         if (level < 0) level = 0;

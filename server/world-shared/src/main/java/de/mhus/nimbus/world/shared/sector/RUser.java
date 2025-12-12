@@ -8,9 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import de.mhus.nimbus.generated.configs.Settings;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.PlayerUser;
 import de.mhus.nimbus.shared.user.SectorRoles;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -19,9 +24,11 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import de.mhus.nimbus.shared.user.RegionRoles;
 
-@Document(collection = "users")
+@Document(collection = "r_users")
 @ActualSchemaVersion("1.0.0")
 @Data
+@Builder
+@AllArgsConstructor
 public class RUser {
 
     public static final String DEFAULT_REGION_ROLE = "PLAYER";
@@ -38,6 +45,8 @@ public class RUser {
     @CreatedDate
     private Instant createdAt;
 
+    private PlayerUser publicData;
+
     private Boolean enabled; // wenn null -> enabled
 
     // Globale Rollen für den Region-Server (nicht pro einzelne Region)
@@ -47,6 +56,9 @@ public class RUser {
 
     // Charakter-Limits pro Region: regionId -> maxCount
     private Map<String,Integer> characterLimits;
+
+    // User Settings per ClientType: clientType (as String) -> Settings
+    private Map<String, Settings> userSettings;
 
     public RUser() { this.enabled = true; }
     public RUser(final String username, final String email) { this.username = username; this.email = email; this.enabled = true; }
@@ -166,5 +178,21 @@ public class RUser {
     public void setCharacterLimits(java.util.Map<String,Integer> limits) { this.characterLimits = (limits == null || limits.isEmpty()) ? null : new java.util.HashMap<>(limits); }
     public Integer getCharacterLimitForRegion(String regionId) { if (characterLimits == null) return null; return characterLimits.get(regionId); }
     public void setCharacterLimitForRegion(String regionId, Integer limit) { if (characterLimits == null) characterLimits = new java.util.HashMap<>(); if (limit == null) characterLimits.remove(regionId); else characterLimits.put(regionId, limit); }
+
+    // UserSettings API
+    public Map<String, Settings> getUserSettings() { return userSettings == null ? Collections.emptyMap() : Collections.unmodifiableMap(userSettings); }
+    public void setUserSettings(Map<String, Settings> settings) { this.userSettings = (settings == null || settings.isEmpty()) ? null : new java.util.HashMap<>(settings); }
+    public Settings getSettingsForClientType(String clientType) { if (clientType == null || userSettings == null) return null; return userSettings.get(clientType); }
+    public void setSettingsForClientType(String clientType, Settings settings) {
+        if (clientType == null) return;
+        if (settings == null) {
+            if (userSettings != null) userSettings.remove(clientType);
+            if (userSettings != null && userSettings.isEmpty()) userSettings = null;
+        } else {
+            if (userSettings == null) userSettings = new java.util.HashMap<>();
+            userSettings.put(clientType, settings);
+        }
+    }
+    public boolean hasSettingsForClientType(String clientType) { return clientType != null && userSettings != null && userSettings.containsKey(clientType); }
 
 }

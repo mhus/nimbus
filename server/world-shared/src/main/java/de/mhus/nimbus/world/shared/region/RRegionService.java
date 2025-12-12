@@ -48,10 +48,10 @@ public class RRegionService {
                 keys
             );
             // Register to the Universe with region server key
-            String token = jwtService.createTokenForRegionServer(regionProperties.getRegionServerId());
+            String token = jwtService.createTokenForRegionServer(regionProperties.getSectorServerId());
              var publicKey = keys.getPublic();
             String publicBase64 = Base64.getEncoder().encodeToString(publicKey.getEncoded());
-            boolean registered = universeClientService.createRegion(token, saved.getName(), regionProperties.getRegionServerUrl(),
+            boolean registered = universeClientService.createRegion(token, saved.getName(), regionProperties.getSectorServerUrl(),
                     FormattedKey.of(keyId, publicBase64).get(), maintainers);
             if (!registered) {
                 log.warn("Region '{}' konnte im Universe nicht registriert werden", saved.getName());

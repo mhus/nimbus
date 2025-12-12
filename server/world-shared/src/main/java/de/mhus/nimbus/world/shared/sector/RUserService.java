@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.mhus.nimbus.generated.configs.Settings;
+import de.mhus.nimbus.shared.types.PlayerUser;
 import de.mhus.nimbus.shared.user.SectorRoles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,31 +19,30 @@ public class RUserService {
 
     private final RUserRepository repository;
 
-    public RUser createUser(String username, String email) {
-        if (username == null || username.isBlank()) throw new IllegalArgumentException("username is blank");
+    public RUser createUser(PlayerUser publicData, String email) {
         if (email == null || email.isBlank()) throw new IllegalArgumentException("email is blank");
-        if (repository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username already exists: " + username);
+        if (repository.existsByUsername(publicData.getUserId())) {
+            throw new IllegalArgumentException("Username already exists: " + publicData);
         }
         if (repository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists: " + email);
         }
-        RUser user = new RUser(username, email);
+        RUser user = RUser.builder()
+                .username(publicData.getUserId())
+                .publicData(publicData)
+                .email(email)
+                .enabled(true)
+                .build();
         user.addSectorRole(SectorRoles.PLAYER); // Standardrolle global
         return repository.save(user);
     }
 
-    public Optional<RUser> getById(String id) { return repository.findById(id); }
     public Optional<RUser> getByUsername(String username) { return repository.findByUsername(username); }
     public List<RUser> listAll() { return repository.findAll(); }
 
-    public RUser update(String id, String username, String email, String sectorRolesRaw) {
-        RUser existing = repository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
-        if (username != null && !username.equals(existing.getUsername())) {
-            if (repository.existsByUsername(username)) throw new IllegalArgumentException("Username already exists: " + username);
-            existing.setUsername(username);
-        }
+    public RUser update(String username, String email, String sectorRolesRaw) {
+        RUser existing = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         if (email != null && !email.equals(existing.getEmail())) {
             if (repository.existsByEmail(email)) throw new IllegalArgumentException("Email already exists: " + email);
             existing.setEmail(email);
@@ -53,30 +54,30 @@ public class RUserService {
     }
 
     // Globale Server-Rollen
-    public RUser addSectorRoles(String id, SectorRoles role) {
-        RUser existing = repository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+    public RUser addSectorRoles(String username, SectorRoles role) {
+        RUser existing = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         if (existing.addSectorRole(role)) existing = repository.save(existing);
         return existing;
     }
 
-    public RUser removeSectorRole(String id, SectorRoles role) {
-        RUser existing = repository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+    public RUser removeSectorRole(String username, SectorRoles role) {
+        RUser existing = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         if (existing.removeSectorRole(role)) existing = repository.save(existing);
         return existing;
     }
 
     // Legacy API methods (moved from deprecated RUser methods)
-    public List<SectorRoles> getRoles(String userId) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public List<SectorRoles> getRoles(String username) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.getSectorRoles();
     }
 
-    public boolean addRole(String userId, SectorRoles role) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public boolean addRole(String username, SectorRoles role) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         boolean changed = user.addSectorRole(role);
         if (changed) {
             repository.save(user);
@@ -84,9 +85,9 @@ public class RUserService {
         return changed;
     }
 
-    public boolean removeRole(String userId, SectorRoles role) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public boolean removeRole(String username, SectorRoles role) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         boolean changed = user.removeSectorRole(role);
         if (changed) {
             repository.save(user);
@@ -94,48 +95,48 @@ public class RUserService {
         return changed;
     }
 
-    public boolean hasRole(String userId, SectorRoles role) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public boolean hasRole(String username, SectorRoles role) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.hasSectorRole(role);
     }
 
-    public String getRolesRaw(String userId) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public String getRolesRaw(String username) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.getSectorRolesRaw();
     }
 
-    public void setRolesRaw(String userId, String raw) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public void setRolesRaw(String username, String raw) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         user.setSectorRolesRaw(raw);
         repository.save(user);
     }
 
     // Region-specific role management
-    public Map<String, RegionRoles> getRegionRoles(String userId) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public Map<String, RegionRoles> getRegionRoles(String username) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.getRegionRoles();
     }
 
-    public void setRegionRoles(String userId, Map<String, RegionRoles> roles) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public void setRegionRoles(String username, Map<String, RegionRoles> roles) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         user.setRegionRoles(roles);
         repository.save(user);
     }
 
-    public RegionRoles getRegionRole(String userId, String regionId) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public RegionRoles getRegionRole(String username, String regionId) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.getRegionRole(regionId);
     }
 
-    public boolean setRegionRole(String userId, String regionId, RegionRoles role) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public boolean setRegionRole(String username, String regionId, RegionRoles role) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         boolean changed = user.setRegionRole(regionId, role);
         if (changed) {
             repository.save(user);
@@ -143,15 +144,15 @@ public class RUserService {
         return changed;
     }
 
-    public boolean hasRegionRole(String userId, String regionId, RegionRoles role) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public boolean hasRegionRole(String username, String regionId, RegionRoles role) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.hasRegionRole(regionId, role);
     }
 
-    public boolean removeRegionRole(String userId, String regionId) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public boolean removeRegionRole(String username, String regionId) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         boolean changed = user.removeRegionRole(regionId);
         if (changed) {
             repository.save(user);
@@ -159,9 +160,9 @@ public class RUserService {
         return changed;
     }
 
-    public List<String> getRegionIdsWithRole(String userId, RegionRoles role) {
-        RUser user = repository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+    public List<String> getRegionIdsWithRole(String username, RegionRoles role) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.getRegionIdsWithRole(role);
     }
 
@@ -171,4 +172,38 @@ public class RUserService {
             .map(RUser::getId)
             .collect(Collectors.toList());
     }
+
+    // User Settings management
+    public Map<String, Settings> getUserSettings(String username) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        return user.getUserSettings();
+    }
+
+    public Settings getSettingsForClientType(String username, String clientType) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        return user.getSettingsForClientType(clientType);
+    }
+
+    public void setSettingsForClientType(String username, String clientType, Settings settings) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        user.setSettingsForClientType(clientType, settings);
+        repository.save(user);
+    }
+
+    public boolean hasSettingsForClientType(String username, String clientType) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        return user.hasSettingsForClientType(clientType);
+    }
+
+    public void setUserSettings(String username, Map<String, Settings> settings) {
+        RUser user = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        user.setUserSettings(settings);
+        repository.save(user);
+    }
+
 }

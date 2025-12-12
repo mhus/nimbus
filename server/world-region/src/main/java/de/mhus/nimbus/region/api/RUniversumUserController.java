@@ -53,42 +53,4 @@ public class RUniversumUserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Create user")
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "Created"), @ApiResponse(responseCode = "400", description = "Validation error")})
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody QUserRequest req) {
-        try {
-            RUser u = service.createUser(req.username(), req.email());
-            // roles from request (optional)
-            if (req.roles() != null && !req.roles().isBlank()) {
-                service.setRolesRaw(u.getId(), req.roles());
-                u = service.update(u.getId(), u.getUsername(), u.getEmail(), service.getRolesRaw(u.getId()));
-            }
-            return ResponseEntity.created(URI.create(BASE_PATH + "/" + u.getId())).body(toResponse(u));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    @Operation(summary = "Update user")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Updated"), @ApiResponse(responseCode = "404", description = "Not found"), @ApiResponse(responseCode = "400", description = "Validation error")})
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @RequestBody QUserRequest req) {
-        // ensure exists
-        if (service.getById(id).isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        try {
-            RUser updated = service.update(id, req.username(), req.email(), req.roles());
-            return ResponseEntity.ok(toResponse(updated));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    @Operation(summary = "Delete user")
-    @ApiResponses({@ApiResponse(responseCode = "204", description = "Deleted"), @ApiResponse(responseCode = "404", description = "Not found")})
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        if (service.getById(id).isEmpty()) return ResponseEntity.notFound().build();
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
 }

@@ -21,9 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 
-import java.time.Instant;
-import java.util.UUID;
-
 /**
  * Handles login messages from clients.
  * Message type: "login"
@@ -63,7 +60,7 @@ public class LoginHandler implements MessageHandler {
         String clientTypeStr = data.has("clientType") ? data.get("clientType").asText() : "web";
         String existingSessionId = data.has("sessionId") ? data.get("sessionId").asText() : null;
 
-        log.info("Login attempt: username={}, worldId={}, existingSessionId={}",
+        log.info("Login attempt: player={}, worldId={}, existingSessionId={}",
                 username, worldIdStr, existingSessionId);
 
         // Check if world exists
@@ -89,7 +86,7 @@ public class LoginHandler implements MessageHandler {
             sendLoginResponse(session, message.getI(), false, "Invalid player", null, null);
             return;
         }
-        var player = playerService.getPlayer(playerId.get(), clientType);
+        var player = playerService.getPlayer(playerId.get(), clientType, worldId.get().getRegionId());
 
         if (applicationDevelopmentEnabled && username != null && password != null) {
             if (Strings.CS.equals(

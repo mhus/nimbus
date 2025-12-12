@@ -49,7 +49,7 @@ public class InitRegionService {
     }
 
     private void checkRegionServerJwtToken() {
-        var intent = KeyIntent.of(regionProperties.getRegionServerId(), KeyIntent.REGION_SERVER_JWT_TOKEN);
+        var intent = KeyIntent.of(regionProperties.getSectorServerId(), KeyIntent.REGION_SERVER_JWT_TOKEN);
         if (keyService.getLatestPrivateKey(KeyType.REGION, intent).isEmpty()) {
             var keys = keyService.createECCKeys();
             keyService.storeKeyPair(
@@ -57,7 +57,7 @@ public class InitRegionService {
                     KeyId.newOf(intent),
                     keys
             );
-            log.info("Created missing JWT token key for region server'{}'", regionProperties.getRegionServerId());
+            log.info("Created missing JWT token key for region server'{}'", regionProperties.getSectorServerId());
             ConfidentialUtil.save("regionServerPublicKey.txt", keys.getPublic());
         }
     }

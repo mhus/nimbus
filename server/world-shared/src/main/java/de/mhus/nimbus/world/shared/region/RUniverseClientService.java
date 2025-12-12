@@ -86,7 +86,7 @@ public class RUniverseClientService {
             log.debug("Sending region request: {}", body);
             var request = new org.springframework.http.HttpEntity<>(body, buildHeaders(token));
             log.debug("POST to URL: {} with headers: {}", url, request.getHeaders());
-            var restTemplate = RestTemplateUtil.create(jwtService.createTokenForRegionServer(regionProperties.getRegionServerId()));
+            var restTemplate = RestTemplateUtil.create(jwtService.createTokenForRegionServer(regionProperties.getSectorServerId()));
             ResponseEntity<URegionResponse> resp = restTemplate.postForEntity(url, request, URegionResponse.class);
             if (resp.getStatusCode() == HttpStatus.CREATED || resp.getStatusCode() == HttpStatus.OK) {
                 log.info("Universe Region Registrierung erfolgreich: name={} status={}", name, resp.getStatusCode());
