@@ -44,7 +44,7 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - Aehnlich wie in material-editor.html soll erst eine liste von charactern suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
 
-[?] Es wird ein Editor für WWorld entities benoetigt.
+[x] Es wird ein Editor für WWorld entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue world-editor.html und einen entsprechenden editor
 - Erstelle in world-control REST Endpunkt /api/regions/{regionId}/worlds/{worldId} zum holen und speichern der World Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von welten suchbar sein, dann bei click editierbar

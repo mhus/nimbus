@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <button class="btn btn-ghost gap-2" @click="handleBack">
@@ -11,6 +11,25 @@
       <h2 class="text-2xl font-bold">
         {{ isNew ? 'Create New World' : 'Edit World' }}
       </h2>
+    </div>
+
+    <!-- Hierarchy Info -->
+    <div class="alert">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div class="text-sm">
+        <span class="font-medium">Hierarchy:</span>
+        <span class="ml-2">region: {{ currentRegionId || '-' }}</span>
+        <span class="mx-1">→</span>
+        <span>world: {{ formData.worldId || '-' }}</span>
+        <span class="mx-1">→</span>
+        <span>zone: -</span>
+        <span class="mx-1">→</span>
+        <span>branch: {{ formData.branch || '-' }}</span>
+        <span class="mx-1">→</span>
+        <span>instance: -</span>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -173,40 +192,6 @@
                 v-model="formData.waterBlockType"
                 type="text"
                 placeholder="r/ocean"
-                class="input input-bordered w-full"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hierarchy Card -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <h3 class="card-title">Hierarchy</h3>
-          <div class="space-y-4">
-            <!-- Parent -->
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text font-medium">Parent World</span>
-              </label>
-              <input
-                v-model="formData.parent"
-                type="text"
-                placeholder="Optional parent world ID"
-                class="input input-bordered w-full"
-              />
-            </div>
-
-            <!-- Branch -->
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text font-medium">Branch</span>
-              </label>
-              <input
-                v-model="formData.branch"
-                type="text"
-                placeholder="Optional branch name"
                 class="input input-bordered w-full"
               />
             </div>
