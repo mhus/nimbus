@@ -22,7 +22,8 @@
       "Bash(paste:*)",
       "Bash(python3:*)",
       "Bash(javap:*)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

@@ -48,7 +48,7 @@ public class RUniversumUserController {
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Found"), @ApiResponse(responseCode = "404", description = "Not found")})
     @GetMapping("/{id}")
     public ResponseEntity<QUserResponse> get(@PathVariable String id) {
-        Optional<RUser> opt = service.getById(id);
+        Optional<RUser> opt = service.getByUsername(id);
         return opt.map(u -> ResponseEntity.ok(toResponse(u)))
                 .orElse(ResponseEntity.notFound().build());
     }

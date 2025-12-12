@@ -38,13 +38,13 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - Aehnlich wie in material-editor.html soll erst eine liste von usern suchbar sein, dann bei click editierbar
 - die 'settings' im User editierbar sein. edit, new, delete 
 
-[?] Es wird ein Editor für RCharacter entities benoetigt.
+[x] Es wird ein Editor für RCharacter entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue character-editor.html und einen entsprechenden editor
 - Erstelle in character-control REST Endpunkt /api/regions/{regionId}/characters/{characterId} zum holen und speichern der Character Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von charactern suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
 
-[ ] Es wird ein Editor für WWorld entities benoetigt.
+[?] Es wird ein Editor für WWorld entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue world-editor.html und einen entsprechenden editor
 - Erstelle in world-control REST Endpunkt /api/regions/{regionId}/worlds/{worldId} zum holen und speichern der World Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von welten suchbar sein, dann bei click editierbar
@@ -58,3 +58,5 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - source
 - author
 - license
+Ein parameter steuert ob diese felder bearbeitet werden keonnen (nur im editor ausgegraut, keine tiefe funktionalitaet)
+- 'licenseFixed': true/false - dieses feld wird auch nicht in der key/value liste angezeigt - default ist false

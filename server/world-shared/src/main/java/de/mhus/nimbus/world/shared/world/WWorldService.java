@@ -32,6 +32,11 @@ public class WWorldService {
         return repository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<WWorld> findByRegionId(String regionId) {
+        return repository.findByRegionId(regionId);
+    }
+
     @Transactional
     public WWorld createWorld(WorldId worldId, WorldInfo info) {
         if (repository.existsByWorldId(worldId.getId())) {
@@ -74,6 +79,14 @@ public class WWorldService {
             log.debug("WWorld aktualisiert: {}", worldId);
             return existing;
         });
+    }
+
+    @Transactional
+    public WWorld save(WWorld world) {
+        world.touchForUpdate();
+        WWorld saved = repository.save(world);
+        log.debug("WWorld gespeichert: {}", world.getWorldId());
+        return saved;
     }
 
     @Transactional
