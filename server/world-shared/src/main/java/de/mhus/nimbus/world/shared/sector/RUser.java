@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.region;
+package de.mhus.nimbus.world.shared.sector;
 
 import java.time.Instant;
 import java.util.ArrayList;

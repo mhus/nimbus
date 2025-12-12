@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.dto.universe.URegionRequest;
 import de.mhus.nimbus.shared.dto.universe.URegionResponse;
 import de.mhus.nimbus.shared.security.FormattedKey;
 import de.mhus.nimbus.shared.security.JwtService;
+import de.mhus.nimbus.shared.types.UniverseWorldDto;
 import de.mhus.nimbus.shared.utils.RestTemplateUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

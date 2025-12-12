@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.region;
+package de.mhus.nimbus.world.shared.sector;
 
 import java.util.Optional;
 import org.springframework.data.mongodb.repository.MongoRepository;

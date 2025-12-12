@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.region;
+package de.mhus.nimbus.world.shared.sector;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import de.mhus.nimbus.shared.user.SectorRoles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import de.mhus.nimbus.shared.user.RegionRoles;
 

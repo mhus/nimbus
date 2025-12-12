@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.shared.region;
 
 import de.mhus.nimbus.generated.types.RegionItemInfo; // geändert
+import de.mhus.nimbus.world.shared.sector.RUser;
+import de.mhus.nimbus.world.shared.sector.RUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
