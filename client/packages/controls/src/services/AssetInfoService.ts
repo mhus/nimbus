@@ -11,7 +11,11 @@ import { apiService } from './ApiService';
  */
 export interface AssetInfo {
   description: string;
-  [key: string]: string | number | boolean;
+  source?: string;
+  author?: string;
+  license?: string;
+  licenseFixed?: boolean;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export class AssetInfoService {

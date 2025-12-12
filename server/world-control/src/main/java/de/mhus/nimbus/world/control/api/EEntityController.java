@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for Entity CRUD operations.
- * Base path: /api/worlds/{worldId}/entity
+ * Base path: /api/worlds/{worldId}/entities
  * <p>
  * Entities are instances placed in the world based on EntityModel templates.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/entity")
+@RequestMapping("/api/worlds/{worldId}/entities")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Entities", description = "Entity instance management")

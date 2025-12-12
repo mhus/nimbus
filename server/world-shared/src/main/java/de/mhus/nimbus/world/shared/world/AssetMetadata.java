@@ -57,4 +57,24 @@ public class AssetMetadata {
      * File extension (e.g., ".png", ".wav").
      */
     private String extension;
+
+    /**
+     * Source/Origin of the asset.
+     */
+    private String source;
+
+    /**
+     * Author/Creator of the asset.
+     */
+    private String author;
+
+    /**
+     * License information for the asset.
+     */
+    private String license;
+
+    /**
+     * If true, license fields (source, author, license) are read-only in editors.
+     */
+    private Boolean licenseFixed;
 }

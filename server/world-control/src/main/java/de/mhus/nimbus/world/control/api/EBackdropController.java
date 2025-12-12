@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for Backdrop CRUD operations.
- * Base path: /api/worlds/{worldId}/backdrop
+ * Base path: /api/worlds/{worldId}/backdrops
  * <p>
  * Backdrops are visual elements rendered at chunk boundaries (fog, sky, etc.).
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/backdrop")
+@RequestMapping("/api/worlds/{worldId}/backdrops")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Backdrops", description = "Backdrop configuration management")

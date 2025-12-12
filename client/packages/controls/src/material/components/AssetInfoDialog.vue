@@ -90,6 +90,63 @@
                   ></textarea>
                 </div>
 
+                <!-- Source -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-semibold">Source</span>
+                  </label>
+                  <input
+                    v-model="localInfo.source"
+                    type="text"
+                    class="input input-bordered"
+                    placeholder="Source of the asset..."
+                    :disabled="localInfo.licenseFixed"
+                  />
+                </div>
+
+                <!-- Author -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-semibold">Author</span>
+                  </label>
+                  <input
+                    v-model="localInfo.author"
+                    type="text"
+                    class="input input-bordered"
+                    placeholder="Author of the asset..."
+                    :disabled="localInfo.licenseFixed"
+                  />
+                </div>
+
+                <!-- License -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-semibold">License</span>
+                  </label>
+                  <input
+                    v-model="localInfo.license"
+                    type="text"
+                    class="input input-bordered"
+                    placeholder="License information..."
+                    :disabled="localInfo.licenseFixed"
+                  />
+                </div>
+
+                <!-- License Fixed -->
+                <div class="form-control">
+                  <label class="label cursor-pointer justify-start gap-4">
+                    <span class="label-text font-semibold">License Fixed</span>
+                    <input
+                      v-model="localInfo.licenseFixed"
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                    />
+                  </label>
+                  <label class="label">
+                    <span class="label-text-alt">When checked, source/author/license fields are read-only</span>
+                  </label>
+                </div>
+
                 <!-- Custom Key-Value Pairs -->
                 <div class="space-y-2">
                   <label class="label">
@@ -191,6 +248,10 @@ const emit = defineEmits<{
 
 const localInfo = reactive<AssetInfo>({
   description: '',
+  source: '',
+  author: '',
+  license: '',
+  licenseFixed: false,
 });
 
 const customFields = reactive<Record<string, string>>({});
@@ -242,12 +303,17 @@ onMounted(async () => {
   try {
     const info = await assetInfoService.getAssetInfo(props.worldId, props.assetPath);
 
-    // Set description
+    // Set fixed fields
     localInfo.description = info.description || '';
+    localInfo.source = info.source || '';
+    localInfo.author = info.author || '';
+    localInfo.license = info.license || '';
+    localInfo.licenseFixed = info.licenseFixed || false;
 
-    // Extract custom fields
+    // Extract custom fields (exclude fixed fields)
+    const fixedFields = ['description', 'source', 'author', 'license', 'licenseFixed'];
     Object.keys(info).forEach((key) => {
-      if (key !== 'description') {
+      if (!fixedFields.includes(key)) {
         const value = info[key];
         customFields[key] = String(value);
         customFieldKeys[key] = key;
@@ -357,15 +423,19 @@ const handleSave = async () => {
   errorMessage.value = null;
 
   try {
-    // Build info object
+    // Build info object with fixed fields
     const info: AssetInfo = {
       description: localInfo.description.trim(),
+      source: localInfo.source?.trim() || '',
+      author: localInfo.author?.trim() || '',
+      license: localInfo.license?.trim() || '',
+      licenseFixed: localInfo.licenseFixed || false,
     };
 
-    // Add custom fields with proper keys
+    // Add custom fields with proper keys (exclude licenseFixed from custom fields)
     Object.keys(customFields).forEach((oldKey) => {
       const actualKey = customFieldKeys[oldKey];
-      if (actualKey && actualKey.trim() && customFields[oldKey]) {
+      if (actualKey && actualKey.trim() && customFields[oldKey] && actualKey !== 'licenseFixed') {
         info[actualKey.trim()] = customFields[oldKey];
       }
     });

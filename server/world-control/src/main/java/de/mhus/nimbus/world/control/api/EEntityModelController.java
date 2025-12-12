@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for EntityModel CRUD operations.
- * Base path: /api/worlds/{worldId}/entitymodel
+ * Base path: /api/worlds/{worldId}/entitymodels
  * <p>
  * EntityModels define 3D models, animations, and physics properties for entities.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/entitymodel")
+@RequestMapping("/api/worlds/{worldId}/entitymodels")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "EntityModels", description = "EntityModel template management")

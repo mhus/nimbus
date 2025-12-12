@@ -60,20 +60,26 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - Aehnlich wie in material-editor.html soll erst eine liste von entitys suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der welt sein
 
-[ ] Es wird noch ein Editor fuer WEntityModel benoetigt.
-- Erstelle in ../client/packages/controls ein neue entity-editor.html und einen entsprechenden editor
-- Erstelle in entity-control REST Endpunkt /api/worlds/{worldId}/entitymodels/{entityId} zum holen und speichern der Entity
+[?] Es wird noch ein Editor fuer WEntityModel benoetigt.
+- Erstelle in ../client/packages/controls ein neue entitymodel-editor.html und einen entsprechenden editor
+- Erstelle in entity-control REST Endpunkt /api/worlds/{worldId}/entitymodels/{id} zum holen und speichern der Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von entitys suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der welt sein
 
-[ ] In Asset Info Editor soll neben dem festen description feld noch die felder fest geben:
+[?] Es wird noch ein Editor fuer WBackdrop benoetigt.
+- Erstelle in ../client/packages/controls ein neue backdrop-editor.html und einen entsprechenden editor
+- Erstelle in entity-control REST Endpunkt /api/worlds/{worldId}/backdrops/{id} zum holen und speichern der Entity
+- Aehnlich wie in material-editor.html soll erst eine liste von entitys suchbar sein, dann bei click editierbar
+- Aehnlich wie bei material editor soll oben eine auswahl der welt sein
+
+[?] In Asset Info Editor soll neben dem festen description feld noch die felder fest geben:
 - source
 - author
 - license
 Ein parameter steuert ob diese felder bearbeitet werden keonnen (nur im editor ausgegraut, keine tiefe funktionalitaet)
 - 'licenseFixed': true/false - dieses feld wird auch nicht in der key/value liste angezeigt - default ist false
 
-[ ] Erstelle eine index.html mit lins auf alle editoren
+[?] Erstelle im index.html links auf alle editoren - in ../client/packages/controls/index.html
 - region-editor
 - user-editor
 - character-editor
@@ -81,5 +87,21 @@ Ein parameter steuert ob diese felder bearbeitet werden keonnen (nur im editor a
 - material-editor
 - item-editor
 - item-type-editor
-
 - scrawl-editor
+...
+
+[?] Erstelle fuer Assets einen weiteren rest ednpunkt .../license mit dem ich die lizenz daten eines assets holen oder setzen kann.
+- Beim setzen wird automatisch licenseFixed auf true gesetzt.
+```text
+ Neuer Endpunkt: GET License Info
+  - GET /api/worlds/{worldId}/assetinfo/{assetPath}/license
+  - Returns: { source, author, license }
+  - Gibt leere Strings zurück wenn Asset nicht existiert
+
+  Neuer Endpunkt: SET License Info
+  - PUT /api/worlds/{worldId}/assetinfo/{assetPath}/license
+  - Body: { source, author, license }
+  - Setzt automatisch licenseFixed = true
+  - Returns: { source, author, license, licenseFixed: true }
+```
+
