@@ -27,12 +27,12 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 - Erstelle SSettingsService mit Hilfsfunktionen um Einstellungen zu holen/setzen
 - erstelle getStringValue(key), getBooleanValue(key), getIntValue(key)
 
-[?] Es wird ein Editor für RRegion entities benoetigt.
+[x] Es wird ein Editor für RRegion entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue region-editor.html und einen entsprechenden editor
 - Erstelle in region-control REST Endpunkt /api/region bzw. /api/region/{regionId} zum holen und speichern der Region Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von regionen suchbar sein, dann bei click editierbar
 
-[ ] Es wird ein Editor für RUser entities benoetigt.
+[?] Es wird ein Editor für RUser entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue user-editor.html und einen entsprechenden editor
 - Erstelle in user-control REST Endpunkt /api/user bzw. /api/user/{userId} zum holen und speichern der User Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von usern suchbar sein, dann bei click editierbar
