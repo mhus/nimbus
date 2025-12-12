@@ -190,7 +190,7 @@ import { useRegion } from '@/composables/useRegion';
 import { characterService, type Character } from '../services/CharacterService';
 
 const props = defineProps<{
-  characterId: string;
+  character: Character | 'new';
 }>();
 
 const emit = defineEmits<{
@@ -200,7 +200,7 @@ const emit = defineEmits<{
 
 const { currentRegionId } = useRegion();
 
-const isNew = computed(() => props.characterId === 'new');
+const isNew = computed(() => props.character === 'new');
 
 const character = ref<Character | null>(null);
 const loading = ref(false);
@@ -217,25 +217,24 @@ const formData = ref({
 const newSkillName = ref('');
 const newSkillLevel = ref(1);
 
-const loadCharacter = async () => {
-  if (isNew.value || !currentRegionId.value) {
+const loadCharacter = () => {
+  if (isNew.value) {
+    character.value = null;
+    formData.value = {
+      userId: '',
+      name: '',
+      display: '',
+    };
     return;
   }
 
-  loading.value = true;
-  error.value = null;
-
-  try {
-    // For loading, we need userId and name - this is a simplification
-    // In a real app, you might need to pass these as props or store them
-    // For now, we'll skip loading existing characters in edit mode
-    error.value = 'Loading existing characters requires userId and name parameters';
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to load character';
-    console.error('Failed to load character:', e);
-  } finally {
-    loading.value = false;
-  }
+  // Load from props
+  character.value = props.character as Character;
+  formData.value = {
+    userId: character.value.userId,
+    name: character.value.name,
+    display: character.value.display,
+  };
 };
 
 const handleSave = async () => {
@@ -256,9 +255,22 @@ const handleSave = async () => {
         display: formData.value.display,
       });
       successMessage.value = 'Character created successfully';
-    } else {
-      // Update would need userId and name
+    } else if (character.value) {
+      // Update existing character
+      await characterService.updateCharacter(
+        currentRegionId.value,
+        character.value.id,
+        character.value.userId,
+        character.value.name,
+        {
+          userId: character.value.userId,
+          name: character.value.name,
+          display: formData.value.display,
+        }
+      );
       successMessage.value = 'Character updated successfully';
+      // Reload character data
+      character.value.display = formData.value.display;
     }
 
     setTimeout(() => {
@@ -284,7 +296,7 @@ const handleAddSkill = async () => {
   try {
     character.value = await characterService.setSkill(
       currentRegionId.value,
-      props.characterId,
+      character.value.id,
       character.value.userId,
       character.value.name,
       newSkillName.value.trim(),
@@ -313,7 +325,7 @@ const handleSetSkillLevel = async (skillName: string, level: number) => {
   try {
     character.value = await characterService.setSkill(
       currentRegionId.value,
-      props.characterId,
+      character.value.id,
       character.value.userId,
       character.value.name,
       skillName,
@@ -344,7 +356,7 @@ const handleIncrementSkill = async (skillName: string, delta: number) => {
   try {
     character.value = await characterService.incrementSkill(
       currentRegionId.value,
-      props.characterId,
+      character.value.id,
       character.value.userId,
       character.value.name,
       skillName,
@@ -364,8 +376,6 @@ const handleBack = () => {
 };
 
 onMounted(() => {
-  if (!isNew.value) {
-    loadCharacter();
-  }
+  loadCharacter();
 });
 </script>

@@ -27,14 +27,6 @@
       </div>
     </div>
 
-    <!-- Info message when showing all characters -->
-    <div v-if="!filterUserId" class="alert alert-info">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <span>Showing all characters in this region. Enter a User ID to filter by user.</span>
-    </div>
-
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center py-12">
       <span class="loading loading-spinner loading-lg"></span>
@@ -147,7 +139,7 @@ import { useRegion } from '@/composables/useRegion';
 import { characterService, type Character } from '../services/CharacterService';
 
 const emit = defineEmits<{
-  select: [id: string];
+  select: [character: Character];
   create: [];
 }>();
 
@@ -198,15 +190,17 @@ const loadCharacters = async () => {
   error.value = null;
 
   try {
+    console.log('[CharacterList] Loading characters for region:', currentRegionId.value, 'userId:', filterUserId.value || 'ALL');
     // If filterUserId is empty, load all characters in region
     // If filterUserId is set, load only that user's characters
     characters.value = await characterService.listCharacters(
       currentRegionId.value,
       filterUserId.value || undefined
     );
+    console.log('[CharacterList] Loaded characters:', characters.value.length);
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load characters';
-    console.error('Failed to load characters:', e);
+    console.error('[CharacterList] Failed to load characters:', e);
   } finally {
     loading.value = false;
   }
@@ -222,7 +216,10 @@ const handleCreate = () => {
 };
 
 const handleSelect = (id: string) => {
-  emit('select', id);
+  const character = characters.value.find(c => c.id === id);
+  if (character) {
+    emit('select', character);
+  }
 };
 
 const handleDelete = async (id: string, userId: string, name: string) => {

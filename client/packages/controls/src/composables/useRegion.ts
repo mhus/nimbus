@@ -18,7 +18,7 @@ export function useRegion() {
    * Current region object
    */
   const currentRegion = computed(() => {
-    return regions.value.find(r => r.id === currentRegionId.value);
+    return regions.value.find(r => r.name === currentRegionId.value);
   });
 
   /**
@@ -36,16 +36,16 @@ export function useRegion() {
       if (!currentRegionId.value && regions.value.length > 0) {
         const firstEnabled = regions.value.find(r => r.enabled);
         if (firstEnabled) {
-          currentRegionId.value = firstEnabled.id;
+          currentRegionId.value = firstEnabled.name;
           console.log('[useRegion] Auto-selected first enabled region', { regionId: currentRegionId.value });
         }
       }
 
       // Verify current region ID still exists
-      if (currentRegionId.value && !regions.value.find(r => r.id === currentRegionId.value)) {
+      if (currentRegionId.value && !regions.value.find(r => r.name === currentRegionId.value)) {
         // Fallback to first region if current ID not found
         if (regions.value.length > 0) {
-          currentRegionId.value = regions.value[0].id;
+          currentRegionId.value = regions.value[0].name;
           console.warn('[useRegion] Current region not found, using first region', { regionId: currentRegionId.value });
         }
       }
@@ -60,14 +60,14 @@ export function useRegion() {
   /**
    * Select a region
    */
-  const selectRegion = (regionId: string) => {
-    if (!regions.value.find(r => r.id === regionId)) {
-      console.warn('[useRegion] Cannot select non-existent region', { regionId });
+  const selectRegion = (regionName: string) => {
+    if (!regions.value.find(r => r.name === regionName)) {
+      console.warn('[useRegion] Cannot select non-existent region', { regionName });
       return;
     }
 
-    currentRegionId.value = regionId;
-    console.log('[useRegion] Selected region', { regionId });
+    currentRegionId.value = regionName;
+    console.log('[useRegion] Selected region', { regionName });
   };
 
   return {

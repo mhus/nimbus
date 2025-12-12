@@ -24,13 +24,13 @@
       <!-- Character List or Editor -->
       <div v-else>
         <CharacterList
-          v-if="!selectedCharacterId"
+          v-if="!selectedCharacter"
           @select="handleCharacterSelect"
           @create="handleCreateNew"
         />
         <CharacterEditor
           v-else
-          :character-id="selectedCharacterId"
+          :character="selectedCharacter"
           @back="handleBack"
           @saved="handleSaved"
         />
@@ -52,24 +52,25 @@ import { useRegion } from '@/composables/useRegion';
 import RegionSelector from './components/RegionSelector.vue';
 import CharacterList from './views/CharacterList.vue';
 import CharacterEditor from './views/CharacterEditor.vue';
+import type { Character } from './services/CharacterService';
 
 const { currentRegionId } = useRegion();
 
-const selectedCharacterId = ref<string | null>(null);
+const selectedCharacter = ref<Character | 'new' | null>(null);
 
-const handleCharacterSelect = (id: string) => {
-  selectedCharacterId.value = id;
+const handleCharacterSelect = (character: Character) => {
+  selectedCharacter.value = character;
 };
 
 const handleCreateNew = () => {
-  selectedCharacterId.value = 'new';
+  selectedCharacter.value = 'new';
 };
 
 const handleBack = () => {
-  selectedCharacterId.value = null;
+  selectedCharacter.value = null;
 };
 
 const handleSaved = () => {
-  selectedCharacterId.value = null;
+  selectedCharacter.value = null;
 };
 </script>

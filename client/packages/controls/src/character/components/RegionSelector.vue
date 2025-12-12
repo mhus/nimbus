@@ -17,8 +17,8 @@
       <template v-else>
         <li v-for="region in enabledRegions" :key="region.id">
           <a
-            @click="selectRegion(region.id)"
-            :class="{ 'active': region.id === currentRegionId }"
+            @click="selectRegion(region.name)"
+            :class="{ 'active': region.name === currentRegionId }"
           >
             {{ region.name }}
           </a>

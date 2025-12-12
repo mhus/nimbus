@@ -53,3 +53,8 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 [ ] In item-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
 
 [ ] In scrawl-editor soll es moeglich sein oben noch die welt auszuwahlen (wie in material-editor)
+
+[ ] In Asset Info Editor soll neben dem festen description feld noch die felder fest geben:
+- source
+- author
+- license
