@@ -3,14 +3,15 @@
 
 ## Overview
 
-Universe <- Region <- Solar System <- Planet <- World
+Universe <- Sector <- Region <- Solar System <- Planet <- World
 
-Universe -> Universe / Governor Server
+Universe -> Universe Server
 Region -> Ueber meherere Regionen verteilt (Regionen sind einheiten mit fester Größe, Regionen können wachsen)
 
 Universe -> Universe Server - Only one Universe!
 Galaxy -> Universe Server (Meta Struktur)
-Region -> Region Server
+Sector -> Sector Server
+Region -> Region Service auf Sector Servern
 Region -> Universe Server (Meta Struktur)
 Solar System -> Universe Server (Meta Struktur)
 Planet -> Universe Server (Meta Struktur)
@@ -23,11 +24,15 @@ ggf. Universe Region zum durchqueren des Universums
   - Welten und EntryPoints werden auf Planeten auf einer Map dargestellt - diese wird von Region an Universe gemeldet
   - Universe verwaltet bekannt Entry Points zu Welten, werden von Region an Universe gemeldet
   - Können auch als Invite gemeldet werden von Owner einer Welt
+- Sector ist unabhaengig von den Regionen. Auf einem Sector Server werden mehrere Regionen und ihre Welten betrieben, 
+  diese können aber auch umziehen auf andere Sector Server. Es wird als strukturelle Einheit benoetigt um den Server einen Namen zu geben.
+  Das Universum muss wissen auf welchem Sector eine Region liegt.
+  - Sector ist nicht EIN Server, sondern eine Gruppe von Servern und Replicas (z.B. in einem Kubernetes Namespace)
 - Region managed: Metastruktur (Solar Systeme, Planeten), Welten Registry, Character Daten
   - Character Daten: Inventar, Rucksack, Alt-Waehrung, Vortschritt, Skills, Einstellungen
   - Eigene Asset (Texture, Model) und item Verwaltung uebergreifend
-  - (Shop)
   - Character Access Points zu Welten (Bekannte Reisepunkte) - Werden von Welt an Region gemeldet, Startpunkte fuer besucher uder Einladungen
+  - Region und alle Welten werden auf einem Sector Server System betrieben
 - World managed: Welt Daten, Block Daten, In-Game Aktionen
 
 - Transfer zwischen den Platformen wird spaeter moeglich sein
@@ -41,6 +46,9 @@ ggf. Universe Region zum durchqueren des Universums
 - Auf einem Planeten gibt es eine Map und weitere Ebenen
   - Auf der Map koenne Welten in 6Eck Raster definiert werden, Pro Raster ein EntryPoint möglich (optional)
   - Ausserdem können weitere Ebenen defineirt werden (jeweils eine Welt)
+
+- Shop Server werden an Universe angelehnt, da hier der Lizens und Kaufprozess abgewickelt wird
+  - Erworbene Lizensen werden auf die Sector Server kopiert (z.b. Import Package). 
 
 Access:
 - Unverse Access Token
