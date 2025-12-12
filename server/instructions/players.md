@@ -29,24 +29,24 @@ Erstelle in shared eine Entity SSettings mit key/value Feldern um globale Einste
 
 [x] Es wird ein Editor für RRegion entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue region-editor.html und einen entsprechenden editor
-- Erstelle in region-control REST Endpunkt /api/region bzw. /api/region/{regionId} zum holen und speichern der Region Entity
+- Erstelle in region-control REST Endpunkt /api/regions bzw. /api/regions/{regionId} zum holen und speichern der Region Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von regionen suchbar sein, dann bei click editierbar
 
-[?] Es wird ein Editor für RUser entities benoetigt.
+[x] Es wird ein Editor für RUser entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue user-editor.html und einen entsprechenden editor
-- Erstelle in user-control REST Endpunkt /api/user bzw. /api/user/{userId} zum holen und speichern der User Entity
+- Erstelle in user-control REST Endpunkt /api/users bzw. /api/users/{userId} zum holen und speichern der User Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von usern suchbar sein, dann bei click editierbar
 - die 'settings' im User editierbar sein. edit, new, delete 
 
-[ ] Es wird ein Editor für RCharacter entities benoetigt.
+[?] Es wird ein Editor für RCharacter entities benoetigt.
 - Erstelle in ../client/packages/controls ein neue character-editor.html und einen entsprechenden editor
-- Erstelle in character-control REST Endpunkt /api/character bzw. /api/character/{characterId} zum holen und speichern der Character Entity
+- Erstelle in character-control REST Endpunkt /api/regions/{regionId}/characters/{characterId} zum holen und speichern der Character Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von charactern suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
 
 [ ] Es wird ein Editor für WWorld entities benoetigt.
-- Erstelle in ../client/packages/controls ein neue woirld-editor.html und einen entsprechenden editor
-- Erstelle in world-control REST Endpunkt /api/world (nicht worlds) bzw. /api/world/{worldId} zum holen und speichern der World Entity
+- Erstelle in ../client/packages/controls ein neue world-editor.html und einen entsprechenden editor
+- Erstelle in world-control REST Endpunkt /api/regions/{regionId}/worlds/{worldId} zum holen und speichern der World Entity
 - Aehnlich wie in material-editor.html soll erst eine liste von welten suchbar sein, dann bei click editierbar
 - Aehnlich wie bei material editor soll oben eine auswahl der region sein (in material-editor ist es die world)
 

@@ -22,47 +22,47 @@ class RegionService {
     if (name) params.name = name;
     if (enabled !== undefined) params.enabled = enabled;
 
-    return apiService.get<Region[]>('/api/region', params);
+    return apiService.get<Region[]>('/api/regions', params);
   }
 
   async getRegion(id: string): Promise<Region> {
-    return apiService.get<Region>(`/api/region/${id}`);
+    return apiService.get<Region>(`/api/regions/${id}`);
   }
 
   async createRegion(request: RegionRequest): Promise<Region> {
-    return apiService.post<Region>('/api/region', request);
+    return apiService.post<Region>('/api/regions', request);
   }
 
   async updateRegion(id: string, request: RegionRequest, enabled?: boolean): Promise<Region> {
     const params: any = {};
     if (enabled !== undefined) params.enabled = enabled;
 
-    const url = enabled !== undefined ? `/api/region/${id}?enabled=${enabled}` : `/api/region/${id}`;
+    const url = enabled !== undefined ? `/api/regions/${id}?enabled=${enabled}` : `/api/regions/${id}`;
     return apiService.put<Region>(url, request);
   }
 
   async deleteRegion(id: string): Promise<void> {
-    return apiService.delete<void>(`/api/region/${id}`);
+    return apiService.delete<void>(`/api/regions/${id}`);
   }
 
   async enableRegion(id: string): Promise<Region> {
-    return apiService.post<Region>(`/api/region/${id}/enable`);
+    return apiService.post<Region>(`/api/regions/${id}/enable`);
   }
 
   async disableRegion(id: string): Promise<Region> {
-    return apiService.post<Region>(`/api/region/${id}/disable`);
+    return apiService.post<Region>(`/api/regions/${id}/disable`);
   }
 
   async addMaintainer(id: string, userId: string): Promise<Region> {
-    return apiService.post<Region>(`/api/region/${id}/maintainers`, { userId });
+    return apiService.post<Region>(`/api/regions/${id}/maintainers`, { userId });
   }
 
   async removeMaintainer(id: string, userId: string): Promise<Region> {
-    return apiService.delete<Region>(`/api/region/${id}/maintainers/${userId}`);
+    return apiService.delete<Region>(`/api/regions/${id}/maintainers/${userId}`);
   }
 
   async listMaintainers(id: string): Promise<string[]> {
-    return apiService.get<string[]>(`/api/region/${id}/maintainers`);
+    return apiService.get<string[]>(`/api/regions/${id}/maintainers`);
   }
 }
 

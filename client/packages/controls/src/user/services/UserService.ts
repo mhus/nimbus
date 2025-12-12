@@ -21,47 +21,47 @@ export interface Settings {
 
 class UserService {
   async listUsers(): Promise<User[]> {
-    return apiService.get<User[]>('/api/user');
+    return apiService.get<User[]>('/api/users');
   }
 
   async getUser(username: string): Promise<User> {
-    return apiService.get<User>(`/api/user/${username}`);
+    return apiService.get<User>(`/api/users/${username}`);
   }
 
   async updateUser(username: string, request: UserRequest): Promise<User> {
-    return apiService.put<User>(`/api/user/${username}`, request);
+    return apiService.put<User>(`/api/users/${username}`, request);
   }
 
   async deleteUser(username: string): Promise<void> {
-    return apiService.delete<void>(`/api/user/${username}`);
+    return apiService.delete<void>(`/api/users/${username}`);
   }
 
   async getUserSettings(username: string): Promise<Record<string, Settings>> {
-    return apiService.get<Record<string, Settings>>(`/api/user/${username}/settings`);
+    return apiService.get<Record<string, Settings>>(`/api/users/${username}/settings`);
   }
 
   async getSettingsForClientType(username: string, clientType: string): Promise<Settings> {
-    return apiService.get<Settings>(`/api/user/${username}/settings/${clientType}`);
+    return apiService.get<Settings>(`/api/users/${username}/settings/${clientType}`);
   }
 
   async updateSettingsForClientType(username: string, clientType: string, settings: Settings): Promise<any> {
-    return apiService.put<any>(`/api/user/${username}/settings/${clientType}`, settings);
+    return apiService.put<any>(`/api/users/${username}/settings/${clientType}`, settings);
   }
 
   async deleteSettingsForClientType(username: string, clientType: string): Promise<void> {
-    return apiService.delete<void>(`/api/user/${username}/settings/${clientType}`);
+    return apiService.delete<void>(`/api/users/${username}/settings/${clientType}`);
   }
 
   async updateAllSettings(username: string, settings: Record<string, Settings>): Promise<any> {
-    return apiService.put<any>(`/api/user/${username}/settings`, settings);
+    return apiService.put<any>(`/api/users/${username}/settings`, settings);
   }
 
   async addSectorRole(username: string, role: string): Promise<User> {
-    return apiService.post<User>(`/api/user/${username}/roles/${role}`);
+    return apiService.post<User>(`/api/users/${username}/roles/${role}`);
   }
 
   async removeSectorRole(username: string, role: string): Promise<User> {
-    return apiService.delete<User>(`/api/user/${username}/roles/${role}`);
+    return apiService.delete<User>(`/api/users/${username}/roles/${role}`);
   }
 }
 

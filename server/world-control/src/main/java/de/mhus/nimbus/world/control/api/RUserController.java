@@ -18,7 +18,7 @@ import java.util.Map;
  * Provides CRUD operations, role management, and settings management.
  */
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class RUserController extends BaseEditorController {
 

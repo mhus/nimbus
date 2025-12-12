@@ -16,7 +16,7 @@ import java.util.Map;
  * Provides CRUD operations and maintainer management.
  */
 @RestController
-@RequestMapping("/api/region")
+@RequestMapping("/api/regions")
 @RequiredArgsConstructor
 public class RRegionController extends BaseEditorController {
 
