@@ -256,7 +256,7 @@ export interface WorldInfo {
 
   /** Start area for new players */
   entryPoint?: {
-    area: Area
+    area: Area;
     grid: HexVector2;
   };
 
