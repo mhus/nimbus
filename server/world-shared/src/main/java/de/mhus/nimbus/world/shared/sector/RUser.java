@@ -61,7 +61,6 @@ public class RUser {
     private Map<String, Settings> userSettings;
 
     public RUser() { this.enabled = true; }
-    public RUser(final String username, final String email) { this.username = username; this.email = email; this.enabled = true; }
 
     public boolean isEnabled() { return enabled == null || enabled; }
     public Boolean getEnabledRaw() { return enabled; }

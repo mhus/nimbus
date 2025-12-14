@@ -14,7 +14,7 @@ class UUserRolesTest {
     void newUser_shouldHaveNoRoles() {
         UUser u = new UUser("name","mail@example.com");
         assertThat(u.getRoles()).isEmpty();
-        assertThat(u.getRolesRaw()).isNull();
+        assertThat(u.getRolesAsString()).isNull();
     }
 
     @Test
@@ -22,7 +22,7 @@ class UUserRolesTest {
         UUser u = new UUser("name","mail@example.com");
         u.setRoles(UniverseRoles.USER, UniverseRoles.ADMIN, UniverseRoles.USER);
         assertThat(u.getRoles()).containsExactly(UniverseRoles.USER, UniverseRoles.ADMIN);
-        assertThat(u.getRolesRaw()).isEqualTo("USER,ADMIN");
+        assertThat(u.getRolesAsString()).isEqualTo("USER,ADMIN");
     }
 
     @Test
@@ -49,7 +49,7 @@ class UUserRolesTest {
         assertThat(removedUserAgain).isFalse();
         assertThat(removedAdmin).isTrue();
         assertThat(u.getRoles()).isEmpty();
-        assertThat(u.getRolesRaw()).isNull();
+        assertThat(u.getRolesAsString()).isNull();
     }
 
     @Test
@@ -57,13 +57,13 @@ class UUserRolesTest {
         UUser u = new UUser("name","mail@example.com");
         u.setRoles(Set.of(UniverseRoles.ADMIN, UniverseRoles.USER));
         assertThat(u.getRoles()).containsExactlyInAnyOrder(UniverseRoles.USER, UniverseRoles.ADMIN);
-        assertThat(u.getRolesRaw()).contains("USER").contains("ADMIN");
+        assertThat(u.getRolesAsString()).contains("USER").contains("ADMIN");
     }
 
     @Test
     void setRolesRaw_shouldTrimAndAllowDirectParsing() {
         UUser u = new UUser("name","mail@example.com");
-        u.setRolesRaw(" USER , ADMIN ");
+        u.setRolesStringList(" USER , ADMIN ");
         assertThat(u.getRoles()).containsExactly(UniverseRoles.USER, UniverseRoles.ADMIN);
         assertThat(u.hasRole(UniverseRoles.USER)).isTrue();
         assertThat(u.hasRole(UniverseRoles.ADMIN)).isTrue();
@@ -75,6 +75,6 @@ class UUserRolesTest {
         u.setRoles(UniverseRoles.USER);
         u.setRoles();
         assertThat(u.getRoles()).isEmpty();
-        assertThat(u.getRolesRaw()).isNull();
+        assertThat(u.getRolesAsString()).isNull();
     }
 }

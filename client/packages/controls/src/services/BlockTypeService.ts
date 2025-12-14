@@ -93,7 +93,7 @@ export class BlockTypeService {
     if (response.blockTypes.length === 0) {
       return 100; // Start at 100
     }
-    const maxId = Math.max(...response.blockTypes.map(bt => bt.id));
+    const maxId = Math.max(...response.blockTypes.map(bt => Number(bt.id)));
     return maxId + 1;
   }
 }

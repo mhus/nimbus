@@ -121,11 +121,18 @@ Die koennen im modul shared abgelegt sein.
 [x] PlayerInfo bereinigen, 'dimensions' wird nicht mehr benoetgt.
 [x] DEFAULT_PLAYER_INFO deprecated, nicht mehr noetig. (DefaultPlayerInfo.ts)
 
-[x] Icons werden als AIR eingebaut, nith als blockTypeId: 1 
+[x] Icons werden als AIR eingebaut, nicht als blockTypeId: 1 
 [x] Flight mode bricht manchmal ab mit gravitation
 [x] Space interaction wenn Selected auf INTERACTION und seletierter bock/entity gefunden
 Editieren:
 [ ] Selected block richtig anzeigen, selekted ist jetzt Marked
 [ ] Palette von Bloecken verwalten und fuer Paste nutzen
 [ ] Einen Block bearbeiten und dann als neuer BlockType speichern
+
+[ ] Life Server: Character positionen nicht mehr im character steicehrn. Entweder separat oder nur im redis (ist schon)
+
+[ ] HexGrid + EntryPoint
+[ ] Public Asset Bereich: p/... -> public:<regionId>
+[ ] jetzt doch umbenennen der rest endpunkte /api -> /player, /control
+[ ] Brauchen wir world-region noch oder kann das world-control auch?!
 

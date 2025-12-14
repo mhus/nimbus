@@ -33,7 +33,7 @@ public class RUserService {
                 .email(email)
                 .enabled(true)
                 .build();
-        user.addSectorRole(SectorRoles.PLAYER); // Standardrolle global
+        user.addSectorRole(SectorRoles.USER); // Standardrolle global
         return repository.save(user);
     }
 

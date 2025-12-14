@@ -12,42 +12,17 @@
 
     <!-- Main Content - Compact for iframe -->
     <main class="flex-1 px-1 py-2">
-      <!-- Session ID Input (when missing) -->
+      <!-- Session ID Missing -->
       <div v-if="!sessionId" class="flex items-center justify-center min-h-[400px]">
-        <div class="card bg-base-100 shadow-xl max-w-md w-full">
-          <div class="card-body">
-            <h2 class="card-title">Session ID Required</h2>
-            <p class="text-sm text-base-content/70 mb-4">
-              Please enter your session ID to continue using the editor.
-            </p>
-
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Session ID</span>
-              </label>
-              <input
-                v-model="sessionIdInput"
-                type="text"
-                placeholder="Enter session ID..."
-                class="input input-bordered w-full"
-                @keyup.enter="applySessionId"
-              />
-            </div>
-
-            <div class="card-actions justify-end mt-4">
-              <button
-                @click="applySessionId"
-                class="btn btn-primary"
-                :disabled="!sessionIdInput.trim()"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
+        <div class="alert alert-warning max-w-md">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>No session found. Please provide sessionId parameter.</span>
         </div>
       </div>
 
-      <!-- Main Editor (when sessionId exists) -->
+      <!-- Main Editor -->
       <div v-else>
         <!-- Error Display -->
         <div v-if="error" class="alert alert-error alert-sm mb-2 text-xs">
@@ -588,24 +563,7 @@ const { isEmbedded } = useModal();
 const params = new URLSearchParams(window.location.search);
 const worldId = ref(params.get('worldId') || import.meta.env.VITE_WORLD_ID || 'main');
 const sessionId = ref(params.get('sessionId') || '');
-const sessionIdInput = ref('');
 const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043'); // world-control
-
-// Function to apply session ID
-function applySessionId() {
-  if (sessionIdInput.value.trim()) {
-    sessionId.value = sessionIdInput.value.trim();
-    // Update URL parameter
-    const url = new URL(window.location.href);
-    url.searchParams.set('sessionId', sessionId.value);
-    window.history.pushState({}, '', url);
-    // Initialize after setting sessionId
-    fetchLayers();
-    fetchEditState();
-    loadEditSettings();
-    startMarkedBlockPolling();
-  }
-}
 
 // Edit State (unified)
 const editState = ref({

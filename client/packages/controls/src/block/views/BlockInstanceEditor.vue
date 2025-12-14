@@ -697,8 +697,8 @@ const currentShape = computed(() => {
 function getBlockTypeEditorUrl(blockTypeId: string): string {
   const params = new URLSearchParams(window.location.search);
 
-  // Use relative path to material-editor.html
-  const baseUrl = 'material-editor.html';
+  // Use relative path to blocktype-editor.html
+  const baseUrl = 'blocktype-editor.html';
 
   // Preserve world and sessionId parameters, add blockTypeId
   const newParams = new URLSearchParams();

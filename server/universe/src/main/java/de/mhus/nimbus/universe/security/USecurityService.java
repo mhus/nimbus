@@ -64,7 +64,7 @@ public class USecurityService {
         Instant refreshExp = Instant.now().plus(securityProperties.getSecurityRefreshExpiresDays(), ChronoUnit.DAYS);
         Instant loginAt = Instant.now();
         long loginAtEpoch = loginAt.toEpochMilli();
-        String rolesRaw = user.getRolesRaw();
+        String rolesRaw = user.getRolesAsString();
         Map<String,Object> claims = rolesRaw == null ?
                 Map.of("username", user.getUsername(), "typ","access", "loginAt", loginAtEpoch) :
                 Map.of("username", user.getUsername(), "universe", rolesRaw, "typ","access", "loginAt", loginAtEpoch);
@@ -110,7 +110,7 @@ public class USecurityService {
             log.warn("Refresh fehlgeschlagen: Benutzer '{}' nicht gefunden oder deaktiviert", userId);
             return AuthResult.of(HttpStatus.UNAUTHORIZED);
         }
-        String rolesRaw = user.getRolesRaw();
+        String rolesRaw = user.getRolesAsString();
 
         Object loginAtObj = payload.get("loginAt");
         if (!(loginAtObj instanceof Number)) {

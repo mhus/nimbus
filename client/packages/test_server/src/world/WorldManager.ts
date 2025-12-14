@@ -294,7 +294,7 @@ export class WorldManager {
       },
       // Optional fields from info.json
       license: info.license,
-      startArea: info.startArea,
+      entryPoint: info.startArea,
       assetPort: info.assetPort,
       splashScreen: info.splashScreen,
       splashScreenAudio: info.splashScreenAudio,

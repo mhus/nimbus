@@ -35,7 +35,7 @@ public class UUserController {
     public record UUserResponse(String id, String username, String email, String roles) {}
 
     private UUserResponse toResponse(UUser u) {
-        return new UUserResponse(u.getId(), u.getUsername(), u.getEmail(), u.getRolesRaw());
+        return new UUserResponse(u.getId(), u.getUsername(), u.getEmail(), u.getRolesAsString());
     }
 
     @Operation(summary = "User auflisten")
@@ -49,8 +49,8 @@ public class UUserController {
         List<UUserResponse> list = service.listAll().stream()
                 .filter(u -> username == null || username.equals(u.getUsername()))
                 .filter(u -> email == null || email.equals(u.getEmail()))
-                .filter(u -> role == null || (u.getRolesRaw() != null &&
-                        List.of(u.getRolesRaw().split(",")).stream().map(String::trim).collect(Collectors.toSet()).contains(role)))
+                .filter(u -> role == null || (u.getRolesAsString() != null &&
+                        List.of(u.getRolesAsString().split(",")).stream().map(String::trim).collect(Collectors.toSet()).contains(role)))
                 .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(list);
@@ -72,8 +72,8 @@ public class UUserController {
         try {
             UUser u = service.createUser(req.username(), req.email());
             if (req.roles() != null && !req.roles().isBlank()) {
-                u.setRolesRaw(req.roles());
-                u = service.update(u.getId(), u.getUsername(), u.getEmail(), u.getRolesRaw());
+                u.setRolesStringList(req.roles());
+                u = service.update(u.getId(), u.getUsername(), u.getEmail(), u.getRolesAsString());
             }
             // optional initial password
             if (req.password() != null && !req.password().isBlank()) {

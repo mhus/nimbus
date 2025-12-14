@@ -46,7 +46,7 @@ class RegionAuthorizationIT {
         admin.addRole(de.mhus.nimbus.shared.user.UniverseRoles.ADMIN);
         userService.setPassword(admin.getId(), "adminpw");
         UUser maint = userService.createUser("maint","maint@example.com");
-        maint.addRole(de.mhus.nimbus.shared.user.UniverseRoles.MAINTAINER);
+        maint.addRole(de.mhus.nimbus.shared.user.UniverseRoles.SUPPORT);
         userService.setPassword(maint.getId(), "maintpw");
         UUser user = userService.createUser("user","user@example.com");
         // default USER Rolle

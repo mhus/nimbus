@@ -14,6 +14,8 @@ export default defineConfig({
       '@components': resolve(__dirname, './src/components'),
       '@editors': resolve(__dirname, './src/editors'),
       '@material': resolve(__dirname, './src/material'),
+      '@blocktype': resolve(__dirname, './src/blocktype'),
+      '@asset': resolve(__dirname, './src/asset'),
       '@layer': resolve(__dirname, './src/layer'),
       '@block': resolve(__dirname, './src/block'),
       '@editconfig': resolve(__dirname, './src/editconfig'),
@@ -26,6 +28,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'material-editor': resolve(__dirname, 'material-editor.html'),
+        'blocktype-editor': resolve(__dirname, 'blocktype-editor.html'),
+        'asset-editor': resolve(__dirname, 'asset-editor.html'),
         'layer-editor': resolve(__dirname, 'layer-editor.html'),
         'block-editor': resolve(__dirname, 'block-editor.html'),
         'edit-config': resolve(__dirname, 'edit-config.html'),

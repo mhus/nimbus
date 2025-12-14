@@ -3,6 +3,9 @@ package de.mhus.nimbus.world.shared.world;
 import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.Identifiable;
+import de.mhus.nimbus.shared.types.UserId;
+import de.mhus.nimbus.shared.user.ActorRoles;
+import de.mhus.nimbus.shared.user.WorldRoles;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -51,11 +54,13 @@ public class WWorld implements Identifiable {
 
     // Zugriff / Berechtigungen
     @Builder.Default
-    private List<String> owner = List.of();
+    private List<String> owner = List.of(); // liste von userIds
     @Builder.Default
-    private List<String> editor = List.of();
+    private List<String> editor = List.of(); // liste von userIds
     @Builder.Default
-    private List<String> player = List.of();
+    private List<String> supporter = List.of(); // liste von userIds
+    @Builder.Default
+    private List<String> player = List.of(); // liste von userIds oder ['*'] für alle
 
     @Builder.Default
     private boolean publicFlag = false; // ob Welt öffentlich zugänglich ist
@@ -141,4 +146,53 @@ public class WWorld implements Identifiable {
     public String getChunkKey(int worldX, int worldZ) {
         return getChunkX(worldX) + ":" + getChunkZ(worldZ);
     }
+
+    public boolean isPlayerAllowed(UserId userId) {
+        if (publicFlag) return true;
+        if (player.contains("*")) return true;
+        if (userId == null) return false;
+        return player.contains(userId.getId());
+    }
+
+    public boolean isEditorAllowed(UserId userId) {
+        if (userId == null) return false;
+        return editor.contains(userId.getId());
+    }
+
+    public boolean isSupporterAllowed(UserId userId) {
+        if (userId == null) return false;
+        return supporter.contains(userId.getId());
+    }
+
+    public boolean isOwnerAllowed(UserId userId) {
+        if (userId == null) return false;
+        return owner.contains(userId.getId());
+    }
+
+    public List<WorldRoles> getRolesForUser(UserId userId) {
+        if (userId == null) return List.of();
+        if (isOwnerAllowed(userId)) return List.of(WorldRoles.OWNER, WorldRoles.SUPPORT, WorldRoles.EDITOR, WorldRoles.PLAYER);
+        if (isEditorAllowed(userId)) {
+            if (isSupporterAllowed(userId))
+                return List.of(WorldRoles.SUPPORT, WorldRoles.EDITOR, WorldRoles.PLAYER);
+            else
+                return List.of(WorldRoles.EDITOR, WorldRoles.PLAYER);
+        }
+        if (isPlayerAllowed(userId)) return List.of(WorldRoles.PLAYER);
+        return List.of();
+    }
+
+    public List<ActorRoles> getActorRolesForUser(UserId userId) {
+        if (userId == null) return List.of();
+        if (isOwnerAllowed(userId)) return List.of(ActorRoles.SUPPORT, ActorRoles.EDITOR, ActorRoles.PLAYER);
+        if (isEditorAllowed(userId)) {
+            if (isSupporterAllowed(userId))
+                return List.of(ActorRoles.SUPPORT, ActorRoles.EDITOR, ActorRoles.PLAYER);
+            else
+                return List.of(ActorRoles.EDITOR, ActorRoles.PLAYER);
+        }
+        if (isPlayerAllowed(userId)) return List.of(ActorRoles.PLAYER);
+        return List.of();
+    }
+
 }

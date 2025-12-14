@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
@@ -43,14 +42,14 @@ public class URegionController {
 
     private boolean canMaintain(URegion q) {
         if (hasRole(UniverseRoles.ADMIN)) return true;
-        if (hasRole(UniverseRoles.MAINTAINER)) {
+        if (hasRole(UniverseRoles.SUPPORT)) {
             return q != null && q.hasMaintainer(current().userId());
         }
         return false;
     }
     private boolean canCreateAsMaintainer(String maintainersRaw) {
         if (hasRole(UniverseRoles.ADMIN)) return true;
-        if (hasRole(UniverseRoles.MAINTAINER)) {
+        if (hasRole(UniverseRoles.SUPPORT)) {
             if (maintainersRaw == null || maintainersRaw.isBlank()) return false; // muss sich selbst eintragen
             var set = java.util.Arrays.stream(maintainersRaw.split(",")).map(String::trim).filter(s->!s.isEmpty()).collect(Collectors.toSet());
             return set.contains(current().userId());
@@ -61,7 +60,7 @@ public class URegionController {
     @Operation(summary = "List Regions")
     @ApiResponse(responseCode = "200", description = "List returned")
     @GetMapping
-    @Role({UniverseRoles.USER, UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
+    @Role({UniverseRoles.USER, UniverseRoles.ADMIN, UniverseRoles.SUPPORT})
     public ResponseEntity<List<URegionResponse>> list() {
         List<URegionResponse> list = service.listAll().stream().map(this::toResponse).toList();
         return ResponseEntity.ok(list);
@@ -70,7 +69,7 @@ public class URegionController {
     @Operation(summary = "Get Region")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Found"), @ApiResponse(responseCode = "404", description = "Not found")})
     @GetMapping("/{id}")
-    @Role({UniverseRoles.USER, UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
+    @Role({UniverseRoles.USER, UniverseRoles.ADMIN, UniverseRoles.SUPPORT})
     public ResponseEntity<URegionResponse> get(@PathVariable String id) {
         return service.getById(id)
                 .map(q -> ResponseEntity.ok(toResponse(q)))
@@ -91,7 +90,7 @@ public class URegionController {
     @Operation(summary = "Update Region")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Updated"), @ApiResponse(responseCode = "403", description = "Forbidden"), @ApiResponse(responseCode = "404", description = "Not found")})
     @PutMapping("/{id}")
-    @Role({UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
+    @Role({UniverseRoles.ADMIN, UniverseRoles.SUPPORT})
     public ResponseEntity<URegionResponse> update(@PathVariable String id, @RequestBody URegionRequest req) {
         URegion existing = service.getById(id).orElse(null);
         if (existing == null) return ResponseEntity.notFound().build();
@@ -103,7 +102,7 @@ public class URegionController {
     @Operation(summary = "Delete Region")
     @ApiResponses({@ApiResponse(responseCode = "204", description = "Deleted"), @ApiResponse(responseCode = "403", description = "Forbidden"), @ApiResponse(responseCode = "404", description = "Not found")})
     @DeleteMapping("/{id}")
-    @Role({UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
+    @Role({UniverseRoles.ADMIN, UniverseRoles.SUPPORT})
     public ResponseEntity<Void> delete(@PathVariable String id) {
         URegion existing = service.getById(id).orElse(null);
         if (existing == null) return ResponseEntity.notFound().build();
@@ -115,7 +114,7 @@ public class URegionController {
     @Operation(summary = "Add maintainer")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Maintainer added"), @ApiResponse(responseCode = "403", description = "Forbidden"), @ApiResponse(responseCode = "404", description = "Not found")})
     @PostMapping("/{id}/maintainers/{userId}")
-    @Role({UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
+    @Role({UniverseRoles.ADMIN, UniverseRoles.SUPPORT})
     public ResponseEntity<URegionResponse> addMaintainer(@PathVariable String id, @PathVariable String userId) {
         URegion existing = service.getById(id).orElse(null);
         if (existing == null) return ResponseEntity.notFound().build();
@@ -127,7 +126,7 @@ public class URegionController {
     @Operation(summary = "Remove maintainer")
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Maintainer removed"), @ApiResponse(responseCode = "403", description = "Forbidden"), @ApiResponse(responseCode = "404", description = "Not found")})
     @DeleteMapping("/{id}/maintainers/{userId}")
-    @Role({UniverseRoles.ADMIN, UniverseRoles.MAINTAINER})
+    @Role({UniverseRoles.ADMIN, UniverseRoles.SUPPORT})
     public ResponseEntity<URegionResponse> removeMaintainer(@PathVariable String id, @PathVariable String userId) {
         URegion existing = service.getById(id).orElse(null);
         if (existing == null) return ResponseEntity.notFound().build();

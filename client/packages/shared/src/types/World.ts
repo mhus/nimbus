@@ -4,6 +4,8 @@
 
 import type { Vector3 } from './Vector3';
 import type { ScriptActionDefinition } from '../scrawl/ScriptActionDefinition';
+import {HexVector2} from "./HexVector2";
+import {Area} from "./Area";
 
 export enum SeasonStatus {
   NONE = 0,
@@ -253,13 +255,9 @@ export interface WorldInfo {
   };
 
   /** Start area for new players */
-  // Deprecated - Use EntryPoints
-  startArea?: {
-    x: number;
-    y: number;
-    z: number;
-    radius: number;
-    rotation: number;
+  entryPoint?: {
+    area: Area
+    grid: HexVector2;
   };
 
   /** Editor URL for block editing */

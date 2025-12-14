@@ -5,10 +5,7 @@ package de.mhus.nimbus.shared.user;
  * USER aus UniverseRoles wird hier als PLAYER abgebildet.
  */
 public enum SectorRoles {
-    PLAYER,
-    MAINTAINER,
-    SUPPORT,
-    EDITOR,
+    USER,
     ADMIN
 }
 

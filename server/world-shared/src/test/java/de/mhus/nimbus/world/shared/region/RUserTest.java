@@ -32,13 +32,13 @@ public class RUserTest {
     void rolesRoundtrip() {
         RUser u = new RUser();
         assertTrue(u.getSectorRoles().isEmpty());
-        u.addSectorRole(SectorRoles.PLAYER);
-        assertTrue(u.hasSectorRole(SectorRoles.PLAYER));
+        u.addSectorRole(SectorRoles.USER);
+        assertTrue(u.hasSectorRole(SectorRoles.USER));
         u.addSectorRole(SectorRoles.ADMIN);
         assertTrue(u.hasSectorRole(SectorRoles.ADMIN));
         assertEquals(2, u.getSectorRoles().size());
-        u.removeSectorRole(SectorRoles.PLAYER);
-        assertFalse(u.hasSectorRole(SectorRoles.PLAYER));
+        u.removeSectorRole(SectorRoles.USER);
+        assertFalse(u.hasSectorRole(SectorRoles.USER));
         assertEquals(1, u.getSectorRoles().size());
     }
 
@@ -52,7 +52,7 @@ public class RUserTest {
     @Test
     void setRolesRawEmptyClearsRoles() {
         RUser u = new RUser();
-        u.addSectorRole(SectorRoles.PLAYER);
+        u.addSectorRole(SectorRoles.USER);
         assertFalse(u.getSectorRoles().isEmpty());
         u.setSectorRolesRaw(" ");
         assertTrue(u.getSectorRoles().isEmpty());
@@ -61,10 +61,9 @@ public class RUserTest {
     @Test
     void setRolesRawParsesValidAndIgnoresInvalid() {
         RUser u = new RUser();
-        u.setSectorRolesRaw("ADMIN,INVALID,EDITOR,ADMIN");
+        u.setSectorRolesRaw("ADMIN,INVALID,ADMIN");
         assertTrue(u.hasSectorRole(SectorRoles.ADMIN));
-        assertTrue(u.hasSectorRole(SectorRoles.EDITOR));
-        assertFalse(u.hasSectorRole(SectorRoles.PLAYER));
+        assertFalse(u.hasSectorRole(SectorRoles.USER));
         assertEquals(2, u.getSectorRoles().size(), "Duplikate und ungültige Rollen sollten entfernt/ignoriert sein");
     }
 

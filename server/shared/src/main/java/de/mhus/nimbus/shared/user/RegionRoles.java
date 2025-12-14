@@ -6,7 +6,6 @@ package de.mhus.nimbus.shared.user;
  */
 public enum RegionRoles {
     PLAYER,
-    MAINTAINER,
     SUPPORT,
     EDITOR,
     ADMIN

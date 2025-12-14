@@ -3,11 +3,21 @@
  * Manages world selection state
  */
 
-import { ref, computed } from 'vue';
+import { ref, computed, type Ref, type ComputedRef } from 'vue';
 import { worldService } from '../services/WorldService';
 import { getLogger, type WorldInfo } from '@nimbus/shared';
 
 const logger = getLogger('useWorld');
+
+export interface UseWorldReturn {
+  currentWorld: ComputedRef<WorldInfo | undefined>;
+  currentWorldId: Ref<string>;
+  worlds: Ref<WorldInfo[]>;
+  loading: Ref<boolean>;
+  error: Ref<string | null>;
+  loadWorlds: () => Promise<void>;
+  selectWorld: (worldId: string) => void;
+}
 
 // Read worldId from URL query parameter
 const getWorldIdFromUrl = (): string | null => {
@@ -23,11 +33,11 @@ const worlds = ref<WorldInfo[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-export function useWorld() {
+export function useWorld(): UseWorldReturn {
   /**
    * Current world object
    */
-  const currentWorld = computed(() => {
+  const currentWorld = computed((): WorldInfo | undefined => {
     return worlds.value.find(w => w.worldId === currentWorldId.value);
   });
 

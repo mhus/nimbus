@@ -15,7 +15,7 @@ public class PlayerId {
     private String userId;
     private String characterId;
 
-    public PlayerId(String id) {
+    private PlayerId(String id) {
         this.id = id;
     }
 
@@ -24,6 +24,10 @@ public class PlayerId {
             parseId();
         }
         return userId;
+    }
+
+    public UserId getUserIdAsUserId() {
+        return UserId.of(getUserId()).orElseThrow(() -> new IllegalStateException("Invalid userId in playerId: " + id));
     }
 
     public String getCharacterId() {

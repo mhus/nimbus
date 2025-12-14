@@ -12,7 +12,7 @@ import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('PlayerPositionInfoCommand');
 import type { AppContext } from '../AppContext';
-import { worldToChunk, getChunkKey } from '../utils/ChunkUtils';
+import { worldToChunk } from '../utils/ChunkUtils';
 
 /**
  * PlayerPositionInfo command - Shows player position and environment info
@@ -36,7 +36,6 @@ export class PlayerPositionInfoCommand extends CommandHandler {
   execute(parameters: any[]): any {
     const playerService = this.appContext.services.player;
     const chunkService = this.appContext.services.chunk;
-    const selectService = this.appContext.services.select;
     const clientService = this.appContext.services.client;
 
     if (!playerService || !chunkService) {
@@ -66,8 +65,10 @@ export class PlayerPositionInfoCommand extends CommandHandler {
       if (worldInfo.stop) {
         lines.push(`  Stop Pos     : (${worldInfo.stop.x}, ${worldInfo.stop.y}, ${worldInfo.stop.z})`);
       }
-      if (worldInfo.startArea) {
-        lines.push(`  Start Area   : (${worldInfo.startArea.x}, ${worldInfo.startArea.y}, ${worldInfo.startArea.z}) R=${worldInfo.startArea.radius}`);
+      if (worldInfo.entryPoint) {
+        // area is always set and is a string
+        const grid = worldInfo.entryPoint.grid;
+        lines.push(`  Entry Point   : Area=${worldInfo.entryPoint.area}, Grid=(${grid.q}, ${grid.r})`);
       }
       if (worldInfo.settings) {
         lines.push(`  Max Players  : ${worldInfo.settings.maxPlayers}`);

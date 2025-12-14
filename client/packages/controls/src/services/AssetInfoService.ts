@@ -53,7 +53,7 @@ export class AssetInfoService {
    * Note: The assetinfo endpoint does not support DELETE (metadata only).
    * To delete asset info, delete the asset itself via AssetService.
    */
-  async deleteAssetInfo(worldId: string, assetPath: string): Promise<void> {
+  async deleteAssetInfo(_worldId: string, _assetPath: string): Promise<void> {
     throw new Error('Delete asset info not supported. Delete the asset via AssetService instead.');
   }
 

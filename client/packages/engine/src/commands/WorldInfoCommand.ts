@@ -343,12 +343,10 @@ export class WorldInfoCommand extends CommandHandler {
     }
 
     // Start Area (deprecated)
-    if (worldInfo.startArea) {
-      lines.push('Start Area (deprecated):');
-      lines.push(`  Position        : (${worldInfo.startArea.x}, ${worldInfo.startArea.y}, ${worldInfo.startArea.z})`);
-      lines.push(`  Radius          : ${worldInfo.startArea.radius}`);
-      lines.push(`  Rotation        : ${worldInfo.startArea.rotation}°`);
-      lines.push('');
+    if (worldInfo.entryPoint) {
+      // entryPoint is now { area: string; grid: HexVector2 }
+      const grid = worldInfo.entryPoint.grid;
+      lines.push(`  Entry Point   : Area=${worldInfo.entryPoint.area}, Grid=(${grid.q}, ${grid.r})`);
     }
 
     // Editor & Splash

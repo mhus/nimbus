@@ -75,7 +75,7 @@ public class UUserService {
 
         // Roles raw (may be null/blank to clear)
         if (rolesRaw != null) {
-            user.setRolesRaw(rolesRaw);
+            user.setRolesStringList(rolesRaw);
         }
 
         return userRepository.save(user);
