@@ -23,4 +23,6 @@ public class AnimationData {
     private java.lang.Boolean loop;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private int repeat;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private AnimationDataSourceDTO source;
 }

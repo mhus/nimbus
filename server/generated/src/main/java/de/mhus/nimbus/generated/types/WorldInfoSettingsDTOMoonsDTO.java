@@ -1,6 +1,6 @@
 /*
- * Source TS: AnimationData.ts
- * Original TS: 'interface AnimationEffect'
+ * Source TS: World.ts
+ * Original TS: 'interface WorldInfoSettingsDTOMoonsDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,20 +10,20 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class AnimationEffect {
+public class WorldInfoSettingsDTOMoonsDTO {
+    private boolean enabled;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String id;
-    private AnimationEffectType type;
+    private java.lang.Double size;
+    @com.fasterxml.jackson.annotation.JsonProperty("positionOnCircle")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<PositionRef> positions;
-    @com.fasterxml.jackson.annotation.JsonProperty("startTime")
-    private long startTime;
+    private java.lang.Double positionOnCircle;
+    @com.fasterxml.jackson.annotation.JsonProperty("heightOverCamera")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int duration;
-    @com.fasterxml.jackson.annotation.JsonProperty("endTime")
+    private java.lang.Double heightOverCamera;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private long endTime;
+    private java.lang.Double distance;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Boolean blocking;
-    private AnimationEffectParamsDTO params;
+    private java.lang.Double phase;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String texture;
 }

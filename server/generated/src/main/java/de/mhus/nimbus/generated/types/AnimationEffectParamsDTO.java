@@ -1,6 +1,6 @@
 /*
  * Source TS: AnimationData.ts
- * Original TS: 'interface AnimationEffect'
+ * Original TS: 'interface AnimationEffectParamsDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,20 +10,22 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class AnimationEffect {
+public class AnimationEffectParamsDTO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String id;
-    private AnimationEffectType type;
+    private Object to;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<PositionRef> positions;
-    @com.fasterxml.jackson.annotation.JsonProperty("startTime")
-    private long startTime;
+    private EasingType easing;
+    @com.fasterxml.jackson.annotation.JsonProperty("projectileModel")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int duration;
-    @com.fasterxml.jackson.annotation.JsonProperty("endTime")
+    private String projectileModel;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private long endTime;
+    private String trajectory;
+    @com.fasterxml.jackson.annotation.JsonProperty("explosionIntensity")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Boolean blocking;
-    private AnimationEffectParamsDTO params;
+    private java.lang.Double explosionIntensity;
+    @com.fasterxml.jackson.annotation.JsonProperty("lightIntensity")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.lang.Double lightIntensity;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.lang.Double volume;
 }

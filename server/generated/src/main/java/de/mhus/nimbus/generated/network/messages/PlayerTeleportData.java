@@ -12,4 +12,5 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class PlayerTeleportData {
     private de.mhus.nimbus.generated.types.Rotation r;
+    private PlayerTeleportDataPDTO p;
 }

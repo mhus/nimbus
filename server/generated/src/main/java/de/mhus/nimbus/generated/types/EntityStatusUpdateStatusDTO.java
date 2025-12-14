@@ -1,6 +1,6 @@
 /*
- * Source TS: ChunkData.ts
- * Original TS: 'interface ChunkData'
+ * Source TS: EntityData.ts
+ * Original TS: 'interface EntityStatusUpdateStatusDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,18 +10,12 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ChunkData {
-    private int cx;
-    private int cz;
-    private byte size;
-    private java.util.List<Block> blocks;
+public class EntityStatusUpdateStatusDTO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<ItemBlockRef> i;
-    @com.fasterxml.jackson.annotation.JsonProperty("heightData")
+    private java.lang.Double health;
+    @com.fasterxml.jackson.annotation.JsonProperty("healthMax")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<HeightData> heightData;
+    private java.lang.Double healthMax;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<Status> status;
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private ChunkDataBackdropDTO backdrop;
+    private java.lang.Double death;
 }

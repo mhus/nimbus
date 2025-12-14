@@ -21,4 +21,6 @@ public class EntityPositionUpdateData {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private byte po;
     private long ts;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private EntityPositionUpdateDataTaDTO ta;
 }

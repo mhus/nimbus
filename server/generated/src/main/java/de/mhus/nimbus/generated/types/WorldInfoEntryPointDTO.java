@@ -1,6 +1,6 @@
 /*
- * Source TS: TargetingTypes.ts
- * Original TS: 'interface ClientBlock'
+ * Source TS: World.ts
+ * Original TS: 'interface WorldInfoEntryPointDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,8 +10,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ClientBlock {
-    @com.fasterxml.jackson.annotation.JsonProperty("blockType")
-    private Object blockType;
-    private ClientBlockBlockDTO block;
+public class WorldInfoEntryPointDTO {
+    private Area area;
+    private HexVector2 grid;
 }

@@ -31,4 +31,5 @@ public class MovementStateValues {
     private double stealthRange;
     @com.fasterxml.jackson.annotation.JsonProperty("distanceNotifyReduction")
     private double distanceNotifyReduction;
+    private MovementStateValuesDimensionsDTO dimensions;
 }

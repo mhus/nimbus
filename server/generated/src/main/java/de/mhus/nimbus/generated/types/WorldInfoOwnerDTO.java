@@ -1,8 +1,8 @@
 /*
- * Source TS: UserMessage.ts
- * Original TS: 'interface UserMovementData'
+ * Source TS: World.ts
+ * Original TS: 'interface WorldInfoOwnerDTO'
  */
-package de.mhus.nimbus.generated.network.messages;
+package de.mhus.nimbus.generated.types;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
@@ -10,9 +10,10 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class UserMovementData {
+public class WorldInfoOwnerDTO {
+    private String user;
+    @com.fasterxml.jackson.annotation.JsonProperty("displayName")
+    private String displayName;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private de.mhus.nimbus.generated.types.Rotation r;
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private UserMovementDataPDTO p;
+    private String email;
 }

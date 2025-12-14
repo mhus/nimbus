@@ -1,6 +1,6 @@
 /*
- * Source TS: TargetingTypes.ts
- * Original TS: 'interface ClientBlock'
+ * Source TS: PlayerInfo.ts
+ * Original TS: 'interface MovementStateValuesDimensionsDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,8 +10,6 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ClientBlock {
-    @com.fasterxml.jackson.annotation.JsonProperty("blockType")
-    private Object blockType;
-    private ClientBlockBlockDTO block;
+public class MovementStateValuesDimensionsDTO {
+    private double height;
 }

@@ -1,6 +1,6 @@
 /*
  * Source TS: TargetingTypes.ts
- * Original TS: 'interface SerializableTargetingContext'
+ * Original TS: 'interface ClientBlockBlockDTOMetadataDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,15 +10,10 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class SerializableTargetingContext {
-    private TargetingMode mode;
-    @com.fasterxml.jackson.annotation.JsonProperty("targetType")
-    private String targetType;
-    @com.fasterxml.jackson.annotation.JsonProperty("entityId")
+public class ClientBlockBlockDTOMetadataDTO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String entityId;
-    @com.fasterxml.jackson.annotation.JsonProperty("blockPosition")
+    private String id;
+    @com.fasterxml.jackson.annotation.JsonProperty("groupId")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private SerializableTargetingContextBlockPositionDTO blockPosition;
-    private SerializableTargetingContextPositionDTO position;
+    private java.lang.Double groupId;
 }

@@ -1,8 +1,8 @@
 /*
- * Source TS: TargetingTypes.ts
- * Original TS: 'interface ClientBlock'
+ * Source TS: EntityMessage.ts
+ * Original TS: 'interface EntityPositionUpdateDataTaDTO'
  */
-package de.mhus.nimbus.generated.types;
+package de.mhus.nimbus.generated.network.messages;
 
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @org.springframework.aot.hint.annotation.Reflective
@@ -10,8 +10,9 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ClientBlock {
-    @com.fasterxml.jackson.annotation.JsonProperty("blockType")
-    private Object blockType;
-    private ClientBlockBlockDTO block;
+public class EntityPositionUpdateDataTaDTO {
+    private double x;
+    private double y;
+    private double z;
+    private double ts;
 }

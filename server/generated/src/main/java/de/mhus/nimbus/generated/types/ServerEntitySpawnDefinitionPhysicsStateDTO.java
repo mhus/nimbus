@@ -1,6 +1,6 @@
 /*
- * Source TS: TargetingTypes.ts
- * Original TS: 'interface ClientBlock'
+ * Source TS: ServerEntitySpawnDefinition.ts
+ * Original TS: 'interface ServerEntitySpawnDefinitionPhysicsStateDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,8 +10,9 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ClientBlock {
-    @com.fasterxml.jackson.annotation.JsonProperty("blockType")
-    private Object blockType;
-    private ClientBlockBlockDTO block;
+public class ServerEntitySpawnDefinitionPhysicsStateDTO {
+    private Vector3 position;
+    private Vector3 velocity;
+    private Rotation rotation;
+    private boolean grounded;
 }

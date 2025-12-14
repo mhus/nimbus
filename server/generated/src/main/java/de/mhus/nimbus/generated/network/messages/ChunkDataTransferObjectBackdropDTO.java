@@ -1,6 +1,6 @@
 /*
  * Source TS: ChunkMessage.ts
- * Original TS: 'interface ChunkDataTransferObject'
+ * Original TS: 'interface ChunkDataTransferObjectBackdropDTO'
  */
 package de.mhus.nimbus.generated.network.messages;
 
@@ -10,16 +10,13 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ChunkDataTransferObject {
-    private int cx;
-    private int cz;
-    private java.util.List<de.mhus.nimbus.generated.types.Block> b;
+public class ChunkDataTransferObjectBackdropDTO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<de.mhus.nimbus.generated.types.ItemBlockRef> i;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> n;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<de.mhus.nimbus.generated.types.HeightData> h;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> e;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<de.mhus.nimbus.generated.types.AreaData> a;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> s;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private ChunkDataTransferObjectBackdropDTO backdrop;
+    private java.util.List<de.mhus.nimbus.generated.types.Backdrop> w;
 }

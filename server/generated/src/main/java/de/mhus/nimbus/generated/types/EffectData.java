@@ -12,4 +12,5 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class EffectData {
     private String n;
+    private EffectDataPDTO p;
 }

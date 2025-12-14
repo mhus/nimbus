@@ -51,4 +51,11 @@ public class WorldInfo {
     @com.fasterxml.jackson.annotation.JsonProperty("splashScreenAudio")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String splashScreenAudio;
+    private WorldInfoOwnerDTO owner;
+    private WorldInfoSettingsDTO settings;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private WorldInfoLicenseDTO license;
+    @com.fasterxml.jackson.annotation.JsonProperty("entryPoint")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private WorldInfoEntryPointDTO entryPoint;
 }

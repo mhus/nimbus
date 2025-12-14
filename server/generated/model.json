@@ -1164,7 +1164,63 @@
     }, {
       "name" : "EntityDimensions",
       "extendsList" : [ ],
-      "properties" : [ ],
+      "properties" : [ {
+        "name" : "walk",
+        "type" : "EntityDimensionsWalkDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sprint",
+        "type" : "EntityDimensionsSprintDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "crouch",
+        "type" : "EntityDimensionsCrouchDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "swim",
+        "type" : "EntityDimensionsSwimDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "climb",
+        "type" : "EntityDimensionsClimbDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "free_fly",
+        "type" : "EntityDimensionsFree_flyDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "fly",
+        "type" : "EntityDimensionsFlyDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "teleport",
+        "type" : "EntityDimensionsTeleportDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
       "methods" : [ ]
     }, {
       "name" : "EntityPhysicsProperties",
@@ -1528,6 +1584,254 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "status",
+        "type" : "EntityStatusUpdateStatusDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsWalkDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsSprintDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsCrouchDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsSwimDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsClimbDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsFree_flyDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsFlyDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityDimensionsTeleportDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityStatusUpdateStatusDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "health",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "healthMax",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "death",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Future expansion",
+        "type" : "mana, stamina, effects, etc.",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     } ],
@@ -1738,6 +2042,46 @@
       }, {
         "name" : "status",
         "type" : "Status[]",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "backdrop",
+        "type" : "ChunkDataBackdropDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ChunkDataBackdropDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "n",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "e",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "s",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "w",
+        "type" : "Array<Backdrop>",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -1968,6 +2312,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "params",
+        "type" : "AnimationEffectParamsDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2022,6 +2373,13 @@
         "visibility" : null,
         "javaTypeHint" : "int",
         "comment" : "// javaType: int"
+      }, {
+        "name" : "source",
+        "type" : "AnimationDataSourceDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -2081,6 +2439,121 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : "// Player ID"
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "AnimationEffectParamsDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "// Common parameters\n    from",
+        "type" : "any",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "to",
+        "type" : "any",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "easing",
+        "type" : "EasingType",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Projectile-specific\n    speed",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "projectileModel",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "trajectory",
+        "type" : "'linear' | 'arc' | 'homing'",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Explosion-specific\n    radius",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "explosionIntensity",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Sky/Light-specific\n    color",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "lightIntensity",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Sound-specific\n    soundPath",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "volume",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Generic extensible params\n    [key: string]",
+        "type" : "any",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "AnimationDataSourceDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "type",
+        "type" : "'server' | 'client'",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "playerId",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     } ],
@@ -4006,6 +4479,46 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "physicsState",
+        "type" : "ServerEntitySpawnDefinitionPhysicsStateDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ServerEntitySpawnDefinitionPhysicsStateDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "position",
+        "type" : "Vector3",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "velocity",
+        "type" : "Vector3",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "rotation",
+        "type" : "Rotation",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "grounded",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     } ],
@@ -4174,6 +4687,39 @@
       "properties" : [ {
         "name" : "n",
         "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "p",
+        "type" : "EffectDataPDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EffectDataPDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "intensity",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "color",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "[key: string]",
+        "type" : "any",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -4463,6 +5009,620 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "owner",
+        "type" : "WorldInfoOwnerDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "settings",
+        "type" : "WorldInfoSettingsDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "license",
+        "type" : "WorldInfoLicenseDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "entryPoint",
+        "type" : "WorldInfoEntryPointDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoOwnerDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "user",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "displayName",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "email",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOClearColorDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "g",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "b",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOSunColorDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "g",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "b",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOSkyBoxDTOColorDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "g",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "b",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOSkyBoxDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "enabled",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "mode",
+        "type" : "'color' | 'texture'",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "color",
+        "type" : "WorldInfoSettingsDTOSkyBoxDTOColorDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "texturePath",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "size",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "rotation",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOMoonsDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "enabled",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "size",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "positionOnCircle",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "heightOverCamera",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "distance",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "phase",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "texture",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOHorizonGradientDTOColor0DTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "g",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "b",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOHorizonGradientDTOColor1DTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "g",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "b",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOHorizonGradientDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "enabled",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "distance",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "height",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "color0",
+        "type" : "WorldInfoSettingsDTOHorizonGradientDTOColor0DTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "color1",
+        "type" : "WorldInfoSettingsDTOHorizonGradientDTOColor1DTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "alpha",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOEnvironmentScriptsDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "group",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "script",
+        "type" : "ScriptActionDefinition",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOWorldTimeDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "minuteScaling",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOShadowsDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "enabled",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "mapSize",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "maxPlayers",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "int",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "allowGuests",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "pvpEnabled",
+        "type" : "boolean",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "pingInterval",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "long",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "allowedMovementModes",
+        "type" : "string[]",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "defaultMovementMode",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "deadAmbientAudio",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "swimStepAudio",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "clearColor",
+        "type" : "WorldInfoSettingsDTOClearColorDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "cameraMaxZ",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "int",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sunTexture",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sunSize",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sunAngleY",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sunElevation",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sunColor",
+        "type" : "WorldInfoSettingsDTOSunColorDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sunEnabled",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "skyBox",
+        "type" : "WorldInfoSettingsDTOSkyBoxDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "moons",
+        "type" : "Array<WorldInfoSettingsDTOMoonsDTO>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "horizonGradient",
+        "type" : "WorldInfoSettingsDTOHorizonGradientDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "environmentScripts",
+        "type" : "Array<WorldInfoSettingsDTOEnvironmentScriptsDTO>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "worldTime",
+        "type" : "WorldInfoSettingsDTOWorldTimeDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "shadows",
+        "type" : "WorldInfoSettingsDTOShadowsDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoLicenseDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "type",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "expiresAt",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoEntryPointDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "area",
+        "type" : "Area",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "grid",
+        "type" : "HexVector2",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     } ],
@@ -4501,6 +5661,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : "// BlockType (full definition in engine package)"
+      }, {
+        "name" : "block",
+        "type" : "ClientBlockBlockDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4569,6 +5736,143 @@
         "name" : "entityId",
         "type" : "string",
         "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "blockPosition",
+        "type" : "SerializableTargetingContextBlockPositionDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "position",
+        "type" : "SerializableTargetingContextPositionDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ClientBlockBlockDTOPositionDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ClientBlockBlockDTOMetadataDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "id",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "groupId",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ClientBlockBlockDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "position",
+        "type" : "ClientBlockBlockDTOPositionDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "metadata",
+        "type" : "ClientBlockBlockDTOMetadataDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "[key: string]",
+        "type" : "any",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "SerializableTargetingContextBlockPositionDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "SerializableTargetingContextPositionDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
@@ -4660,6 +5964,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : "// Stealth modifier (0.0 = normal, 1.0 = invisible)"
+      }, {
+        "name" : "dimensions",
+        "type" : "MovementStateValuesDimensionsDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -4851,6 +6162,32 @@
         "name" : "thirdPersonModelModifiers",
         "type" : "Map<string, string>",
         "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "MovementStateValuesDimensionsDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Entity height in blocks (collision box)\n    width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Entity width in blocks (collision box diameter)\n    footprint",
+        "type" : "number",
+        "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
@@ -5496,6 +6833,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "backdrop",
+        "type" : "ChunkDataTransferObjectBackdropDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -5517,6 +6861,39 @@
         "name" : "c",
         "type" : "ChunkCoordinate[]",
         "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "ChunkDataTransferObjectBackdropDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "n",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "e",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "s",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "w",
+        "type" : "Array<Backdrop>",
+        "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
@@ -5629,6 +7006,13 @@
         "visibility" : null,
         "javaTypeHint" : "long",
         "comment" : "// javaType: long"
+      }, {
+        "name" : "ta",
+        "type" : "EntityPositionUpdateDataTaDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -5659,6 +7043,46 @@
         "name" : "pa",
         "type" : "Record<string, any>",
         "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "EntityPositionUpdateDataTaDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "ts",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "long",
+        "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
@@ -5834,6 +7258,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "p",
+        "type" : "UserMovementDataPDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -5842,6 +7273,65 @@
       "properties" : [ {
         "name" : "r",
         "type" : "Rotation",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "p",
+        "type" : "PlayerTeleportDataPDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "UserMovementDataPDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "PlayerTeleportDataPDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,

@@ -1,6 +1,6 @@
 /*
- * Source TS: TargetingTypes.ts
- * Original TS: 'interface ClientBlock'
+ * Source TS: EntityData.ts
+ * Original TS: 'interface EntityDimensionsWalkDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,8 +10,8 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class ClientBlock {
-    @com.fasterxml.jackson.annotation.JsonProperty("blockType")
-    private Object blockType;
-    private ClientBlockBlockDTO block;
+public class EntityDimensionsWalkDTO {
+    private double height;
+    private double width;
+    private double footprint;
 }

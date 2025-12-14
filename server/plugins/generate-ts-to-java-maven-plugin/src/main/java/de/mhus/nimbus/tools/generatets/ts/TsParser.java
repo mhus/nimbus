@@ -52,6 +52,8 @@ public class TsParser {
             extractDeclarations(src, content, ts);  // content is the original with comments!
             model.addFile(ts);
         }
+        // Post-processing: extract inline object types and create synthetic interfaces
+        extractInlineObjectTypes(model);
         return model;
     }
 
@@ -181,7 +183,8 @@ public class TsParser {
 
     private void extractPropertiesFromBodyWithOriginal(String strippedBody, String originalBody, List<TsDeclarations.TsProperty> out) {
         if (strippedBody == null || out == null) return;
-        // Match TS property declarations of the form: [visibility]? name[?]: type;
+
+        // First: Match single-line TS property declarations of the form: [visibility]? name[?]: type;
         java.util.regex.Pattern propPat = java.util.regex.Pattern.compile(DECL_STEP);
         java.util.regex.Matcher m = propPat.matcher(strippedBody);
         while (m.find()) {
@@ -228,6 +231,70 @@ public class TsParser {
             pr.type = typeTxt;
             pr.comment = m.group(5) != null ? m.group(5).trim() : null;
             pr.javaTypeHint = extractJavaTypeHint(pr.comment);
+            out.add(pr);
+        }
+
+        // Second: Find multiline inline object properties like: propertyName?: { ... };
+        // These are not matched by the regex above because they don't have ';' on the first line
+        extractMultilineInlineObjectProperties(strippedBody, out);
+    }
+
+    /**
+     * Extract properties that are multiline inline objects.
+     * Pattern: propertyName?: { ... };
+     * These are missed by DECL_STEP regex because the first line doesn't end with ';'
+     */
+    private void extractMultilineInlineObjectProperties(String body, List<TsDeclarations.TsProperty> out) {
+        if (body == null || out == null) return;
+
+        // Pattern: optional visibility, property name, optional '?', ':', optional whitespace, '{'
+        // Example: "owner?: {"
+        java.util.regex.Pattern multilinePat = java.util.regex.Pattern.compile(
+            "(?m)^[\\t ]*(public|private|protected)?[\\t ]*([A-Za-z_$][A-Za-z0-9_$]*)[\\t ]*(\\?)?[\\t ]*:[\\t ]*\\{"
+        );
+
+        java.util.regex.Matcher m = multilinePat.matcher(body);
+        while (m.find()) {
+            int startIdx = m.start();
+
+            // Only accept properties at top-level (depth == 1)
+            if (braceDepthAt(body, startIdx) != 1) {
+                continue;
+            }
+
+            // Check if we already have this property (from single-line parsing)
+            String propName = m.group(2);
+            boolean alreadyExists = false;
+            for (TsDeclarations.TsProperty existing : out) {
+                if (propName.equals(existing.name)) {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+            if (alreadyExists) {
+                continue;
+            }
+
+            // Find the opening brace position
+            int braceStart = body.indexOf('{', m.start());
+            if (braceStart < 0) continue;
+
+            // Find the matching closing brace
+            int braceEnd = findMatchingBrace(body, braceStart);
+            if (braceEnd < 0) continue;
+
+            // Extract the full inline object type including braces
+            String inlineObjType = body.substring(braceStart, braceEnd).trim();
+
+            // Create the property
+            TsDeclarations.TsProperty pr = new TsDeclarations.TsProperty();
+            pr.visibility = m.group(1);
+            pr.name = m.group(2);
+            pr.optional = m.group(3) != null && !m.group(3).isEmpty();
+            pr.type = inlineObjType;
+            pr.comment = null; // Could extract comment from line before if needed
+            pr.javaTypeHint = null;
+
             out.add(pr);
         }
     }
@@ -468,5 +535,199 @@ public class TsParser {
 
     private String relativize(File f) {
         return f.getPath();
+    }
+
+    /**
+     * Post-processing step: scan all interfaces for properties with inline object types
+     * and create synthetic interfaces for them.
+     */
+    private void extractInlineObjectTypes(TsModel model) {
+        if (model == null || model.getFiles() == null) return;
+
+        List<TsSourceFile> filesToUpdate = new ArrayList<>();
+        List<TsDeclarations.TsInterface> newInterfaces = new ArrayList<>();
+
+        for (TsSourceFile file : model.getFiles()) {
+            if (file.getInterfaces() == null) continue;
+
+            for (TsDeclarations.TsInterface iface : file.getInterfaces()) {
+                if (iface.properties == null) continue;
+
+                for (TsDeclarations.TsProperty prop : iface.properties) {
+                    if (prop.type == null) continue;
+
+                    // Remove all whitespace including newlines for checking
+                    String cleanedType = prop.type.replaceAll("\\s+", " ").trim();
+                    String trimmedType = prop.type.trim();
+
+                    // Check if this is an inline object type
+                    if (cleanedType.startsWith("{") && cleanedType.contains(":")) {
+                        // Generate a name for the synthetic interface
+                        String syntheticName = generateSyntheticInterfaceName(iface.name, prop.name);
+
+                        // Parse the inline object and create a new interface
+                        TsDeclarations.TsInterface syntheticInterface = parseInlineObjectType(syntheticName, trimmedType, file, newInterfaces);
+                        if (syntheticInterface != null) {
+                            newInterfaces.add(syntheticInterface);
+
+                            // Update the property type to reference the new interface
+                            prop.type = syntheticName;
+                        }
+                    }
+                    // Handle Array<inline object> types
+                    else if (cleanedType.startsWith("Array<{") && cleanedType.endsWith("}>")) {
+                        String inlineObj = cleanedType.substring("Array<".length(), cleanedType.length() - 1);
+                        String syntheticName = generateSyntheticInterfaceName(iface.name, prop.name);
+
+                        TsDeclarations.TsInterface syntheticInterface = parseInlineObjectType(syntheticName, inlineObj, file, newInterfaces);
+                        if (syntheticInterface != null) {
+                            newInterfaces.add(syntheticInterface);
+                            prop.type = "Array<" + syntheticName + ">";
+                        }
+                    }
+                }
+            }
+
+            // Add all new interfaces to this file
+            if (!newInterfaces.isEmpty()) {
+                file.getInterfaces().addAll(newInterfaces);
+                newInterfaces.clear();
+            }
+        }
+    }
+
+    /**
+     * Generate a name for a synthetic interface based on parent interface and property name.
+     * Example: interface WorldInfo, property entryPoint -> WorldInfoEntryPointDTO
+     */
+    private String generateSyntheticInterfaceName(String parentName, String propertyName) {
+        if (propertyName == null || propertyName.isEmpty()) {
+            return parentName + "InlineDTO";
+        }
+        // Capitalize first letter of property name
+        String capitalizedProp = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
+        return parentName + capitalizedProp + "DTO";
+    }
+
+    /**
+     * Parse an inline object type string and create a TsInterface from it.
+     * Example input: "{ area: Area; grid: HexVector2; }"
+     * Recursively handles nested inline objects.
+     */
+    private TsDeclarations.TsInterface parseInlineObjectType(String name, String objectType,
+                                                             TsSourceFile file,
+                                                             List<TsDeclarations.TsInterface> newInterfaces) {
+        if (objectType == null || !objectType.contains(":")) return null;
+
+        TsDeclarations.TsInterface iface = new TsDeclarations.TsInterface();
+        iface.name = name;
+
+        // Remove outer braces
+        String body = objectType.trim();
+        if (body.startsWith("{")) body = body.substring(1);
+        if (body.endsWith("}")) body = body.substring(0, body.length() - 1);
+        body = body.trim();
+
+        // Parse properties manually, handling nested braces
+        int pos = 0;
+        while (pos < body.length()) {
+            // Skip whitespace
+            while (pos < body.length() && Character.isWhitespace(body.charAt(pos))) pos++;
+            if (pos >= body.length()) break;
+
+            // Find property name and colon
+            int colonPos = findNextColon(body, pos);
+            if (colonPos < 0) break;
+
+            String namePart = body.substring(pos, colonPos).trim();
+            if (namePart.isEmpty()) break;
+
+            boolean optional = false;
+            if (namePart.endsWith("?")) {
+                optional = true;
+                namePart = namePart.substring(0, namePart.length() - 1).trim();
+            }
+
+            // Find the type value (up to semicolon, handling nested braces)
+            int typeStart = colonPos + 1;
+            int typeEnd = findPropertyEnd(body, typeStart);
+            if (typeEnd < 0) typeEnd = body.length();
+
+            String typePart = body.substring(typeStart, typeEnd).trim();
+
+            // Remove trailing semicolon if present
+            if (typePart.endsWith(";")) {
+                typePart = typePart.substring(0, typePart.length() - 1).trim();
+            }
+
+            // Remove comments from type
+            int commentIdx = typePart.indexOf("//");
+            if (commentIdx >= 0) {
+                typePart = typePart.substring(0, commentIdx).trim();
+            }
+
+            // Check if this property has a nested inline object
+            if (typePart.startsWith("{") && typePart.contains(":")) {
+                String nestedName = generateSyntheticInterfaceName(name, namePart);
+                TsDeclarations.TsInterface nestedInterface = parseInlineObjectType(nestedName, typePart, file, newInterfaces);
+                if (nestedInterface != null) {
+                    newInterfaces.add(nestedInterface);
+                    typePart = nestedName;
+                }
+            }
+            // Check for Array<inline object>
+            else if (typePart.startsWith("Array<{") && typePart.endsWith("}>")) {
+                String inlineObj = typePart.substring("Array<".length(), typePart.length() - 1);
+                String nestedName = generateSyntheticInterfaceName(name, namePart);
+                TsDeclarations.TsInterface nestedInterface = parseInlineObjectType(nestedName, inlineObj, file, newInterfaces);
+                if (nestedInterface != null) {
+                    newInterfaces.add(nestedInterface);
+                    typePart = "Array<" + nestedName + ">";
+                }
+            }
+
+            TsDeclarations.TsProperty prop = new TsDeclarations.TsProperty();
+            prop.name = namePart;
+            prop.type = typePart;
+            prop.optional = optional;
+
+            iface.properties.add(prop);
+
+            // Move past the semicolon
+            pos = typeEnd + 1;
+        }
+
+        return iface.properties.isEmpty() ? null : iface;
+    }
+
+    /**
+     * Find the next colon that's not inside braces or brackets
+     */
+    private int findNextColon(String s, int start) {
+        int depth = 0;
+        for (int i = start; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '{' || c == '[' || c == '<') depth++;
+            else if (c == '}' || c == ']' || c == '>') depth--;
+            else if (c == ':' && depth == 0) return i;
+        }
+        return -1;
+    }
+
+    /**
+     * Find the end of a property value (semicolon, newline, or end of string), handling nested braces
+     * TypeScript allows properties without semicolons, so we also stop at newlines when at depth 0
+     */
+    private int findPropertyEnd(String s, int start) {
+        int depth = 0;
+        for (int i = start; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '{' || c == '[' || c == '<') depth++;
+            else if (c == '}' || c == ']' || c == '>') depth--;
+            else if (c == ';' && depth == 0) return i;
+            // Also stop at newline if we're at depth 0 (not inside braces)
+            else if ((c == '\n' || c == '\r') && depth == 0) return i;
+        }
+        return s.length();
     }
 }
