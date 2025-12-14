@@ -18,7 +18,11 @@
     - Enthält: worldId, userId, role
     - Kein session basierter Zugriff, kann nicht auf session basierende Funktionen zugreifen.
 
-## Aufräuen
+- Rest endpoints in world-control
+- AccessService in world-shared
+- vue html componente in ../client/packages/controls für DevLogin
+
+## Aufräumen
 
 [ ] Es gibt bereits eine implementierung in world-region die muss vorher geprueft werden.
 [ ] Timeout an Webscoket auf 24 Stunden setzen (aktuell 12 Stunden)
@@ -33,7 +37,7 @@ Login:
 - characterId - nur bei agent false
 - actor: string - nur bei agent false
 
-1. Ausahl: Welt suchen / auswahlen
+1. Auwahl: Welt suchen / auswahlen
 2. Anzeige tabs: session / agent - default session
 
 3. Session:
@@ -43,15 +47,16 @@ Login:
    1. User auswahl
 5. Login button
 
+- Benutze JwtService um tokens zu erstellen. ggf um generische funktionen erweitern
 
-[ ] Erstelle den AAAService in world-shared
+[ ] Erstelle den AccessService in world-shared
 - mit den methoden:
   - getWorlds (Punkt 1) - WWorldService nutzen
   - getCharactersForUserInWorld(userId, worldId) (Punkt 3.1)
   - getRolesForCharacterInWorld(characterId, worldId) (Punkt 3.2)
 - Erstelle benoetigte DTOs in world-shared / types
 
-[ ] Erstelle in AAAService eine 
+[ ] Erstelle in AccessService eine 
 - methode 'devSessionLogin(...)
   -  Rückgabe: AccessToken, cookieUrls, jumpUrl, SessionId, PlayerId
 - methode 'devAgentLogin(...)
@@ -59,27 +64,9 @@ Login:
 - Erstelle benoetigte DTOs in world-shared / types
 
 
-
 [ ] Erstelle einen REST Endpunkt im world-control /api/aaa/devlogin 
-POST methode
-- DTO:
-  - agent: boolean (optional, default false) - es wird ein agent access token erstellt hier sit characterId und role obsolate
-  - worldId: string
-  - userId: string
-  - characterId
-  - role: string
-- Retour:
-  - Access Token
-  - cookieUrls - urls for cookie
-  - jump url
-  - Session Id - wenn agent false
-GET methode (entrypoints)
-- Qyery Parameter:
-  - worldId: string (optional, Suchstring)
-  - user: string (optional, Suchstring)
-- Retour:
-  - Liste aller user names mit rollen und character names und worldIds
-  - Es werden maximal 50 world eintraege zurueckgegeben
+- POST methode: fuehrt dev login aus
+- GET methode gibt gesucht daten zurueck fuer den devLogin control
 
 AccessToken:
 - JWT Token wird mit region erstellt, nutze JwtService aus shared

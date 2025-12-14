@@ -4947,7 +4947,7 @@
         "javaTypeHint" : "int",
         "comment" : "// javaType: int"
       }, {
-        "name" : "worlRegion",
+        "name" : "worldIcon",
         "type" : "string",
         "optional" : true,
         "visibility" : null,

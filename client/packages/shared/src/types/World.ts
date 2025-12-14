@@ -47,8 +47,8 @@ export interface WorldInfo {
   /** Asset server port */
   assetPort?: number; // javaType: int
 
-  /** World region identifier */
-  worlRegion?: string;
+  /** World icon asset path */
+  worldIcon?: string;
 
   /** World status (0=active, 1=inactive, etc.) */
   status?: number; // javaType: byte

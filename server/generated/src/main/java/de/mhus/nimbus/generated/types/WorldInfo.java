@@ -29,9 +29,9 @@ public class WorldInfo {
     @com.fasterxml.jackson.annotation.JsonProperty("assetPort")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private int assetPort;
-    @com.fasterxml.jackson.annotation.JsonProperty("worlRegion")
+    @com.fasterxml.jackson.annotation.JsonProperty("worldIcon")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String worlRegion;
+    private String worldIcon;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private byte status;
     @com.fasterxml.jackson.annotation.JsonProperty("seasonStatus")

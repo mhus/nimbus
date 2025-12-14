@@ -83,9 +83,6 @@ export class WorldInfoCommand extends CommandHandler {
     if (worldInfo.assetPort) {
       lines.push(`  Asset Port      : ${worldInfo.assetPort}`);
     }
-    if (worldInfo.worlRegion) {
-      lines.push(`  World Region    : ${worldInfo.worlRegion}`);
-    }
     if (worldInfo.status !== undefined) {
       lines.push(`  Status          : ${worldInfo.status}`);
     }

@@ -1,0 +1,40 @@
+package de.mhus.nimbus.world.shared.access;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+/**
+ * Configuration properties for AccessService.
+ * Loaded from application.yml with prefix 'world.access'.
+ */
+@Component
+@ConfigurationProperties(prefix = "world.access")
+@Data
+public class AccessProperties {
+
+    /**
+     * Access token expiration in seconds.
+     * Default: 300 seconds (5 minutes)
+     */
+    private long tokenExpirationSeconds = 300;
+
+    /**
+     * Cookie URLs for multi-domain cookie setup.
+     * Hardcoded for now, will be made dynamic later.
+     */
+    private List<String> cookieUrls = List.of(
+            "http://localhost:9042",
+            "http://localhost:9043"
+    );
+
+    /**
+     * Jump URL to redirect after login.
+     * Hardcoded for now, will be made dynamic later.
+     * {worldId} placeholder will be replaced with actual worldId.
+     */
+    private String jumpUrlAgentToken = "http://localhost:3001?worldId={worldId}";
+    private String jumpUrlSessionToken = "http://localhost:3002?worldId={worldId}&session={session}";
+}
