@@ -49,14 +49,14 @@ Login:
 
 - Benutze JwtService um tokens zu erstellen. ggf um generische funktionen erweitern
 
-[ ] Erstelle den AccessService in world-shared
+[?] Erstelle den AccessService in world-shared
 - mit den methoden:
   - getWorlds (Punkt 1) - WWorldService nutzen
   - getCharactersForUserInWorld(userId, worldId) (Punkt 3.1)
   - getRolesForCharacterInWorld(characterId, worldId) (Punkt 3.2)
 - Erstelle benoetigte DTOs in world-shared / types
 
-[ ] Erstelle in AccessService eine 
+[?] Erstelle in AccessService eine 
 - methode 'devSessionLogin(...)
   -  Rückgabe: AccessToken, cookieUrls, jumpUrl, SessionId, PlayerId
 - methode 'devAgentLogin(...)
@@ -64,7 +64,7 @@ Login:
 - Erstelle benoetigte DTOs in world-shared / types
 
 
-[ ] Erstelle einen REST Endpunkt im world-control /api/aaa/devlogin 
+[?] Erstelle einen REST Endpunkt im world-control /api/aaa/devlogin 
 - POST methode: fuehrt dev login aus
 - GET methode gibt gesucht daten zurueck fuer den devLogin control
 
@@ -79,7 +79,7 @@ AccessToken:
   - sessionId - bei agent false
   - expiration: 5 minuten
 
-[ ] Erstelle in ../client/packages/controls einen neuen dev-login.html editor
+[?] Erstelle in ../client/packages/controls einen neuen dev-login.html editor
 - Suchfeld fuer user
 - Suchfeld fuer world
 - Liste alle Eintraege auf bei click auf einen eintrag wird der dev login ausgefuehrt

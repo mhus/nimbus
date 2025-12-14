@@ -26,8 +26,8 @@ public class AccessProperties {
      * Hardcoded for now, will be made dynamic later.
      */
     private List<String> cookieUrls = List.of(
-            "http://localhost:9042",
-            "http://localhost:9043"
+            "http://localhost:9042/api/aaa/authorize",
+            "http://localhost:9043/api/aaa/authorize"
     );
 
     /**
@@ -37,4 +37,30 @@ public class AccessProperties {
      */
     private String jumpUrlAgentToken = "http://localhost:3001?worldId={worldId}";
     private String jumpUrlSessionToken = "http://localhost:3002?worldId={worldId}&session={session}";
+
+    /**
+     * Session token TTL in seconds (for agent=false).
+     * Default: 86400 seconds (24 hours)
+     */
+    private long sessionTokenTtlSeconds = 86400L;
+
+    /**
+     * Agent token TTL in seconds (for agent=true).
+     * Default: 3600 seconds (1 hour)
+     */
+    private long agentTokenTtlSeconds = 3600L;
+
+    /**
+     * Whether to use secure cookies (HTTPS only).
+     * Should be true in production, false for local development.
+     * Default: false
+     */
+    private boolean secureCookies = false;
+
+    /**
+     * Cookie domain for multi-domain setup.
+     * If null/empty, cookies are set for the current domain only.
+     * Example: ".example.com" for *.example.com
+     */
+    private String cookieDomain = null;
 }

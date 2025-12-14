@@ -98,7 +98,7 @@ class DevLoginService {
    */
   async authorize(cookieUrls: string[], accessToken: string): Promise<void> {
     const authPromises = cookieUrls.map(url =>
-      fetch(`${url}/api/aaa/authorize?token=${accessToken}`, {
+      fetch(`${url}?token=${accessToken}`, {
         method: 'GET',
         credentials: 'include', // Important: allows setting cookies cross-origin
         mode: 'cors',

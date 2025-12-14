@@ -6,6 +6,7 @@ import de.mhus.nimbus.world.shared.dto.DevAgentLoginRequest;
 import de.mhus.nimbus.world.shared.dto.DevLoginResponse;
 import de.mhus.nimbus.world.shared.dto.DevSessionLoginRequest;
 import de.mhus.nimbus.world.shared.dto.WorldInfoDto;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -231,6 +232,46 @@ public class AaaController extends BaseEditorController {
         } catch (Exception e) {
             // Unexpected errors
             log.error("Dev login failed unexpectedly", e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Internal error: " + e.getMessage()));
+        }
+    }
+
+    // ===== GET /api/aaa/authorize =====
+
+    /**
+     * Authorize with access token and set session cookies.
+     * Validates the access token and creates long-lived session cookies.
+     *
+     * @param token Access token from /devlogin
+     * @param response HttpServletResponse for cookie setting
+     * @return 200 OK if successful
+     */
+    @GetMapping("/authorize")
+    public ResponseEntity<?> authorize(
+            @RequestParam String token,
+            HttpServletResponse response
+    ) {
+        log.debug("GET /api/aaa/authorize - validating token");
+
+        try {
+            accessService.authorizeWithToken(token, response);
+            return ResponseEntity.ok().build();
+
+        } catch (IllegalArgumentException e) {
+            // Token validation failures
+            log.warn("Token validation failed: {}", e.getMessage(), e);
+            return unauthorized("Invalid or expired token");
+
+        } catch (IllegalStateException e) {
+            // Session/access validation failures
+            log.warn("Authorization failed: {}", e.getMessage());
+            return ResponseEntity.status(403)
+                    .body(Map.of("error", e.getMessage()));
+
+        } catch (Exception e) {
+            // Unexpected errors
+            log.error("Authorization failed unexpectedly", e);
             return ResponseEntity.status(500)
                     .body(Map.of("error", "Internal error: " + e.getMessage()));
         }

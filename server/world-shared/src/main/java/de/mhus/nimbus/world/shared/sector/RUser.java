@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import de.mhus.nimbus.generated.configs.Settings;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.PlayerUser;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.shared.user.SectorRoles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -193,5 +194,14 @@ public class RUser {
         }
     }
     public boolean hasSettingsForClientType(String clientType) { return clientType != null && userSettings != null && userSettings.containsKey(clientType); }
+
+    public boolean isSectorAdmin() {
+        return hasSectorRole(SectorRoles.ADMIN);
+    }
+
+    public boolean isRegionAdmin(WorldId worldId) {
+        if (worldId.isCollection()) return false;
+        return hasRegionRole(worldId.getRegionId(), RegionRoles.ADMIN);
+    }
 
 }
