@@ -61,9 +61,9 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Get single BlockType by ID.
-     * GET /api/worlds/{worldId}/blocktypes/{blockId}
+     * GET /api/worlds/{worldId}/blocktypes/type/{blockId}
      */
-    @GetMapping("/{*blockId}")
+    @GetMapping("/type/{*blockId}")
     @Operation(summary = "Get BlockType by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "BlockType found"),
@@ -220,9 +220,9 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Create new BlockType.
-     * POST /api/worlds/{worldId}/blocktypes
+     * POST /api/worlds/{worldId}/blocktypes/type
      */
-    @PostMapping
+    @PostMapping("/type")
     @Operation(summary = "Create new BlockType")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "BlockType created"),
@@ -287,9 +287,9 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Update existing BlockType.
-     * PUT /api/worlds/{worldId}/blocktypes/{blockId}
+     * PUT /api/worlds/{worldId}/blocktypes/type/{blockId}
      */
-    @PutMapping("/{*blockId}")
+    @PutMapping("/type/{*blockId}")
     @Operation(summary = "Update BlockType")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "BlockType updated"),
@@ -355,9 +355,9 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Delete BlockType.
-     * DELETE /api/worlds/{worldId}/blocktypes/{blockId}
+     * DELETE /api/worlds/{worldId}/blocktypes/type/{blockId}
      */
-    @DeleteMapping("/{*blockId}")
+    @DeleteMapping("/type/{*blockId}")
     @Operation(summary = "Delete BlockType")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "BlockType deleted"),
@@ -406,11 +406,12 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Duplicate BlockType with a new ID.
-     * POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}/{newBlockId}
+     * POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}
+     * Body: { "newBlockId": "..." }
      *
      * Creates a copy of an existing BlockType with a new ID.
      */
-    @PostMapping("/duplicate/{*sourceBlockId}/{*newBlockId}")
+    @PostMapping("/duplicate/{*sourceBlockId}")
     @Operation(summary = "Duplicate BlockType",
                description = "Creates a copy of an existing BlockType with a new ID")
     @ApiResponses({
@@ -422,14 +423,13 @@ public class EBlockTypeController extends BaseEditorController {
     public ResponseEntity<?> duplicate(
             @Parameter(description = "World identifier") @PathVariable String worldId,
             @Parameter(description = "Source BlockType identifier") @PathVariable String sourceBlockId,
-            @Parameter(description = "New BlockType identifier") @PathVariable String newBlockId) {
+            @RequestBody Map<String, String> body) {
+
+        String newBlockId = body.get("newBlockId");
 
         // Strip leading slash from wildcard pattern
         if (sourceBlockId != null && sourceBlockId.startsWith("/")) {
             sourceBlockId = sourceBlockId.substring(1);
-        }
-        if (newBlockId != null && newBlockId.startsWith("/")) {
-            newBlockId = newBlockId.substring(1);
         }
 
         // Extract ID from format "w/310" -> "310" or "310" -> "310"

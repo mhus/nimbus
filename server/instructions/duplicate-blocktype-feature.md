@@ -13,12 +13,25 @@ Diese Funktion ermöglicht es, einen bestehenden BlockType unter einer neuen ID 
 
 **Neuer Endpoint:**
 ```
-POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}/{newBlockId}
+POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}
 ```
 
+**Request Body:**
+```json
+{
+  "newBlockId": "w/456"
+}
+```
+
+**Wichtig:** Der `{*sourceBlockId}` Wildcard muss am Ende des Pfads stehen (Spring-Limitierung).
+
 **Funktionalität:**
-- Nimmt die alte und neue BlockTypeId als URL-Parameter
+- Nimmt sourceBlockId als URL-Parameter, newBlockId im Body
 - Lädt den Quell-BlockType via WBlockTypeService
+
+**Wichtige Änderungen:**
+- GET/PUT/DELETE Endpoints geändert zu `/blocktypes/type/{blockId}` um Kollision mit `/duplicate/{blockId}` zu vermeiden
+- Frontend (BlockTypeService.ts) entsprechend angepasst
 - Erstellt eine Deep Copy der publicData via ObjectMapper
 - Setzt die neue ID im kopierten BlockType
 - Fügt " (Copy)" zur Description hinzu
@@ -82,13 +95,20 @@ POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}/{newBlockId}
 
 ### Request
 ```http
-POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}/{newBlockId}
+POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}
 Content-Type: application/json
+
+{
+  "newBlockId": "w/456"
+}
 ```
 
 **Beispiel:**
 ```
-POST /api/worlds/main/blocktypes/duplicate/w/123/w/456
+POST /api/worlds/main/blocktypes/duplicate/w/123
+{
+  "newBlockId": "w/456"
+}
 ```
 
 ### Response (Success)
@@ -241,11 +261,13 @@ newPublicData.setDescription(originalDescription + " (Copy)");
 
 ## Architektur-Entscheidungen
 
-1. **Endpoint-Design: POST /duplicate/{source}/{new}**
+1. **Endpoint-Design: POST /duplicate/{sourceBlockId} mit Body**
    - RESTful: Ressourcen-orientiert
-   - Klare Intention durch "duplicate" im Pfad
-   - Beide IDs im Pfad (nicht im Body)
+   - "duplicate" zuerst im Pfad (Spring-Limitierung: {*...} muss am Ende sein)
+   - Source ID im Pfad mit {*...} Wildcard (am Ende)
+   - New ID im Body
    - POST weil neue Ressource erstellt wird
+   - Klare Intention durch "duplicate" im Pfad
 
 2. **Deep Copy via ObjectMapper**
    - Keine JSON-String-Manipulation

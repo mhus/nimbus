@@ -519,13 +519,16 @@ const handleDuplicate = async () => {
   try {
     const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
     const sourceBlockId = props.blockType.id;
-    const url = `${apiUrl}/api/worlds/${props.worldId}/blocktypes/duplicate/${encodeURIComponent(sourceBlockId)}/${encodeURIComponent(newBlockTypeId.value)}`;
+    const url = `${apiUrl}/api/worlds/${props.worldId}/blocktypes/duplicate/${encodeURIComponent(sourceBlockId)}`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        newBlockId: newBlockTypeId.value,
+      }),
     });
 
     if (!response.ok) {
