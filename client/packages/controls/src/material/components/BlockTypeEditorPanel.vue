@@ -129,12 +129,26 @@
 
               <!-- Actions -->
               <div class="mt-6 flex justify-between gap-2">
-                <button class="btn btn-outline btn-sm" @click="showJsonEditor = true">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                  </svg>
-                  Source
-                </button>
+                <div class="flex gap-2">
+                  <button class="btn btn-outline btn-sm" @click="showJsonEditor = true">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    Source
+                  </button>
+                  <button
+                    v-if="!isCreate"
+                    class="btn btn-outline btn-sm btn-info"
+                    @click="openDuplicateDialog"
+                    :disabled="saving"
+                    title="Save a copy with a new ID"
+                  >
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Save as Copy
+                  </button>
+                </div>
                 <div class="flex gap-2">
                   <button class="btn btn-ghost" @click="emit('close')">
                     Cancel
@@ -158,6 +172,62 @@
     :model-value="formData"
     @apply="handleJsonApply"
   />
+
+  <!-- Duplicate BlockType Dialog -->
+  <Dialog v-if="showDuplicateDialog" as="div" class="relative z-50" @close="closeDuplicateDialog">
+    <div class="fixed inset-0 bg-black bg-opacity-25" />
+    <div class="fixed inset-0 overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4">
+        <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
+          <DialogTitle class="text-lg font-bold mb-4">
+            Save as Copy
+          </DialogTitle>
+
+          <p class="text-sm text-base-content/70 mb-4">
+            Create a copy of this BlockType with a new ID.
+          </p>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">New BlockType ID</span>
+              <span class="label-text-alt text-error" v-if="!newBlockTypeId">Required</span>
+            </label>
+            <input
+              v-model="newBlockTypeId"
+              type="text"
+              class="input input-bordered"
+              placeholder="e.g., custom:my-block or w/123"
+              @keyup.enter="handleDuplicate"
+            />
+            <label class="label">
+              <span class="label-text-alt">Use format: group:name or group/name</span>
+            </label>
+          </div>
+
+          <div v-if="duplicateError" class="alert alert-error mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ duplicateError }}</span>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-2">
+            <button class="btn btn-ghost" @click="closeDuplicateDialog" :disabled="duplicating">
+              Cancel
+            </button>
+            <button
+              class="btn btn-primary"
+              @click="handleDuplicate"
+              :disabled="!newBlockTypeId || duplicating"
+            >
+              <span v-if="duplicating" class="loading loading-spinner loading-sm mr-2"></span>
+              {{ duplicating ? 'Duplicating...' : 'Save Copy' }}
+            </button>
+          </div>
+        </DialogPanel>
+      </div>
+    </div>
+  </Dialog>
 
   <!-- Input Dialog -->
   <InputDialog
@@ -196,6 +266,12 @@ const { createBlockType, updateBlockType, getNextAvailableId } = useBlockTypes(p
 const isCreate = computed(() => !props.blockType);
 const saving = ref(false);
 const showJsonEditor = ref(false);
+
+// Duplicate dialog state
+const showDuplicateDialog = ref(false);
+const newBlockTypeId = ref('');
+const duplicating = ref(false);
+const duplicateError = ref<string | null>(null);
 
 // Input dialog state
 const showInputDialog = ref(false);
@@ -417,5 +493,64 @@ const handleSave = async () => {
 // Handle JSON apply from JSON editor
 const handleJsonApply = (jsonData: any) => {
   formData.value = jsonData;
+};
+
+// Duplicate BlockType functionality
+const openDuplicateDialog = () => {
+  newBlockTypeId.value = '';
+  duplicateError.value = null;
+  showDuplicateDialog.value = true;
+};
+
+const closeDuplicateDialog = () => {
+  showDuplicateDialog.value = false;
+  newBlockTypeId.value = '';
+  duplicateError.value = null;
+};
+
+const handleDuplicate = async () => {
+  if (!newBlockTypeId.value || duplicating.value || !props.blockType?.id) {
+    return;
+  }
+
+  duplicating.value = true;
+  duplicateError.value = null;
+
+  try {
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const sourceBlockId = props.blockType.id;
+    const url = `${apiUrl}/api/worlds/${props.worldId}/blocktypes/duplicate/${encodeURIComponent(sourceBlockId)}/${encodeURIComponent(newBlockTypeId.value)}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      duplicateError.value = errorData.error || `Failed to duplicate BlockType: ${response.statusText}`;
+      return;
+    }
+
+    const result = await response.json();
+
+    // Close dialog
+    closeDuplicateDialog();
+
+    // Show success message
+    alert(`BlockType duplicated successfully!\n\nNew ID: ${result.blockId}\n\nThe page will reload to show the updated list.`);
+
+    // Emit saved event to refresh the list
+    emit('saved');
+
+    // Close the editor
+    emit('close');
+  } catch (err) {
+    duplicateError.value = err instanceof Error ? err.message : 'Unknown error occurred';
+  } finally {
+    duplicating.value = false;
+  }
 };
 </script>

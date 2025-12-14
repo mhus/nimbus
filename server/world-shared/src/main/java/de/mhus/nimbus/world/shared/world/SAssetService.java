@@ -150,6 +150,53 @@ public class SAssetService {
         });
     }
 
+    /**
+     * Duplicates an asset with a new path.
+     * Creates a copy of the content in storage and a new database entry.
+     */
+    @Transactional
+    public SAsset duplicateAsset(SAsset source, String newPath, String createdBy) {
+        if (source == null) throw new IllegalArgumentException("source asset required");
+        if (newPath == null || newPath.isBlank()) throw new IllegalArgumentException("newPath required");
+        if (!source.isEnabled()) throw new IllegalStateException("Source asset disabled: " + source.getId());
+
+        // Load content from source
+        InputStream sourceContent = loadContent(source);
+        if (sourceContent == null) {
+            throw new IllegalStateException("Failed to load source asset content: " + source.getId());
+        }
+
+        // Create new asset entity
+        SAsset duplicate = SAsset.builder()
+                .worldId(source.getWorldId())
+                .path(newPath)
+                .name(extractName(newPath))
+                .createdBy(createdBy)
+                .enabled(true)
+                .publicData(source.getPublicData()) // Copy metadata
+                .build();
+        duplicate.setCreatedAt(Instant.now());
+
+        // Store content in new location
+        WorldId worldId = WorldId.of(source.getWorldId())
+                .orElseThrow(() -> new IllegalStateException("Invalid worldId in source asset"));
+        StorageService.StorageInfo storageInfo = storageService.store(
+                STORAGE_SCHEMA,
+                STORAGE_SCHEMA_VERSION,
+                worldId.getId(),
+                "assets/" + newPath,
+                sourceContent
+        );
+
+        duplicate.setStorageId(storageInfo.id());
+        duplicate.setSize(storageInfo.size());
+
+        log.debug("Duplicated asset: sourcePath={}, newPath={}, size={}, storageId={}",
+                  source.getPath(), newPath, storageInfo.size(), storageInfo.id());
+
+        return repository.save(duplicate);
+    }
+
     private String extractName(String path) {
         if (path == null) return null;
         int idx = path.lastIndexOf('/');

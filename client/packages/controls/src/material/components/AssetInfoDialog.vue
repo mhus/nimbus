@@ -207,18 +207,31 @@
               </div>
 
               <!-- Actions -->
-              <div class="mt-6 flex justify-end gap-2">
-                <button class="btn btn-ghost" @click="emit('close')" :disabled="loading">
-                  Abbrechen
-                </button>
+              <div class="mt-6 flex justify-between gap-2">
                 <button
-                  class="btn btn-primary"
-                  @click="handleSave"
-                  :disabled="!localInfo.description.trim() || loading"
+                  class="btn btn-outline btn-sm btn-info"
+                  @click="openDuplicateDialog"
+                  :disabled="loading"
+                  title="Save a copy with a new path"
                 >
-                  <span v-if="loading" class="loading loading-spinner loading-sm mr-2"></span>
-                  {{ loading ? 'Speichert...' : 'Speichern' }}
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Save as Copy
                 </button>
+                <div class="flex gap-2">
+                  <button class="btn btn-ghost" @click="emit('close')" :disabled="loading">
+                    Abbrechen
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    @click="handleSave"
+                    :disabled="!localInfo.description.trim() || loading"
+                  >
+                    <span v-if="loading" class="loading loading-spinner loading-sm mr-2"></span>
+                    {{ loading ? 'Speichert...' : 'Speichern' }}
+                  </button>
+                </div>
               </div>
             </DialogPanel>
           </TransitionChild>
@@ -226,6 +239,62 @@
       </div>
     </Dialog>
   </TransitionRoot>
+
+  <!-- Duplicate Asset Dialog -->
+  <Dialog v-if="showDuplicateDialog" as="div" class="relative z-50" @close="closeDuplicateDialog">
+    <div class="fixed inset-0 bg-black bg-opacity-25" />
+    <div class="fixed inset-0 overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4">
+        <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
+          <DialogTitle class="text-lg font-bold mb-4">
+            Save as Copy
+          </DialogTitle>
+
+          <p class="text-sm text-base-content/70 mb-4">
+            Create a copy of this asset with a new path.
+          </p>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">New Path</span>
+              <span class="label-text-alt text-error" v-if="!newAssetPath">Required</span>
+            </label>
+            <input
+              v-model="newAssetPath"
+              type="text"
+              class="input input-bordered"
+              placeholder="e.g., textures/my-texture-copy.png"
+              @keyup.enter="handleDuplicate"
+            />
+            <label class="label">
+              <span class="label-text-alt">Enter the full path for the copy</span>
+            </label>
+          </div>
+
+          <div v-if="duplicateError" class="alert alert-error mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ duplicateError }}</span>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-2">
+            <button class="btn btn-ghost" @click="closeDuplicateDialog" :disabled="duplicating">
+              Cancel
+            </button>
+            <button
+              class="btn btn-primary"
+              @click="handleDuplicate"
+              :disabled="!newAssetPath || duplicating"
+            >
+              <span v-if="duplicating" class="loading loading-spinner loading-sm mr-2"></span>
+              {{ duplicating ? 'Duplicating...' : 'Save Copy' }}
+            </button>
+          </div>
+        </DialogPanel>
+      </div>
+    </div>
+  </Dialog>
 </template>
 
 <script setup lang="ts">
@@ -258,6 +327,12 @@ const customFields = reactive<Record<string, string>>({});
 const customFieldKeys = reactive<Record<string, string>>({});
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
+
+// Duplicate dialog state
+const showDuplicateDialog = ref(false);
+const newAssetPath = ref('');
+const duplicating = ref(false);
+const duplicateError = ref<string | null>(null);
 
 // Audio preview state
 const audioElement = ref<HTMLAudioElement | null>(null);
@@ -447,6 +522,75 @@ const handleSave = async () => {
     console.error('Failed to save asset info', error);
   } finally {
     loading.value = false;
+  }
+};
+
+// Duplicate Asset functionality
+const openDuplicateDialog = () => {
+  // Suggest a default path based on current path
+  const parts = props.assetPath.split('/');
+  const fileName = parts[parts.length - 1];
+  const dir = parts.slice(0, -1).join('/');
+  const fileNameParts = fileName.split('.');
+  const ext = fileNameParts.length > 1 ? '.' + fileNameParts.pop() : '';
+  const baseName = fileNameParts.join('.');
+  newAssetPath.value = dir ? `${dir}/${baseName}-copy${ext}` : `${baseName}-copy${ext}`;
+  duplicateError.value = null;
+  showDuplicateDialog.value = true;
+};
+
+const closeDuplicateDialog = () => {
+  showDuplicateDialog.value = false;
+  newAssetPath.value = '';
+  duplicateError.value = null;
+};
+
+const handleDuplicate = async () => {
+  if (!newAssetPath.value || duplicating.value) {
+    return;
+  }
+
+  duplicating.value = true;
+  duplicateError.value = null;
+
+  try {
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const url = `${apiUrl}/editor/user/asset/main/${props.worldId}/duplicate`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sourcePath: props.assetPath,
+        newPath: newAssetPath.value,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: response.statusText }));
+      duplicateError.value = errorData.error || `Failed to duplicate asset: ${response.statusText}`;
+      return;
+    }
+
+    const result = await response.json();
+
+    // Close dialog
+    closeDuplicateDialog();
+
+    // Show success message
+    alert(`Asset duplicated successfully!\n\nNew path: ${result.path}\n\nThe page will reload to show the updated list.`);
+
+    // Emit saved event to refresh the list
+    emit('saved');
+
+    // Close the info dialog
+    emit('close');
+  } catch (err) {
+    duplicateError.value = err instanceof Error ? err.message : 'Unknown error occurred';
+  } finally {
+    duplicating.value = false;
   }
 };
 </script>

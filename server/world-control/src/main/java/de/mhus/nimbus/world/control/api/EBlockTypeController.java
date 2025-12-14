@@ -39,6 +39,7 @@ import static de.mhus.nimbus.world.shared.world.BlockUtil.normalizeBlockId;
 public class EBlockTypeController extends BaseEditorController {
 
     private final WBlockTypeService blockTypeService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     // DTOs
     public record BlockTypeDto(
@@ -401,6 +402,253 @@ public class EBlockTypeController extends BaseEditorController {
 
         log.info("Deleted blocktype: blockId={}", blockId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Duplicate BlockType with a new ID.
+     * POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}/{newBlockId}
+     *
+     * Creates a copy of an existing BlockType with a new ID.
+     */
+    @PostMapping("/duplicate/{*sourceBlockId}/{*newBlockId}")
+    @Operation(summary = "Duplicate BlockType",
+               description = "Creates a copy of an existing BlockType with a new ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "BlockType duplicated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Source BlockType not found"),
+            @ApiResponse(responseCode = "409", description = "New BlockType ID already exists")
+    })
+    public ResponseEntity<?> duplicate(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Source BlockType identifier") @PathVariable String sourceBlockId,
+            @Parameter(description = "New BlockType identifier") @PathVariable String newBlockId) {
+
+        // Strip leading slash from wildcard pattern
+        if (sourceBlockId != null && sourceBlockId.startsWith("/")) {
+            sourceBlockId = sourceBlockId.substring(1);
+        }
+        if (newBlockId != null && newBlockId.startsWith("/")) {
+            newBlockId = newBlockId.substring(1);
+        }
+
+        // Extract ID from format "w/310" -> "310" or "310" -> "310"
+        if (sourceBlockId != null && sourceBlockId.contains("/")) {
+            String[] parts = sourceBlockId.split("/", 2);
+            if (parts.length == 2) {
+                sourceBlockId = parts[1];
+            }
+        }
+        if (newBlockId != null && newBlockId.contains("/")) {
+            String[] parts = newBlockId.split("/", 2);
+            if (parts.length == 2) {
+                newBlockId = parts[1];
+            }
+        }
+
+        log.debug("DUPLICATE blocktype: worldId={}, sourceBlockId={}, newBlockId={}",
+                  worldId, sourceBlockId, newBlockId);
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        validation = validateId(sourceBlockId, "sourceBlockId");
+        if (validation != null) return validation;
+
+        validation = validateId(newBlockId, "newBlockId");
+        if (validation != null) return validation;
+
+        if (sourceBlockId.equals(newBlockId)) {
+            return bad("sourceBlockId and newBlockId must be different");
+        }
+
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
+        // Check if source BlockType exists
+        Optional<WBlockType> sourceOpt = blockTypeService.findByBlockId(wid, sourceBlockId);
+        if (sourceOpt.isEmpty()) {
+            log.warn("Source BlockType not found for duplication: blockId={}", sourceBlockId);
+            return notFound("source blocktype not found");
+        }
+
+        // Check if new BlockType ID already exists
+        if (blockTypeService.findByBlockId(wid, newBlockId).isPresent()) {
+            return conflict("blocktype already exists with id: " + newBlockId);
+        }
+
+        try {
+            WBlockType source = sourceOpt.get();
+
+            // Create a deep copy of the publicData
+            BlockType sourcePublicData = source.getPublicData();
+            BlockType newPublicData = objectMapper.readValue(
+                objectMapper.writeValueAsString(sourcePublicData),
+                BlockType.class
+            );
+
+            // Set the new ID
+            newPublicData.setId(newBlockId);
+
+            // Update description to indicate it's a copy
+            String originalDescription = newPublicData.getDescription() != null
+                    ? newPublicData.getDescription()
+                    : "";
+            newPublicData.setDescription(originalDescription + " (Copy)");
+
+            // Extract blockTypeGroup from newBlockId
+            String blockTypeGroup = extractGroupFromBlockId(newBlockId);
+
+            // Save the new BlockType
+            WBlockType saved = blockTypeService.save(wid, newBlockId, newPublicData);
+
+            // Set the blockTypeGroup and enabled state
+            blockTypeService.update(wid, newBlockId, blockType -> {
+                blockType.setBlockTypeGroup(blockTypeGroup);
+                blockType.setEnabled(source.isEnabled());
+            });
+
+            // Reload to get updated entity
+            saved = blockTypeService.findByBlockId(wid, newBlockId).orElse(saved);
+
+            log.info("Duplicated blocktype: sourceBlockId={}, newBlockId={}, group={}",
+                     sourceBlockId, newBlockId, blockTypeGroup);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "blockId", saved.getBlockId(),
+                    "message", "BlockType duplicated successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to duplicate blocktype", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to duplicate blocktype: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Create BlockType from custom Block instance.
+     * POST /api/worlds/{worldId}/blocktypes/fromBlock/{blockTypeId}
+     *
+     * Converts a custom Block (JSON payload) into a BlockType template.
+     * The blockTypeId is provided in the URL path.
+     */
+    @PostMapping("/fromBlock/{*blockTypeId}")
+    @Operation(summary = "Create BlockType from custom Block",
+               description = "Converts a custom Block instance into a reusable BlockType template")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "BlockType created from Block"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "409", description = "BlockType already exists")
+    })
+    public ResponseEntity<?> createFromBlock(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "New BlockType identifier") @PathVariable String blockTypeId,
+            @RequestBody Map<String, Object> blockPayload) {
+
+        // Strip leading slash from wildcard pattern {*blockTypeId}
+        if (blockTypeId != null && blockTypeId.startsWith("/")) {
+            blockTypeId = blockTypeId.substring(1);
+        }
+
+        log.debug("CREATE blocktype from block: worldId={}, blockTypeId={}", worldId, blockTypeId);
+
+        ResponseEntity<?> validation = validateWorldId(worldId);
+        if (validation != null) return validation;
+
+        if (blank(blockTypeId)) {
+            return bad("blockTypeId required");
+        }
+
+        if (blockPayload == null || blockPayload.isEmpty()) {
+            return bad("block payload required");
+        }
+
+        Optional<WorldId> widOpt = WorldId.of(worldId);
+        if (widOpt.isEmpty()) {
+            return bad("invalid worldId");
+        }
+        WorldId wid = widOpt.get();
+
+        // Check if BlockType already exists
+        if (blockTypeService.findByBlockId(wid, blockTypeId).isPresent()) {
+            return conflict("blocktype already exists with id: " + blockTypeId);
+        }
+
+        try {
+            // Convert Block to BlockType
+            BlockType blockType = convertBlockToBlockType(blockPayload);
+
+            // Set the ID in the BlockType
+            blockType.setId(blockTypeId);
+
+            // Extract blockTypeGroup from blockTypeId (e.g., "custom" from "custom:stone" or "w" from "w/123")
+            String blockTypeGroup = extractGroupFromBlockId(blockTypeId);
+
+            // Save BlockType
+            WBlockType saved = blockTypeService.save(wid, blockTypeId, blockType);
+
+            // Set the blockTypeGroup
+            blockTypeService.update(wid, blockTypeId, bt -> {
+                bt.setBlockTypeGroup(blockTypeGroup);
+            });
+
+            // Reload to get updated entity
+            saved = blockTypeService.findByBlockId(wid, blockTypeId).orElse(saved);
+
+            log.info("Created blocktype from block: blockTypeId={}, group={}", blockTypeId, blockTypeGroup);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "blockId", saved.getBlockId(),
+                    "message", "BlockType created successfully"
+            ));
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error creating blocktype from block: {}", e.getMessage());
+            return bad(e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error creating blocktype from block", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Internal server error: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Converts a custom Block (from JSON) into a BlockType.
+     * Extracts modifiers, visibility settings, and other properties from the Block.
+     */
+    private BlockType convertBlockToBlockType(Map<String, Object> blockPayload) {
+        try {
+            // First, deserialize the blockPayload to a Block object to validate structure
+            de.mhus.nimbus.generated.types.Block block = objectMapper.convertValue(
+                    blockPayload,
+                    de.mhus.nimbus.generated.types.Block.class
+            );
+
+            // Create new BlockType from Block data
+            BlockType blockType = new BlockType();
+
+            // Set default description
+            blockType.setDescription("Custom block converted to BlockType");
+
+            // Copy modifiers - this is the main content we want to preserve
+            if (block.getModifiers() != null && !block.getModifiers().isEmpty()) {
+                blockType.setModifiers(block.getModifiers());
+            }
+
+            // Set initialStatus from Block's status if present
+            if (block.getStatus() != 0) {
+                blockType.setInitialStatus(block.getStatus());
+            }
+
+            log.debug("Converted Block to BlockType: {} modifiers",
+                     blockType.getModifiers() != null ? blockType.getModifiers().size() : 0);
+
+            return blockType;
+        } catch (Exception e) {
+            log.error("Failed to convert Block to BlockType", e);
+            throw new IllegalArgumentException("Invalid block structure: " + e.getMessage(), e);
+        }
     }
 
     // Helper methods

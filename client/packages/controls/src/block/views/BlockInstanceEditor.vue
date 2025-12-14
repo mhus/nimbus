@@ -410,6 +410,17 @@
                 </svg>
                 Source
               </button>
+              <button
+                class="btn btn-outline btn-sm btn-info"
+                @click="openSaveAsBlockTypeDialog"
+                :disabled="!isValid || saving"
+                title="Save this custom block as a new BlockType template"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Save as BlockType
+              </button>
             </div>
 
             <div class="flex gap-2">
@@ -469,6 +480,54 @@
         <button @click="handleConfirmCancel">close</button>
       </form>
     </dialog>
+
+    <!-- Save as BlockType Dialog -->
+    <dialog ref="saveAsBlockTypeDialog" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Save as BlockType</h3>
+        <p class="py-4 text-sm text-base-content/70">
+          Convert this custom block instance into a reusable BlockType template.
+        </p>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">BlockType ID</span>
+            <span class="label-text-alt text-error" v-if="!newBlockTypeId">Required</span>
+          </label>
+          <input
+            v-model="newBlockTypeId"
+            type="text"
+            class="input input-bordered"
+            placeholder="e.g., custom:my-block or w/123"
+            @keyup.enter="handleSaveAsBlockType"
+          />
+          <label class="label">
+            <span class="label-text-alt">Use format: group:name or group/name (e.g., custom:stone, w/123)</span>
+          </label>
+        </div>
+
+        <div v-if="saveAsBlockTypeError" class="alert alert-error mt-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ saveAsBlockTypeError }}</span>
+        </div>
+
+        <div class="modal-action">
+          <button class="btn" @click="closeSaveAsBlockTypeDialog" :disabled="savingAsBlockType">Cancel</button>
+          <button
+            class="btn btn-primary"
+            @click="handleSaveAsBlockType"
+            :disabled="!newBlockTypeId || savingAsBlockType"
+          >
+            {{ savingAsBlockType ? 'Saving...' : 'Save as BlockType' }}
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button @click="closeSaveAsBlockTypeDialog">close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -485,6 +544,7 @@ import OffsetsEditor from '@editors/OffsetsEditor.vue';
 import ModifierEditorDialog from '@/components/ModifierEditorDialog.vue';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
+import { saveBlockAsBlockType, getBlockTypeEditorUrl as getBlockTypeEditorUrlHelper } from './BlockInstanceEditor_SaveAsBlockType';
 
 // Parse URL parameters
 function parseBlockCoordinates(): { x: number; y: number; z: number } | null {
@@ -570,6 +630,13 @@ const confirmTitle = ref('');
 const confirmMessage = ref('');
 const confirmOkText = ref('OK');
 const confirmResolve = ref<((value: boolean) => void) | null>(null);
+
+// Save as BlockType dialog state
+const showSaveAsBlockTypeDialog = ref(false);
+const saveAsBlockTypeDialog = ref<HTMLDialogElement | null>(null);
+const newBlockTypeId = ref('');
+const savingAsBlockType = ref(false);
+const saveAsBlockTypeError = ref<string | null>(null);
 
 // Computed
 const isLoading = computed(() => {
@@ -1251,4 +1318,63 @@ const rotationY = computed({
     blockData.value.rotation.y = value;
   },
 });
+
+// Save as BlockType functionality
+function openSaveAsBlockTypeDialog() {
+  newBlockTypeId.value = '';
+  saveAsBlockTypeError.value = null;
+  saveAsBlockTypeDialog.value?.showModal();
+}
+
+function closeSaveAsBlockTypeDialog() {
+  saveAsBlockTypeDialog.value?.close();
+  newBlockTypeId.value = '';
+  saveAsBlockTypeError.value = null;
+}
+
+async function handleSaveAsBlockType() {
+  if (!newBlockTypeId.value || savingAsBlockType.value) {
+    return;
+  }
+
+  savingAsBlockType.value = true;
+  saveAsBlockTypeError.value = null;
+
+  try {
+    const result = await saveBlockAsBlockType(
+      worldId,
+      newBlockTypeId.value,
+      blockData.value
+    );
+
+    if (result.success) {
+      // Close dialog
+      closeSaveAsBlockTypeDialog();
+
+      // Show success notification with link
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('sessionId');
+      const editorUrl = getBlockTypeEditorUrlHelper(newBlockTypeId.value, worldId, sessionId || undefined);
+
+      if (isEmbedded()) {
+        sendNotification(
+          '0',
+          'BlockType Created',
+          `BlockType "${newBlockTypeId.value}" created successfully. <a href="${editorUrl}" target="_blank">Open in editor</a>`
+        );
+      } else {
+        alert(`BlockType "${newBlockTypeId.value}" created successfully!\n\nOpen editor: ${editorUrl}`);
+      }
+
+      // Optionally open in new tab
+      window.open(editorUrl, '_blank');
+    } else {
+      saveAsBlockTypeError.value = result.error || 'Failed to save BlockType';
+    }
+  } catch (err) {
+    saveAsBlockTypeError.value = err instanceof Error ? err.message : 'Unknown error occurred';
+  } finally {
+    savingAsBlockType.value = false;
+  }
+}
 </script>

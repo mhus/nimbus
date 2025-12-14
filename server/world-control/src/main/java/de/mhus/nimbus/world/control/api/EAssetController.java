@@ -154,6 +154,69 @@ public class EAssetController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Duplicate Asset with a new path.
+     * POST /editor/user/asset/{regionId}/{worldId}/duplicate
+     * Body: { "sourcePath": "...", "newPath": "..." }
+     */
+    @PostMapping("/{regionId}/{worldId}/duplicate")
+    @Operation(summary = "Asset duplizieren",
+               description = "Erstellt eine Kopie eines Assets mit einem neuen Pfad")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Asset erfolgreich dupliziert"),
+            @ApiResponse(responseCode = "400", description = "Ungültige Parameter"),
+            @ApiResponse(responseCode = "404", description = "Quell-Asset nicht gefunden"),
+            @ApiResponse(responseCode = "409", description = "Ziel-Asset existiert bereits")
+    })
+    public ResponseEntity<?> duplicate(@PathVariable String regionId,
+                                      @PathVariable String worldId,
+                                      @RequestBody Map<String, String> body) {
+        String sourcePath = normalizePath(body.get("sourcePath"));
+        String newPath = normalizePath(body.get("newPath"));
+
+        log.debug("DUPLICATE asset: regionId={}, worldId={}, sourcePath={}, newPath={}",
+                  regionId, worldId, sourcePath, newPath);
+
+        if (blank(regionId) || blank(worldId)) return bad("blank regionId or worldId");
+        if (blank(sourcePath)) return bad("sourcePath required");
+        if (blank(newPath)) return bad("newPath required");
+        if (sourcePath.equals(newPath)) return bad("sourcePath and newPath must be different");
+
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) return bad("invalid worldId");
+
+        // Check if source asset exists
+        Optional<SAsset> sourceOpt = assetService.findByPath(wid, sourcePath);
+        if (sourceOpt.isEmpty()) {
+            log.warn("Source asset not found for duplication: path={}", sourcePath);
+            return notFound("source asset not found");
+        }
+
+        // Check if new path already exists
+        if (assetService.findByPath(wid, newPath).isPresent()) {
+            return conflict("asset already exists at new path: " + newPath);
+        }
+
+        try {
+            SAsset source = sourceOpt.get();
+
+            // Duplicate the asset
+            SAsset duplicate = assetService.duplicateAsset(source, newPath, "editor");
+
+            log.info("Duplicated asset: sourcePath={}, newPath={}, size={}",
+                     sourcePath, newPath, duplicate.getSize());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "path", duplicate.getPath(),
+                    "message", "Asset duplicated successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to duplicate asset", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to duplicate asset: " + e.getMessage()));
+        }
+    }
+
     // Hilfsmethoden
     private boolean exists(String worldId, String path) {
         WorldId wid = WorldId.of(worldId).orElse(null);

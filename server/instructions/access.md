@@ -3,7 +3,7 @@
 
 ## Konzept
 
-- EntryPoitns werden später über HexGrid umgesetzt. Aktell wird der Default-Wert in WorldInfo genutzt.
+- EntryPoints werden später über HexGrid umgesetzt. Aktell wird der Default-Wert in WorldInfo genutzt.
 - Es gibt Rollen in denen der User ist und es gibt eine ActorRolle die der User gerade ausfüllt.
 - Rollen: SECTOR_ADMIN, REGION_ADMIN, WORLD_OWNER, WORLD_EDITOR, WORLD_PLAYER, WORLD_SUPPORT
 - Actor(Rolle): SUPPORT, EDITOR, PLAYER (Welt-spezifisch)
@@ -80,40 +80,6 @@ GET methode (entrypoints)
 - Retour:
   - Liste aller user names mit rollen und character names und worldIds
   - Es werden maximal 50 world eintraege zurueckgegeben
-
-```json
-[
-  {
-    "user": "string",
-    // region roles
-    "roles": [
-      "string"
-    ],
-    "worlds": [
-      {
-        "id": "string",
-        "name": "string",
-        // world roles
-        "roles": [
-          "string"
-        ],
-        "characters": [
-          {
-            "id": "string",
-            "name": "string"
-          }
-        ],
-        "entryPoints": [
-          {
-            "id": "string",
-            "name": "string"
-          }
-        ]
-      }
-    ]
-  }
-] 
-```
 
 AccessToken:
 - JWT Token wird mit region erstellt, nutze JwtService aus shared
