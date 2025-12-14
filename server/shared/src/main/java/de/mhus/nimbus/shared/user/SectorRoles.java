@@ -6,6 +6,7 @@ package de.mhus.nimbus.shared.user;
  */
 public enum SectorRoles {
     USER,
-    ADMIN
+    ADMIN,
+    PLAYER // deprecated -> use USER
 }
 

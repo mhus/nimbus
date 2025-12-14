@@ -1856,20 +1856,20 @@
     "typeAliases" : [ ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/Area.ts",
-    "imports" : [ "./Vector3" ],
+    "imports" : [ "./Vector3Int" ],
     "interfaces" : [ {
       "name" : "Area",
       "extendsList" : [ ],
       "properties" : [ {
         "name" : "a",
-        "type" : "Vector3",
+        "type" : "Vector3Int",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
       }, {
         "name" : "b",
-        "type" : "Vector3",
+        "type" : "Vector3Int",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -3703,6 +3703,39 @@
     "classes" : [ ],
     "typeAliases" : [ ]
   }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/Vector3Int.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "Vector3Int",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/ClientEntity.ts",
     "imports" : [ "./EntityData", "./Vector3", "./Rotation" ],
     "interfaces" : [ {
@@ -3792,6 +3825,32 @@
         "visibility" : null,
         "javaTypeHint" : "long",
         "comment" : "// javaType: long"
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/HexVector2.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "HexVector2",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "q",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      }, {
+        "name" : "r",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -4281,7 +4340,7 @@
     } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/World.ts",
-    "imports" : [ "./Vector3", "../scrawl/ScriptActionDefinition" ],
+    "imports" : [ "./Vector3", "../scrawl/ScriptActionDefinition", "./HexVector2", "./Area" ],
     "interfaces" : [ {
       "name" : "WorldInfo",
       "extendsList" : [ ],

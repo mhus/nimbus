@@ -342,7 +342,7 @@ export class WorldInfoCommand extends CommandHandler {
       lines.push('');
     }
 
-    // Start Area (deprecated)
+    // Entry Point
     if (worldInfo.entryPoint) {
       // entryPoint is now { area: string; grid: HexVector2 }
       const grid = worldInfo.entryPoint.grid;

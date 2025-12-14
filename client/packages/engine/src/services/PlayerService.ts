@@ -143,10 +143,13 @@ export class PlayerService {
     // Get initial state values for WALK state
     const initialStateValues = getStateValues(appContext.playerInfo, 'walk');
 
+    // Calculate initial player position from worldInfo.entryPoint.area
+    const initialPosition = this.calculateInitialPlayerPosition(appContext);
+
     // Create player entity (starts in Walk mode)
     this.playerEntity = {
       entityId: 'player',
-      position: new Vector3(0, 64, 0),
+      position: initialPosition,
       velocity: Vector3.Zero(),
       rotation: Vector3.Zero(), // Rotation in radians (x: pitch, y: yaw, z: roll)
       movementMode: 'walk' as MovementMode,
@@ -156,7 +159,7 @@ export class PlayerService {
       inWater: false, // Is in water
       autoJump: 0, // Can trigger auto-jump
       jumpRequested: false, // Jump requested this frame
-      lastBlockPos: new Vector3(0, 64, 0), // Last block position for cache invalidation
+      lastBlockPos: initialPosition.clone(), // Last block position for cache invalidation
       playerInfo: appContext.playerInfo,
 
       // Initialize fall tracking (added for FALL state detection)
@@ -1647,6 +1650,48 @@ export class PlayerService {
     this.vitals.clear();
     this.emit('vitals:changed', []);
     logger.debug('All vitals cleared');
+  }
+
+  /**
+   * Calculate initial player position from worldInfo.entryPoint.area
+   * Returns a random position within the area bounds
+   * Falls back to (0, 64, 0) if no entryPoint is defined
+   */
+  private calculateInitialPlayerPosition(appContext: AppContext): Vector3 {
+    const entryPoint = appContext.worldInfo?.entryPoint;
+
+    // Fallback to default position if no entryPoint defined
+    if (!entryPoint || !entryPoint.area) {
+      logger.info('No entryPoint.area defined in WorldInfo, using default position (0, 64, 0)');
+      return new Vector3(0, 64, 0);
+    }
+
+    const area = entryPoint.area;
+
+    // Get min and max coordinates from area
+    const minX = Math.min(area.a.x, area.b.x);
+    const maxX = Math.max(area.a.x, area.b.x);
+    const minY = Math.min(area.a.y, area.b.y);
+    const maxY = Math.max(area.a.y, area.b.y);
+    const minZ = Math.min(area.a.z, area.b.z);
+    const maxZ = Math.max(area.a.z, area.b.z);
+
+    // Generate random position within area bounds
+    const randomX = minX + Math.random() * (maxX - minX);
+    const randomY = minY + Math.random() * (maxY - minY);
+    const randomZ = minZ + Math.random() * (maxZ - minZ);
+
+    const position = new Vector3(randomX, randomY, randomZ);
+
+    logger.info('Player spawned at random position within entryPoint.area', {
+      position: { x: position.x, y: position.y, z: position.z },
+      area: {
+        min: { x: minX, y: minY, z: minZ },
+        max: { x: maxX, y: maxY, z: maxZ }
+      }
+    });
+
+    return position;
   }
 
   /**

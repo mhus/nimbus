@@ -1,6 +1,6 @@
 /*
- * Source TS: Area.ts
- * Original TS: 'interface Area'
+ * Source TS: HexVector2.ts
+ * Original TS: 'interface HexVector2'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,7 +10,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class Area {
-    private Vector3Int a;
-    private Vector3Int b;
+public class HexVector2 {
+    private int q;
+    private int r;
 }

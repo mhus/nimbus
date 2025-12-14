@@ -1,9 +1,8 @@
 /**
- * Vector3 - 3D position/offset
+ * Vector3 integer - 3D position/offset
  */
-import {Vector3} from "./Vector3";
 
-export interface Vector3Int extends Vector3 {
+export interface Vector3Int {
   x: number; // javaType: int
   y: number; // javaType: int
   z: number; // javaType: int
