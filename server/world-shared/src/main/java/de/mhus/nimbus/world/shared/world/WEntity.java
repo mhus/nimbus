@@ -16,6 +16,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * MongoDB Entity for Entity instances in the world.
@@ -54,6 +56,12 @@ public class WEntity implements Identifiable {
      * This is what gets serialized and sent to clients.
      */
     private Entity publicData;
+
+    /**
+     * List of chunks whee the entity is active.
+     */
+    @Indexed
+    private Set<String> chunks;
 
     /**
      * Reference to the EntityModel template ID.
@@ -104,7 +112,7 @@ public class WEntity implements Identifiable {
      * Behavior-specific configuration (JSON).
      * Stored as Map for flexibility.
      */
-    private java.util.Map<String, Object> behaviorConfig;
+    private Map<String, Object> behaviorConfig;
 
     private Instant createdAt;
     private Instant updatedAt;
