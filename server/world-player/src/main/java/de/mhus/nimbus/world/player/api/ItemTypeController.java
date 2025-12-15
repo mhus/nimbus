@@ -2,12 +2,14 @@ package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.ItemType;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.access.AccessUtil;
 import de.mhus.nimbus.world.shared.world.WItemType;
 import de.mhus.nimbus.world.shared.world.WItemTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,71 +29,66 @@ import java.util.Map;
 public class ItemTypeController {
 
     private final WItemTypeService service;
+    private final AccessUtil accessUtil;
 
     /**
      * Get ItemType by type.
-     * GET /player/worlds/{worldId}/itemtypes/{itemType}
+     * GET /player/world/itemtypes/{itemType}
      */
-    @GetMapping("/player/worlds/{worldId}/itemtypes/{itemType}")
+    @GetMapping("/player/world/itemtypes/{itemType}")
     @Operation(summary = "Get ItemType by type", description = "Returns ItemType template for a specific item type")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "ItemType found"),
             @ApiResponse(responseCode = "404", description = "ItemType not found")
     })
     public ResponseEntity<?> getItemType(
-            @PathVariable String worldId,
+            HttpServletRequest request,
             @PathVariable String itemType) {
 
-        log.debug("GET itemType: worldId={}, itemType={}", worldId, itemType);
+        var worldId = accessUtil.getWorldId(request).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
 
-        if (worldId == null || worldId.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "worldId is required"));
-        }
+        log.debug("GET itemType: worldId={}, itemType={}", worldId, itemType);
 
         if (itemType == null || itemType.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "itemType is required"));
         }
 
-        return WorldId.of(worldId)
-                .map(wid -> service.findByItemType(wid, itemType)
+        return service.findByItemType(worldId, itemType)
                         .map(WItemType::getPublicData)
                         .map(ResponseEntity::ok)
                         .orElseGet(() -> {
                             log.warn("ItemType not found: worldId={}, itemType={}", worldId, itemType);
                             return ResponseEntity.notFound().build();
-                        }))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+                        });
     }
 
     /**
      * Get all ItemTypes for a world.
      * GET /player/worlds/{worldId}/itemtypes
      */
-    @GetMapping("/player/worlds/{worldId}/itemtypes")
-    @Operation(summary = "Get all ItemTypes", description = "Returns all enabled ItemType templates for a world")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of ItemTypes")
-    })
-    public ResponseEntity<?> getAllItemTypes(@PathVariable String worldId) {
-
-        log.debug("GET all itemTypes: worldId={}", worldId);
-
-        if (worldId == null || worldId.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "worldId is required"));
-        }
-
-        return WorldId.of(worldId)
-                .<ResponseEntity<?>>map(wid -> {
-                    List<ItemType> itemTypes = service.findByWorldId(wid).stream()
-                            .filter(WItemType::isEnabled)
-                            .map(WItemType::getPublicData)
-                            .toList();
-
-                    return ResponseEntity.ok(Map.of(
-                            "itemTypes", itemTypes,
-                            "count", itemTypes.size()
-                    ));
-                })
-                .orElseGet(() -> ResponseEntity.badRequest().build());
-    }
+//    @Deprecated
+//    @GetMapping("/player/world/itemtypes")
+//    @Operation(summary = "Get all ItemTypes", description = "Returns all enabled ItemType templates for a world")
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "List of ItemTypes")
+//    })
+//    public ResponseEntity<?> getAllItemTypes(HttpServletRequest request) {
+//
+//        var worldId = accessUtil.getWorldId(request).orElseThrow(
+//                () -> new IllegalStateException("World ID not found in request")
+//        );
+//
+//        log.debug("GET all itemTypes: worldId={}", worldId);
+//
+//        List<ItemType> itemTypes = service.findByWorldId(worldId).stream()
+//                .filter(WItemType::isEnabled)
+//                .map(WItemType::getPublicData)
+//                .toList();
+//
+//        return ResponseEntity.ok(Map.of(
+//                "itemTypes", itemTypes,
+//                "count", itemTypes.size()));
+//    }
 }

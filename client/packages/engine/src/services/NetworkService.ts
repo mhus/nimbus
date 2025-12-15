@@ -642,7 +642,7 @@ export class NetworkService {
    */
   getItemTypeUrl(type: string): string {
     const worldId = this.appContext.worldInfo?.worldId;
-    return `${this.apiUrl}/player/worlds/${worldId}/itemtypes/${type}`;
+    return `${this.apiUrl}/player/world/itemtypes/${type}`;
   }
 
   /**
@@ -698,7 +698,7 @@ export class NetworkService {
   getEntityModelUrl(entityTypeId: string): string {
     const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/player/worlds/${worldId}/entitymodel/${entityTypeId}?t=${timestamp}`;
+    return `${this.apiUrl}/player/world/entitymodel/${entityTypeId}?t=${timestamp}`;
   }
 
   /**
@@ -710,7 +710,7 @@ export class NetworkService {
   getBackdropUrl(backdropTypeId: string): string {
     const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/player/worlds/${worldId}/backdrop/${backdropTypeId}?t=${timestamp}`;
+    return `${this.apiUrl}/player/world/backdrop/${backdropTypeId}?t=${timestamp}`;
   }
 
   /**
@@ -722,7 +722,7 @@ export class NetworkService {
   getEntityUrl(entityId: string): string {
     const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/player/worlds/${worldId}/entity/${entityId}?t=${timestamp}`;
+    return `${this.apiUrl}/player/world/entity/${entityId}?t=${timestamp}`;
   }
 
   /**
@@ -736,7 +736,7 @@ export class NetworkService {
   getBlockTypesRangeUrl(from: number, to: number): string {
     const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/player/worlds/${worldId}/blocktypes/${from}/${to}?t=${timestamp}`;
+    return `${this.apiUrl}/player/world/blocktypes/${from}/${to}?t=${timestamp}`;
   }
 
   /**
@@ -748,7 +748,7 @@ export class NetworkService {
   getBlockTypesChunkUrl(groupName: string): string {
     const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/player/worlds/${worldId}/blocktypeschunk/${groupName}?t=${timestamp}`;
+    return `${this.apiUrl}/player/world/blocktypeschunk/${groupName}?t=${timestamp}`;
   }
 
   /**

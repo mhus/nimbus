@@ -94,9 +94,8 @@ public class LoginHandler implements MessageHandler {
                     player.get().user().getDevelopmentPassword())
             ) {
                 var newSessionId = wSessionService.create(
-                        worldId.get().toString(),
-                        player.get().character().getPublicData().getPlayerId(),
-                        null
+                        worldId.get(),
+                        PlayerId.of(player.get().character().getPublicData().getPlayerId()).get()
                 ).getId();
                 sessionManager.authenticateSession(session, newSessionId, worldId.get(), player.get(), clientType);
             }

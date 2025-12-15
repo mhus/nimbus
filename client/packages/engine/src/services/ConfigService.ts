@@ -62,7 +62,7 @@ export class ConfigService {
       // Get worldId from parameter, config, or default to 'main'
       const targetWorldId = worldId || this.appContext.config?.worldId;
       const apiUrl = this.appContext.config?.apiUrl;
-      const url = `${apiUrl}/player/worlds/${targetWorldId}/config?client=${clientType}&t=${Date.now()}`;
+      const url = `${apiUrl}/player/world/config?client=${clientType}&t=${Date.now()}`;
 
       logger.debug('Loading configuration from REST API', { url, clientType });
 
@@ -178,7 +178,7 @@ export class ConfigService {
   async loadWorldInfo(worldId?: string): Promise<WorldInfo> {
     const targetWorldId = worldId || this.appContext.config?.worldId;
     const apiUrl = this.appContext.config?.apiUrl;
-    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/worldinfo?t=${Date.now()}`;
+    const url = `${apiUrl}/player/world/config/worldinfo?t=${Date.now()}`;
 
     const response = await fetch(url, {
       credentials: 'include',
@@ -243,7 +243,7 @@ export class ConfigService {
   async loadPlayerInfo(worldId?: string): Promise<PlayerInfo> {
     const targetWorldId = worldId || this.appContext.config?.worldId;
     const apiUrl = this.appContext.config?.apiUrl;
-    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/playerinfo`;
+    const url = `${apiUrl}/player/world/config/playerinfo`;
 
     const response = await fetch(url, {
       credentials: 'include',
@@ -267,7 +267,7 @@ export class ConfigService {
   async loadPlayerBackpack(worldId?: string): Promise<PlayerBackpack> {
     const targetWorldId = worldId || this.appContext.config?.worldId;
     const apiUrl = this.appContext.config?.apiUrl;
-    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/playerbackpack`;
+    const url = `${apiUrl}/player/world/config/playerbackpack`;
 
     const response = await fetch(url, {
       credentials: 'include',
@@ -290,7 +290,7 @@ export class ConfigService {
   async loadSettings(clientType: 'viewer' | 'editor' = 'viewer', worldId?: string): Promise<Settings> {
     const targetWorldId = worldId || this.appContext.config?.worldId;
     const apiUrl = this.appContext.config?.apiUrl;
-    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/settings?client=${clientType}`;
+    const url = `${apiUrl}/player/world/config/settings?client=${clientType}`;
 
     const response = await fetch(url, {
       credentials: 'include',

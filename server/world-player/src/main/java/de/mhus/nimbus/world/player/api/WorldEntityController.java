@@ -6,12 +6,14 @@ import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.service.PlayerService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.ws.SessionManager;
+import de.mhus.nimbus.world.shared.access.AccessUtil;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
  * 2. Database (for persistent NPC entities)
  */
 @RestController
-@RequestMapping("/player/worlds")
+@RequestMapping("/player/world")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "World Entities", description = "Entity instances (alternative URL pattern)")
@@ -35,6 +37,7 @@ public class WorldEntityController {
     private final WEntityService service;
     private final SessionManager sessionManager;
     private final PlayerService playerService;
+    private final AccessUtil accessUtil;
 
     /**
      * Get entity by ID.
@@ -44,17 +47,20 @@ public class WorldEntityController {
      * 1. Player entities in active sessions (entityId starts with "@")
      * 2. Persistent NPC entities in database
      */
-    @GetMapping("/{worldId}/entity/{entityId}")
+    @GetMapping("/entity/{entityId}")
     @Operation(summary = "Get Entity by ID", description = "Returns Entity instance for a specific entity (player or NPC)")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Entity found"),
             @ApiResponse(responseCode = "404", description = "Entity not found")
     })
     public ResponseEntity<Entity> getEntity(
-            @PathVariable String worldId,
+            HttpServletRequest request,
             @PathVariable String entityId) {
+        var worldId = accessUtil.getWorldId(request).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
 
-        log.debug("GET /player/worlds/{}/entity/{}", worldId, entityId);
+        log.debug("GET /player/world/entity/{}", worldId, entityId);
 
         // Check if this is a player entity (starts with "@")
         if (entityId.startsWith("@")) {
@@ -69,15 +75,13 @@ public class WorldEntityController {
         }
 
         // Not a player entity or not found in sessions - search database
-        return WorldId.of(worldId)
-                .map(wid -> service.findByWorldIdAndEntityId(wid, entityId)
+        return service.findByWorldIdAndEntityId(worldId, entityId)
                         .map(WEntity::getPublicData)
                         .map(ResponseEntity::ok)
                         .orElseGet(() -> {
                             log.debug("Entity not found: worldId={}, entityId={}", worldId, entityId);
                             return ResponseEntity.notFound().build();
-                        }))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+                        });
     }
 
 }

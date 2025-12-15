@@ -4,12 +4,14 @@ import de.mhus.nimbus.generated.types.Entity;
 import de.mhus.nimbus.shared.types.PlayerId;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.service.PlayerService;
+import de.mhus.nimbus.world.shared.access.AccessUtil;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
@@ -32,16 +34,20 @@ public class EntityController {
 
     private final WEntityService service;
     private final PlayerService playerService;
+    private final AccessUtil accessUtil;
 
-    @GetMapping("/{worldId}/{entityId}")
+    @GetMapping("/{entityId}")
     @Operation(summary = "Get Entity by world and entity ID", description = "Returns Entity instance for a specific entity in a world")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Entity found"),
             @ApiResponse(responseCode = "404", description = "Entity not found")
     })
     public ResponseEntity<?> getEntity(
-            @PathVariable String worldId,
+            HttpServletRequest request,
             @PathVariable String entityId) {
+        var worldId = accessUtil.getWorldId(request).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
 
         if (Strings.isBlank(entityId)) {
             return ResponseEntity.badRequest().body("entityId is required");
@@ -57,12 +63,10 @@ public class EntityController {
                     .orElseGet(() -> ResponseEntity.notFound().build());
         }
 
-        return WorldId.of(worldId)
-                .map(wid -> service.findByWorldIdAndEntityId(wid, entityId)
+        return service.findByWorldIdAndEntityId(worldId, entityId)
                         .map(WEntity::getPublicData)
                         .map(ResponseEntity::ok)
-                        .orElseGet(() -> ResponseEntity.notFound().build()))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+                        .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 }

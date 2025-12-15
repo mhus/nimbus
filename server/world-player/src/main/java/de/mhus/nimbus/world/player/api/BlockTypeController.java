@@ -2,12 +2,14 @@ package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.BlockType;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.access.AccessUtil;
 import de.mhus.nimbus.world.shared.world.WBlockType;
 import de.mhus.nimbus.world.shared.world.WBlockTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,13 +23,14 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/player/worlds/{worldId}")
+@RequestMapping("/player/world")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "BlockTypes", description = "BlockType templates for rendering blocks")
 public class BlockTypeController {
 
     private final WBlockTypeService service;
+    private final AccessUtil accessUtil;
 
     /**
      * GET /player/worlds/{worldId}/blocktypeschunk/{groupName}
@@ -40,8 +43,12 @@ public class BlockTypeController {
             @ApiResponse(responseCode = "400", description = "Invalid group name")
     })
     public ResponseEntity<?> getBlockTypesByGroup(
-            @PathVariable String worldId,
+            HttpServletRequest request,
             @PathVariable String groupName) {
+
+        var worldId = accessUtil.getWorldId(request).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
 
         // Validate group name (only a-z0-9_- allowed)
         if (!groupName.matches("^[a-z0-9_-]+$")) {
@@ -49,19 +56,15 @@ public class BlockTypeController {
                     .body(Map.of("error", "Invalid group name. Only lowercase letters, numbers, hyphens and underscores allowed."));
         }
 
-        return WorldId.of(worldId)
-                .<ResponseEntity<?>>map(wid -> {
-                    List<BlockType> blockTypes = service.findByBlockTypeGroup(wid, groupName).stream()
-                            .filter(WBlockType::isEnabled)
-                            .map(WBlockType::getPublicData)
-                            .toList();
+        List<BlockType> blockTypes = service.findByBlockTypeGroup(worldId, groupName).stream()
+        .filter(WBlockType::isEnabled)
+        .map(WBlockType::getPublicData)
+        .toList();
 
-                    log.debug("Returning {} BlockTypes for group: {}", blockTypes.size(), groupName);
+        log.debug("Returning {} BlockTypes for group: {}", blockTypes.size(), groupName);
 
-                    return ResponseEntity.ok(blockTypes);
-                })
-                .orElseGet(() -> ResponseEntity.badRequest().body(Map.of("error", "Invalid worldId")));
-    }
+        return ResponseEntity.ok(blockTypes);
+        }
 
     /**
      * GET /player/worlds/{worldId}/blocktypes/{blockId}
@@ -74,8 +77,12 @@ public class BlockTypeController {
             @ApiResponse(responseCode = "404", description = "BlockType not found")
     })
     public ResponseEntity<?> getBlockType(
-            @PathVariable String worldId,
+            HttpServletRequest request,
             @PathVariable String blockId) {
+
+        var worldId = accessUtil.getWorldId(request).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
 
         // Strip leading slash from wildcard pattern {*blockId}
         if (blockId != null && blockId.startsWith("/")) {
@@ -93,15 +100,13 @@ public class BlockTypeController {
         final String finalBlockId = blockId;
         log.debug("GET blocktype: blockId={}, worldId={}", finalBlockId, worldId);
 
-        return WorldId.of(worldId)
-                .map(wid -> service.findByBlockId(wid, finalBlockId)
+        return service.findByBlockId(worldId, finalBlockId)
                         .map(WBlockType::getPublicData)
                         .map(ResponseEntity::ok)
                         .orElseGet(() -> {
                             log.warn("BlockType not found: blockId={}", finalBlockId);
                             return ResponseEntity.notFound().build();
-                        }))
-                .orElseGet(() -> ResponseEntity.badRequest().build());
+                        });
     }
 
 }

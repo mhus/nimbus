@@ -6,6 +6,7 @@ import de.mhus.nimbus.generated.types.Entity;
 import de.mhus.nimbus.shared.types.PlayerCharacter;
 import de.mhus.nimbus.shared.types.PlayerData;
 import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.session.SessionPingConsumer;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
@@ -73,14 +74,9 @@ public class PlayerService implements SessionPingConsumer {
         return ACTION.NONE;
     }
 
-    public Optional<Entity> getPlayerAsEntity(PlayerId playerId, String worldId) {
+    public Optional<Entity> getPlayerAsEntity(PlayerId playerId, WorldId worldId) {
         // Extract regionId from worldId
-        var worldIdObj = de.mhus.nimbus.shared.types.WorldId.of(worldId);
-        if (worldIdObj.isEmpty()) {
-            log.warn("Invalid worldId: {}", worldId);
-            return Optional.empty();
-        }
-        String regionId = worldIdObj.get().getRegionId();
+        String regionId = worldId.getRegionId();
 
         var playerX = getPlayer(playerId, ClientType.WEB, regionId);
         if (playerX.isEmpty()) return Optional.empty();
