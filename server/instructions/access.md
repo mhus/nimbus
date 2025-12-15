@@ -140,8 +140,115 @@ In world-player und world-control entsprechende Ableitungen PlayerAccessFilter u
 - Gib eine info-seite aus mit einem Link auf den login (AccessProperties.loginUrl).
 - Die freigaben sollen durch eine abstrakte methode in AccessFilterBase abgefragt werden.
 
-[ ] Zugriff auf rest endpunkte mit Annotations. 
- 
+[?] Zugriff auf rest endpunkte mit Annotations. 
+Da die AccessToken daten im request sind, koennen sie aus dem Request geholt werden.
+Es soll erstmal ein AccessUtil geben mit methoden wie:
+- hasRole(Request request, SectorRoles role): boolean
+- hasRole(Request request, WorldRoles role): boolean
+- isWorldOwner(Request request): boolean
+- isWorldEditor(Request request): boolean
+- isWorldPlayer(Request request): boolean
+- isWorldInstance(Request request): boolean (WordlId.isInstance)
+- isWorldZone(Request request): boolean (WorldId.isZone)
+- isWorldBranch(Request request): boolean (WorldId.isBranch)
+- isWorldCollection(Request request): boolean (WorldId.isCollection)
+- isWorldSet(Request request): boolean
+- getWorldId(Request request): WorldId
+- getUserId(Request request): UserId
+- getCharacterId(Request request): CharacterId
+- getPlayerId(Request request): PlayerId
+- isAgent(Request request): boolean
+- getSessionId(Request request): String
+- hasSession(Request request): boolean
+
+Darauf aufbauend koennen dann Annotations erstellt werden wie:
+- @RequireWorldRole(WorldRoles role)
+- @RequireSectorRole(SectorRoles role)
+- @RequireAgent
+- @RequireSession
+- @RequireWorldInNotInstance // spezial for this case
+Die annotations sollen an Rest endpoints angebracht werden koennen.
+
+```text
+  Zusammenfassung: Access Control Annotations
+
+  Ich habe erfolgreich ein vollständiges System für Zugriffskontrolle via Annotations auf REST-Endpunkten in world-shared erstellt:
+
+  1. AccessUtil (world-shared/src/main/java/de/mhus/nimbus/world/shared/access/AccessUtil.java)
+
+  Utility-Klasse mit Methoden zum Prüfen von:
+  - Authentication Status: isAuthenticated(), isAgent(), hasSession()
+  - User Information: getUserId(), getCharacterId(), getPlayerId(), getSessionId()
+  - World Information: getWorldId(), isWorldInstance(), isWorldZone(), isWorldBranch(), isWorldCollection(), isWorldSet()
+  - Role Checks: hasSectorRole(), hasWorldRole(), isWorldOwner(), isWorldEditor(), isWorldPlayer()
+
+  Alle Daten werden aus den Request-Attributen gelesen, die vom AccessFilterBase gesetzt wurden.
+
+  2. Annotations
+
+  5 Annotations für deklarative Zugriffskontrolle:
+
+  - @RequireWorldRole(WorldRoles role) - Erfordert eine bestimmte World-Rolle (PLAYER, EDITOR, OWNER, SUPPORT)
+  - @RequireSectorRole(SectorRoles role) - Erfordert eine bestimmte Sector-Rolle (USER, ADMIN)
+  - @RequireAgent - Erfordert Agent-Authentifizierung (nicht-session-basiert)
+  - @RequireSession - Erfordert Session-Authentifizierung (mit Character)
+  - @RequireWorldIsNotInstance - Erlaubt Zugriff nur auf Nicht-Instance-Welten
+
+  3. AccessControlAspect (world-shared/src/main/java/de/mhus/nimbus/world/shared/access/AccessControlAspect.java)
+
+  Spring AOP Aspect der:
+  - Alle REST-Endpunkte (@GetMapping, @PostMapping, etc.) abfängt
+  - Class-Level und Method-Level Annotations prüft
+  - Bei fehlender Berechtigung HTTP 403 Forbidden zurückgibt
+  - Detaillierte Logs für Debugging erstellt
+
+  4. Dependency: Spring Boot Starter AOP hinzugefügt in pom.xml
+
+  Verwendungsbeispiele:
+
+  // Nur für World-Editoren
+  @RequireWorldRole(WorldRoles.EDITOR)
+  @GetMapping("/world/config")
+  public ResponseEntity<?> getConfig() {
+      // ...
+  }
+
+  // Nur für Sector-Admins
+  @RequireSectorRole(SectorRoles.ADMIN)
+  @PostMapping("/sector/settings")
+  public ResponseEntity<?> updateSettings() {
+      // ...
+  }
+
+  // Nur für Session-basierte Authentifizierung
+  @RequireSession
+  @PostMapping("/player/action")
+  public ResponseEntity<?> playerAction() {
+      // ...
+  }
+
+  // Nicht auf Instance-Welten erlaubt
+  @RequireWorldIsNotInstance
+  @PutMapping("/world/structure")
+  public ResponseEntity<?> updateStructure() {
+      // ...
+  }
+
+  // Kombiniert: Class-Level + Method-Level
+  @RestController
+  @RequireSession  // Gilt für alle Methoden
+  public class PlayerController {
+
+      @RequireWorldRole(WorldRoles.PLAYER)  // Zusätzlich für diese Methode
+      @PostMapping("/move")
+      public ResponseEntity<?> move() {
+          // ...
+      }
+  }
+```
+Erstelle das in world-shared im package access.
+
+
 ## Inner Server Comunikation
 
 [?] Wenn dei server untereinander kommunizieren via rest requests, dann muss der access token als bearer token im authorization header mitgegeben werden.
@@ -181,12 +288,12 @@ In world-player und world-control entsprechende Ableitungen PlayerAccessFilter u
 
 ## Logout
 
-[ ] Fuege in world-control /control/aaa/status POST methode hinzu, die gibt nur die aktuellen daten aus dem sessionToken zurueck und die urls und die logoutUrl (AccessProperties.logoutUrl)
+[?] Fuege in world-control /control/aaa/status POST methode hinzu, die gibt nur die aktuellen daten aus dem sessionToken zurueck und die urls und die logoutUrl (AccessProperties.logoutUrl)
 - Siehe dazu auch devLogin
-[ ] Fuege in die bestehende routen /control/aaa/authorize und /player/aaa/authorize eine DELETE methode hinzu. Sie soll die sessionId aus dem httpOnly entfernen.
+[?] Fuege in die bestehende routen /control/aaa/authorize und /player/aaa/authorize eine DELETE methode hinzu. Sie soll die sessionId aus dem httpOnly entfernen.
 - In /player/aaa/logout: Falls es ein SessionToken ist, soll die ession im redis mit SessionService auf CLOSED gesetzt werden.
 
-[ ] Fuege in ../client/packages/controls einen logout.html control hinzu. Der holt sich die urls, macht den DELETE auf alle urls 
+[?] Fuege in ../client/packages/controls einen logout.html control hinzu. Der holt sich die urls, macht den DELETE auf alle urls 
 und leitet auf die login seite weiter.
 
 ---
