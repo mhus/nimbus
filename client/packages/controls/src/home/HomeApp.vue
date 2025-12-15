@@ -45,6 +45,14 @@
                 <span class="font-mono text-xs">{{ authStatus.sessionId.substring(0, 20) }}...</span>
               </div>
             </div>
+
+            <!-- Not Authenticated Info -->
+            <div v-else-if="authStatus && !authStatus.authenticated" class="text-yellow-100 text-sm mt-3 flex items-center gap-2 bg-yellow-600 bg-opacity-30 px-3 py-2 rounded">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="font-semibold">Not authenticated - Please log in to access editors</span>
+            </div>
           </div>
           <div class="flex gap-2">
             <a href="./dev-login.html" class="p-2 rounded bg-blue-700 hover:bg-blue-800 transition-colors" title="Login">
@@ -268,7 +276,7 @@ const editorRoleMap: Record<string, string[]> = {
   'USER_EDITOR': ['SECTOR_ADMIN'],
   'CHARACTER_EDITOR': ['SECTOR_ADMIN'],
   'WORLD_EDITOR': ['SECTOR_ADMIN'],
-  'ENTITY_EDITOR': ['ENTITY_EDITOR', 'WORLD_EDITOR'],
+  'ENTITY_EDITOR': ['SECTOR_ADMIN', 'WORLD_EDITOR'],
   'ENTITYMODEL_EDITOR': ['SECTOR_ADMIN', 'ENTITYMODEL_EDITOR', 'WORLD_EDITOR'],
   'BACKDROP_EDITOR': ['SECTOR_ADMIN', 'BACKDROP_EDITOR', 'WORLD_EDITOR'],
   'MATERIAL_EDITOR': ['SECTOR_ADMIN', 'MATERIAL_EDITOR', 'WORLD_EDITOR'],
