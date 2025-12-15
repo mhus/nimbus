@@ -78,7 +78,7 @@ export class ApiService {
    */
   getCurrentWorldId(): string {
     const params = new URLSearchParams(window.location.search);
-    return params.get('world');
+    return params.get('world') || '';
   }
 
   /**

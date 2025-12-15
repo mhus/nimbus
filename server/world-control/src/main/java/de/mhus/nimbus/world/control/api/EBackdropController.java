@@ -126,18 +126,24 @@ public class EBackdropController extends BaseEditorController {
 
         int totalCount = all.size();
 
-        // Apply pagination
-        List<Backdrop> publicDataList = all.stream()
+        // Apply pagination and include backdropId in response
+        List<Map<String, Object>> backdropList = all.stream()
                 .skip(offset)
                 .limit(limit)
-                .map(WBackdrop::getPublicData)
+                .map(backdrop -> {
+                    Map<String, Object> result = new java.util.HashMap<>();
+                    result.put("backdropId", backdrop.getBackdropId());
+                    result.put("publicData", backdrop.getPublicData());
+                    result.put("enabled", backdrop.isEnabled());
+                    return result;
+                })
                 .collect(Collectors.toList());
 
-        log.debug("Returning {} backdrops (total: {})", publicDataList.size(), totalCount);
+        log.debug("Returning {} backdrops (total: {})", backdropList.size(), totalCount);
 
-        // TypeScript compatible format (match test_server response)
+        // TypeScript compatible format with backdropId included
         return ResponseEntity.ok(Map.of(
-                "backdrops", publicDataList,
+                "backdrops", backdropList,
                 "count", totalCount,
                 "limit", limit,
                 "offset", offset

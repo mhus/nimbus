@@ -314,6 +314,14 @@ import {
   type LoginRequest
 } from './services/DevLoginService';
 
+// ===== LOCAL STORAGE KEYS =====
+const STORAGE_KEY_WORLD = 'nimbus-devlogin-world';
+const STORAGE_KEY_LOGIN_TYPE = 'nimbus-devlogin-logintype';
+const STORAGE_KEY_SESSION_USER = 'nimbus-devlogin-session-user';
+const STORAGE_KEY_CHARACTER = 'nimbus-devlogin-character';
+const STORAGE_KEY_ACTOR = 'nimbus-devlogin-actor';
+const STORAGE_KEY_AGENT_USER = 'nimbus-devlogin-agent-user';
+
 // ===== STATE =====
 
 // Worlds
@@ -367,6 +375,97 @@ const canLogin = computed(() => {
 });
 
 // ===== METHODS =====
+
+/**
+ * Save state to localStorage
+ */
+const saveToLocalStorage = () => {
+  try {
+    if (selectedWorld.value) {
+      localStorage.setItem(STORAGE_KEY_WORLD, JSON.stringify(selectedWorld.value));
+    }
+    localStorage.setItem(STORAGE_KEY_LOGIN_TYPE, loginType.value);
+
+    if (selectedSessionUser.value) {
+      localStorage.setItem(STORAGE_KEY_SESSION_USER, JSON.stringify(selectedSessionUser.value));
+    }
+    if (selectedCharacter.value) {
+      localStorage.setItem(STORAGE_KEY_CHARACTER, JSON.stringify(selectedCharacter.value));
+    }
+    if (selectedActor.value) {
+      localStorage.setItem(STORAGE_KEY_ACTOR, selectedActor.value);
+    }
+    if (selectedAgentUser.value) {
+      localStorage.setItem(STORAGE_KEY_AGENT_USER, JSON.stringify(selectedAgentUser.value));
+    }
+  } catch (e) {
+    console.error('[DevLogin] Failed to save to localStorage:', e);
+  }
+};
+
+/**
+ * Load state from localStorage
+ */
+const loadFromLocalStorage = async () => {
+  try {
+    // Load login type
+    const savedLoginType = localStorage.getItem(STORAGE_KEY_LOGIN_TYPE);
+    if (savedLoginType === 'session' || savedLoginType === 'agent') {
+      loginType.value = savedLoginType;
+    }
+
+    // Load world
+    const savedWorld = localStorage.getItem(STORAGE_KEY_WORLD);
+    if (savedWorld) {
+      const world = JSON.parse(savedWorld) as World;
+      // Verify world still exists in loaded worlds
+      const foundWorld = worlds.value.find(w => w.worldId === world.worldId);
+      if (foundWorld) {
+        selectedWorld.value = foundWorld;
+      }
+    }
+
+    // Load session user and characters
+    if (loginType.value === 'session') {
+      const savedSessionUser = localStorage.getItem(STORAGE_KEY_SESSION_USER);
+      if (savedSessionUser) {
+        selectedSessionUser.value = JSON.parse(savedSessionUser) as User;
+
+        // Load characters for this user if world is selected
+        if (selectedWorld.value && selectedSessionUser.value) {
+          await loadCharacters(selectedSessionUser.value.username, selectedWorld.value.worldId);
+
+          // Load character after characters are loaded
+          const savedCharacter = localStorage.getItem(STORAGE_KEY_CHARACTER);
+          if (savedCharacter) {
+            const character = JSON.parse(savedCharacter) as Character;
+            // Verify character still exists in loaded characters
+            const foundChar = characters.value.find(c => c.id === character.id);
+            if (foundChar) {
+              selectedCharacter.value = foundChar;
+            }
+          }
+        }
+      }
+
+      // Load actor
+      const savedActor = localStorage.getItem(STORAGE_KEY_ACTOR);
+      if (savedActor) {
+        selectedActor.value = savedActor as ActorType;
+      }
+    }
+
+    // Load agent user
+    if (loginType.value === 'agent') {
+      const savedAgentUser = localStorage.getItem(STORAGE_KEY_AGENT_USER);
+      if (savedAgentUser) {
+        selectedAgentUser.value = JSON.parse(savedAgentUser) as User;
+      }
+    }
+  } catch (e) {
+    console.error('[DevLogin] Failed to load from localStorage:', e);
+  }
+};
 
 /**
  * Handle world search (debounced)
@@ -583,6 +682,9 @@ watch(loginType, (newType) => {
   } else if (newType === 'agent' && agentUsers.value.length === 0) {
     loadAgentUsers();
   }
+
+  // Save to localStorage
+  saveToLocalStorage();
 });
 
 /**
@@ -592,6 +694,31 @@ watch(selectedWorld, (newWorld) => {
   if (newWorld && loginType.value === 'session' && sessionUsers.value.length === 0) {
     loadSessionUsers();
   }
+
+  // Save to localStorage
+  saveToLocalStorage();
+});
+
+/**
+ * Watch and save session selections
+ */
+watch(selectedSessionUser, () => {
+  saveToLocalStorage();
+});
+
+watch(selectedCharacter, () => {
+  saveToLocalStorage();
+});
+
+watch(selectedActor, () => {
+  saveToLocalStorage();
+});
+
+/**
+ * Watch and save agent selections
+ */
+watch(selectedAgentUser, () => {
+  saveToLocalStorage();
 });
 
 // ===== LIFECYCLE =====
@@ -599,8 +726,9 @@ watch(selectedWorld, (newWorld) => {
 /**
  * Load initial data on mount
  */
-onMounted(() => {
-  loadWorlds(); // Load first 100 worlds on mount
+onMounted(async () => {
+  await loadWorlds(); // Load first 100 worlds on mount
+  await loadFromLocalStorage(); // Restore previous selections
 });
 </script>
 

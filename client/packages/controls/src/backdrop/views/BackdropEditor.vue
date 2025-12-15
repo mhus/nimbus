@@ -1,12 +1,14 @@
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <button class="btn btn-ghost gap-2" @click="handleBack">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to List
-      </button>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-ghost gap-2" @click="handleBack">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to List
+        </button>
+      </div>
       <h2 class="text-2xl font-bold">
         {{ isNew ? 'Create New Backdrop' : 'Edit Backdrop' }}
       </h2>
@@ -292,7 +294,7 @@ const backdropData = ref<any>(null);
 const publicDataJson = ref('{}');
 const showJsonEditor = ref(false);
 
-const loadBackdrop = () => {
+const loadBackdrop = async () => {
   if (isNew.value) {
     formData.value = { backdropId: '', enabled: true };
     backdropData.value = {
@@ -312,10 +314,22 @@ const loadBackdrop = () => {
     return;
   }
 
+  // Load fresh data from server
   const backdrop = props.backdrop as BackdropData;
-  formData.value = { backdropId: backdrop.backdropId, enabled: backdrop.enabled };
-  backdropData.value = backdrop.publicData || {};
-  publicDataJson.value = JSON.stringify(backdrop.publicData, null, 2);
+  if (!currentWorldId.value) {
+    error.value = 'No world selected';
+    return;
+  }
+
+  try {
+    const freshData = await backdropService.getBackdrop(currentWorldId.value, backdrop.backdropId);
+    formData.value = { backdropId: backdrop.backdropId, enabled: backdrop.enabled };
+    backdropData.value = freshData || {};
+    publicDataJson.value = JSON.stringify(freshData, null, 2);
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to load backdrop';
+    console.error('Failed to load backdrop:', e);
+  }
 };
 
 const handleSave = async () => {

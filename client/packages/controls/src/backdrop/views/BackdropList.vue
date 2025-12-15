@@ -157,11 +157,11 @@ const loadBackdrops = async () => {
       offset.value,
       pageSize.value
     );
-    backdrops.value = response.backdrops.map((publicData, index) => ({
-      backdropId: publicData.id || `backdrop-${offset.value + index}`,
-      publicData,
+    backdrops.value = response.backdrops.map((item: any, index) => ({
+      backdropId: item.backdropId || item.publicData?.id || `backdrop-${offset.value + index}`,
+      publicData: item.publicData || item,
       worldId: currentWorldId.value!,
-      enabled: true,
+      enabled: item.enabled !== undefined ? item.enabled : true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));

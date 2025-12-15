@@ -90,7 +90,7 @@ AccessToken:
 
 ## Access
 
-[ ] Erstelle in world-shared einen REST endpunkt /api/aaa/authorize
+[?] Erstelle in world-shared einen REST endpunkt /api/aaa/authorize
 - Query Parameter:
   - accessToken: string
 - retour:
@@ -117,6 +117,17 @@ AccessToken:
   - role: string
   - sessionId
   - characterId
+
+## Access Filters
+
+[ ] Erstelle in world-shared einen AccessFilterBase
+- Der Filter soll aktuell nur den sessionToken aus dem httpOnly Cookie lesen und prüfen
+- Falls es ein SessionToken ist die session pruefen
+- Ergebnisse an den HttpRequest anhaengen
+- Ausgabe im Log
+- noch nicht Zugriff verhindern
+In world-player und world-control entsprechende Ableitungen PlayerAccessFilter und ControlAccessFilter.
+
 
 ---
 
