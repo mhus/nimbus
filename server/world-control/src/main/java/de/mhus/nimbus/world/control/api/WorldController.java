@@ -18,12 +18,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for World operations.
- * Base path: /api/worlds
+ * Base path: /control/worlds
  * <p>
  * Provides access to world metadata and configuration.
  */
 @RestController
-@RequestMapping("/api/worlds")
+@RequestMapping("/control/worlds")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Worlds", description = "World metadata and configuration")
@@ -58,7 +58,7 @@ public class WorldController extends BaseEditorController {
 
     /**
      * List all worlds.
-     * GET /api/worlds
+     * GET /control/worlds
      */
     @GetMapping
     @Operation(summary = "List all worlds")
@@ -80,7 +80,7 @@ public class WorldController extends BaseEditorController {
 
     /**
      * Get single world by ID.
-     * GET /api/worlds/{worldId}
+     * GET /control/worlds/{worldId}
      */
     @GetMapping("/{worldId}")
     @Operation(summary = "Get world by ID")
@@ -109,7 +109,7 @@ public class WorldController extends BaseEditorController {
 
     /**
      * Get block info with layer metadata.
-     * GET /api/worlds/{worldId}/session/{sessionId}/block/{x}/{y}/{z}
+     * GET /control/worlds/{worldId}/session/{sessionId}/block/{x}/{y}/{z}
      */
     @GetMapping("/{worldId}/session/{sessionId}/block/{x}/{y}/{z}")
     @Operation(summary = "Get block info with layer metadata")

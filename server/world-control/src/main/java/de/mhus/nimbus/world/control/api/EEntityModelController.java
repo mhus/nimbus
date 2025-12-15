@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for EntityModel CRUD operations.
- * Base path: /api/worlds/{worldId}/entitymodels
+ * Base path: /control/worlds/{worldId}/entitymodels
  * <p>
  * EntityModels define 3D models, animations, and physics properties for entities.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/entitymodels")
+@RequestMapping("/control/worlds/{worldId}/entitymodels")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "EntityModels", description = "EntityModel template management")
@@ -55,7 +55,7 @@ public class EEntityModelController extends BaseEditorController {
 
     /**
      * Get single EntityModel by ID.
-     * GET /api/worlds/{worldId}/entitymodel/{modelId}
+     * GET /control/worlds/{worldId}/entitymodel/{modelId}
      */
     @GetMapping("/{modelId}")
     @Operation(summary = "Get EntityModel by ID")
@@ -94,7 +94,7 @@ public class EEntityModelController extends BaseEditorController {
 
     /**
      * List all EntityModels for a world with optional search filter and pagination.
-     * GET /api/worlds/{worldId}/entitymodel?query=...&offset=0&limit=50
+     * GET /control/worlds/{worldId}/entitymodel?query=...&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List all EntityModels")
@@ -151,7 +151,7 @@ public class EEntityModelController extends BaseEditorController {
 
     /**
      * Create new EntityModel.
-     * POST /api/worlds/{worldId}/entitymodel
+     * POST /control/worlds/{worldId}/entitymodel
      */
     @PostMapping
     @Operation(summary = "Create new EntityModel")
@@ -204,7 +204,7 @@ public class EEntityModelController extends BaseEditorController {
 
     /**
      * Update existing EntityModel.
-     * PUT /api/worlds/{worldId}/entitymodel/{modelId}
+     * PUT /control/worlds/{worldId}/entitymodel/{modelId}
      */
     @PutMapping("/{modelId}")
     @Operation(summary = "Update EntityModel")
@@ -256,7 +256,7 @@ public class EEntityModelController extends BaseEditorController {
 
     /**
      * Delete EntityModel.
-     * DELETE /api/worlds/{worldId}/entitymodel/{modelId}
+     * DELETE /control/worlds/{worldId}/entitymodel/{modelId}
      */
     @DeleteMapping("/{modelId}")
     @Operation(summary = "Delete EntityModel")

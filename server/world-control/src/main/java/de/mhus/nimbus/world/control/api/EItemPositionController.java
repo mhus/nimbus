@@ -24,14 +24,14 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for ItemPosition CRUD operations.
- * Base path: /api/worlds/{worldId}/item-positions
+ * Base path: /control/worlds/{worldId}/item-positions
  * <p>
  * ItemPositions are placed items in the world with position and rendering data (ItemBlockRef).
  * They reference Items but have their own position in chunks.
  * Note: universeId is not used in this context (universe/region servers are not relevant here).
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/item-positions")
+@RequestMapping("/control/worlds/{worldId}/item-positions")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "ItemPositions", description = "Item position management (placed items in world)")
@@ -59,7 +59,7 @@ public class EItemPositionController extends BaseEditorController {
 
     /**
      * Get single Item by ID.
-     * GET /api/worlds/{worldId}/items/{itemId}
+     * GET /control/worlds/{worldId}/items/{itemId}
      */
     @GetMapping("/{itemId}")
     @Operation(summary = "Get Item by ID")
@@ -99,7 +99,7 @@ public class EItemPositionController extends BaseEditorController {
 
     /**
      * List/search Items for a world with optional chunk filter and pagination.
-     * GET /api/worlds/{worldId}/items?query=...&cx=0&cz=0&offset=0&limit=50
+     * GET /control/worlds/{worldId}/items?query=...&cx=0&cz=0&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List/search Items")
@@ -174,7 +174,7 @@ public class EItemPositionController extends BaseEditorController {
 
     /**
      * Create new Item.
-     * POST /api/worlds/{worldId}/items
+     * POST /control/worlds/{worldId}/items
      */
     @PostMapping
     @Operation(summary = "Create new Item")
@@ -235,7 +235,7 @@ public class EItemPositionController extends BaseEditorController {
 
     /**
      * Update existing Item.
-     * PUT /api/worlds/{worldId}/items/{itemId}
+     * PUT /control/worlds/{worldId}/items/{itemId}
      */
     @PutMapping("/{itemId}")
     @Operation(summary = "Update Item")
@@ -306,7 +306,7 @@ public class EItemPositionController extends BaseEditorController {
 
     /**
      * Delete Item.
-     * DELETE /api/worlds/{worldId}/items/{itemId}
+     * DELETE /control/worlds/{worldId}/items/{itemId}
      */
     @DeleteMapping("/{itemId}")
     @Operation(summary = "Delete Item")

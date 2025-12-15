@@ -23,7 +23,7 @@ export class ItemApiService {
    */
   static async searchItems(query: string = '', worldId: string): Promise<ItemSearchResult[]> {
     const queryParam = query ? `?query=${encodeURIComponent(query)}` : '';
-    const url = `/api/worlds/${worldId}/items${queryParam}`;
+    const url = `/control/worlds/${worldId}/items${queryParam}`;
 
     const response = await this.apiService.get<{ items: ItemSearchResult[] }>(url);
     return response.items || [];
@@ -33,7 +33,7 @@ export class ItemApiService {
    * Get item data by ID
    */
   static async getItem(itemId: string, worldId: string): Promise<ItemData | null> {
-    const url = `/api/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
+    const url = `/control/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
 
     try {
       return await this.apiService.get<ItemData>(url);
@@ -49,7 +49,7 @@ export class ItemApiService {
    * Create a new item
    */
   static async createItem(item: ItemData, worldId: string): Promise<void> {
-    const url = `/api/worlds/${worldId}/items`;
+    const url = `/control/worlds/${worldId}/items`;
 
     await this.apiService.post(url, item);
   }
@@ -58,7 +58,7 @@ export class ItemApiService {
    * Update an existing item
    */
   static async updateItem(itemId: string, item: ItemData, worldId: string): Promise<void> {
-    const url = `/api/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
+    const url = `/control/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
 
     await this.apiService.put(url, item);
   }
@@ -67,7 +67,7 @@ export class ItemApiService {
    * Delete an item
    */
   static async deleteItem(itemId: string, worldId: string): Promise<void> {
-    const url = `/api/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
+    const url = `/control/worlds/${worldId}/item/${encodeURIComponent(itemId)}`;
 
     try {
       await this.apiService.delete(url);

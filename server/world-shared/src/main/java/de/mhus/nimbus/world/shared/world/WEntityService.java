@@ -32,11 +32,6 @@ public class WEntityService {
     }
 
     @Transactional(readOnly = true)
-    public List<WEntity> findByWorldIdAndChunk(WorldId worldId, String chunk) {
-        return repository.findByWorldIdAndChunk(worldId.getId(), chunk);
-    }
-
-    @Transactional(readOnly = true)
     public List<WEntity> findByModelId(WorldId worldId, String modelId) {
         return repository.findByWorldIdAndModelId(worldId.getId(), modelId);
     }
@@ -47,7 +42,7 @@ public class WEntityService {
     }
 
     @Transactional
-    public WEntity save(WorldId worldId, String entityId, Entity publicData, String chunk, String modelId) {
+    public WEntity save(WorldId worldId, String entityId, Entity publicData, String modelId) {
         if (worldId == null) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -62,7 +57,6 @@ public class WEntityService {
             WEntity neu = WEntity.builder()
                     .worldId(worldId.getId())
                     .entityId(entityId)
-                    .chunk(chunk)
                     .modelId(modelId)
                     .enabled(true)
                     .build();
@@ -72,7 +66,6 @@ public class WEntityService {
         });
 
         entity.setPublicData(publicData);
-        entity.setChunk(chunk);
         entity.setModelId(modelId);
         entity.touchUpdate();
 

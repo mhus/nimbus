@@ -50,7 +50,7 @@ class PresetService {
 
     try {
       const worldId = this.apiService.getCurrentWorldId();
-      const url = `${this.apiService.getBaseUrl()}/api/worlds/${worldId}/assets/scrawl/effects.json`;
+      const url = `${this.apiService.getBaseUrl()}/control/worlds/${worldId}/assets/scrawl/effects.json`;
 
       const response = await fetch(url);
       if (!response.ok) {

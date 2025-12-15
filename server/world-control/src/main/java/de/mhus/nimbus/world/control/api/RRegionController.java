@@ -16,7 +16,7 @@ import java.util.Map;
  * Provides CRUD operations and maintainer management.
  */
 @RestController
-@RequestMapping("/api/regions")
+@RequestMapping("/control/regions")
 @RequiredArgsConstructor
 public class RRegionController extends BaseEditorController {
 
@@ -34,7 +34,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * List all regions with optional filtering
-     * GET /api/region?name=...&enabled=true
+     * GET /control/region?name=...&enabled=true
      */
     @GetMapping
     public ResponseEntity<List<RegionResponse>> list(
@@ -52,7 +52,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Get region by ID
-     * GET /api/region/{regionId}
+     * GET /control/region/{regionId}
      */
     @GetMapping("/{regionId}")
     public ResponseEntity<?> get(@PathVariable String regionId) {
@@ -67,7 +67,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Create new region
-     * POST /api/region
+     * POST /control/region
      */
     @PostMapping
     public ResponseEntity<?> create(@RequestBody RegionRequest request) {
@@ -77,7 +77,7 @@ public class RRegionController extends BaseEditorController {
 
         try {
             RRegion created = regionService.create(request.name(), request.maintainers());
-            return ResponseEntity.created(URI.create("/api/region/" + created.getId()))
+            return ResponseEntity.created(URI.create("/control/region/" + created.getId()))
                     .body(toResponse(created));
         } catch (IllegalArgumentException e) {
             return bad(e.getMessage());
@@ -86,7 +86,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Update region
-     * PUT /api/region/{regionId}?enabled=true
+     * PUT /control/region/{regionId}?enabled=true
      */
     @PutMapping("/{regionId}")
     public ResponseEntity<?> update(
@@ -111,7 +111,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Delete region
-     * DELETE /api/region/{regionId}
+     * DELETE /control/region/{regionId}
      */
     @DeleteMapping("/{regionId}")
     public ResponseEntity<?> delete(@PathVariable String regionId) {
@@ -128,7 +128,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Enable region
-     * POST /api/region/{regionId}/enable
+     * POST /control/region/{regionId}/enable
      */
     @PostMapping("/{regionId}/enable")
     public ResponseEntity<?> enable(@PathVariable String regionId) {
@@ -145,7 +145,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Disable region
-     * POST /api/region/{regionId}/disable
+     * POST /control/region/{regionId}/disable
      */
     @PostMapping("/{regionId}/disable")
     public ResponseEntity<?> disable(@PathVariable String regionId) {
@@ -162,7 +162,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Add maintainer
-     * POST /api/region/{regionId}/maintainers
+     * POST /control/region/{regionId}/maintainers
      */
     @PostMapping("/{regionId}/maintainers")
     public ResponseEntity<?> addMaintainer(
@@ -186,7 +186,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * Remove maintainer
-     * DELETE /api/region/{regionId}/maintainers/{userId}
+     * DELETE /control/region/{regionId}/maintainers/{userId}
      */
     @DeleteMapping("/{regionId}/maintainers/{userId}")
     public ResponseEntity<?> removeMaintainer(
@@ -210,7 +210,7 @@ public class RRegionController extends BaseEditorController {
 
     /**
      * List maintainers
-     * GET /api/region/{regionId}/maintainers
+     * GET /control/region/{regionId}/maintainers
      */
     @GetMapping("/{regionId}/maintainers")
     public ResponseEntity<?> listMaintainers(@PathVariable String regionId) {

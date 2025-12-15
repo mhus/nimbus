@@ -31,23 +31,23 @@ class BackdropService {
     const params: any = { offset, limit };
     if (query) params.query = query;
 
-    return apiService.get<BackdropListResponse>(`/api/worlds/${worldId}/backdrops`, params);
+    return apiService.get<BackdropListResponse>(`/control/worlds/${worldId}/backdrops`, params);
   }
 
   async getBackdrop(worldId: string, backdropId: string): Promise<any> {
-    return apiService.get<any>(`/api/worlds/${worldId}/backdrops/${backdropId}`);
+    return apiService.get<any>(`/control/worlds/${worldId}/backdrops/${backdropId}`);
   }
 
   async createBackdrop(worldId: string, request: CreateBackdropRequest): Promise<any> {
-    return apiService.post<any>(`/api/worlds/${worldId}/backdrops`, request);
+    return apiService.post<any>(`/control/worlds/${worldId}/backdrops`, request);
   }
 
   async updateBackdrop(worldId: string, backdropId: string, request: UpdateBackdropRequest): Promise<any> {
-    return apiService.put<any>(`/api/worlds/${worldId}/backdrops/${backdropId}`, request);
+    return apiService.put<any>(`/control/worlds/${worldId}/backdrops/${backdropId}`, request);
   }
 
   async deleteBackdrop(worldId: string, backdropId: string): Promise<void> {
-    return apiService.delete<void>(`/api/worlds/${worldId}/backdrops/${backdropId}`);
+    return apiService.delete<void>(`/control/worlds/${worldId}/backdrops/${backdropId}`);
   }
 }
 

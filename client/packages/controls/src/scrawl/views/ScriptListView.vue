@@ -104,7 +104,7 @@ async function loadScripts() {
     // Get all .scrawl.json files from assets
     // Filter by query=scrawl to get files in scrawl/ directory
     const response = await apiService.get<{ assets: any[] }>(
-      `/api/worlds/${currentWorldId.value}/assets?query=scrawl`
+      `/control/worlds/${currentWorldId.value}/assets?query=scrawl`
     );
 
     const assets = response.assets || [];
@@ -119,7 +119,7 @@ async function loadScripts() {
     for (const asset of scrawlAssets) {
       try {
         // Fetch script content
-        const scriptUrl = `${apiService.getBaseUrl()}/api/worlds/${currentWorldId.value}/assets/${asset.path}`;
+        const scriptUrl = `${apiService.getBaseUrl()}/control/worlds/${currentWorldId.value}/assets/${asset.path}`;
         const scriptResponse = await fetch(scriptUrl);
         const script: ScrawlScript = await scriptResponse.json();
 

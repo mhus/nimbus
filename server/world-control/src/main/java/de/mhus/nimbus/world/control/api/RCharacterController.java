@@ -17,7 +17,7 @@ import java.util.Map;
  * Provides CRUD operations for characters within regions.
  */
 @RestController
-@RequestMapping("/api/regions/{regionId}/characters")
+@RequestMapping("/control/regions/{regionId}/characters")
 @RequiredArgsConstructor
 public class RCharacterController extends BaseEditorController {
 
@@ -50,7 +50,7 @@ public class RCharacterController extends BaseEditorController {
 
     /**
      * List all characters in a region
-     * GET /api/regions/{regionId}/characters?userId=... (optional)
+     * GET /control/regions/{regionId}/characters?userId=... (optional)
      * If userId is provided, filters characters by user
      * If userId is not provided, returns all characters in the region
      */
@@ -83,7 +83,7 @@ public class RCharacterController extends BaseEditorController {
 
     /**
      * Get character by ID
-     * GET /api/regions/{regionId}/character/{characterId}
+     * GET /control/regions/{regionId}/character/{characterId}
      */
     @GetMapping("/{characterId}")
     public ResponseEntity<?> get(
@@ -114,7 +114,7 @@ public class RCharacterController extends BaseEditorController {
 
     /**
      * Create new character
-     * POST /api/regions/{regionId}/character
+     * POST /control/regions/{regionId}/character
      */
     @PostMapping
     public ResponseEntity<?> create(
@@ -148,7 +148,7 @@ public class RCharacterController extends BaseEditorController {
                 characterService.updateCharater(created);
             }
 
-            return ResponseEntity.created(URI.create("/api/regions/" + regionId + "/character/" + created.getId()))
+            return ResponseEntity.created(URI.create("/control/regions/" + regionId + "/character/" + created.getId()))
                     .body(toResponse(created));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return bad(e.getMessage());
@@ -157,7 +157,7 @@ public class RCharacterController extends BaseEditorController {
 
     /**
      * Update character
-     * PUT /api/regions/{regionId}/character/{characterId}
+     * PUT /control/regions/{regionId}/character/{characterId}
      */
     @PutMapping("/{characterId}")
     public ResponseEntity<?> update(
@@ -201,7 +201,7 @@ public class RCharacterController extends BaseEditorController {
 
     /**
      * Delete character
-     * DELETE /api/regions/{regionId}/character/{characterId}
+     * DELETE /control/regions/{regionId}/character/{characterId}
      */
     @DeleteMapping("/{characterId}")
     public ResponseEntity<?> delete(
@@ -234,7 +234,7 @@ public class RCharacterController extends BaseEditorController {
 
     /**
      * Set skill level
-     * PUT /api/regions/{regionId}/character/{characterId}/skills/{skill}
+     * PUT /control/regions/{regionId}/character/{characterId}/skills/{skill}
      */
     @PutMapping("/{characterId}/skills/{skill}")
     public ResponseEntity<?> setSkill(
@@ -269,7 +269,7 @@ public class RCharacterController extends BaseEditorController {
 
     /**
      * Increment skill level
-     * POST /api/regions/{regionId}/character/{characterId}/skills/{skill}/increment
+     * POST /control/regions/{regionId}/character/{characterId}/skills/{skill}/increment
      */
     @PostMapping("/{characterId}/skills/{skill}/increment")
     public ResponseEntity<?> incrementSkill(

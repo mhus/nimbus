@@ -131,7 +131,18 @@ public class BlockUtil {
                 .build();
     }
 
-    public static String toCunkKey(Integer cx, Integer cz) {
+    public static String toCunkKey(int cx, int cz) {
         return cx + ":" + cz;
     }
+
+    public static String toCunkKey(double cx, double cz) {
+        return (int)cx + ":" + (int)cz;
+    }
+
+    public static String toCunkKey(WWorld world, Vector3 position) {
+        int cx = world.getChunkX((int)position.getX());
+        int cz = world.getChunkZ((int)position.getZ());
+        return (int)cx + ":" + (int)cz;
+    }
+
 }

@@ -16,8 +16,6 @@ public interface WEntityRepository extends MongoRepository<WEntity, String> {
 
     List<WEntity> findByWorldId(String worldId);
 
-    List<WEntity> findByWorldIdAndChunk(String worldId, String chunk);
-
     List<WEntity> findByWorldIdAndModelId(String worldId, String modelId);
 
     List<WEntity> findByWorldIdAndEnabled(String worldId, boolean enabled);

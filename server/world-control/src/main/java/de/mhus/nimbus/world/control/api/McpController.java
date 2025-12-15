@@ -29,10 +29,10 @@ import java.util.stream.Collectors;
  * MCP (Model Context Protocol) REST API Controller.
  * Provides unified access to world control operations for MCP clients.
  * <p>
- * Base path: /api/mcp
+ * Base path: /control/mcp
  */
 @RestController
-@RequestMapping("/api/mcp")
+@RequestMapping("/control/mcp")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "MCP", description = "Model Context Protocol API for world control")
@@ -51,7 +51,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Get MCP server info and available tools.
-     * GET /api/mcp
+     * GET /control/mcp
      */
     @GetMapping
     @Operation(summary = "Get MCP server info and available tools")
@@ -301,18 +301,18 @@ public class McpController extends BaseEditorController {
 
         // Add REST API endpoints info
         Map<String, String> endpoints = new HashMap<>();
-        endpoints.put("GET /api/mcp", "Get this server info");
-        endpoints.put("GET /api/mcp/sessions/{sessionId}/marked-block", "Get marked block");
-        endpoints.put("GET /api/mcp/sessions/{sessionId}/selected-block", "Get selected block");
-        endpoints.put("GET /api/mcp/worlds", "List worlds");
-        endpoints.put("GET /api/mcp/worlds/{worldId}", "Get world");
-        endpoints.put("GET /api/mcp/worlds/{worldId}/blocktypes", "Get block types");
-        endpoints.put("GET /api/mcp/worlds/{worldId}/layers", "List layers");
-        endpoints.put("GET /api/mcp/worlds/{worldId}/layers/{layerId}", "Get layer");
-        endpoints.put("POST /api/mcp/worlds/{worldId}/layers", "Create layer");
-        endpoints.put("PUT /api/mcp/worlds/{worldId}/layers/{layerId}/groups", "Update layer groups");
-        endpoints.put("GET /api/mcp/worlds/{worldId}/layers/{layerId}/blocks", "Get layer blocks");
-        endpoints.put("POST /api/mcp/worlds/{worldId}/layers/{layerId}/blocks", "Add layer blocks");
+        endpoints.put("GET /control/mcp", "Get this server info");
+        endpoints.put("GET /control/mcp/sessions/{sessionId}/marked-block", "Get marked block");
+        endpoints.put("GET /control/mcp/sessions/{sessionId}/selected-block", "Get selected block");
+        endpoints.put("GET /control/mcp/worlds", "List worlds");
+        endpoints.put("GET /control/mcp/worlds/{worldId}", "Get world");
+        endpoints.put("GET /control/mcp/worlds/{worldId}/blocktypes", "Get block types");
+        endpoints.put("GET /control/mcp/worlds/{worldId}/layers", "List layers");
+        endpoints.put("GET /control/mcp/worlds/{worldId}/layers/{layerId}", "Get layer");
+        endpoints.put("POST /control/mcp/worlds/{worldId}/layers", "Create layer");
+        endpoints.put("PUT /control/mcp/worlds/{worldId}/layers/{layerId}/groups", "Update layer groups");
+        endpoints.put("GET /control/mcp/worlds/{worldId}/layers/{layerId}/blocks", "Get layer blocks");
+        endpoints.put("POST /control/mcp/worlds/{worldId}/layers/{layerId}/blocks", "Add layer blocks");
         response.put("endpoints", endpoints);
 
         return ResponseEntity.ok(response);
@@ -333,7 +333,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Get marked block position from session.
-     * GET /api/mcp/sessions/{sessionId}/marked-block
+     * GET /control/mcp/sessions/{sessionId}/marked-block
      */
     @GetMapping("/sessions/{sessionId}/marked-block")
     @Operation(summary = "Get marked block position from session")
@@ -377,7 +377,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Get selected block position from session.
-     * GET /api/mcp/sessions/{sessionId}/selected-block
+     * GET /control/mcp/sessions/{sessionId}/selected-block
      */
     @GetMapping("/sessions/{sessionId}/selected-block")
     @Operation(summary = "Get selected block position from session")
@@ -417,7 +417,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * List all worlds.
-     * GET /api/mcp/worlds
+     * GET /control/mcp/worlds
      */
     @GetMapping("/worlds")
     @Operation(summary = "List all worlds")
@@ -440,7 +440,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Get world by ID.
-     * GET /api/mcp/worlds/{worldId}
+     * GET /control/mcp/worlds/{worldId}
      */
     @GetMapping("/worlds/{worldId}")
     @Operation(summary = "Get world by ID")
@@ -467,7 +467,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * List all layers for a world.
-     * GET /api/mcp/worlds/{worldId}/layers
+     * GET /control/mcp/worlds/{worldId}/layers
      */
     @GetMapping("/worlds/{worldId}/layers")
     @Operation(summary = "List all layers for a world")
@@ -494,7 +494,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Get layer by ID.
-     * GET /api/mcp/worlds/{worldId}/layers/{layerId}
+     * GET /control/mcp/worlds/{worldId}/layers/{layerId}
      */
     @GetMapping("/worlds/{worldId}/layers/{layerId}")
     @Operation(summary = "Get layer by ID")
@@ -525,7 +525,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Create new layer.
-     * POST /api/mcp/worlds/{worldId}/layers
+     * POST /control/mcp/worlds/{worldId}/layers
      */
     @PostMapping("/worlds/{worldId}/layers")
     @Operation(summary = "Create new layer")
@@ -586,7 +586,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Update layer groups.
-     * PUT /api/mcp/worlds/{worldId}/layers/{layerId}/groups
+     * PUT /control/mcp/worlds/{worldId}/layers/{layerId}/groups
      */
     @PutMapping("/worlds/{worldId}/layers/{layerId}/groups")
     @Operation(summary = "Update layer groups")
@@ -627,7 +627,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Get layer blocks (for MODEL layers).
-     * GET /api/mcp/worlds/{worldId}/layers/{layerId}/blocks
+     * GET /control/mcp/worlds/{worldId}/layers/{layerId}/blocks
      */
     @GetMapping("/worlds/{worldId}/layers/{layerId}/blocks")
     @Operation(summary = "Get layer blocks (MODEL layers only)")
@@ -680,7 +680,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Add blocks to layer (MODEL layers).
-     * POST /api/mcp/worlds/{worldId}/layers/{layerId}/blocks
+     * POST /control/mcp/worlds/{worldId}/layers/{layerId}/blocks
      */
     @PostMapping("/worlds/{worldId}/layers/{layerId}/blocks")
     @Operation(summary = "Add blocks to layer (MODEL layers only)")
@@ -781,7 +781,7 @@ public class McpController extends BaseEditorController {
 
     /**
      * Get block types for a world.
-     * GET /api/mcp/worlds/{worldId}/blocktypes
+     * GET /control/mcp/worlds/{worldId}/blocktypes
      */
     @GetMapping("/worlds/{worldId}/blocktypes")
     @Operation(summary = "Get block types for a world")

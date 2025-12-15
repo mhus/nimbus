@@ -32,10 +32,10 @@ export class LayerService {
     params?: LayerPagingParams
   ): Promise<LayerListResponse> {
     console.log('[LayerService] getLayers called', { worldId, params });
-    console.log('[LayerService] Request URL:', `/api/worlds/${worldId}/layers`);
+    console.log('[LayerService] Request URL:', `/control/worlds/${worldId}/layers`);
 
     const response = await apiService.get<LayerListResponse>(
-      `/api/worlds/${worldId}/layers`,
+      `/control/worlds/${worldId}/layers`,
       params
     );
     console.log('[LayerService] API response:', response);
@@ -52,7 +52,7 @@ export class LayerService {
    * Get single layer by ID
    */
   async getLayer(worldId: string, id: string): Promise<WLayer> {
-    return apiService.get<WLayer>(`/api/worlds/${worldId}/layers/${id}`);
+    return apiService.get<WLayer>(`/control/worlds/${worldId}/layers/${id}`);
   }
 
   /**
@@ -60,7 +60,7 @@ export class LayerService {
    */
   async createLayer(worldId: string, layer: Partial<WLayer>): Promise<string> {
     const response = await apiService.post<LayerCreateResponse>(
-      `/api/worlds/${worldId}/layers`,
+      `/control/worlds/${worldId}/layers`,
       layer
     );
     return response.id;
@@ -71,7 +71,7 @@ export class LayerService {
    */
   async updateLayer(worldId: string, id: string, layer: Partial<WLayer>): Promise<WLayer> {
     return apiService.put<WLayer>(
-      `/api/worlds/${worldId}/layers/${id}`,
+      `/control/worlds/${worldId}/layers/${id}`,
       layer
     );
   }
@@ -80,7 +80,7 @@ export class LayerService {
    * Delete layer
    */
   async deleteLayer(worldId: string, id: string): Promise<void> {
-    return apiService.delete<void>(`/api/worlds/${worldId}/layers/${id}`);
+    return apiService.delete<void>(`/control/worlds/${worldId}/layers/${id}`);
   }
 }
 

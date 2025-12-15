@@ -34,5 +34,5 @@ const { isEmbedded } = useModal();
 
 // Get world ID from URL or env
 const params = new URLSearchParams(window.location.search);
-const worldId = computed(() => params.get('world') || import.meta.env.VITE_WORLD_ID || 'main');
+const worldId = computed(() => params.get('world'));
 </script>

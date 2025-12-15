@@ -22,12 +22,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for Layer CRUD operations.
- * Base path: /api/worlds/{worldId}/layers
+ * Base path: /control/worlds/{worldId}/layers
  * <p>
  * Layers are used to organize and manage world content in separate overlays.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/layers")
+@RequestMapping("/control/worlds/{worldId}/layers")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Layers", description = "Layer management for world content organization")
@@ -87,7 +87,7 @@ public class ELayerController extends BaseEditorController {
 
     /**
      * Get single Layer by ID.
-     * GET /api/worlds/{worldId}/layers/{id}
+     * GET /control/worlds/{worldId}/layers/{id}
      */
     @GetMapping("/{id}")
     @Operation(summary = "Get Layer by ID")
@@ -126,7 +126,7 @@ public class ELayerController extends BaseEditorController {
 
     /**
      * List all Layers for a world with optional search filter and pagination.
-     * GET /api/worlds/{worldId}/layers?query=...&offset=0&limit=50
+     * GET /control/worlds/{worldId}/layers?query=...&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List all Layers")
@@ -182,7 +182,7 @@ public class ELayerController extends BaseEditorController {
 
     /**
      * Create new Layer.
-     * POST /api/worlds/{worldId}/layers
+     * POST /control/worlds/{worldId}/layers
      */
     @PostMapping
     @Operation(summary = "Create new Layer")
@@ -247,7 +247,7 @@ public class ELayerController extends BaseEditorController {
 
     /**
      * Update existing Layer.
-     * PUT /api/worlds/{worldId}/layers/{id}
+     * PUT /control/worlds/{worldId}/layers/{id}
      */
     @PutMapping("/{id}")
     @Operation(summary = "Update Layer")
@@ -337,7 +337,7 @@ public class ELayerController extends BaseEditorController {
 
     /**
      * Delete Layer.
-     * DELETE /api/worlds/{worldId}/layers/{id}
+     * DELETE /control/worlds/{worldId}/layers/{id}
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete Layer")

@@ -26,7 +26,7 @@ export class AssetInfoService {
   async getAssetInfo(worldId: string, assetPath: string): Promise<AssetInfo> {
     try {
       return await apiService.get<AssetInfo>(
-        `/api/worlds/${worldId}/assetinfo/${assetPath}`
+        `/control/worlds/${worldId}/assetinfo/${assetPath}`
       );
     } catch (error) {
       // If .info file doesn't exist, return empty object
@@ -43,7 +43,7 @@ export class AssetInfoService {
     }
 
     await apiService.put<void>(
-      `/api/worlds/${worldId}/assetinfo/${assetPath}`,
+      `/control/worlds/${worldId}/assetinfo/${assetPath}`,
       info
     );
   }

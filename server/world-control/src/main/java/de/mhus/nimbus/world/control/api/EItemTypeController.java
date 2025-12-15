@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for ItemType CRUD operations.
- * Base path: /api/worlds/{worldId}/itemtypes
+ * Base path: /control/worlds/{worldId}/itemtypes
  * <p>
  * ItemTypes define the properties and behavior of items in the world.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/itemtypes")
+@RequestMapping("/control/worlds/{worldId}/itemtypes")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "ItemTypes", description = "ItemType template management")
@@ -55,7 +55,7 @@ public class EItemTypeController extends BaseEditorController {
 
     /**
      * Get single ItemType by ID.
-     * GET /api/worlds/{worldId}/itemtypes/{itemType}
+     * GET /control/worlds/{worldId}/itemtypes/{itemType}
      */
     @GetMapping("/{itemType}")
     @Operation(summary = "Get ItemType by ID")
@@ -94,7 +94,7 @@ public class EItemTypeController extends BaseEditorController {
 
     /**
      * List all ItemTypes for a world with optional search filter and pagination.
-     * GET /api/worlds/{worldId}/itemtypes?query=...&offset=0&limit=50
+     * GET /control/worlds/{worldId}/itemtypes?query=...&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List all ItemTypes")
@@ -151,7 +151,7 @@ public class EItemTypeController extends BaseEditorController {
 
     /**
      * Create new ItemType.
-     * POST /api/worlds/{worldId}/itemtypes
+     * POST /control/worlds/{worldId}/itemtypes
      */
     @PostMapping
     @Operation(summary = "Create new ItemType")
@@ -204,7 +204,7 @@ public class EItemTypeController extends BaseEditorController {
 
     /**
      * Update existing ItemType.
-     * PUT /api/worlds/{worldId}/itemtypes/{itemType}
+     * PUT /control/worlds/{worldId}/itemtypes/{itemType}
      */
     @PutMapping("/{itemType}")
     @Operation(summary = "Update ItemType")
@@ -256,7 +256,7 @@ public class EItemTypeController extends BaseEditorController {
 
     /**
      * Delete ItemType.
-     * DELETE /api/worlds/{worldId}/itemtypes/{itemType}
+     * DELETE /control/worlds/{worldId}/itemtypes/{itemType}
      */
     @DeleteMapping("/{itemType}")
     @Operation(summary = "Delete ItemType")

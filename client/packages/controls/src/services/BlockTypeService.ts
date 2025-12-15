@@ -32,10 +32,10 @@ export class BlockTypeService {
     params?: BlockTypePagingParams
   ): Promise<BlockTypeListResponse> {
     console.log('[BlockTypeService] getBlockTypes called', { worldId, params });
-    console.log('[BlockTypeService] Request URL:', `/api/worlds/${worldId}/blocktypes`);
+    console.log('[BlockTypeService] Request URL:', `/control/worlds/${worldId}/blocktypes`);
 
     const response = await apiService.get<BlockTypeListResponse>(
-      `/api/worlds/${worldId}/blocktypes`,
+      `/control/worlds/${worldId}/blocktypes`,
       params
     );
     console.log('[BlockTypeService] API response:', response);
@@ -52,7 +52,7 @@ export class BlockTypeService {
    * Get single block type by ID
    */
   async getBlockType(worldId: string, id: number): Promise<BlockType> {
-    return apiService.get<BlockType>(`/api/worlds/${worldId}/blocktypes/type/${id}`);
+    return apiService.get<BlockType>(`/control/worlds/${worldId}/blocktypes/type/${id}`);
   }
 
   /**
@@ -60,7 +60,7 @@ export class BlockTypeService {
    */
   async createBlockType(worldId: string, blockType: Partial<BlockType>): Promise<number> {
     const response = await apiService.post<BlockTypeCreateResponse>(
-      `/api/worlds/${worldId}/blocktypes/type`,
+      `/control/worlds/${worldId}/blocktypes/type`,
       blockType
     );
     return response.id;
@@ -71,7 +71,7 @@ export class BlockTypeService {
    */
   async updateBlockType(worldId: string, id: number, blockType: Partial<BlockType>): Promise<BlockType> {
     return apiService.put<BlockType>(
-      `/api/worlds/${worldId}/blocktypes/type/${id}`,
+      `/control/worlds/${worldId}/blocktypes/type/${id}`,
       blockType
     );
   }
@@ -80,7 +80,7 @@ export class BlockTypeService {
    * Delete block type
    */
   async deleteBlockType(worldId: string, id: number): Promise<void> {
-    return apiService.delete<void>(`/api/worlds/${worldId}/blocktypes/type/${id}`);
+    return apiService.delete<void>(`/control/worlds/${worldId}/blocktypes/type/${id}`);
   }
 
   /**

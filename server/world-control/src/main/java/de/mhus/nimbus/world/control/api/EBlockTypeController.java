@@ -26,13 +26,13 @@ import static de.mhus.nimbus.world.shared.world.BlockUtil.normalizeBlockId;
 
 /**
  * REST Controller for BlockType CRUD operations.
- * Base path: /api/worlds/{worldId}/blocktypes
+ * Base path: /control/worlds/{worldId}/blocktypes
  * <p>
  * BlockTypes are templates that define how blocks look and behave.
  * BlockType IDs have the format {group}:{key} (e.g., "core:stone", "w:123").
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/blocktypes")
+@RequestMapping("/control/worlds/{worldId}/blocktypes")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "BlockTypes", description = "BlockType template management")
@@ -61,7 +61,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Get single BlockType by ID.
-     * GET /api/worlds/{worldId}/blocktypes/type/{blockId}
+     * GET /control/worlds/{worldId}/blocktypes/type/{blockId}
      */
     @GetMapping("/type/{*blockId}")
     @Operation(summary = "Get BlockType by ID")
@@ -114,7 +114,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * List all BlockTypes for a world with optional search filter and pagination.
-     * GET /api/worlds/{worldId}/blocktypes?query=...&offset=0&limit=50
+     * GET /control/worlds/{worldId}/blocktypes?query=...&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List all BlockTypes")
@@ -171,7 +171,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Get BlockTypes by group.
-     * GET /api/worlds/{worldId}/blocktypeschunk/{groupName}
+     * GET /control/worlds/{worldId}/blocktypeschunk/{groupName}
      * <p>
      * This is a special endpoint to load BlockTypes grouped by their group prefix
      * (e.g., "core" for "core:stone", "w" for "w/123").
@@ -220,7 +220,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Create new BlockType.
-     * POST /api/worlds/{worldId}/blocktypes/type
+     * POST /control/worlds/{worldId}/blocktypes/type
      */
     @PostMapping("/type")
     @Operation(summary = "Create new BlockType")
@@ -287,7 +287,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Update existing BlockType.
-     * PUT /api/worlds/{worldId}/blocktypes/type/{blockId}
+     * PUT /control/worlds/{worldId}/blocktypes/type/{blockId}
      */
     @PutMapping("/type/{*blockId}")
     @Operation(summary = "Update BlockType")
@@ -355,7 +355,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Delete BlockType.
-     * DELETE /api/worlds/{worldId}/blocktypes/type/{blockId}
+     * DELETE /control/worlds/{worldId}/blocktypes/type/{blockId}
      */
     @DeleteMapping("/type/{*blockId}")
     @Operation(summary = "Delete BlockType")
@@ -406,7 +406,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Duplicate BlockType with a new ID.
-     * POST /api/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}
+     * POST /control/worlds/{worldId}/blocktypes/duplicate/{sourceBlockId}
      * Body: { "newBlockId": "..." }
      *
      * Creates a copy of an existing BlockType with a new ID.
@@ -530,7 +530,7 @@ public class EBlockTypeController extends BaseEditorController {
 
     /**
      * Create BlockType from custom Block instance.
-     * POST /api/worlds/{worldId}/blocktypes/fromBlock/{blockTypeId}
+     * POST /control/worlds/{worldId}/blocktypes/fromBlock/{blockTypeId}
      *
      * Converts a custom Block (JSON payload) into a BlockType template.
      * The blockTypeId is provided in the URL path.

@@ -115,7 +115,7 @@ async function saveScript(script: ScrawlScript) {
     const blob = new Blob([scriptJson], { type: 'application/json' });
 
     // Save as asset using PUT (creates if not exists, updates if exists)
-    await apiService.updateBinary(`/api/worlds/${currentWorldId.value}/assets/${assetPath}`, blob, 'application/json');
+    await apiService.updateBinary(`/control/worlds/${currentWorldId.value}/assets/${assetPath}`, blob, 'application/json');
 
     console.log('Script saved:', scriptId);
     selectedScript.value = null;
@@ -149,7 +149,7 @@ async function deleteScript(scriptId: string) {
   try {
     const assetPath = `scrawl/${scriptId}.scrawl.json`;
 
-    await apiService.delete(`/api/worlds/${currentWorldId.value}/assets/${assetPath}`);
+    await apiService.delete(`/control/worlds/${currentWorldId.value}/assets/${assetPath}`);
 
     console.log('Script deleted:', scriptId);
     selectedScript.value = null;

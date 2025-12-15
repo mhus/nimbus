@@ -20,7 +20,7 @@ import java.util.Optional;
  * Provides CRUD operations for worlds within regions.
  */
 @RestController
-@RequestMapping("/api/regions/{regionId}/worlds")
+@RequestMapping("/control/regions/{regionId}/worlds")
 @RequiredArgsConstructor
 public class WWorldController extends BaseEditorController {
 
@@ -89,7 +89,7 @@ public class WWorldController extends BaseEditorController {
 
     /**
      * List all worlds in a region
-     * GET /api/regions/{regionId}/worlds
+     * GET /control/regions/{regionId}/worlds
      */
     @GetMapping
     public ResponseEntity<?> list(@PathVariable String regionId) {
@@ -108,7 +108,7 @@ public class WWorldController extends BaseEditorController {
 
     /**
      * Get world by worldId
-     * GET /api/regions/{regionId}/worlds/{worldId}
+     * GET /control/regions/{regionId}/worlds/{worldId}
      */
     @GetMapping("/{worldId}")
     public ResponseEntity<?> get(
@@ -135,7 +135,7 @@ public class WWorldController extends BaseEditorController {
 
     /**
      * Create new world
-     * POST /api/regions/{regionId}/worlds
+     * POST /control/regions/{regionId}/worlds
      */
     @PostMapping
     public ResponseEntity<?> create(
@@ -178,7 +178,7 @@ public class WWorldController extends BaseEditorController {
             });
 
             WWorld updated = worldService.getByWorldId(worldIdObj).orElseThrow();
-            return ResponseEntity.created(URI.create("/api/regions/" + regionId + "/worlds/" + updated.getWorldId()))
+            return ResponseEntity.created(URI.create("/control/regions/" + regionId + "/worlds/" + updated.getWorldId()))
                     .body(toResponse(updated));
         } catch (IllegalStateException | IllegalArgumentException e) {
             return bad(e.getMessage());
@@ -187,7 +187,7 @@ public class WWorldController extends BaseEditorController {
 
     /**
      * Update world
-     * PUT /api/regions/{regionId}/worlds/{worldId}
+     * PUT /control/regions/{regionId}/worlds/{worldId}
      */
     @PutMapping("/{worldId}")
     public ResponseEntity<?> update(
@@ -231,7 +231,7 @@ public class WWorldController extends BaseEditorController {
 
     /**
      * Delete world
-     * DELETE /api/regions/{regionId}/worlds/{worldId}
+     * DELETE /control/regions/{regionId}/worlds/{worldId}
      */
     @DeleteMapping("/{worldId}")
     public ResponseEntity<?> delete(

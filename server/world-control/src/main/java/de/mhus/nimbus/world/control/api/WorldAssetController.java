@@ -24,12 +24,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * REST Controller for Asset list operations at /api/worlds/{worldId}/assets
+ * REST Controller for Asset list operations at /control/worlds/{worldId}/assets
  * This provides the test_server compatible asset list endpoint.
  * For full CRUD operations, use EAssetController at /editor/user/asset
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/assets")
+@RequestMapping("/control/worlds/{worldId}/assets")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "WorldAssets", description = "Asset listing for world editor")
@@ -50,7 +50,7 @@ public class WorldAssetController extends BaseEditorController {
 
     /**
      * List/search assets for a world with pagination and extension filter.
-     * GET /api/worlds/{worldId}/assets?query=...&ext=png,jpg&offset=0&limit=50
+     * GET /control/worlds/{worldId}/assets?query=...&ext=png,jpg&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List assets for world")
@@ -128,8 +128,8 @@ public class WorldAssetController extends BaseEditorController {
 
     /**
      * Get/serve asset file content.
-     * GET /api/worlds/{worldId}/assets/{*path}
-     * Example: GET /api/worlds/main/assets/textures/block/stone.png
+     * GET /control/worlds/{worldId}/assets/{*path}
+     * Example: GET /control/worlds/main/assets/textures/block/stone.png
      *
      * For metadata (.info), use WorldAssetInfoController
      */
@@ -196,7 +196,7 @@ public class WorldAssetController extends BaseEditorController {
 
     /**
      * Create new asset.
-     * POST /api/worlds/{worldId}/assets/{*path}
+     * POST /control/worlds/{worldId}/assets/{*path}
      */
     @PostMapping("/{*path}")
     @Operation(summary = "Create new asset")
@@ -245,7 +245,7 @@ public class WorldAssetController extends BaseEditorController {
 
     /**
      * Update asset content.
-     * PUT /api/worlds/{worldId}/assets/textures/block/stone.png - Update/create binary content
+     * PUT /control/worlds/{worldId}/assets/textures/block/stone.png - Update/create binary content
      *
      * For metadata updates (.info), use WorldAssetInfoController
      */
@@ -306,7 +306,7 @@ public class WorldAssetController extends BaseEditorController {
 
     /**
      * Delete asset.
-     * DELETE /api/worlds/{worldId}/assets/{*path}
+     * DELETE /control/worlds/{worldId}/assets/{*path}
      */
     @DeleteMapping("/{*path}")
     @Operation(summary = "Delete asset")

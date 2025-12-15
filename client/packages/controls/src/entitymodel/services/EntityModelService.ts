@@ -31,23 +31,23 @@ class EntityModelService {
     const params: any = { offset, limit };
     if (query) params.query = query;
 
-    return apiService.get<EntityModelListResponse>(`/api/worlds/${worldId}/entitymodels`, params);
+    return apiService.get<EntityModelListResponse>(`/control/worlds/${worldId}/entitymodels`, params);
   }
 
   async getEntityModel(worldId: string, modelId: string): Promise<any> {
-    return apiService.get<any>(`/api/worlds/${worldId}/entitymodels/${modelId}`);
+    return apiService.get<any>(`/control/worlds/${worldId}/entitymodels/${modelId}`);
   }
 
   async createEntityModel(worldId: string, request: CreateEntityModelRequest): Promise<any> {
-    return apiService.post<any>(`/api/worlds/${worldId}/entitymodels`, request);
+    return apiService.post<any>(`/control/worlds/${worldId}/entitymodels`, request);
   }
 
   async updateEntityModel(worldId: string, modelId: string, request: UpdateEntityModelRequest): Promise<any> {
-    return apiService.put<any>(`/api/worlds/${worldId}/entitymodels/${modelId}`, request);
+    return apiService.put<any>(`/control/worlds/${worldId}/entitymodels/${modelId}`, request);
   }
 
   async deleteEntityModel(worldId: string, modelId: string): Promise<void> {
-    return apiService.delete<void>(`/api/worlds/${worldId}/entitymodels/${modelId}`);
+    return apiService.delete<void>(`/control/worlds/${worldId}/entitymodels/${modelId}`);
   }
 }
 

@@ -25,15 +25,15 @@ export interface SkillRequest {
 class CharacterService {
   async listCharacters(regionId: string, userId?: string): Promise<Character[]> {
     const params = userId ? { userId } : {};
-    return apiService.get<Character[]>(`/api/regions/${regionId}/characters`, params);
+    return apiService.get<Character[]>(`/control/regions/${regionId}/characters`, params);
   }
 
   async getCharacter(regionId: string, characterId: string, userId: string, name: string): Promise<Character> {
-    return apiService.get<Character>(`/api/regions/${regionId}/characters/${characterId}`, { userId, name });
+    return apiService.get<Character>(`/control/regions/${regionId}/characters/${characterId}`, { userId, name });
   }
 
   async createCharacter(regionId: string, request: CharacterRequest): Promise<Character> {
-    return apiService.post<Character>(`/api/regions/${regionId}/characters`, request);
+    return apiService.post<Character>(`/control/regions/${regionId}/characters`, request);
   }
 
   async updateCharacter(
@@ -44,14 +44,14 @@ class CharacterService {
     request: CharacterRequest
   ): Promise<Character> {
     return apiService.put<Character>(
-      `/api/regions/${regionId}/characters/${characterId}?userId=${userId}&name=${name}`,
+      `/control/regions/${regionId}/characters/${characterId}?userId=${userId}&name=${name}`,
       request
     );
   }
 
   async deleteCharacter(regionId: string, characterId: string, userId: string, name: string): Promise<void> {
     return apiService.delete<void>(
-      `/api/regions/${regionId}/characters/${characterId}?userId=${userId}&name=${name}`
+      `/control/regions/${regionId}/characters/${characterId}?userId=${userId}&name=${name}`
     );
   }
 
@@ -64,7 +64,7 @@ class CharacterService {
     level: number
   ): Promise<Character> {
     return apiService.put<Character>(
-      `/api/regions/${regionId}/characters/${characterId}/skills/${skill}?userId=${userId}&name=${name}`,
+      `/control/regions/${regionId}/characters/${characterId}/skills/${skill}?userId=${userId}&name=${name}`,
       { skill, level }
     );
   }
@@ -78,7 +78,7 @@ class CharacterService {
     delta: number = 1
   ): Promise<Character> {
     return apiService.post<Character>(
-      `/api/regions/${regionId}/characters/${characterId}/skills/${skill}/increment?userId=${userId}&name=${name}&delta=${delta}`
+      `/control/regions/${regionId}/characters/${characterId}/skills/${skill}/increment?userId=${userId}&name=${name}&delta=${delta}`
     );
   }
 }

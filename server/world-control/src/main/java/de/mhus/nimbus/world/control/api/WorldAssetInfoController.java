@@ -19,12 +19,12 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * REST Controller for Asset metadata operations at /api/worlds/{worldId}/assetinfo
+ * REST Controller for Asset metadata operations at /control/worlds/{worldId}/assetinfo
  * Handles .info suffix for asset metadata (GET and PUT only).
  * For binary asset content, use WorldAssetController.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/assetinfo")
+@RequestMapping("/control/worlds/{worldId}/assetinfo")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "WorldAssetInfo", description = "Asset metadata management")
@@ -35,8 +35,8 @@ public class WorldAssetInfoController extends BaseEditorController {
 
     /**
      * Get asset metadata.
-     * GET /api/worlds/{worldId}/assetinfo/{*path}
-     * Example: GET /api/worlds/main/assetinfo/textures/block/stone.png
+     * GET /control/worlds/{worldId}/assetinfo/{*path}
+     * Example: GET /control/worlds/main/assetinfo/textures/block/stone.png
      * Returns the asset's publicData (AssetMetadata)
      */
     @GetMapping("/{*path}")
@@ -83,8 +83,8 @@ public class WorldAssetInfoController extends BaseEditorController {
 
     /**
      * Update asset metadata.
-     * PUT /api/worlds/{worldId}/assetinfo/{*path}
-     * Example: PUT /api/worlds/main/assetinfo/textures/block/stone.png
+     * PUT /control/worlds/{worldId}/assetinfo/{*path}
+     * Example: PUT /control/worlds/main/assetinfo/textures/block/stone.png
      * Body: AssetMetadata JSON { description: "..." }
      */
     @PutMapping("/{*path}")

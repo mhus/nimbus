@@ -18,7 +18,7 @@ import java.util.Map;
  * Provides CRUD operations, role management, and settings management.
  */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/control/users")
 @RequiredArgsConstructor
 public class RUserController extends BaseEditorController {
 
@@ -52,7 +52,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * List all users
-     * GET /api/user
+     * GET /control/user
      */
     @GetMapping
     public ResponseEntity<List<UserResponse>> list() {
@@ -64,7 +64,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Get user by username
-     * GET /api/user/{username}
+     * GET /control/user/{username}
      */
     @GetMapping("/{username}")
     public ResponseEntity<?> get(@PathVariable String username) {
@@ -79,7 +79,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Update user
-     * PUT /api/user/{username}
+     * PUT /control/user/{username}
      */
     @PutMapping("/{username}")
     public ResponseEntity<?> update(
@@ -103,7 +103,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Delete user (disable)
-     * DELETE /api/user/{username}
+     * DELETE /control/user/{username}
      */
     @DeleteMapping("/{username}")
     public ResponseEntity<?> delete(@PathVariable String username) {
@@ -123,7 +123,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Get user settings
-     * GET /api/user/{username}/settings
+     * GET /control/user/{username}/settings
      */
     @GetMapping("/{username}/settings")
     public ResponseEntity<?> getSettings(@PathVariable String username) {
@@ -140,7 +140,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Get settings for specific client type
-     * GET /api/user/{username}/settings/{clientType}
+     * GET /control/user/{username}/settings/{clientType}
      */
     @GetMapping("/{username}/settings/{clientType}")
     public ResponseEntity<?> getSettingsForClientType(
@@ -166,7 +166,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Update settings for specific client type
-     * PUT /api/user/{username}/settings/{clientType}
+     * PUT /control/user/{username}/settings/{clientType}
      */
     @PutMapping("/{username}/settings/{clientType}")
     public ResponseEntity<?> updateSettingsForClientType(
@@ -190,7 +190,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Delete settings for specific client type
-     * DELETE /api/user/{username}/settings/{clientType}
+     * DELETE /control/user/{username}/settings/{clientType}
      */
     @DeleteMapping("/{username}/settings/{clientType}")
     public ResponseEntity<?> deleteSettingsForClientType(
@@ -213,7 +213,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Update all user settings
-     * PUT /api/user/{username}/settings
+     * PUT /control/user/{username}/settings
      */
     @PutMapping("/{username}/settings")
     public ResponseEntity<?> updateAllSettings(
@@ -233,7 +233,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Add sector role
-     * POST /api/user/{username}/roles/{role}
+     * POST /control/user/{username}/roles/{role}
      */
     @PostMapping("/{username}/roles/{role}")
     public ResponseEntity<?> addSectorRole(
@@ -254,7 +254,7 @@ public class RUserController extends BaseEditorController {
 
     /**
      * Remove sector role
-     * DELETE /api/user/{username}/roles/{role}
+     * DELETE /control/user/{username}/roles/{role}
      */
     @DeleteMapping("/{username}/roles/{role}")
     public ResponseEntity<?> removeSectorRole(

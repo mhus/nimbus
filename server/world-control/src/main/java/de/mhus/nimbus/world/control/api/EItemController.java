@@ -26,11 +26,11 @@ import java.util.stream.Collectors;
  * For placed items with position, see EItemPositionController.
  * <p>
  * Endpoints:
- * - GET /api/worlds/{worldId}/items - Search items
- * - GET /api/worlds/{worldId}/item/{itemId} - Get single item
- * - POST /api/worlds/{worldId}/items - Create item
- * - PUT /api/worlds/{worldId}/item/{itemId} - Update item
- * - DELETE /api/worlds/{worldId}/item/{itemId} - Delete item
+ * - GET /control/worlds/{worldId}/items - Search items
+ * - GET /control/worlds/{worldId}/item/{itemId} - Get single item
+ * - POST /control/worlds/{worldId}/items - Create item
+ * - PUT /control/worlds/{worldId}/item/{itemId} - Update item
+ * - DELETE /control/worlds/{worldId}/item/{itemId} - Delete item
  */
 @RestController
 @RequiredArgsConstructor
@@ -69,9 +69,9 @@ public class EItemController extends BaseEditorController {
 
     /**
      * Search items (max 100 results).
-     * GET /api/worlds/{worldId}/items?query={searchTerm}
+     * GET /control/worlds/{worldId}/items?query={searchTerm}
      */
-    @GetMapping("/api/worlds/{worldId}/items")
+    @GetMapping("/control/worlds/{worldId}/items")
     @Operation(summary = "Search items")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success"),
@@ -116,9 +116,9 @@ public class EItemController extends BaseEditorController {
 
     /**
      * Get full item data.
-     * GET /api/worlds/{worldId}/item/{itemId}
+     * GET /control/worlds/{worldId}/item/{itemId}
      */
-    @GetMapping("/api/worlds/{worldId}/item/{itemId}")
+    @GetMapping("/control/worlds/{worldId}/item/{itemId}")
     @Operation(summary = "Get item by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Item found"),
@@ -154,10 +154,10 @@ public class EItemController extends BaseEditorController {
 
     /**
      * Create a new item.
-     * POST /api/worlds/{worldId}/items
+     * POST /control/worlds/{worldId}/items
      * Body: Item object
      */
-    @PostMapping("/api/worlds/{worldId}/items")
+    @PostMapping("/control/worlds/{worldId}/items")
     @Operation(summary = "Create new item")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Item created"),
@@ -227,10 +227,10 @@ public class EItemController extends BaseEditorController {
 
     /**
      * Update an existing item.
-     * PUT /api/worlds/{worldId}/item/{itemId}
+     * PUT /control/worlds/{worldId}/item/{itemId}
      * Body: Partial Item object
      */
-    @PutMapping("/api/worlds/{worldId}/item/{itemId}")
+    @PutMapping("/control/worlds/{worldId}/item/{itemId}")
     @Operation(summary = "Update item")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Item updated"),
@@ -294,9 +294,9 @@ public class EItemController extends BaseEditorController {
 
     /**
      * Delete an item.
-     * DELETE /api/worlds/{worldId}/item/{itemId}
+     * DELETE /control/worlds/{worldId}/item/{itemId}
      */
-    @DeleteMapping("/api/worlds/{worldId}/item/{itemId}")
+    @DeleteMapping("/control/worlds/{worldId}/item/{itemId}")
     @Operation(summary = "Delete item")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Item deleted"),

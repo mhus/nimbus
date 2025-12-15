@@ -35,7 +35,7 @@ export class AssetService {
    */
   async getAssets(worldId: string, params?: AssetPagingParams): Promise<AssetListResponse> {
     const response = await apiService.get<AssetListResponse>(
-      `/api/worlds/${worldId}/assets`,
+      `/control/worlds/${worldId}/assets`,
       params
     );
     return response;
@@ -47,7 +47,7 @@ export class AssetService {
   async uploadAsset(worldId: string, assetPath: string, file: File): Promise<Asset> {
     const arrayBuffer = await file.arrayBuffer();
     return apiService.uploadBinary<Asset>(
-      `/api/worlds/${worldId}/assets/${assetPath}`,
+      `/control/worlds/${worldId}/assets/${assetPath}`,
       arrayBuffer,
       file.type
     );
@@ -59,7 +59,7 @@ export class AssetService {
   async updateAsset(worldId: string, assetPath: string, file: File): Promise<Asset> {
     const arrayBuffer = await file.arrayBuffer();
     return apiService.updateBinary<Asset>(
-      `/api/worlds/${worldId}/assets/${assetPath}`,
+      `/control/worlds/${worldId}/assets/${assetPath}`,
       arrayBuffer,
       file.type
     );
@@ -69,14 +69,14 @@ export class AssetService {
    * Delete asset
    */
   async deleteAsset(worldId: string, assetPath: string): Promise<void> {
-    return apiService.delete<void>(`/api/worlds/${worldId}/assets/${assetPath}`);
+    return apiService.delete<void>(`/control/worlds/${worldId}/assets/${assetPath}`);
   }
 
   /**
    * Get asset download URL
    */
   getAssetUrl(worldId: string, assetPath: string): string {
-    return `${apiService.getBaseUrl()}/api/worlds/${worldId}/assets/${assetPath}`;
+    return `${apiService.getBaseUrl()}/control/worlds/${worldId}/assets/${assetPath}`;
   }
 
   /**

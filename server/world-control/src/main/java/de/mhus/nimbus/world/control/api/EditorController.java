@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
  * Manages edit mode configuration and layer selection.
  */
 @RestController
-@RequestMapping("/api/editor")
+@RequestMapping("/control/editor")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Editor", description = "Edit mode and layer editing")
@@ -55,7 +55,7 @@ public class EditorController extends BaseEditorController {
     // ===== EDIT STATE =====
 
     /**
-     * GET /api/editor/{worldId}/session/{sessionId}/edit
+     * GET /control/editor/{worldId}/session/{sessionId}/edit
      * Returns full edit state
      */
     @GetMapping("/{worldId}/session/{sessionId}/edit")
@@ -97,7 +97,7 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * PUT /api/editor/{worldId}/session/{sessionId}/edit
+     * PUT /control/editor/{worldId}/session/{sessionId}/edit
      * Update edit state (partial updates supported).
      */
     @PutMapping("/{worldId}/session/{sessionId}/edit")
@@ -156,7 +156,7 @@ public class EditorController extends BaseEditorController {
     // ===== LAYERS =====
 
     /**
-     * GET /api/editor/{worldId}/layers
+     * GET /control/editor/{worldId}/layers
      * List all layers for selection dropdown.
      */
     @GetMapping("/{worldId}/layers")
@@ -186,7 +186,7 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/{worldId}/layers
+     * POST /control/editor/{worldId}/layers
      * Create a new layer.
      */
     @PostMapping("/{worldId}/layers")
@@ -236,7 +236,7 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * DELETE /api/editor/{worldId}/layers/{layerName}
+     * DELETE /control/editor/{worldId}/layers/{layerName}
      * Delete a layer and all its data.
      */
     @DeleteMapping("/{worldId}/layers/{layerName}")
@@ -265,7 +265,7 @@ public class EditorController extends BaseEditorController {
     // ===== BLOCK EDITOR =====
 
     /**
-     * PUT /api/editor/{worldId}/session/{sessionId}/block
+     * PUT /control/editor/{worldId}/session/{sessionId}/block
      * Update a block at the selected position and trigger "b.u" to client.
      */
     @PutMapping("/{worldId}/session/{sessionId}/block")
@@ -403,7 +403,7 @@ public class EditorController extends BaseEditorController {
     // ===== EDIT MODE CONTROL =====
 
     /**
-     * POST /api/editor/{worldId}/session/{sessionId}/activate
+     * POST /control/editor/{worldId}/session/{sessionId}/activate
      * Activates edit mode for the session.
      */
     @PostMapping("/{worldId}/session/{sessionId}/activate")
@@ -470,7 +470,7 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/{worldId}/session/{sessionId}/discard
+     * POST /control/editor/{worldId}/session/{sessionId}/discard
      * Discards all overlays and deactivates edit mode.
      */
     @PostMapping("/{worldId}/session/{sessionId}/discard")
@@ -536,7 +536,7 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/{worldId}/session/{sessionId}/save
+     * POST /control/editor/{worldId}/session/{sessionId}/save
      * Saves overlays to the selected layer (fire-and-forget).
      */
     @PostMapping("/{worldId}/session/{sessionId}/save")
@@ -593,7 +593,7 @@ public class EditorController extends BaseEditorController {
     // ===== BLOCK PALETTE SUPPORT =====
 
     /**
-     * GET /api/editor/{worldId}/session/{sessionId}/blockRegister
+     * GET /control/editor/{worldId}/session/{sessionId}/blockRegister
      * Returns the complete block data for the currently marked block.
      * Reads from Redis overlay where the marked block is stored.
      * Used when adding a marked block to the palette.
@@ -642,7 +642,7 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/{worldId}/session/{sessionId}/blockRegister
+     * POST /control/editor/{worldId}/session/{sessionId}/blockRegister
      * Sets a block as the current marked block (for palette selection and paste).
      * Stores complete block data in Redis overlay.
      * Position in block.position is optional/ignored - only block content matters.
@@ -689,7 +689,7 @@ public class EditorController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/{worldId}/session/{sessionId}/blockRegister
+     * POST /control/editor/{worldId}/session/{sessionId}/blockRegister
      * Sets a block as the current marked block (for palette selection and paste).
      * Stores complete block data in Redis overlay.
      * Position in block.position is optional/ignored - only block content matters.

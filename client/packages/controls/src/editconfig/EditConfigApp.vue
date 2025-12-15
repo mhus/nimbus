@@ -561,7 +561,7 @@ const { isEmbedded } = useModal();
 
 // Get URL parameters
 const params = new URLSearchParams(window.location.search);
-const worldId = ref(params.get('worldId') || import.meta.env.VITE_WORLD_ID || 'main');
+const worldId = ref(params.get('worldId'));
 const sessionId = ref(params.get('sessionId') || '');
 const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043'); // world-control
 
@@ -650,7 +650,7 @@ function getActionDescription(action: EditAction): string {
 // Fetch available layers from API
 async function fetchLayers() {
   try {
-    const response = await fetch(`${apiUrl.value}/api/editor/${worldId.value}/layers`);
+    const response = await fetch(`${apiUrl.value}/control/editor/${worldId.value}/layers`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch layers: ${response.statusText}`);
@@ -687,7 +687,7 @@ function isEqual(a: any, b: any): boolean {
 async function fetchEditState() {
   try {
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/edit`
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/edit`
     );
 
     if (!response.ok) {
@@ -736,7 +736,7 @@ async function saveEditState() {
 
   try {
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/edit`,
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/edit`,
       {
         method: 'PUT',
         headers: {
@@ -843,7 +843,7 @@ async function activateEditMode() {
 
   try {
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/activate`,
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/activate`,
       { method: 'POST' }
     );
 
@@ -874,7 +874,7 @@ async function confirmDiscard() {
 
   try {
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/discard`,
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/discard`,
       { method: 'POST' }
     );
 
@@ -896,7 +896,7 @@ async function saveOverlays() {
 
   try {
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/save`,
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/save`,
       { method: 'POST', headers: { 'Accept': 'application/json' } }
     );
 
@@ -919,7 +919,7 @@ async function saveOverlays() {
 async function loadEditSettings() {
   try {
     const response = await fetch(
-      `${apiUrl.value}/api/editor/settings/worlds/${worldId.value}/editsettings?sessionId=${sessionId.value}`
+      `${apiUrl.value}/control/editor/settings/worlds/${worldId.value}/editsettings?sessionId=${sessionId.value}`
     );
 
     if (!response.ok) {
@@ -948,8 +948,8 @@ async function loadEditSettings() {
 
 // Get texture URL for block icon
 function getTextureUrl(icon: string): string {
-  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-  return `${apiBaseUrl}/api/worlds/${worldId.value}/assets/${icon}`;
+  const apiBaseUrl = import.meta.env.VITE_API_URL;
+  return `${apiBaseUrl}/control/worlds/${worldId.value}/assets/${icon}`;
 }
 
 // Handle image load error (fallback to placeholder)
@@ -1019,7 +1019,7 @@ async function selectPaletteBlock(index: number) {
   try {
     // Send block to Redis as marked block (will trigger polling update)
     const response = await fetch(
-      `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/blockRegister`,
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/blockRegister`,
       {
         method: 'POST',
         headers: {
@@ -1097,7 +1097,7 @@ async function savePalette() {
   error.value = null;
 
   try {
-    const url = `${apiUrl.value}/api/editor/settings/worlds/${worldId.value}/editsettings/palette?sessionId=${sessionId.value}`;
+    const url = `${apiUrl.value}/control/editor/settings/worlds/${worldId.value}/editsettings/palette?sessionId=${sessionId.value}`;
     console.log('[Palette] POST to:', url);
     console.log('[Palette] Payload:', palette.value);
 
@@ -1139,7 +1139,7 @@ async function pollMarkedBlockContent() {
 
   try {
     // Always try to fetch - server will return 404 if no block marked
-    const url = `${apiUrl.value}/api/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
+    const url = `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
     console.log('[Polling] Fetching:', url);
 
     const response = await fetch(url);
@@ -1185,7 +1185,7 @@ async function pollMarkedBlockContent() {
 
     try {
       const blockTypeResponse = await fetch(
-        `${apiUrl.value}/api/worlds/${worldId.value}/blocktypes/${blockData.blockTypeId}`
+        `${apiUrl.value}/control/worlds/${worldId.value}/blocktypes/${blockData.blockTypeId}`
       );
 
       if (blockTypeResponse.ok) {

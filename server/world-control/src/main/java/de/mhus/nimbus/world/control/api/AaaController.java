@@ -20,7 +20,7 @@ import java.util.Map;
  * Provides development login endpoints for session and agent access.
  */
 @RestController
-@RequestMapping("/api/aaa")
+@RequestMapping("/control/aaa")
 @RequiredArgsConstructor
 @Slf4j
 public class AaaController extends BaseEditorController {
@@ -45,7 +45,7 @@ public class AaaController extends BaseEditorController {
         }
     }
 
-    // ===== GET /api/aaa/devlogin =====
+    // ===== GET /control/aaa/devlogin =====
 
     /**
      * Get worlds for dev login UI.
@@ -60,7 +60,7 @@ public class AaaController extends BaseEditorController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false, defaultValue = "100") int limit
     ) {
-        log.debug("GET /api/aaa/devlogin - search={}, limit={}", search, limit);
+        log.debug("GET /control/aaa/devlogin - search={}, limit={}", search, limit);
 
         try {
             List<WorldInfoDto> worlds = accessService.getWorlds(search, limit);
@@ -74,7 +74,7 @@ public class AaaController extends BaseEditorController {
         }
     }
 
-    // ===== GET /api/aaa/devlogin/users =====
+    // ===== GET /control/aaa/devlogin/users =====
 
     /**
      * Get users for dev login UI.
@@ -89,7 +89,7 @@ public class AaaController extends BaseEditorController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false, defaultValue = "100") int limit
     ) {
-        log.debug("GET /api/aaa/devlogin/users - search={}, limit={}", search, limit);
+        log.debug("GET /control/aaa/devlogin/users - search={}, limit={}", search, limit);
 
         try {
             var users = accessService.getUsers(search, limit);
@@ -103,7 +103,7 @@ public class AaaController extends BaseEditorController {
         }
     }
 
-    // ===== GET /api/aaa/devlogin/characters =====
+    // ===== GET /control/aaa/devlogin/characters =====
 
     /**
      * Get characters for a user in a world.
@@ -117,7 +117,7 @@ public class AaaController extends BaseEditorController {
             @RequestParam String userId,
             @RequestParam String worldId
     ) {
-        log.debug("GET /api/aaa/devlogin/characters - userId={}, worldId={}", userId, worldId);
+        log.debug("GET /control/aaa/devlogin/characters - userId={}, worldId={}", userId, worldId);
 
         // Validate parameters
         ResponseEntity<?> validation = validateId(userId, "userId");
@@ -143,7 +143,7 @@ public class AaaController extends BaseEditorController {
         }
     }
 
-    // ===== POST /api/aaa/devlogin =====
+    // ===== POST /control/aaa/devlogin =====
 
     /**
      * Execute dev login and create access token.
@@ -154,7 +154,7 @@ public class AaaController extends BaseEditorController {
      */
     @PostMapping("/devlogin")
     public ResponseEntity<?> devLogin(@RequestBody DevLoginRequest request) {
-        log.debug("POST /api/aaa/devlogin - worldId={}, userId={}, agent={}, characterId={}, actor={}",
+        log.debug("POST /control/aaa/devlogin - worldId={}, userId={}, agent={}, characterId={}, actor={}",
                 request.worldId(), request.userId(), request.agent(),
                 request.characterId(), request.actor());
 
@@ -237,7 +237,7 @@ public class AaaController extends BaseEditorController {
         }
     }
 
-    // ===== GET /api/aaa/authorize =====
+    // ===== GET /control/aaa/authorize =====
 
     /**
      * Authorize with access token and set session cookies.
@@ -252,7 +252,7 @@ public class AaaController extends BaseEditorController {
             @RequestParam String token,
             HttpServletResponse response
     ) {
-        log.debug("GET /api/aaa/authorize - validating token");
+        log.debug("GET /control/aaa/authorize - validating token");
 
         try {
             accessService.authorizeWithToken(token, response);

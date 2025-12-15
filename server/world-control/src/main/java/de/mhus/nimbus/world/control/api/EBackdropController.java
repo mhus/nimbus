@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for Backdrop CRUD operations.
- * Base path: /api/worlds/{worldId}/backdrops
+ * Base path: /control/worlds/{worldId}/backdrops
  * <p>
  * Backdrops are visual elements rendered at chunk boundaries (fog, sky, etc.).
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/backdrops")
+@RequestMapping("/control/worlds/{worldId}/backdrops")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Backdrops", description = "Backdrop configuration management")
@@ -55,7 +55,7 @@ public class EBackdropController extends BaseEditorController {
 
     /**
      * Get single backdrop by ID.
-     * GET /api/worlds/{worldId}/backdrop/{backdropId}
+     * GET /control/worlds/{worldId}/backdrop/{backdropId}
      */
     @GetMapping("/{backdropId}")
     @Operation(summary = "Get backdrop by ID")
@@ -90,7 +90,7 @@ public class EBackdropController extends BaseEditorController {
 
     /**
      * List all backdrops for a world with optional search filter and pagination.
-     * GET /api/worlds/{worldId}/backdrop?query=...&offset=0&limit=50
+     * GET /control/worlds/{worldId}/backdrop?query=...&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List all backdrops")
@@ -146,7 +146,7 @@ public class EBackdropController extends BaseEditorController {
 
     /**
      * Create new backdrop.
-     * POST /api/worlds/{worldId}/backdrop
+     * POST /control/worlds/{worldId}/backdrop
      */
     @PostMapping
     @Operation(summary = "Create new backdrop")
@@ -199,7 +199,7 @@ public class EBackdropController extends BaseEditorController {
 
     /**
      * Update existing backdrop.
-     * PUT /api/worlds/{worldId}/backdrop/{backdropId}
+     * PUT /control/worlds/{worldId}/backdrop/{backdropId}
      */
     @PutMapping("/{backdropId}")
     @Operation(summary = "Update backdrop")
@@ -250,7 +250,7 @@ public class EBackdropController extends BaseEditorController {
 
     /**
      * Delete backdrop.
-     * DELETE /api/worlds/{worldId}/backdrop/{backdropId}
+     * DELETE /control/worlds/{worldId}/backdrop/{backdropId}
      */
     @DeleteMapping("/{backdropId}")
     @Operation(summary = "Delete backdrop")

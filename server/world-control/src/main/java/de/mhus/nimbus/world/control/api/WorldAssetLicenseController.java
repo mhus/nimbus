@@ -18,11 +18,11 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * REST Controller for Asset license operations at /api/worlds/{worldId}/assetlicense
+ * REST Controller for Asset license operations at /control/worlds/{worldId}/assetlicense
  * Handles license information (source, author, license) for assets.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/assetlicense")
+@RequestMapping("/control/worlds/{worldId}/assetlicense")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "WorldAssetLicense", description = "Asset license management")
@@ -32,7 +32,7 @@ public class WorldAssetLicenseController extends BaseEditorController {
 
     /**
      * Get license information for an asset.
-     * GET /api/worlds/{worldId}/assetlicense/{*path}
+     * GET /control/worlds/{worldId}/assetlicense/{*path}
      * Returns: { source, author, license, licenseFixed }
      */
     @GetMapping("/{*path}")
@@ -90,7 +90,7 @@ public class WorldAssetLicenseController extends BaseEditorController {
 
     /**
      * Set license information for an asset.
-     * PUT /api/worlds/{worldId}/assetlicense/{*path}
+     * PUT /control/worlds/{worldId}/assetlicense/{*path}
      * Body: { source, author, license }
      * Automatically sets licenseFixed=true
      */

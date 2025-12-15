@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 
 /**
  * REST Controller for Entity CRUD operations.
- * Base path: /api/worlds/{worldId}/entities
+ * Base path: /control/worlds/{worldId}/entities
  * <p>
  * Entities are instances placed in the world based on EntityModel templates.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/entities")
+@RequestMapping("/control/worlds/{worldId}/entities")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Entities", description = "Entity instance management")
@@ -41,7 +41,6 @@ public class EEntityController extends BaseEditorController {
             String entityId,
             Entity publicData,
             String worldId,
-            String chunk,
             String modelId,
             boolean enabled,
             Instant createdAt,
@@ -57,7 +56,7 @@ public class EEntityController extends BaseEditorController {
 
     /**
      * Get single Entity by ID.
-     * GET /api/worlds/{worldId}/entity/{entityId}
+     * GET /control/worlds/{worldId}/entity/{entityId}
      */
     @GetMapping("/{entityId}")
     @Operation(summary = "Get Entity by ID")
@@ -96,7 +95,7 @@ public class EEntityController extends BaseEditorController {
 
     /**
      * List all Entities for a world with optional search filter and pagination.
-     * GET /api/worlds/{worldId}/entity?query=...&offset=0&limit=50
+     * GET /control/worlds/{worldId}/entity?query=...&offset=0&limit=50
      */
     @GetMapping
     @Operation(summary = "List all Entities")
@@ -153,7 +152,7 @@ public class EEntityController extends BaseEditorController {
 
     /**
      * Create new Entity.
-     * POST /api/worlds/{worldId}/entity
+     * POST /control/worlds/{worldId}/entity
      */
     @PostMapping
     @Operation(summary = "Create new Entity")
@@ -191,18 +190,14 @@ public class EEntityController extends BaseEditorController {
         }
 
         try {
-            // Calculate chunk from entity position (if available)
-            String chunk = calculateChunk(request.publicData());
-
             WEntity saved = entityService.save(
                     wid,
                     request.entityId(),
                     request.publicData(),
-                    chunk,
                     request.modelId()
             );
 
-            log.info("Created entity: entityId={}, chunk={}", request.entityId(), chunk);
+            log.info("Created entity: entityId={}", request.entityId());
             return ResponseEntity.status(HttpStatus.CREATED).body(toDto(saved));
         } catch (IllegalArgumentException e) {
             log.warn("Validation error creating entity: {}", e.getMessage());
@@ -216,7 +211,7 @@ public class EEntityController extends BaseEditorController {
 
     /**
      * Update existing Entity.
-     * PUT /api/worlds/{worldId}/entity/{entityId}
+     * PUT /control/worlds/{worldId}/entity/{entityId}
      */
     @PutMapping("/{entityId}")
     @Operation(summary = "Update Entity")
@@ -250,9 +245,6 @@ public class EEntityController extends BaseEditorController {
         Optional<WEntity> updated = entityService.update(widOpt.get(), entityId, entity -> {
             if (request.publicData() != null) {
                 entity.setPublicData(request.publicData());
-                // Recalculate chunk if position changed
-                String newChunk = calculateChunk(request.publicData());
-                entity.setChunk(newChunk);
             }
             if (request.modelId() != null) {
                 entity.setModelId(request.modelId());
@@ -273,7 +265,7 @@ public class EEntityController extends BaseEditorController {
 
     /**
      * Delete Entity.
-     * DELETE /api/worlds/{worldId}/entity/{entityId}
+     * DELETE /control/worlds/{worldId}/entity/{entityId}
      */
     @DeleteMapping("/{entityId}")
     @Operation(summary = "Delete Entity")
@@ -316,7 +308,6 @@ public class EEntityController extends BaseEditorController {
                 entity.getEntityId(),
                 entity.getPublicData(),
                 entity.getWorldId(),
-                entity.getChunk(),
                 entity.getModelId(),
                 entity.isEnabled(),
                 entity.getCreatedAt(),
@@ -337,18 +328,4 @@ public class EEntityController extends BaseEditorController {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Calculate chunk key from entity position.
-     * Chunk key format: "cx:cz" (e.g., "0:0", "-1:2")
-     * Uses chunk size of 16 (standard Minecraft chunk size)
-     *
-     * Note: Entity DTO does not have position - chunk calculation should be done
-     * from WEntity.position if needed. For now, return null and let service handle it.
-     */
-    private String calculateChunk(Entity entity) {
-        // Entity DTO doesn't contain position data
-        // Position is stored separately in WEntity
-        // Return null here - chunk will be calculated by service or set explicitly
-        return null;
-    }
 }

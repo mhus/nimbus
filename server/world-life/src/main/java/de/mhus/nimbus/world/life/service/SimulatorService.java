@@ -10,9 +10,12 @@ import de.mhus.nimbus.world.life.config.WorldLifeProperties;
 import de.mhus.nimbus.world.life.model.ChunkCoordinate;
 import de.mhus.nimbus.world.life.model.SimulationState;
 import de.mhus.nimbus.world.life.redis.PathwayPublisher;
+import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityRepository;
 import de.mhus.nimbus.world.shared.world.WEntityService;
+import de.mhus.nimbus.world.shared.world.WWorld;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static de.mhus.nimbus.world.shared.world.BlockUtil.toCunkKey;
 
 /**
  * Main entity simulation service.
@@ -54,7 +59,7 @@ public class SimulatorService {
     private final PathwayPublisher pathwayPublisher;
     private final EntityOwnershipService ownershipService;
     private final WorldDiscoveryService worldDiscoveryService;
-    private final WorldLifeProperties properties;
+    private final WWorldService worldService;
 
     /**
      * Simulation states for all entities, grouped by world.
@@ -189,6 +194,7 @@ public class SimulatorService {
         }
 
         List<EntityPathway> newPathways = new ArrayList<>();
+        WWorld world = worldService.getByWorldId(worldId).get();
 
         for (Map.Entry<String, SimulationState> entry : simulationStates.entrySet()) {
             String entityId = entry.getKey();
@@ -197,7 +203,7 @@ public class SimulatorService {
 
             try {
                 // 1. Check if entity is in an active chunk
-                String entityChunk = entity.getChunk();
+                String entityChunk = toCunkKey(world, entity.getPosition());
                 if (entityChunk == null || !multiWorldChunkService.isChunkActive(worldId, entityChunk)) {
                     // Entity chunk is not active, release ownership if we own it
                     if (ownershipService.isOwnedByThisPod(worldId, entityId)) {
@@ -337,6 +343,7 @@ public class SimulatorService {
         // Search for entity across all worlds
         for (Map.Entry<WorldId, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
             WorldId worldId = worldEntry.getKey();
+            Optional<WWorld> worldOpt = worldService.getByWorldId(worldId);
             Map<String, SimulationState> simulationStates = worldEntry.getValue();
 
             SimulationState state = simulationStates.get(entityId);
@@ -345,7 +352,7 @@ public class SimulatorService {
             }
 
             WEntity entity = state.getEntity();
-            String entityChunk = entity.getChunk();
+            String entityChunk = toCunkKey(worldOpt.get(), entity.getPosition());
 
             if (entityChunk == null) {
                 log.debug("Entity {} has no chunk information", entityId);
@@ -416,18 +423,6 @@ public class SimulatorService {
         int cz = (int) Math.floor(entity.getPosition().getZ() / 16);
         String newChunk = cx + ":" + cz;
 
-        if (!newChunk.equals(entity.getChunk())) {
-            String oldChunk = entity.getChunk();
-            entity.setChunk(newChunk);
-
-            log.debug("World {}: Entity {} moved to new chunk: {} -> {}", worldId, entity.getEntityId(), oldChunk, newChunk);
-
-            // Update ownership with new chunk
-            if (ownershipService.isOwnedByThisPod(worldId, entity.getEntityId())) {
-                ownershipService.releaseEntity(worldId, entity.getEntityId());
-                ownershipService.claimEntity(worldId, entity.getEntityId(), newChunk);
-            }
-        }
     }
 
     /**

@@ -15,10 +15,10 @@ import java.util.Map;
 
 /**
  * REST Controller for block marker operations.
- * Base path: /api/worlds/{worldId}/session/{sessionId}/marker
+ * Base path: /control/worlds/{worldId}/session/{sessionId}/marker
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/session/{sessionId}/marker")
+@RequestMapping("/control/worlds/{worldId}/session/{sessionId}/marker")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Marker", description = "Block marker operations for edit mode")
@@ -28,7 +28,7 @@ public class EMarkerController extends BaseEditorController {
 
     /**
      * Mark a block at specified coordinates.
-     * POST /api/worlds/{worldId}/session/{sessionId}/marker/{x}/{y}/{z}
+     * POST /control/worlds/{worldId}/session/{sessionId}/marker/{x}/{y}/{z}
      */
     @PostMapping("/{x}/{y}/{z}")
     @Operation(summary = "Mark block at position", description = "Marks a block at the specified coordinates in the client")
@@ -78,7 +78,7 @@ public class EMarkerController extends BaseEditorController {
 
     /**
      * Clear the marked block.
-     * DELETE /api/worlds/{worldId}/session/{sessionId}/marker
+     * DELETE /control/worlds/{worldId}/session/{sessionId}/marker
      */
     @DeleteMapping
     @Operation(summary = "Clear marked block", description = "Removes the visual marker from the client and clears marked block data from Redis")

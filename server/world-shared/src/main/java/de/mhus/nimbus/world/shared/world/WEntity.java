@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Entity;
+import de.mhus.nimbus.generated.types.Rotation;
+import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
@@ -54,13 +56,6 @@ public class WEntity implements Identifiable {
     private Entity publicData;
 
     /**
-     * Current chunk location of the entity.
-     * Used for spatial queries and chunk-based entity loading.
-     */
-    @Indexed
-    private String chunk;
-
-    /**
      * Reference to the EntityModel template ID.
      * E.g., "cow1", "farmer1" - links to WEntityModel.
      */
@@ -76,18 +71,18 @@ public class WEntity implements Identifiable {
      * Entity's current position in the world.
      * Updated during simulation.
      */
-    private de.mhus.nimbus.generated.types.Vector3 position;
+    private Vector3 position;
 
     /**
      * Entity's current rotation.
      */
-    private de.mhus.nimbus.generated.types.Rotation rotation;
+    private Rotation rotation;
 
     /**
      * Middle point for entity movement (center of roaming area).
      * Entities typically roam around this point within a certain radius.
      */
-    private de.mhus.nimbus.generated.types.Vector3 middlePoint;
+    private Vector3 middlePoint;
 
     /**
      * Movement radius around middle point (blocks).

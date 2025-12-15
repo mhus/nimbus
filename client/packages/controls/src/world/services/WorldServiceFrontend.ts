@@ -42,23 +42,23 @@ export interface WorldRequest {
 
 class WorldServiceFrontend {
   async listWorlds(regionId: string): Promise<World[]> {
-    return apiService.get<World[]>(`/api/regions/${regionId}/worlds`);
+    return apiService.get<World[]>(`/control/regions/${regionId}/worlds`);
   }
 
   async getWorld(regionId: string, worldId: string): Promise<World> {
-    return apiService.get<World>(`/api/regions/${regionId}/worlds/${worldId}`);
+    return apiService.get<World>(`/control/regions/${regionId}/worlds/${worldId}`);
   }
 
   async createWorld(regionId: string, request: WorldRequest): Promise<World> {
-    return apiService.post<World>(`/api/regions/${regionId}/worlds`, request);
+    return apiService.post<World>(`/control/regions/${regionId}/worlds`, request);
   }
 
   async updateWorld(regionId: string, worldId: string, request: WorldRequest): Promise<World> {
-    return apiService.put<World>(`/api/regions/${regionId}/worlds/${worldId}`, request);
+    return apiService.put<World>(`/control/regions/${regionId}/worlds/${worldId}`, request);
   }
 
   async deleteWorld(regionId: string, worldId: string): Promise<void> {
-    return apiService.delete<void>(`/api/regions/${regionId}/worlds/${worldId}`);
+    return apiService.delete<void>(`/control/regions/${regionId}/worlds/${worldId}`);
   }
 }
 

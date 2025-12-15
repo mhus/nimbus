@@ -26,8 +26,8 @@ public class AccessProperties {
      * Hardcoded for now, will be made dynamic later.
      */
     private List<String> cookieUrls = List.of(
-            "http://localhost:9042/api/aaa/authorize",
-            "http://localhost:9043/api/aaa/authorize"
+            "http://localhost:9042/player/aaa/authorize",
+            "http://localhost:9043/control/aaa/authorize"
     );
 
     /**

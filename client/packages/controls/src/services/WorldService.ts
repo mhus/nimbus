@@ -16,14 +16,14 @@ export class WorldService {
    * Get all worlds
    */
   async getWorlds(): Promise<WorldInfo[]> {
-    return apiService.get<WorldInfo[]>('/api/worlds');
+    return apiService.get<WorldInfo[]>('/control/worlds');
   }
 
   /**
    * Get single world by ID
    */
   async getWorld(worldId: string): Promise<WorldInfo> {
-    return apiService.get<WorldInfo>(`/api/worlds/${worldId}`);
+    return apiService.get<WorldInfo>(`/control/worlds/${worldId}`);
   }
 }
 

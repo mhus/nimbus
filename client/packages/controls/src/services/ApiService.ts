@@ -13,7 +13,7 @@ export class ApiService {
   private apiUrl: string;
 
   constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.apiUrl = import.meta.env.VITE_API_URL;
 
     this.client = axios.create({
       baseURL: this.apiUrl,
@@ -78,7 +78,7 @@ export class ApiService {
    */
   getCurrentWorldId(): string {
     const params = new URLSearchParams(window.location.search);
-    return params.get('world') || import.meta.env.VITE_WORLD_ID || 'main';
+    return params.get('world');
   }
 
   /**

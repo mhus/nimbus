@@ -584,7 +584,7 @@ const blockCoordinates = ref<{ x: number; y: number; z: number } | null>(parseBl
 
 // Get worldId from URL (once, not reactive - needed for composables)
 const params = new URLSearchParams(window.location.search);
-const worldId = params.get('world') || import.meta.env.VITE_WORLD_ID || 'main';
+const worldId = params.get('world');
 
 // Modal composable
 const {
@@ -796,9 +796,9 @@ async function handleNavigate(position: { x: number; y: number; z: number }) {
   try {
     const sessionId = params.get('sessionId');
     if (sessionId) {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await fetch(
-        `${apiUrl}/api/worlds/${worldId}/session/${sessionId}/selectedEditBlock/navigate`,
+        `${apiUrl}/control/worlds/${worldId}/session/${sessionId}/selectedEditBlock/navigate`,
         {
           method: 'POST',
           headers: {
@@ -908,7 +908,7 @@ async function loadBlockTypeDetails(blockTypeId: number) {
 async function setMarker(x: number, y: number, z: number, sessionId: string) {
   try {
     const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
-    const url = `${apiUrl}/api/worlds/${worldId}/session/${sessionId}/marker/${x}/${y}/${z}`;
+    const url = `${apiUrl}/control/worlds/${worldId}/session/${sessionId}/marker/${x}/${y}/${z}`;
 
     // Fire and forget - don't wait for response
     fetch(url, {
@@ -949,7 +949,7 @@ async function loadBlock() {
     // Set marker asynchronously (fire and forget)
     setMarker(x, y, z, sessionId);
 
-    const url = `${apiUrl}/api/worlds/${worldId}/session/${sessionId}/block/${x}/${y}/${z}`;
+    const url = `${apiUrl}/control/worlds/${worldId}/session/${sessionId}/block/${x}/${y}/${z}`;
 
     // Fetch with timeout
     const controller = new AbortController();
@@ -1126,7 +1126,7 @@ async function saveBlock(closeAfter: boolean = false) {
     };
 
     // Send complete block as JSON string
-    const response = await fetch(`${apiUrl}/api/editor/${worldId}/session/${sessionId}/block`, {
+    const response = await fetch(`${apiUrl}/control/editor/${worldId}/session/${sessionId}/block`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(block),
@@ -1192,7 +1192,7 @@ async function deleteBlock() {
     }
 
     // Delete = set to air block via editor endpoint
-    const response = await fetch(`${apiUrl}/api/editor/${worldId}/session/${sessionId}/block`, {
+    const response = await fetch(`${apiUrl}/control/editor/${worldId}/session/${sessionId}/block`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

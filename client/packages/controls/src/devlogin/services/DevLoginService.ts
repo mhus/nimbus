@@ -63,7 +63,7 @@ class DevLoginService {
     if (searchQuery) {
       params.search = searchQuery;
     }
-    return apiService.get<World[]>('/api/aaa/devlogin', params);
+    return apiService.get<World[]>('/control/aaa/devlogin', params);
   }
 
   /**
@@ -74,7 +74,7 @@ class DevLoginService {
     if (searchQuery) {
       params.search = searchQuery;
     }
-    return apiService.get<User[]>('/api/aaa/devlogin/users', params);
+    return apiService.get<User[]>('/control/aaa/devlogin/users', params);
   }
 
   /**
@@ -82,14 +82,14 @@ class DevLoginService {
    */
   async getCharacters(userId: string, worldId: string): Promise<Character[]> {
     const params = { userId, worldId };
-    return apiService.get<Character[]>('/api/aaa/devlogin/characters', params);
+    return apiService.get<Character[]>('/control/aaa/devlogin/characters', params);
   }
 
   /**
    * Perform login (session or agent)
    */
   async login(request: LoginRequest): Promise<LoginResponse> {
-    return apiService.post<LoginResponse>('/api/aaa/devlogin', request);
+    return apiService.post<LoginResponse>('/control/aaa/devlogin', request);
   }
 
   /**

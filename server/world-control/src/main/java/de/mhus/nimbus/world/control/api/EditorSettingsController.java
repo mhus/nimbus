@@ -23,7 +23,7 @@ import java.util.Optional;
  * Stores user-specific editor configuration like block palettes.
  */
 @RestController
-@RequestMapping("/api/editor/settings")
+@RequestMapping("/control/editor/settings")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "EditorSettings", description = "Editor settings per world and user")
@@ -33,7 +33,7 @@ public class EditorSettingsController extends BaseEditorController {
     private final WSessionService wSessionService;
 
     /**
-     * GET /api/editor/settings/worlds/{worldId}/editsettings
+     * GET /control/editor/settings/worlds/{worldId}/editsettings
      * Load settings for world and current user.
      *
      * @param worldId World identifier
@@ -79,7 +79,7 @@ public class EditorSettingsController extends BaseEditorController {
     }
 
     /**
-     * POST /api/editor/settings/worlds/{worldId}/editsettings/palette
+     * POST /control/editor/settings/worlds/{worldId}/editsettings/palette
      * Set palette for world and current user.
      * Always replaces the entire palette.
      *
