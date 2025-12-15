@@ -53,6 +53,12 @@ public class AccessService {
     private final JwtService jwtService;
     private final AccessProperties properties;
     private final Base64Service base64Service;
+    private final de.mhus.nimbus.shared.utils.LocationService locationService;
+
+    // Cache for world token (server-to-server authentication)
+    private volatile String cachedWorldToken;
+    private volatile Instant cachedWorldTokenExpiry;
+    private final Object worldTokenLock = new Object();
 
     // ===== 1. getWorlds =====
 
@@ -293,14 +299,14 @@ public class AccessService {
         url = url.replace("{session}", sessionId);
         url = url.replace("{userId}", request.getUserId());
         url = url.replace("{characterId}", request.getCharacterId());
-        return null;
+        return url;
     }
 
     private String findJumpUrl(AccessProperties properties, DevAgentLoginRequest request) {
         var url = properties.getJumpUrlSessionToken();
         url = url.replace("{worldId}", request.getWorldId());
         url = url.replace("{userId}", request.getUserId());
-        return null;
+        return url;
     }
 
     /**
@@ -691,18 +697,33 @@ public class AccessService {
     // ===== 7. getSessionStatus =====
 
     /**
-     * Gets current session status from sessionToken cookie.
+     * Gets current authentication status from sessionToken cookie or Bearer token.
      * Returns user info, URLs for logout, and login URL.
      *
-     * @param request HttpServletRequest containing sessionToken cookie
-     * @return SessionStatusResponse with session info and URLs
-     * @throws IllegalArgumentException if not authenticated or cookie invalid
+     * Supports three authentication types:
+     * 1. Session tokens (agent=false) - via cookie
+     * 2. Agent tokens (agent=true) - via cookie
+     * 3. World tokens (serverToServer=true) - via Authorization Bearer header
+     *
+     * For agent tokens, characterId, role, and sessionId will be null.
+     * For world tokens, all user-specific fields will be null.
+     *
+     * @param request HttpServletRequest containing sessionToken cookie or Bearer token
+     * @return SessionStatusResponse with authentication info and URLs
+     * @throws IllegalArgumentException if not authenticated or token invalid
      */
     public SessionStatusResponse getSessionStatus(HttpServletRequest request) {
-        // Extract and validate sessionToken from cookie
+        // First check for Bearer token (server-to-server)
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String bearerToken = authHeader.substring(7);
+            return getStatusFromBearerToken(bearerToken);
+        }
+
+        // Otherwise check for cookie-based token
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
-            throw new IllegalArgumentException("No cookies found");
+            throw new IllegalArgumentException("No cookies or Authorization header found");
         }
 
         String sessionToken = null;
@@ -714,7 +735,7 @@ public class AccessService {
         }
 
         if (sessionToken == null) {
-            throw new IllegalArgumentException("Session token not found");
+            throw new IllegalArgumentException("Session token not found in cookies");
         }
 
         // Parse and validate token
@@ -746,10 +767,13 @@ public class AccessService {
             String worldId = claims.get("worldId", String.class);
             String userId = claims.get("userId", String.class);
             String characterId = claims.get("characterId", String.class);
-            String role = claims.get("role", String.class);
+            String actor = claims.get("role", String.class); // "role" field contains actor
             String sessionId = claims.get("sessionId", String.class);
 
-            // Build logout URLs (same as cookie URLs but for logout)
+            // Load roles dynamically
+            List<String> roles = loadUserRoles(userId, worldId);
+
+            // Build logout URLs
             List<String> accessUrls = properties.getAccessUrls();
 
             return SessionStatusResponse.builder()
@@ -758,15 +782,108 @@ public class AccessService {
                     .worldId(worldId)
                     .userId(userId)
                     .characterId(characterId)
-                    .role(role)
+                    .actor(actor)
+                    .roles(roles)
                     .sessionId(sessionId)
                     .accessUrls(accessUrls)
                     .loginUrl(properties.getLoginUrl())
+                    .logoutUrl(properties.getLogoutUrl())
                     .build();
 
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to parse session token: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Gets status from Bearer token (server-to-server authentication).
+     */
+    private SessionStatusResponse getStatusFromBearerToken(String bearerToken) {
+        try {
+            // Decode JWT payload to extract regionId
+            String[] parts = bearerToken.split("\\.");
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Invalid bearer token format");
+            }
+
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+            String regionId = extractJsonField(payloadJson, "regionId");
+
+            // Validate token with JWT service
+            var jwsOpt = jwtService.validateTokenWithPublicKey(
+                    bearerToken,
+                    KeyType.REGION,
+                    KeyIntent.of(regionId, KeyIntent.REGION_JWT_TOKEN)
+            );
+
+            if (jwsOpt.isEmpty()) {
+                throw new IllegalArgumentException("Bearer token validation failed");
+            }
+
+            Claims claims = jwsOpt.get().getPayload();
+
+            // Check if this is a server-to-server token
+            Boolean serverToServer = claims.get("serverToServer", Boolean.class);
+            String serviceName = claims.get("serviceName", String.class);
+
+            if (serverToServer == null || !serverToServer) {
+                throw new IllegalArgumentException("Not a server-to-server token");
+            }
+
+            // Return status for server-to-server token
+            // Note: No logout URLs for server tokens (they don't use cookies)
+            return SessionStatusResponse.builder()
+                    .authenticated(true)
+                    .agent(false) // Not really agent, but serverToServer
+                    .worldId(null)
+                    .userId("service:" + serviceName)
+                    .characterId(null)
+                    .actor(null)
+                    .roles(List.of("SERVER_TO_SERVER"))
+                    .sessionId(null)
+                    .accessUrls(List.of()) // No logout URLs for server tokens
+                    .loginUrl(properties.getLoginUrl())
+                    .logoutUrl(properties.getLogoutUrl())
+                    .build();
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to validate bearer token: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Loads user roles from RUserService and WWorldService.
+     * Combines sector roles and world-specific roles.
+     */
+    private List<String> loadUserRoles(String userId, String worldId) {
+        List<String> allRoles = new java.util.ArrayList<>();
+
+        try {
+            // Get sector roles from RUserService
+            var sectorRoles = userService.getRoles(userId);
+            sectorRoles.forEach(role -> allRoles.add("SECTOR_" + role.name()));
+        } catch (Exception e) {
+            log.warn("Failed to load sector roles for user={}: {}", userId, e.getMessage());
+        }
+
+        try {
+            // Get world roles from WWorldService
+            if (worldId != null && !worldId.isBlank()) {
+                var worldOpt = worldService.getByWorldId(worldId);
+                if (worldOpt.isPresent()) {
+                    var world = worldOpt.get();
+                    var userIdOpt = UserId.of(userId);
+                    if (userIdOpt.isPresent()) {
+                        var worldRoles = world.getRolesForUser(userIdOpt.get());
+                        worldRoles.forEach(role -> allRoles.add("WORLD_" + role.name()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to load world roles for user={}, world={}: {}", userId, worldId, e.getMessage());
+        }
+
+        return allRoles;
     }
 
     /**
@@ -817,5 +934,80 @@ public class AccessService {
         response.addCookie(dataCookie);
 
         log.info("Session cookies cleared");
+    }
+
+    // ===== 9. getWorldToken (Server-to-Server) =====
+
+    /**
+     * Gets a world token for server-to-server authentication.
+     * Token is cached and automatically renewed when expired.
+     *
+     * World tokens are different from user tokens:
+     * - No worldId, userId, characterId
+     * - Contains serviceName (from LocationService.applicationServiceName)
+     * - Full access rights for inter-service communication
+     * - TTL: 1 hour (agentTokenTtlSeconds)
+     *
+     * @return Bearer token for Authorization header
+     */
+    public String getWorldToken() {
+        // Check if cached token is still valid
+        if (cachedWorldToken != null && cachedWorldTokenExpiry != null) {
+            // Renew if less than 5 minutes remaining
+            if (Instant.now().plusSeconds(300).isBefore(cachedWorldTokenExpiry)) {
+                log.debug("Using cached world token");
+                return cachedWorldToken;
+            }
+        }
+
+        // Generate new token (thread-safe)
+        synchronized (worldTokenLock) {
+            // Double-check after acquiring lock
+            if (cachedWorldToken != null && cachedWorldTokenExpiry != null) {
+                if (Instant.now().plusSeconds(300).isBefore(cachedWorldTokenExpiry)) {
+                    return cachedWorldToken;
+                }
+            }
+
+            // Get service name from LocationService
+            String serviceName = locationService.getApplicationServiceName();
+
+            log.info("Generating new world token for service: {}", serviceName);
+            if (serviceName == null || serviceName.isBlank()) {
+                throw new IllegalStateException("Service name not configured (spring.application.name)");
+            }
+
+            // Get regionId from properties or environment
+            String regionId = properties.getRegionId();
+            if (regionId == null || regionId.isBlank()) {
+                throw new IllegalStateException("Region ID not configured (world.access.regionId)");
+            }
+
+            // Build claims for world token
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("serviceName", serviceName);
+            claims.put("serverToServer", true);
+            claims.put("regionId", regionId);
+
+            // Calculate expiration (1 hour)
+            Instant expiresAt = Instant.now().plusSeconds(properties.getAgentTokenTtlSeconds());
+
+            // Create token
+            String token = jwtService.createTokenWithPrivateKey(
+                    KeyType.REGION,
+                    KeyIntent.of(regionId, KeyIntent.REGION_JWT_TOKEN),
+                    "service:" + serviceName,
+                    claims,
+                    expiresAt
+            );
+
+            // Cache token
+            cachedWorldToken = token;
+            cachedWorldTokenExpiry = expiresAt;
+
+            log.info("World token generated - serviceName={}, expiresAt={}", serviceName, expiresAt);
+
+            return token;
+        }
     }
 }

@@ -15,9 +15,11 @@ public record SessionStatusResponse(
         String worldId,
         String userId,
         String characterId,
-        String role,
+        String actor,              // Actor role: PLAYER, EDITOR, SUPPORT (session only)
+        List<String> roles,        // User roles: SECTOR_ADMIN, REGION_ADMIN, WORLD_OWNER, etc.
         String sessionId,
         List<String> accessUrls,
-        String loginUrl
+        String loginUrl,
+        String logoutUrl
 ) {
 }

@@ -68,4 +68,11 @@ public class AccessProperties {
 
     private String logoutUrl = "http://localhost:3002/dev-login.html";
 
+    /**
+     * Region ID for this service instance.
+     * Required for server-to-server authentication (worldToken).
+     * Should match the region this service belongs to.
+     */
+    private String regionId;
+
 }

@@ -85,50 +85,65 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
         boolean authenticated = false;
 
         try {
-            // 1. Extract sessionToken from cookie
-            String sessionToken = extractSessionTokenFromCookie(request);
+            // 1. Check for Bearer token (server-to-server authentication)
+            String bearerToken = extractBearerToken(request);
+            if (bearerToken != null) {
+                log.debug("Bearer token found - validating server-to-server authentication");
+                if (validateBearerToken(bearerToken, request)) {
+                    authenticated = true;
+                    log.info("Server-to-server authentication successful");
+                } else {
+                    log.warn("Invalid bearer token");
+                    request.setAttribute(ATTR_IS_AUTHENTICATED, false);
+                }
+            }
 
-            if (sessionToken == null) {
-                log.debug("No sessionToken cookie found");
-                request.setAttribute(ATTR_IS_AUTHENTICATED, false);
-            } else {
-                // 2. Validate sessionToken
-                SessionTokenClaims claims = validateSessionToken(sessionToken);
+            // 2. If no bearer token, try cookie-based authentication
+            if (!authenticated) {
+                String sessionToken = extractSessionTokenFromCookie(request);
 
-                if (claims == null) {
-                    log.warn("Invalid or expired sessionToken");
+                if (sessionToken == null) {
+                    log.debug("No sessionToken cookie found");
                     request.setAttribute(ATTR_IS_AUTHENTICATED, false);
                 } else {
-                    // 3. Check if claims are acceptable for this service (e.g., reject agent tokens)
-                    if (!isClaimsAcceptable(claims)) {
-                        log.warn("Claims not acceptable for this service - agent={}", claims.agent());
+                    // 3. Validate sessionToken
+                    SessionTokenClaims claims = validateSessionToken(sessionToken);
+
+                    if (claims == null) {
+                        log.warn("Invalid or expired sessionToken");
                         request.setAttribute(ATTR_IS_AUTHENTICATED, false);
                     } else {
-                        // 4. If session login (agent=false), validate Redis session
-                        if (!claims.agent() && claims.sessionId() != null) {
-                            boolean sessionValid = validateRedisSession(claims);
-                            if (!sessionValid) {
-                                log.warn("Redis session validation failed - sessionId={}", claims.sessionId());
-                                request.setAttribute(ATTR_IS_AUTHENTICATED, false);
+                        // 4. Check if claims are acceptable for this service (e.g., reject agent tokens)
+                        if (!isClaimsAcceptable(claims)) {
+                            log.warn("Claims not acceptable for this service - agent={}", claims.agent());
+                            request.setAttribute(ATTR_IS_AUTHENTICATED, false);
+                        } else {
+                            // 5. If session login (agent=false), validate Redis session
+                            if (!claims.agent() && claims.sessionId() != null) {
+                                boolean sessionValid = validateRedisSession(claims);
+                                if (!sessionValid) {
+                                    log.warn("Redis session validation failed - sessionId={}", claims.sessionId());
+                                    request.setAttribute(ATTR_IS_AUTHENTICATED, false);
+                                } else {
+                                    authenticated = true;
+                                }
                             } else {
                                 authenticated = true;
                             }
-                        } else {
-                            authenticated = true;
-                        }
 
-                        if (authenticated) {
-                            // 5. Attach claims to request attributes
-                            request.setAttribute(ATTR_IS_AUTHENTICATED, true);
-                            request.setAttribute(ATTR_IS_AGENT, claims.agent());
-                            request.setAttribute(ATTR_USER_ID, claims.userId());
-                            request.setAttribute(ATTR_WORLD_ID, claims.worldId());
-                            request.setAttribute(ATTR_ROLE, claims.role());
-                            request.setAttribute(ATTR_SESSION_ID, claims.sessionId());
-                            request.setAttribute(ATTR_CHARACTER_ID, claims.characterId());
+                            if (authenticated) {
+                                // 6. Attach claims to request attributes
+                                request.setAttribute(ATTR_IS_AUTHENTICATED, true);
+                                request.setAttribute(ATTR_IS_AGENT, claims.agent());
+                                request.setAttribute(ATTR_USER_ID, claims.userId());
+                                request.setAttribute(ATTR_WORLD_ID, claims.worldId());
+                                request.setAttribute(ATTR_ROLE, claims.role());
+                                request.setAttribute(ATTR_SESSION_ID, claims.sessionId());
+                                request.setAttribute(ATTR_CHARACTER_ID, claims.characterId());
 
-                            log.info("Access validated - userId={}, worldId={}, agent={}, sessionId={}",
-                                    claims.userId(), claims.worldId(), claims.agent(), claims.sessionId());
+                                log.info("Access validated - userId={}, worldId={}, agent={}, sessionId={}",
+                                        claims.userId(), claims.worldId(), claims.agent(), claims.sessionId());
+                            }
                         }
                     }
                 }
@@ -373,6 +388,80 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
 
         } catch (Exception e) {
             log.error("Redis session validation error: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Extracts Bearer token from Authorization header.
+     */
+    private String extractBearerToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7); // Remove "Bearer " prefix
+        }
+        return null;
+    }
+
+    /**
+     * Validates Bearer token for server-to-server authentication.
+     * Bearer tokens contain serviceName instead of userId and allow full access.
+     */
+    private boolean validateBearerToken(String token, HttpServletRequest request) {
+        try {
+            // Decode JWT payload to extract regionId
+            String[] parts = token.split("\\.");
+            if (parts.length != 3) {
+                log.warn("Invalid bearer token format");
+                return false;
+            }
+
+            String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            String regionId = extractRegionIdFromJson(payloadJson);
+
+            if (regionId == null) {
+                log.warn("Bearer token missing regionId");
+                return false;
+            }
+
+            // Validate token with JWT service
+            Optional<Jws<Claims>> jwsOpt = jwtService.validateTokenWithPublicKey(
+                    token,
+                    de.mhus.nimbus.shared.security.KeyType.REGION,
+                    de.mhus.nimbus.shared.security.KeyIntent.of(regionId, de.mhus.nimbus.shared.security.KeyIntent.REGION_JWT_TOKEN)
+            );
+
+            if (jwsOpt.isEmpty()) {
+                log.warn("Bearer token validation failed");
+                return false;
+            }
+
+            Claims claims = jwsOpt.get().getPayload();
+
+            // Check if this is a server-to-server token
+            Boolean serverToServer = claims.get("serverToServer", Boolean.class);
+            String serviceName = claims.get("serviceName", String.class);
+
+            if (serverToServer == null || !serverToServer) {
+                log.warn("Bearer token is not a server-to-server token");
+                return false;
+            }
+
+            if (serviceName == null || serviceName.isBlank()) {
+                log.warn("Bearer token missing serviceName");
+                return false;
+            }
+
+            // Set server-to-server attributes
+            request.setAttribute(ATTR_IS_AUTHENTICATED, true);
+            request.setAttribute("serverToServer", true);
+            request.setAttribute("serviceName", serviceName);
+
+            log.info("Bearer token validated - serviceName={}, regionId={}", serviceName, regionId);
+            return true;
+
+        } catch (Exception e) {
+            log.warn("Bearer token validation error: {}", e.getMessage());
             return false;
         }
     }

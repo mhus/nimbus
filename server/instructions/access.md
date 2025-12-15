@@ -134,17 +134,21 @@ In world-player und world-control entsprechende Ableitungen PlayerAccessFilter u
 - Gib eine info-seite aus mit einem Link auf den login (AccessProperties.loginUrl).
 - Die freigaben sollen durch eine abstrakte methode in AccessFilterBase abgefragt werden.
 
-[ ] In world-player soll der PlayerAccessFilter den Zugriff verweigern wenn das cookie nicht gueltig ist oder kein session cookie ist.
+[x] In world-player soll der PlayerAccessFilter den Zugriff verweigern wenn das cookie nicht gueltig ist oder kein session cookie ist.
 - Ausnahmen fuer /player/aaa/authorize
 - Bei verweigerung 401 zurueckgeben
 - Gib eine info-seite aus mit einem Link auf den login (AccessProperties.loginUrl).
 - Die freigaben sollen durch eine abstrakte methode in AccessFilterBase abgefragt werden.
 
-## Inner Server Communikation
+[ ] Zugriff auf rest endpunkte mit Annotations. 
+ 
+## Inner Server Comunikation
 
 [ ] Wenn dei server untereinander kommunizieren via rest requests, dann muss der access token als bearer token im authorization header mitgegeben werden.
-Dazu haelt jeder Server ein eigenes worldToken das vollen Zugriff erlaubt (keine worldId oder userId, characterId enthalten, dafuer der name des Services ()).
-In AccessService
+- Dazu haelt jeder Server ein eigenes worldToken das vollen Zugriff erlaubt (keine worldId oder userId, characterId enthalten, dafuer der name des Services (LocaltionService.applicationServiceName)).
+- In AccessService wird ein solches bearer Token erzeugt und gehalten. Wenn es ablauft, wird automatisch ein neues geholt (on request).
+- Will ein Service auf einen anderen world service zugreifen, holt er sich das token aus dem AccessService und fuegt es dem request header hinzu.
+- Im AccessFilterBase wird geprueft ob ein bearer token im authorization header ist. Wenn ja, wird es geprueft und der zugriff erlaubt.
 
 
 ## Cookie & CORS Configuration

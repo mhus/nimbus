@@ -23,7 +23,7 @@ import java.util.Map;
 @RequestMapping("/control/aaa")
 @RequiredArgsConstructor
 @Slf4j
-public class AaaController extends BaseEditorController {
+public class ControlAaaController extends BaseEditorController {
 
     private final AccessService accessService;
 
@@ -295,7 +295,7 @@ public class AaaController extends BaseEditorController {
 
         } catch (IllegalArgumentException e) {
             log.warn("Status check failed: {}", e.getMessage());
-            return unauthorized("Not authenticated or invalid session");
+            return unauthorized("Not authenticated or invalid token");
 
         } catch (Exception e) {
             log.error("Status check failed unexpectedly", e);

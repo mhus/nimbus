@@ -652,9 +652,9 @@ const handleLogin = async () => {
     console.log('[DevLogin] Login successful:', response);
 
     // Authorize with cookie URLs
-    if (response.cookieUrls && response.cookieUrls.length > 0) {
-      console.log('[DevLogin] Authorizing cookies:', response.cookieUrls);
-      await devLoginService.authorize(response.cookieUrls, response.accessToken);
+    if (response.accessUrls && response.accessUrls.length > 0) {
+      console.log('[DevLogin] Authorizing cookies:', response.accessUrls);
+      await devLoginService.authorize(response.accessUrls, response.accessToken);
     }
 
     // Redirect to jump URL

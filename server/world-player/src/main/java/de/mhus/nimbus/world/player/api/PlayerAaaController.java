@@ -17,7 +17,7 @@ import java.util.Map;
 @RequestMapping("/player/aaa")
 @RequiredArgsConstructor
 @Slf4j
-public class AaaController {
+public class PlayerAaaController {
 
     private final AccessService accessService;
 

@@ -35,13 +35,19 @@ public class LocationService {
     private String applicationServerHost;
 
     @Value("${spring.application.name:}")
-    @Getter
     private String applicationServiceName;
 
     private String serverIp;
     private Integer serverPort;
     private String externalAddress;
     private SERVER meServer;
+
+    /**
+     * Get application service name from spring.application.name property.
+     */
+    public String getApplicationServiceName() {
+        return applicationServiceName;
+    }
 
     /**
      * Get server IP address for originIp in CommandContext.

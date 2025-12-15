@@ -5,9 +5,16 @@ const logger = getLogger('AuthService');
 
 export interface AuthStatus {
   authenticated: boolean;
+  agent: boolean;
+  worldId: string | null;
+  userId: string | null;
+  characterId: string | null;
+  actor: string | null;
   roles: string[];
+  sessionId: string | null;
   accessUrls: string[];
   loginUrl: string;
+  logoutUrl: string | null;
 }
 
 /**
@@ -21,16 +28,30 @@ class AuthService {
     try {
       const response = await apiService.post<{
         authenticated: boolean;
+        agent?: boolean;
+        worldId?: string | null;
+        userId?: string | null;
+        characterId?: string | null;
+        actor?: string | null;
         roles?: string[];
+        sessionId?: string | null;
         accessUrls?: string[];
         loginUrl?: string;
+        logoutUrl?: string | null;
       }>('/control/aaa/status', {});
 
       return {
         authenticated: response.authenticated || false,
+        agent: response.agent || false,
+        worldId: response.worldId || null,
+        userId: response.userId || null,
+        characterId: response.characterId || null,
+        actor: response.actor || null,
         roles: response.roles || [],
+        sessionId: response.sessionId || null,
         accessUrls: response.accessUrls || [],
         loginUrl: response.loginUrl || 'dev-login.html',
+        logoutUrl: response.logoutUrl || null,
       };
     } catch (error) {
       logger.error('Failed to get auth status', {}, error instanceof Error ? error : undefined);
@@ -38,9 +59,16 @@ class AuthService {
       // If request fails, assume not authenticated
       return {
         authenticated: false,
+        agent: false,
+        worldId: null,
+        userId: null,
+        characterId: null,
+        actor: null,
         roles: [],
+        sessionId: null,
         accessUrls: [],
         loginUrl: 'dev-login.html',
+        logoutUrl: null,
       };
     }
   }
