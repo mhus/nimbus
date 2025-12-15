@@ -3,12 +3,15 @@ package de.mhus.nimbus.world.shared.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.utils.LocationService;
 import de.mhus.nimbus.shared.utils.LocationService.SERVER;
+import de.mhus.nimbus.world.shared.access.AccessService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -38,6 +41,7 @@ public class WorldClientService {
     private final WorldClientProperties properties;
     private final ObjectMapper objectMapper;
     private final LocationService locationService;
+    private final AccessService accessService;
 
     /**
      * Command request DTO.
@@ -176,10 +180,18 @@ public class WorldClientService {
                 log.debug("Sending command to {}: url={}, cmd={}, worldId={}",
                         targetServer, url, commandName, worldId);
 
+                // Get world token from AccessService
+                String bearerToken = accessService.getWorldToken();
+
+                // Add Authorization header with Bearer token
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", "Bearer " + bearerToken);
+                HttpEntity<CommandRequest> httpEntity = new HttpEntity<>(request, headers);
+
                 // Execute REST call with timeout
                 ResponseEntity<Map> response = restTemplate.postForEntity(
                         URI.create(url),
-                        request,
+                        httpEntity,
                         Map.class
                 );
 

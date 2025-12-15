@@ -144,12 +144,14 @@ In world-player und world-control entsprechende Ableitungen PlayerAccessFilter u
  
 ## Inner Server Comunikation
 
-[ ] Wenn dei server untereinander kommunizieren via rest requests, dann muss der access token als bearer token im authorization header mitgegeben werden.
+[?] Wenn dei server untereinander kommunizieren via rest requests, dann muss der access token als bearer token im authorization header mitgegeben werden.
 - Dazu haelt jeder Server ein eigenes worldToken das vollen Zugriff erlaubt (keine worldId oder userId, characterId enthalten, dafuer der name des Services (LocaltionService.applicationServiceName)).
 - In AccessService wird ein solches bearer Token erzeugt und gehalten. Wenn es ablauft, wird automatisch ein neues geholt (on request).
 - Will ein Service auf einen anderen world service zugreifen, holt er sich das token aus dem AccessService und fuegt es dem request header hinzu.
 - Im AccessFilterBase wird geprueft ob ein bearer token im authorization header ist. Wenn ja, wird es geprueft und der zugriff erlaubt.
 
+[?] Der AccessService hält ein token mit dem die services untereinander kommunizieren koennen.
+- Im WorldClientService werden rest aufrufe ausgefuehrt. Da muss immer der token als Bearer Token mitgegeben werden.
 
 ## Cookie & CORS Configuration
 
