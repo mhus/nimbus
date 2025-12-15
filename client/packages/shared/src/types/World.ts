@@ -41,12 +41,6 @@ export interface WorldInfo {
   /** Chunk size (default: 16) */
   chunkSize?: number; // javaType: int
 
-  /** Asset path for resources */
-  assetPath?: string;
-
-  /** Asset server port */
-  assetPort?: number; // javaType: int
-
   /** World icon asset path */
   worldIcon?: string;
 

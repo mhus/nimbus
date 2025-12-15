@@ -994,7 +994,7 @@ export class ModalService {
 
       // Build URL with path and parameters
       const separator = componentBaseUrl.includes('?') ? '&' : '?';
-      const worldId = this.appContext.worldInfo?.worldId || 'main';
+      const worldId = this.appContext.worldInfo?.worldId;
       const editorUrl = `${componentBaseUrl}block-editor.html${separator}world=${worldId}&x=${x}&y=${y}&z=${z}`;
 
       logger.debug('Opening block editor', { position: { x, y, z }, editorUrl });
@@ -1034,8 +1034,8 @@ export class ModalService {
 
       // Build URL with path and parameters
       const separator = componentBaseUrl.includes('?') ? '&' : '?';
-      const worldId = this.appContext.worldInfo?.worldId || 'main';
-      const sessionId = this.appContext.sessionId || '';
+      const worldId = this.appContext.worldInfo?.worldId;
+      const sessionId = this.appContext.sessionId;
 
       const editorUrl = `${componentBaseUrl}edit-config.html${separator}embedded=true&worldId=${worldId}&sessionId=${sessionId}`;
 

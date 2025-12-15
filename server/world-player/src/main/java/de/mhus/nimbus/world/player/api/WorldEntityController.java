@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * REST Controller for entity lookup using alternative URL pattern.
- * Matches client URL: GET /api/worlds/{worldId}/entity/{entityId}
+ * Matches client URL: GET /player/worlds/{worldId}/entity/{entityId}
  *
  * Searches in:
  * 1. Active player sessions (for player entities like "@ecb:blade")
  * 2. Database (for persistent NPC entities)
  */
 @RestController
-@RequestMapping("/api/worlds")
+@RequestMapping("/player/worlds")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "World Entities", description = "Entity instances (alternative URL pattern)")
@@ -38,7 +38,7 @@ public class WorldEntityController {
 
     /**
      * Get entity by ID.
-     * URL: GET /api/worlds/{worldId}/entity/{entityId}
+     * URL: GET /player/worlds/{worldId}/entity/{entityId}
      *
      * Searches for:
      * 1. Player entities in active sessions (entityId starts with "@")
@@ -54,7 +54,7 @@ public class WorldEntityController {
             @PathVariable String worldId,
             @PathVariable String entityId) {
 
-        log.debug("GET /api/worlds/{}/entity/{}", worldId, entityId);
+        log.debug("GET /player/worlds/{}/entity/{}", worldId, entityId);
 
         // Check if this is a player entity (starts with "@")
         if (entityId.startsWith("@")) {

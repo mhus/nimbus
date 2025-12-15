@@ -172,7 +172,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     // Load configuration from REST API before connecting to WebSocket
     logger.debug('Loading configuration from REST API...');
     const clientType = __EDITOR__ ? 'editor' : 'viewer';
-    const worldId = appContext.config?.worldId || 'main';
+    const worldId = appContext.config?.worldId;
     try {
       await configService.loadConfig(clientType, false, worldId);
       logger.debug('Configuration loaded successfully');

@@ -21,7 +21,7 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}")
+@RequestMapping("/player/worlds/{worldId}")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "BlockTypes", description = "BlockType templates for rendering blocks")
@@ -30,7 +30,7 @@ public class BlockTypeController {
     private final WBlockTypeService service;
 
     /**
-     * GET /api/worlds/{worldId}/blocktypeschunk/{groupName}
+     * GET /player/worlds/{worldId}/blocktypeschunk/{groupName}
      * Returns all BlockTypes in a specific group for chunked loading.
      */
     @GetMapping("/blocktypeschunk/{groupName}")
@@ -64,7 +64,7 @@ public class BlockTypeController {
     }
 
     /**
-     * GET /api/worlds/{worldId}/blocktypes/{blockId}
+     * GET /player/worlds/{worldId}/blocktypes/{blockId}
      * Returns a single BlockType by ID.
      */
     @GetMapping("/blocktypes/{*blockId}")

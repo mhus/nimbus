@@ -23,7 +23,7 @@ import java.util.Optional;
  * Provides complete EngineConfiguration for client initialization.
  */
 @RestController
-@RequestMapping("/api/worlds")
+@RequestMapping("/player/worlds")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "World Config", description = "World configuration for client initialization")

@@ -60,9 +60,9 @@ export class ConfigService {
 
     try {
       // Get worldId from parameter, config, or default to 'main'
-      const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
-      const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-      const url = `${apiUrl}/api/worlds/${targetWorldId}/config?client=${clientType}&t=${Date.now()}`;
+      const targetWorldId = worldId || this.appContext.config?.worldId;
+      const apiUrl = this.appContext.config?.apiUrl;
+      const url = `${apiUrl}/player/worlds/${targetWorldId}/config?client=${clientType}&t=${Date.now()}`;
 
       logger.debug('Loading configuration from REST API', { url, clientType });
 
@@ -174,9 +174,9 @@ export class ConfigService {
    * Load specific config section
    */
   async loadWorldInfo(worldId?: string): Promise<WorldInfo> {
-    const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
-    const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/worldinfo?t=${Date.now()}`;
+    const targetWorldId = worldId || this.appContext.config?.worldId;
+    const apiUrl = this.appContext.config?.apiUrl;
+    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/worldinfo?t=${Date.now()}`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -237,9 +237,9 @@ export class ConfigService {
    * Load specific config section
    */
   async loadPlayerInfo(worldId?: string): Promise<PlayerInfo> {
-    const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
-    const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/playerinfo`;
+    const targetWorldId = worldId || this.appContext.config?.worldId;
+    const apiUrl = this.appContext.config?.apiUrl;
+    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/playerinfo`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -259,9 +259,9 @@ export class ConfigService {
    * Load specific config section
    */
   async loadPlayerBackpack(worldId?: string): Promise<PlayerBackpack> {
-    const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
-    const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/playerbackpack`;
+    const targetWorldId = worldId || this.appContext.config?.worldId;
+    const apiUrl = this.appContext.config?.apiUrl;
+    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/playerbackpack`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -280,9 +280,9 @@ export class ConfigService {
    * Load specific config section
    */
   async loadSettings(clientType: 'viewer' | 'editor' = 'viewer', worldId?: string): Promise<Settings> {
-    const targetWorldId = worldId || this.appContext.config?.worldId || 'main';
-    const apiUrl = this.appContext.config?.apiUrl || 'http://localhost:3000';
-    const url = `${apiUrl}/api/worlds/${targetWorldId}/config/settings?client=${clientType}`;
+    const targetWorldId = worldId || this.appContext.config?.worldId;
+    const apiUrl = this.appContext.config?.apiUrl;
+    const url = `${apiUrl}/player/worlds/${targetWorldId}/config/settings?client=${clientType}`;
 
     const response = await fetch(url);
     if (!response.ok) {

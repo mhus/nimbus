@@ -20,7 +20,7 @@ class WorldInfoControllerTest {
 
     @Test
     void infoEndpointOk() throws Exception {
-        mvc.perform(get("/api/world/w1/info"))
+        mvc.perform(get("/player/world/w1/info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.service").value("world-provider"))
                 .andExpect(jsonPath("$.worldId").value("w1"));

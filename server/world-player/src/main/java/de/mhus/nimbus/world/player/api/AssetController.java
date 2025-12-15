@@ -26,12 +26,12 @@ import java.util.Map;
  * Serves binary assets and metadata from MongoDB.
  *
  * Endpoints:
- * - GET /api/worlds/{worldId}/assets - List assets with filters
- * - GET /api/worlds/{worldId}/assets/** - Serve binary asset
- * - GET /api/worlds/{worldId}/assets/**.info - Serve asset metadata
+ * - GET /player/worlds/{worldId}/assets - List assets with filters
+ * - GET /player/worlds/{worldId}/assets/** - Serve binary asset
+ * - GET /player/worlds/{worldId}/assets/**.info - Serve asset metadata
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/assets")
+@RequestMapping("/player/worlds/{worldId}/assets")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Assets", description = "Asset management (textures, models, audio)")
@@ -42,7 +42,7 @@ public class AssetController {
 
     /**
      * List assets with optional filtering and pagination.
-     * GET /api/worlds/{worldId}/assets?query=sword&ext=png&limit=100&offset=0
+     * GET /player/worlds/{worldId}/assets?query=sword&ext=png&limit=100&offset=0
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List assets", description = "List and search assets with pagination")
@@ -109,7 +109,7 @@ public class AssetController {
 
     /**
      * Serve asset metadata (.info file).
-     * GET /api/worlds/{worldId}/assets/textures/items/sword.png.info
+     * GET /player/worlds/{worldId}/assets/textures/items/sword.png.info
      */
     @GetMapping(value = "/**", produces = MediaType.APPLICATION_JSON_VALUE, params = "info")
     @Operation(summary = "Get asset metadata", description = "Returns asset metadata from publicData")

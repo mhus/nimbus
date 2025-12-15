@@ -21,7 +21,7 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}/entitymodel")
+@RequestMapping("/player/worlds/{worldId}/entitymodel")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "EntityModels", description = "EntityModel templates for 3D models and animations")

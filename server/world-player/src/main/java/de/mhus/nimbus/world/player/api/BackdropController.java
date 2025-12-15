@@ -21,7 +21,7 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/worlds/{worldId}")
+@RequestMapping("/player/worlds/{worldId}")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Backdrops", description = "Backdrop configurations for visual effects at chunk boundaries")

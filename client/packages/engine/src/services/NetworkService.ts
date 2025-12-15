@@ -626,8 +626,8 @@ export class NetworkService {
    * @returns Full asset URL
    */
   getAssetUrl(assetPath: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
-    const worldAssetPath = this.appContext.worldInfo?.assetPath || `/api/worlds/${worldId}/assets`;
+    const worldId = this.appContext.worldInfo?.worldId;
+    const worldAssetPath = `/player/worlds/${worldId}/assets`;
 
     return `${this.apiUrl}${worldAssetPath}/${assetPath}`;
   }
@@ -641,8 +641,8 @@ export class NetworkService {
    * @returns Full ItemType URL
    */
   getItemTypeUrl(type: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
-    return `${this.apiUrl}/api/worlds/${worldId}/itemtypes/${type}`;
+    const worldId = this.appContext.worldInfo?.worldId;
+    return `${this.apiUrl}/player/worlds/${worldId}/itemtypes/${type}`;
   }
 
   /**
@@ -654,11 +654,11 @@ export class NetworkService {
    * @returns Full speech URL with authentication
    */
   getSpeechUrl(streamPath: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
-    const sessionId = this.appContext.sessionId || '';
+    const worldId = this.appContext.worldInfo?.worldId;
+    const sessionId = this.appContext.sessionId;
 
     // Build base URL
-    const baseUrl = `${this.apiUrl}/api/world/${worldId}/speech/${streamPath}`;
+    const baseUrl = `${this.apiUrl}/player/world/${worldId}/speech/${streamPath}`;
 
     // Add query parameters
     const params = new URLSearchParams();
@@ -696,9 +696,9 @@ export class NetworkService {
    * @returns Full entity model URL with cache-busting timestamp
    */
   getEntityModelUrl(entityTypeId: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/api/worlds/${worldId}/entitymodel/${entityTypeId}?t=${timestamp}`;
+    return `${this.apiUrl}/player/worlds/${worldId}/entitymodel/${entityTypeId}?t=${timestamp}`;
   }
 
   /**
@@ -708,10 +708,9 @@ export class NetworkService {
    * @returns Full backdrop URL with cache-busting timestamp
    */
   getBackdropUrl(backdropTypeId: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-//    return `${this.apiUrl}/api/backdrop/${backdropTypeId}?t=${timestamp}`;
-    return `${this.apiUrl}/api/worlds/${worldId}/backdrop/${backdropTypeId}?t=${timestamp}`;
+    return `${this.apiUrl}/player/worlds/${worldId}/backdrop/${backdropTypeId}?t=${timestamp}`;
   }
 
   /**
@@ -721,9 +720,9 @@ export class NetworkService {
    * @returns Full entity URL with cache-busting timestamp
    */
   getEntityUrl(entityId: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/api/worlds/${worldId}/entity/${entityId}?t=${timestamp}`;
+    return `${this.apiUrl}/player/worlds/${worldId}/entity/${entityId}?t=${timestamp}`;
   }
 
   /**
@@ -735,9 +734,9 @@ export class NetworkService {
    * @returns Full block types range URL with cache-busting timestamp
    */
   getBlockTypesRangeUrl(from: number, to: number): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/api/worlds/${worldId}/blocktypes/${from}/${to}?t=${timestamp}`;
+    return `${this.apiUrl}/player/worlds/${worldId}/blocktypes/${from}/${to}?t=${timestamp}`;
   }
 
   /**
@@ -747,9 +746,9 @@ export class NetworkService {
    * @returns Full block types chunk URL with cache-busting timestamp
    */
   getBlockTypesChunkUrl(groupName: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
+    const worldId = this.appContext.worldInfo?.worldId;
     const timestamp = Date.now();
-    return `${this.apiUrl}/api/worlds/${worldId}/blocktypeschunk/${groupName}?t=${timestamp}`;
+    return `${this.apiUrl}/player/worlds/${worldId}/blocktypeschunk/${groupName}?t=${timestamp}`;
   }
 
   /**
@@ -759,8 +758,8 @@ export class NetworkService {
    * @returns Full item URL
    */
   getItemUrl(itemId: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
-    return `${this.apiUrl}/api/worlds/${worldId}/item/${itemId}`;
+    const worldId = this.appContext.worldInfo?.worldId;
+    return `${this.apiUrl}/player/worlds/${worldId}/item/${itemId}`;
   }
 
   /**
@@ -770,8 +769,8 @@ export class NetworkService {
    * @returns Full item data URL
    */
   getItemDataUrl(itemId: string): string {
-    const worldId = this.appContext.worldInfo?.worldId || 'main';
-    return `${this.apiUrl}/api/worlds/${worldId}/itemdata/${itemId}`;
+    const worldId = this.appContext.worldInfo?.worldId;
+    return `${this.apiUrl}/player/worlds/${worldId}/itemdata/${itemId}`;
   }
 
   /**

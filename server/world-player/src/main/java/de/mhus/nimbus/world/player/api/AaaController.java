@@ -14,14 +14,14 @@ import java.util.Map;
  * Provides authorization endpoint for setting session cookies.
  */
 @RestController
-@RequestMapping("/api/aaa")
+@RequestMapping("/player/aaa")
 @RequiredArgsConstructor
 @Slf4j
 public class AaaController {
 
     private final AccessService accessService;
 
-    // ===== GET /api/aaa/authorize =====
+    // ===== GET /player/aaa/authorize =====
 
     /**
      * Authorize with access token and set session cookies.
@@ -36,7 +36,7 @@ public class AaaController {
             @RequestParam String token,
             HttpServletResponse response
     ) {
-        log.debug("GET /api/aaa/authorize - validating token");
+        log.debug("GET /player/aaa/authorize - validating token");
 
         try {
             accessService.authorizeWithToken(token, response);

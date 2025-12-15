@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/world/{worldId}")
+@RequestMapping("/player/world/{worldId}")
 @Tag(name = "WorldInfo", description = "Infos zu einer World im world-provider")
 public class WorldInfoController {
 

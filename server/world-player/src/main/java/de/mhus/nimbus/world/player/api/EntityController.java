@@ -24,7 +24,7 @@ import java.util.Map;
  * Returns only publicData from entities.
  */
 @RestController
-@RequestMapping("/api/world/entities")
+@RequestMapping("/player/world/entities")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Entities", description = "Entity instances placed in worlds (NPCs, players, etc.)")

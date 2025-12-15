@@ -30,9 +30,9 @@ public class ItemTypeController {
 
     /**
      * Get ItemType by type.
-     * GET /api/worlds/{worldId}/itemtypes/{itemType}
+     * GET /player/worlds/{worldId}/itemtypes/{itemType}
      */
-    @GetMapping("/api/worlds/{worldId}/itemtypes/{itemType}")
+    @GetMapping("/player/worlds/{worldId}/itemtypes/{itemType}")
     @Operation(summary = "Get ItemType by type", description = "Returns ItemType template for a specific item type")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "ItemType found"),
@@ -65,9 +65,9 @@ public class ItemTypeController {
 
     /**
      * Get all ItemTypes for a world.
-     * GET /api/worlds/{worldId}/itemtypes
+     * GET /player/worlds/{worldId}/itemtypes
      */
-    @GetMapping("/api/worlds/{worldId}/itemtypes")
+    @GetMapping("/player/worlds/{worldId}/itemtypes")
     @Operation(summary = "Get all ItemTypes", description = "Returns all enabled ItemType templates for a world")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of ItemTypes")

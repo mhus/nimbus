@@ -40,9 +40,9 @@ public class ItemController {
 
     /**
      * Search items (max 100 results).
-     * GET /api/worlds/{worldId}/items?query={searchTerm}
+     * GET /player/worlds/{worldId}/items?query={searchTerm}
      */
-    @GetMapping("/api/worlds/{worldId}/items")
+    @GetMapping("/player/worlds/{worldId}/items")
     @Operation(summary = "Search items", description = "Returns items matching the search query")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success"),
@@ -88,9 +88,9 @@ public class ItemController {
 
     /**
      * Get full item data.
-     * GET /api/worlds/{worldId}/item/{itemId}
+     * GET /player/worlds/{worldId}/item/{itemId}
      */
-    @GetMapping("/api/worlds/{worldId}/item/{itemId}")
+    @GetMapping("/player/worlds/{worldId}/item/{itemId}")
     @Operation(summary = "Get item by ID", description = "Returns full item data for a specific itemId")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Item found"),

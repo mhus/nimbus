@@ -77,12 +77,6 @@ export class WorldInfoCommand extends CommandHandler {
     // World Configuration
     lines.push('World Configuration:');
     lines.push(`  Chunk Size      : ${worldInfo.chunkSize ?? 16}`);
-    if (worldInfo.assetPath) {
-      lines.push(`  Asset Path      : ${worldInfo.assetPath}`);
-    }
-    if (worldInfo.assetPort) {
-      lines.push(`  Asset Port      : ${worldInfo.assetPort}`);
-    }
     if (worldInfo.status !== undefined) {
       lines.push(`  Status          : ${worldInfo.status}`);
     }
