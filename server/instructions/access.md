@@ -27,6 +27,7 @@
 [ ] Es gibt bereits eine implementierung in world-region die muss vorher geprueft werden.
 [ ] Timeout an Webscoket auf 24 Stunden setzen (aktuell 12 Stunden)
 [m] Rollen und AccessGruppen in Typen umsetzen
+[m] Alte Filter löschen (nicht universe)
 
 ## Develpment
 
@@ -119,10 +120,14 @@ AccessToken:
 
 ---
 
+
+
+
+
 ## World Info Overwrite
 
 Bei der Rückgabe der WorldInfo muessen vorher Daten überschrieben werden.
-- Entyrpoint
+- Entrypoint
 - World Status (character spezifisch?!)
 - WorldId bei fallback (instance / branch)
 

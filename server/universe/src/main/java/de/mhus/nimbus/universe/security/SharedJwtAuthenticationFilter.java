@@ -1,5 +1,6 @@
-package de.mhus.nimbus.shared.security;
+package de.mhus.nimbus.universe.security;
 
+import de.mhus.nimbus.shared.security.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

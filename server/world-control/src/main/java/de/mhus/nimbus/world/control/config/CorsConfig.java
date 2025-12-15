@@ -1,10 +1,13 @@
 package de.mhus.nimbus.world.control.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
 
 /**
  * CORS configuration for world-control REST endpoints.
@@ -12,6 +15,9 @@ import org.springframework.web.filter.CorsFilter;
  */
 @Configuration
 public class CorsConfig {
+
+    @Value("${world.cors.allowed-origins:*}")
+    private List<String> allowedOrigins;
 
     @Bean
     public CorsFilter corsFilter() {
@@ -21,9 +27,8 @@ public class CorsConfig {
         // Allow credentials
         config.setAllowCredentials(true);
 
-        // Allow localhost origins (development)
-        config.addAllowedOriginPattern("http://localhost:*");
-        config.addAllowedOriginPattern("http://127.0.0.1:*");
+        // Allow origins
+        allowedOrigins.forEach(config::addAllowedOriginPattern);
 
         // Allow all headers
         config.addAllowedHeader("*");
