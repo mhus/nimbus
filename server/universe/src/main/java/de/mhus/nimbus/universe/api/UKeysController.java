@@ -1,4 +1,4 @@
-package de.mhus.nimbus.universe.user;
+package de.mhus.nimbus.universe.api;
 
 import de.mhus.nimbus.generated.dto.CreateSKeyRequest;
 import de.mhus.nimbus.generated.dto.UpdateSKeyNameRequest;

@@ -4933,20 +4933,6 @@
         "javaTypeHint" : "int",
         "comment" : "// javaType: int"
       }, {
-        "name" : "assetPath",
-        "type" : "string",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "assetPort",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
-      }, {
         "name" : "worldIcon",
         "type" : "string",
         "optional" : true,

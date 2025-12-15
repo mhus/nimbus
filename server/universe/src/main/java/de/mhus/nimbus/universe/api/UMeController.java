@@ -1,5 +1,6 @@
-package de.mhus.nimbus.universe.auth;
+package de.mhus.nimbus.universe.api;
 
+import de.mhus.nimbus.universe.auth.UMeResponse;
 import de.mhus.nimbus.universe.security.CurrentUser;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
 import de.mhus.nimbus.universe.security.Role;

@@ -64,7 +64,7 @@ public class RUserTest {
         u.setSectorRolesRaw("ADMIN,INVALID,ADMIN");
         assertTrue(u.hasSectorRole(SectorRoles.ADMIN));
         assertFalse(u.hasSectorRole(SectorRoles.USER));
-        assertEquals(2, u.getSectorRoles().size(), "Duplikate und ungültige Rollen sollten entfernt/ignoriert sein");
+        assertEquals(1, u.getSectorRoles().size(), "Duplikate und ungültige Rollen sollten entfernt/ignoriert sein");
     }
 
     @Test

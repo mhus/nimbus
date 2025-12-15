@@ -3,9 +3,11 @@ package de.mhus.nimbus.world.shared.sector;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.mhus.nimbus.generated.configs.Settings;
@@ -52,7 +54,7 @@ public class RUser {
 
     // Globale Rollen für den Region-Server (nicht pro einzelne Region)
     @Field("roles") // liest alte Property 'roles' weiterhin ein
-    private List<SectorRoles> sectorRoles; // null oder leer -> keine Rollen
+    private Set<SectorRoles> sectorRoles; // null oder leer -> keine Rollen
     private Map<String, RegionRoles> regionRoles; // regionId -> role
 
     // Charakter-Limits pro Region: regionId -> maxCount
@@ -69,10 +71,10 @@ public class RUser {
     public void disable() { this.enabled = false; }
 
     // ServerRoles API
-    public List<SectorRoles> getSectorRoles() { return sectorRoles == null ? Collections.emptyList() : Collections.unmodifiableList(sectorRoles); }
-    public void setSectorRoles(List<SectorRoles> roles) { this.sectorRoles = (roles == null || roles.isEmpty()) ? null : new ArrayList<>(new LinkedHashSet<>(roles)); }
+    public Set<SectorRoles> getSectorRoles() { return sectorRoles == null ? Collections.emptySet() : Collections.unmodifiableSet(sectorRoles); }
+    public void setSectorRoles(Set<SectorRoles> roles) { this.sectorRoles = (roles == null || roles.isEmpty()) ? null : new HashSet<>(new LinkedHashSet<>(roles)); }
     public boolean addSectorRole(SectorRoles role) {
-        if (role == null) return false; if (sectorRoles == null) sectorRoles = new ArrayList<>(); if (sectorRoles.contains(role)) return false; sectorRoles.add(role); return true;
+        if (role == null) return false; if (sectorRoles == null) sectorRoles = new HashSet<>(); if (sectorRoles.contains(role)) return false; sectorRoles.add(role); return true;
     }
     public boolean removeSectorRole(SectorRoles role) {
         if (role == null || sectorRoles == null) return false; return sectorRoles.remove(role);
@@ -82,7 +84,7 @@ public class RUser {
     public String getSectorRolesRaw() { return sectorRoles == null ? "" : sectorRoles.stream().map(Enum::name).collect(Collectors.joining(",")); }
     public void setSectorRolesRaw(String raw) {
         if (raw == null || raw.isBlank()) { sectorRoles = null; return; }
-        List<SectorRoles> list = new ArrayList<>();
+        Set<SectorRoles> list = new HashSet<>();
         for (String part : raw.split(",")) {
             String p = part.trim(); if (p.isEmpty()) continue;
             try { list.add(SectorRoles.valueOf(p)); } catch (IllegalArgumentException ignored) { }

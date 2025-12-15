@@ -1,5 +1,7 @@
-package de.mhus.nimbus.universe.favorit;
+package de.mhus.nimbus.universe.api;
 
+import de.mhus.nimbus.universe.favorit.UFavorit;
+import de.mhus.nimbus.universe.favorit.UFavoritService;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
 import de.mhus.nimbus.universe.security.CurrentUser;
 import de.mhus.nimbus.universe.security.Role;

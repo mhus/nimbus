@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/world/user/world")
@@ -29,7 +30,7 @@ public class UserWorldEditorController {
     private final WWorldService worldService;
 
     public record CreateChildWorldRequest(String worldId, Boolean enabled, Boolean publicFlag) {}
-    public record UpdateChildWorldRequest(Boolean enabled, Boolean publicFlag, List<String> editor, List<String> player) {}
+    public record UpdateChildWorldRequest(Boolean enabled, Boolean publicFlag, Set<String> editor, Set<String> player, Set<String> supporter, Set<String> owners) {}
 
     private String currentUserId(HttpServletRequest req) {
         Object attr = req.getAttribute("currentUserId");
@@ -124,6 +125,8 @@ public class UserWorldEditorController {
             if (req.publicFlag() != null) w.setPublicFlag(req.publicFlag());
             if (req.editor() != null) w.setEditor(req.editor());
             if (req.player() != null) w.setPlayer(req.player());
+            if (req.owners() != null) w.setOwner(req.owners());
+            if (req.supporter() != null) w.setSupporter(req.supporter());
         });
         WWorld updated = worldService.getByWorldId(worldIdStr).orElse(existing);
         return ResponseEntity.ok(worldToMap(updated));

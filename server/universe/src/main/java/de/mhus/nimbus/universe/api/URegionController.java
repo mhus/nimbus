@@ -1,7 +1,9 @@
-package de.mhus.nimbus.universe.region;
+package de.mhus.nimbus.universe.api;
 
 import de.mhus.nimbus.shared.dto.universe.URegionRequest;
 import de.mhus.nimbus.shared.dto.universe.URegionResponse;
+import de.mhus.nimbus.universe.region.URegion;
+import de.mhus.nimbus.universe.region.URegionService;
 import de.mhus.nimbus.universe.security.CurrentUser;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
 import de.mhus.nimbus.universe.security.Role;

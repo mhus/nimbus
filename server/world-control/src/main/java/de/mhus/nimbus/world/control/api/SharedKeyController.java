@@ -1,11 +1,21 @@
-package de.mhus.nimbus.shared.security;
+package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.shared.persistence.SKey;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
+import de.mhus.nimbus.shared.security.KeyKind;
+import de.mhus.nimbus.shared.security.KeyType;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -18,11 +28,9 @@ import java.util.stream.StreamSupport;
  * CRUD ähnlich wie UKeysController aber ohne Rollen-Annotation (Filter schützt).
  */
 @RestController
-@RequestMapping(SharedKeyController.BASE_PATH)
+@RequestMapping("/control/key")
 @Validated
 public class SharedKeyController {
-
-    public static final String BASE_PATH = "/shared/key";
 
     private final SKeyRepository repository;
 
@@ -82,7 +90,7 @@ public class SharedKeyController {
             }
         }
         SKey saved = repository.save(e);
-        return ResponseEntity.created(URI.create(BASE_PATH + "/" + saved.getId())).body(toDto(saved));
+        return ResponseEntity.ok(toDto(saved));
     }
 
     @PutMapping("/{id}")

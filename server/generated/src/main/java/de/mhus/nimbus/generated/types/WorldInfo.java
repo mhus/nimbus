@@ -23,12 +23,6 @@ public class WorldInfo {
     @com.fasterxml.jackson.annotation.JsonProperty("chunkSize")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private int chunkSize;
-    @com.fasterxml.jackson.annotation.JsonProperty("assetPath")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String assetPath;
-    @com.fasterxml.jackson.annotation.JsonProperty("assetPort")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int assetPort;
     @com.fasterxml.jackson.annotation.JsonProperty("worldIcon")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String worldIcon;

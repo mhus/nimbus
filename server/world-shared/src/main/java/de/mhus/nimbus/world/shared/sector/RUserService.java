@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.shared.sector;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.mhus.nimbus.generated.configs.Settings;
@@ -69,7 +70,7 @@ public class RUserService {
     }
 
     // Legacy API methods (moved from deprecated RUser methods)
-    public List<SectorRoles> getRoles(String username) {
+    public Set<SectorRoles> getRoles(String username) {
         RUser user = repository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.getSectorRoles();

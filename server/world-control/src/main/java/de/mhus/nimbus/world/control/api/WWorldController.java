@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * REST Controller for managing WWorld entities.
@@ -57,9 +58,9 @@ public class WWorldController extends BaseEditorController {
             Integer waterLevel,
             String groundBlockType,
             String waterBlockType,
-            List<String> owner,
-            List<String> editor,
-            List<String> player,
+            Set<String> owner,
+            Set<String> editor,
+            Set<String> player,
             boolean publicFlag
     ) {}
 

@@ -1,4 +1,4 @@
-package de.mhus.nimbus.shared.api;
+package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.shared.storage.StorageService;
 import jakarta.servlet.http.HttpServletResponse;

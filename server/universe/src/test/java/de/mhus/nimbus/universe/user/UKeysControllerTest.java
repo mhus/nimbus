@@ -6,6 +6,7 @@ import de.mhus.nimbus.shared.persistence.SKey;
 import de.mhus.nimbus.shared.persistence.SKeyRepository;
 import de.mhus.nimbus.shared.security.KeyKind;
 import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.universe.api.UKeysController;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;

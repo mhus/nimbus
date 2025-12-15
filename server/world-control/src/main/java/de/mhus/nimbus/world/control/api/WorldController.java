@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -49,10 +50,10 @@ public class WorldController extends BaseEditorController {
             Integer chunkSize,
             String status,
             String regionId,
-            List<String> owner,
+            Set<String> owner,
             Boolean publicFlag,
-            List<String> editor,
-            List<String> player
+            Set<String> editor,
+            Set<String> player
     ) {
     }
 

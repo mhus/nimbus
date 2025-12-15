@@ -1,5 +1,6 @@
 package de.mhus.nimbus.universe.auth;
 
+import de.mhus.nimbus.universe.api.ULoginController;
 import de.mhus.nimbus.universe.security.USecurityService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

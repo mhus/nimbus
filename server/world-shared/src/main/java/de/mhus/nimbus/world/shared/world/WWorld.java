@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -54,13 +55,13 @@ public class WWorld implements Identifiable {
 
     // Zugriff / Berechtigungen
     @Builder.Default
-    private List<String> owner = List.of(); // liste von userIds
+    private Set<String> owner = Set.of(); // liste von userIds
     @Builder.Default
-    private List<String> editor = List.of(); // liste von userIds
+    private Set<String> editor = Set.of(); // liste von userIds
     @Builder.Default
-    private List<String> supporter = List.of(); // liste von userIds
+    private Set<String> supporter = Set.of(); // liste von userIds
     @Builder.Default
-    private List<String> player = List.of(); // liste von userIds oder ['*'] für alle
+    private Set<String> player = Set.of(); // liste von userIds oder ['*'] für alle
 
     @Builder.Default
     private boolean publicFlag = false; // ob Welt öffentlich zugänglich ist

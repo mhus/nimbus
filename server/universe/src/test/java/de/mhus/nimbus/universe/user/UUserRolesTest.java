@@ -14,7 +14,7 @@ class UUserRolesTest {
     void newUser_shouldHaveNoRoles() {
         UUser u = new UUser("name","mail@example.com");
         assertThat(u.getRoles()).isEmpty();
-        assertThat(u.getRolesAsString()).isNull();
+        assertThat(u.getRolesAsString()).isEmpty();
     }
 
     @Test
@@ -49,7 +49,7 @@ class UUserRolesTest {
         assertThat(removedUserAgain).isFalse();
         assertThat(removedAdmin).isTrue();
         assertThat(u.getRoles()).isEmpty();
-        assertThat(u.getRolesAsString()).isNull();
+        assertThat(u.getRolesAsString()).isEmpty();
     }
 
     @Test
@@ -75,6 +75,6 @@ class UUserRolesTest {
         u.setRoles(UniverseRoles.USER);
         u.setRoles();
         assertThat(u.getRoles()).isEmpty();
-        assertThat(u.getRolesAsString()).isNull();
+        assertThat(u.getRolesAsString()).isEmpty();
     }
 }

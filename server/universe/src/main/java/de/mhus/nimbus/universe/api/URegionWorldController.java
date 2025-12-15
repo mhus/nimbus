@@ -1,4 +1,4 @@
-package de.mhus.nimbus.universe.region;
+package de.mhus.nimbus.universe.api;
 
 import de.mhus.nimbus.shared.dto.region.RegionWorldRequest;
 import de.mhus.nimbus.shared.dto.region.RegionWorldResponse;

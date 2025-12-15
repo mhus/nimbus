@@ -1,5 +1,6 @@
 package de.mhus.nimbus.universe.favorit;
 
+import de.mhus.nimbus.universe.api.UFavoritController;
 import de.mhus.nimbus.universe.security.CurrentUser;
 import de.mhus.nimbus.universe.security.RequestUserHolder;
 import org.junit.jupiter.api.BeforeEach;

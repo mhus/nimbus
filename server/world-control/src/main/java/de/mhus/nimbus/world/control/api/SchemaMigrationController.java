@@ -1,4 +1,4 @@
-package de.mhus.nimbus.shared.api;
+package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.shared.service.MongoRawDocumentService;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * by component scanning the {@code de.mhus.nimbus.shared.api} package.</p>
  */
 @RestController
-@RequestMapping("/shared/schema")
+@RequestMapping("/control/schema")
 @RequiredArgsConstructor
 @Slf4j
 public class SchemaMigrationController {

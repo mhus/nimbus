@@ -1,5 +1,7 @@
-package de.mhus.nimbus.universe.auth;
+package de.mhus.nimbus.universe.api;
 
+import de.mhus.nimbus.universe.auth.ULoginRequest;
+import de.mhus.nimbus.universe.auth.ULoginResponse;
 import de.mhus.nimbus.universe.security.USecurityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,7 +1,9 @@
-package de.mhus.nimbus.universe.world;
+package de.mhus.nimbus.universe.api;
 
 import de.mhus.nimbus.shared.user.UniverseRoles;
 import de.mhus.nimbus.universe.security.Role;
+import de.mhus.nimbus.universe.world.UWorld;
+import de.mhus.nimbus.universe.world.UWorldService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
