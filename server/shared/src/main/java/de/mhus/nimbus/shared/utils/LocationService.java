@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.utils;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class LocationService {
     private String applicationServerHost;
 
     @Value("${spring.application.name:}")
+    @Getter
     private String applicationServiceName;
 
     private String serverIp;

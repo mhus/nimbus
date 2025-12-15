@@ -276,4 +276,55 @@ public class AaaController extends BaseEditorController {
                     .body(Map.of("error", "Internal error: " + e.getMessage()));
         }
     }
+
+    // ===== POST /control/aaa/status =====
+
+    /**
+     * Get current session status from sessionToken cookie.
+     * Returns user info, world info, and URLs for logout.
+     *
+     * @return Status response with user data and URLs
+     */
+    @PostMapping("/status")
+    public ResponseEntity<?> getStatus(jakarta.servlet.http.HttpServletRequest request) {
+        log.debug("POST /control/aaa/status");
+
+        try {
+            var statusResponse = accessService.getSessionStatus(request);
+            return ResponseEntity.ok(statusResponse);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Status check failed: {}", e.getMessage());
+            return unauthorized("Not authenticated or invalid session");
+
+        } catch (Exception e) {
+            log.error("Status check failed unexpectedly", e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Internal error: " + e.getMessage()));
+        }
+    }
+
+    // ===== DELETE /control/aaa/authorize =====
+
+    /**
+     * Logout by removing session cookies (DELETE login).
+     * Clears the sessionToken cookie by setting MaxAge=0.
+     *
+     * @param response HttpServletResponse for cookie clearing
+     * @return 200 OK
+     */
+    @DeleteMapping("/authorize")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        log.debug("DELETE /control/aaa/authorize");
+
+        try {
+            accessService.logout(response);
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+
+        } catch (Exception e) {
+            log.error("Logout failed unexpectedly", e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Internal error: " + e.getMessage()));
+        }
+    }
 }

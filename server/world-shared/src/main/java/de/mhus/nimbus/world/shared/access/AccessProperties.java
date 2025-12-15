@@ -25,7 +25,7 @@ public class AccessProperties {
      * Cookie URLs for multi-domain cookie setup.
      * Hardcoded for now, will be made dynamic later.
      */
-    private List<String> cookieUrls = List.of(
+    private List<String> accessUrls = List.of(
             "http://localhost:9042/player/aaa/authorize",
             "http://localhost:9043/control/aaa/authorize"
     );
@@ -63,4 +63,9 @@ public class AccessProperties {
      * Example: ".example.com" for *.example.com
      */
     private String cookieDomain = null;
+
+    private String loginUrl = "http://localhost:3002/dev-login.html";
+
+    private String logoutUrl = "http://localhost:3002/dev-login.html";
+
 }

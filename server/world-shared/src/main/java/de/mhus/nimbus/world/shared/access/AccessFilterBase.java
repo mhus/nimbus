@@ -44,6 +44,28 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final WSessionService sessionService;
 
+    /**
+     * Determines if the given request path requires authentication.
+     * Subclasses can override this to define path-specific authentication rules.
+     *
+     * @param requestUri The request URI
+     * @param method The HTTP method
+     * @return true if authentication is required, false if the path is exempt
+     */
+    protected abstract boolean shouldRequireAuthentication(String requestUri, String method);
+
+    /**
+     * Validates if the authenticated session claims are acceptable for this service.
+     * Subclasses can override this to add additional validation (e.g., reject agent tokens).
+     *
+     * @param claims The validated session token claims
+     * @return true if claims are acceptable, false if they should be rejected
+     */
+    protected boolean isClaimsAcceptable(SessionTokenClaims claims) {
+        // Default: accept all valid claims
+        return true;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                      HttpServletResponse response,
@@ -53,6 +75,15 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
                 request.getMethod(), request.getRequestURI(),
                 request.getHeader("Host"), request.getHeader("Origin"));
 
+        // Always allow OPTIONS requests (CORS preflight) - they don't have cookies
+        if ("OPTIONS".equals(request.getMethod())) {
+            log.debug("Allowing OPTIONS request (CORS preflight)");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        boolean authenticated = false;
+
         try {
             // 1. Extract sessionToken from cookie
             String sessionToken = extractSessionTokenFromCookie(request);
@@ -60,51 +91,124 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
             if (sessionToken == null) {
                 log.debug("No sessionToken cookie found");
                 request.setAttribute(ATTR_IS_AUTHENTICATED, false);
-                filterChain.doFilter(request, response);
-                return;
-            }
+            } else {
+                // 2. Validate sessionToken
+                SessionTokenClaims claims = validateSessionToken(sessionToken);
 
-            // 2. Validate sessionToken
-            SessionTokenClaims claims = validateSessionToken(sessionToken);
-
-            if (claims == null) {
-                log.warn("Invalid or expired sessionToken");
-                request.setAttribute(ATTR_IS_AUTHENTICATED, false);
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            // 3. If session login (agent=false), validate Redis session
-            if (!claims.agent() && claims.sessionId() != null) {
-                boolean sessionValid = validateRedisSession(claims);
-                if (!sessionValid) {
-                    log.warn("Redis session validation failed - sessionId={}", claims.sessionId());
+                if (claims == null) {
+                    log.warn("Invalid or expired sessionToken");
                     request.setAttribute(ATTR_IS_AUTHENTICATED, false);
-                    filterChain.doFilter(request, response);
-                    return;
+                } else {
+                    // 3. Check if claims are acceptable for this service (e.g., reject agent tokens)
+                    if (!isClaimsAcceptable(claims)) {
+                        log.warn("Claims not acceptable for this service - agent={}", claims.agent());
+                        request.setAttribute(ATTR_IS_AUTHENTICATED, false);
+                    } else {
+                        // 4. If session login (agent=false), validate Redis session
+                        if (!claims.agent() && claims.sessionId() != null) {
+                            boolean sessionValid = validateRedisSession(claims);
+                            if (!sessionValid) {
+                                log.warn("Redis session validation failed - sessionId={}", claims.sessionId());
+                                request.setAttribute(ATTR_IS_AUTHENTICATED, false);
+                            } else {
+                                authenticated = true;
+                            }
+                        } else {
+                            authenticated = true;
+                        }
+
+                        if (authenticated) {
+                            // 5. Attach claims to request attributes
+                            request.setAttribute(ATTR_IS_AUTHENTICATED, true);
+                            request.setAttribute(ATTR_IS_AGENT, claims.agent());
+                            request.setAttribute(ATTR_USER_ID, claims.userId());
+                            request.setAttribute(ATTR_WORLD_ID, claims.worldId());
+                            request.setAttribute(ATTR_ROLE, claims.role());
+                            request.setAttribute(ATTR_SESSION_ID, claims.sessionId());
+                            request.setAttribute(ATTR_CHARACTER_ID, claims.characterId());
+
+                            log.info("Access validated - userId={}, worldId={}, agent={}, sessionId={}",
+                                    claims.userId(), claims.worldId(), claims.agent(), claims.sessionId());
+                        }
+                    }
                 }
             }
-
-            // 4. Attach claims to request attributes
-            request.setAttribute(ATTR_IS_AUTHENTICATED, true);
-            request.setAttribute(ATTR_IS_AGENT, claims.agent());
-            request.setAttribute(ATTR_USER_ID, claims.userId());
-            request.setAttribute(ATTR_WORLD_ID, claims.worldId());
-            request.setAttribute(ATTR_ROLE, claims.role());
-            request.setAttribute(ATTR_SESSION_ID, claims.sessionId());
-            request.setAttribute(ATTR_CHARACTER_ID, claims.characterId());
-
-            log.info("Access validated - userId={}, worldId={}, agent={}, sessionId={}",
-                    claims.userId(), claims.worldId(), claims.agent(), claims.sessionId());
 
         } catch (Exception e) {
             log.error("AccessFilter error: {}", e.getMessage(), e);
             request.setAttribute(ATTR_IS_AUTHENTICATED, false);
+            authenticated = false;
         }
 
-        // Continue filter chain (no blocking yet)
+        // Check if authentication is required for this path
+        if (!authenticated && shouldRequireAuthentication(request.getRequestURI(), request.getMethod())) {
+            log.warn("Access denied - authentication required for: {} {}", request.getMethod(), request.getRequestURI());
+            handleUnauthorized(request, response);
+            return;
+        }
+
+        // Continue filter chain
         filterChain.doFilter(request, response);
     }
+
+    /**
+     * Handles unauthorized access by returning a 401 error with HTML page.
+     * Subclasses can override this to customize the error response.
+     */
+    protected void handleUnauthorized(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("text/html; charset=UTF-8");
+
+        String loginUrl = getLoginUrl();
+        String requestUri = request.getRequestURI();
+
+        String html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>401 Unauthorized</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        max-width: 600px;
+                        margin: 100px auto;
+                        padding: 20px;
+                        text-align: center;
+                    }
+                    h1 { color: #d32f2f; }
+                    .info { margin: 20px 0; color: #666; }
+                    .login-link {
+                        display: inline-block;
+                        margin-top: 20px;
+                        padding: 10px 20px;
+                        background-color: #1976d2;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 4px;
+                    }
+                    .login-link:hover { background-color: #1565c0; }
+                </style>
+            </head>
+            <body>
+                <h1>401 - Unauthorized</h1>
+                <div class="info">
+                    <p>You need to be authenticated to access this resource.</p>
+                    <p><strong>Request:</strong> %s</p>
+                </div>
+                <a href="%s" class="login-link">Go to Login</a>
+            </body>
+            </html>
+            """.formatted(requestUri, loginUrl);
+
+        response.getWriter().write(html);
+    }
+
+    /**
+     * Gets the login URL for unauthorized responses.
+     * Subclasses can override this to provide a custom login URL.
+     */
+    protected abstract String getLoginUrl();
 
     /**
      * Extracts sessionToken from httpOnly cookie.
@@ -274,9 +378,10 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
     }
 
     /**
-     * Internal record for parsed session token claims.
+     * Record for parsed session token claims.
+     * Protected to allow subclasses to use it in isClaimsAcceptable().
      */
-    private record SessionTokenClaims(
+    protected record SessionTokenClaims(
             boolean agent,
             String worldId,
             String userId,

@@ -5,6 +5,7 @@
 
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import { getLogger } from '@nimbus/shared';
+import { showErrorToast } from '@/utils/toast';
 
 const logger = getLogger('ApiService');
 
@@ -48,11 +49,69 @@ export class ApiService {
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
+        const status = error.response?.status;
+        const method = error.config?.method?.toUpperCase();
+
+        // Handle network errors (no response from server)
+        if (!error.response) {
+          logger.error('Network error', {
+            url: error.config?.url,
+            method: method,
+            message: error.message
+          }, error);
+
+          // Check if it might be an authentication issue (CORS often fails when not authenticated)
+          if (error.message === 'Network Error' && method === 'GET') {
+            logger.info('Network error on GET request - might be authentication issue, redirecting to login', {
+              url: error.config?.url
+            });
+
+            showErrorToast('Cannot connect to server or session expired. Redirecting to login page...', 5000);
+            setTimeout(() => {
+              window.location.href = './index.html';
+            }, 2000);
+            return Promise.reject(error);
+          }
+
+          return Promise.reject(error);
+        }
+
         logger.error('Response error', {
           url: error.config?.url,
-          status: error.response?.status,
+          status: status,
+          method: method,
           data: error.response?.data
         }, error);
+
+        // Handle 401 Unauthorized
+        if (status === 401) {
+          if (method === 'GET') {
+            // For GET requests: show info and redirect to index.html
+            logger.info('Unauthorized GET request - redirecting to login', {
+              url: error.config?.url
+            });
+
+            // Show toast before redirect
+            showErrorToast('Session expired or not authenticated. Redirecting to login page...', 5000);
+
+            // Redirect to index.html after a short delay
+            setTimeout(() => {
+              window.location.href = './index.html';
+            }, 2000);
+          } else {
+            // For other methods: show Access Denied
+            logger.warn('Access Denied', {
+              url: error.config?.url,
+              method: method
+            });
+
+            // Modify error message
+            const accessError: any = error;
+            accessError.message = 'Access Denied';
+            return Promise.reject(accessError);
+          }
+        }
+
         return Promise.reject(error);
       }
     );

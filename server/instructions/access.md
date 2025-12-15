@@ -128,6 +128,25 @@ AccessToken:
 - noch nicht Zugriff verhindern
 In world-player und world-control entsprechende Ableitungen PlayerAccessFilter und ControlAccessFilter.
 
+[x] In world-control soll der ControlAccessFilter den Zugriff verweigern wenn das cookie nicht gueltig ist.
+- Ausnahmen fuer /control/aaa/authorize und /control/aaa/devlogin und /control/aaa/status und /control/aaa/logout
+- Bei verweigerung 401 zurueckgeben
+- Gib eine info-seite aus mit einem Link auf den login (AccessProperties.loginUrl).
+- Die freigaben sollen durch eine abstrakte methode in AccessFilterBase abgefragt werden.
+
+[ ] In world-player soll der PlayerAccessFilter den Zugriff verweigern wenn das cookie nicht gueltig ist oder kein session cookie ist.
+- Ausnahmen fuer /player/aaa/authorize
+- Bei verweigerung 401 zurueckgeben
+- Gib eine info-seite aus mit einem Link auf den login (AccessProperties.loginUrl).
+- Die freigaben sollen durch eine abstrakte methode in AccessFilterBase abgefragt werden.
+
+## Inner Server Communikation
+
+[ ] Wenn dei server untereinander kommunizieren via rest requests, dann muss der access token als bearer token im authorization header mitgegeben werden.
+Dazu haelt jeder Server ein eigenes worldToken das vollen Zugriff erlaubt (keine worldId oder userId, characterId enthalten, dafuer der name des Services ()).
+In AccessService
+
+
 ## Cookie & CORS Configuration
 
 **WICHTIG für Cookie-basierte Authentication:**
@@ -152,11 +171,13 @@ In world-player und world-control entsprechende Ableitungen PlayerAccessFilter u
    - ❌ CORS Wildcard mit Credentials → ✅ Spezifische Origins verwenden
    - ❌ Tomcat verwirft Cookies → ✅ Manuelles Cookie-Header Parsing als Fallback in AccessFilterBase
 
+
+
 ## Logout
 
-[ ] Fuege in world-control /control/aaa/status POST methode hinzu, die gibt nur die aktuellen daten aus dem sessionToken zurueck und die urls und die logoutUrl (neu!)
+[ ] Fuege in world-control /control/aaa/status POST methode hinzu, die gibt nur die aktuellen daten aus dem sessionToken zurueck und die urls und die logoutUrl (AccessProperties.logoutUrl)
 - Siehe dazu auch devLogin
-[ ] Fuege in die bestehende routen /control/aaa/logout und /player/aaa/logout eine DELETE methode hinzu. Sie soll die sessionId aus dem httpOnly entfernen.
+[ ] Fuege in die bestehende routen /control/aaa/authorize und /player/aaa/authorize eine DELETE methode hinzu. Sie soll die sessionId aus dem httpOnly entfernen.
 - In /player/aaa/logout: Falls es ein SessionToken ist, soll die ession im redis mit SessionService auf CLOSED gesetzt werden.
 
 [ ] Fuege in ../client/packages/controls einen logout.html control hinzu. Der holt sich die urls, macht den DELETE auf alle urls 

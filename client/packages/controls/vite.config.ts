@@ -28,6 +28,7 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
+        'index': resolve(__dirname, 'index.html'),
         'material-editor': resolve(__dirname, 'material-editor.html'),
         'blocktype-editor': resolve(__dirname, 'blocktype-editor.html'),
         'asset-editor': resolve(__dirname, 'asset-editor.html'),
@@ -38,6 +39,13 @@ export default defineConfig({
         'itemtype-editor': resolve(__dirname, 'itemtype-editor.html'),
         'scrawl-editor': resolve(__dirname, 'scrawl-editor.html'),
         'dev-login': resolve(__dirname, 'dev-login.html'),
+        'region-editor': resolve(__dirname, 'region-editor.html'),
+        'user-editor': resolve(__dirname, 'user-editor.html'),
+        'character-editor': resolve(__dirname, 'character-editor.html'),
+        'world-editor': resolve(__dirname, 'world-editor.html'),
+        'entity-editor': resolve(__dirname, 'entity-editor.html'),
+        'entitymodel-editor': resolve(__dirname, 'entitymodel-editor.html'),
+        'backdrop-editor': resolve(__dirname, 'backdrop-editor.html'),
       },
     },
   },

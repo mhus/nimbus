@@ -10,7 +10,6 @@ import de.mhus.nimbus.shared.user.WorldRoles;
 import de.mhus.nimbus.world.shared.dto.*;
 import de.mhus.nimbus.world.shared.region.RCharacter;
 import de.mhus.nimbus.world.shared.region.RCharacterService;
-import de.mhus.nimbus.world.shared.sector.RUserService;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
 import de.mhus.nimbus.world.shared.world.WWorld;
@@ -18,6 +17,7 @@ import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -279,7 +280,7 @@ public class AccessService {
         // Build response with configured URLs
         return DevLoginResponse.builder()
                 .accessToken(token)
-                .cookieUrls(properties.getCookieUrls())
+                .accessUrls(properties.getAccessUrls())
                 .jumpUrl(findJumpUrl(properties,request, sessionId))
                 .sessionId(sessionId)
                 .playerId(playerId)
@@ -358,7 +359,7 @@ public class AccessService {
         // Build response with configured URLs (no sessionId/playerId)
         return DevLoginResponse.builder()
                 .accessToken(token)
-                .cookieUrls(properties.getCookieUrls())
+                .accessUrls(properties.getAccessUrls())
                 .jumpUrl(findJumpUrl(properties,request))
                 .sessionId(null)
                 .playerId(null)
@@ -685,5 +686,136 @@ public class AccessService {
 
         json.append("}");
         return json.toString();
+    }
+
+    // ===== 7. getSessionStatus =====
+
+    /**
+     * Gets current session status from sessionToken cookie.
+     * Returns user info, URLs for logout, and login URL.
+     *
+     * @param request HttpServletRequest containing sessionToken cookie
+     * @return SessionStatusResponse with session info and URLs
+     * @throws IllegalArgumentException if not authenticated or cookie invalid
+     */
+    public SessionStatusResponse getSessionStatus(HttpServletRequest request) {
+        // Extract and validate sessionToken from cookie
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            throw new IllegalArgumentException("No cookies found");
+        }
+
+        String sessionToken = null;
+        for (Cookie cookie : cookies) {
+            if ("sessionToken".equals(cookie.getName())) {
+                sessionToken = cookie.getValue();
+                break;
+            }
+        }
+
+        if (sessionToken == null) {
+            throw new IllegalArgumentException("Session token not found");
+        }
+
+        // Parse and validate token
+        try {
+            // Decode JWT payload to extract regionId
+            String[] parts = sessionToken.split("\\.");
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Invalid token format");
+            }
+
+            String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+            String regionId = extractJsonField(payloadJson, "regionId");
+
+            // Validate token with JWT service
+            var jwsOpt = jwtService.validateTokenWithPublicKey(
+                    sessionToken,
+                    KeyType.REGION,
+                    KeyIntent.of(regionId, KeyIntent.REGION_JWT_TOKEN)
+            );
+
+            if (jwsOpt.isEmpty()) {
+                throw new IllegalArgumentException("Token validation failed");
+            }
+
+            Claims claims = jwsOpt.get().getPayload();
+
+            // Extract claims
+            Boolean agent = claims.get("agent", Boolean.class);
+            String worldId = claims.get("worldId", String.class);
+            String userId = claims.get("userId", String.class);
+            String characterId = claims.get("characterId", String.class);
+            String role = claims.get("role", String.class);
+            String sessionId = claims.get("sessionId", String.class);
+
+            // Build logout URLs (same as cookie URLs but for logout)
+            List<String> accessUrls = properties.getAccessUrls();
+
+            return SessionStatusResponse.builder()
+                    .authenticated(true)
+                    .agent(agent != null && agent)
+                    .worldId(worldId)
+                    .userId(userId)
+                    .characterId(characterId)
+                    .role(role)
+                    .sessionId(sessionId)
+                    .accessUrls(accessUrls)
+                    .loginUrl(properties.getLoginUrl())
+                    .build();
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to parse session token: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Simple JSON field extractor.
+     */
+    private String extractJsonField(String json, String fieldName) {
+        int fieldIndex = json.indexOf("\"" + fieldName + "\"");
+        if (fieldIndex == -1) {
+            return null;
+        }
+        int valueStart = json.indexOf("\"", fieldIndex + fieldName.length() + 3);
+        int valueEnd = json.indexOf("\"", valueStart + 1);
+        if (valueStart == -1 || valueEnd == -1) {
+            return null;
+        }
+        return json.substring(valueStart + 1, valueEnd);
+    }
+
+    // ===== 8. logout =====
+
+    /**
+     * Logout by clearing session cookies.
+     * Sets Max-Age=0 on sessionToken and sessionData cookies.
+     *
+     * @param response HttpServletResponse for cookie clearing
+     */
+    public void logout(jakarta.servlet.http.HttpServletResponse response) {
+        // Clear sessionToken cookie
+        jakarta.servlet.http.Cookie tokenCookie = new jakarta.servlet.http.Cookie("sessionToken", "");
+        tokenCookie.setHttpOnly(true);
+        tokenCookie.setSecure(properties.isSecureCookies());
+        tokenCookie.setPath("/");
+        tokenCookie.setMaxAge(0); // Delete cookie
+        if (properties.getCookieDomain() != null && !properties.getCookieDomain().isBlank()) {
+            tokenCookie.setDomain(properties.getCookieDomain());
+        }
+        response.addCookie(tokenCookie);
+
+        // Clear sessionData cookie
+        jakarta.servlet.http.Cookie dataCookie = new jakarta.servlet.http.Cookie("sessionData", "");
+        dataCookie.setHttpOnly(false);
+        dataCookie.setSecure(properties.isSecureCookies());
+        dataCookie.setPath("/");
+        dataCookie.setMaxAge(0); // Delete cookie
+        if (properties.getCookieDomain() != null && !properties.getCookieDomain().isBlank()) {
+            dataCookie.setDomain(properties.getCookieDomain());
+        }
+        response.addCookie(dataCookie);
+
+        log.info("Session cookies cleared");
     }
 }

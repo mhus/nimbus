@@ -46,7 +46,7 @@ export type LoginRequest = SessionLoginRequest | AgentLoginRequest;
 
 export interface LoginResponse {
   accessToken: string;
-  cookieUrls: string[];
+  accessUrls: string[];
   jumpUrl: string;
   sessionId?: string;
   playerId?: string;
@@ -96,8 +96,8 @@ class DevLoginService {
    * Authorize with cookie URLs
    * Makes requests to each URL to set authentication cookies
    */
-  async authorize(cookieUrls: string[], accessToken: string): Promise<void> {
-    const authPromises = cookieUrls.map(url =>
+  async authorize(accessUrls: string[], accessToken: string): Promise<void> {
+    const authPromises = accessUrls.map(url =>
       fetch(`${url}?token=${accessToken}`, {
         method: 'GET',
         credentials: 'include', // Important: allows setting cookies cross-origin

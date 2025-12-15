@@ -26,7 +26,7 @@ public class DevLoginResponse {
      * List of cookie URLs for multi-domain cookie setup.
      * Currently hardcoded, will be made dynamic later.
      */
-    private List<String> cookieUrls;
+    private List<String> accessUrls;
 
     /**
      * Jump URL to redirect user after login.
