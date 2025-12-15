@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.shared.session;
 
+import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
@@ -33,16 +35,16 @@ public class WSessionService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int ID_LENGTH = 60;
 
-    public WSession create(String worldId, String playerId, Duration ttl) {
+    public WSession create(WorldId worldId, PlayerId playerId) {
         String id = randomId();
         Instant now = Instant.now();
-        Duration effectiveTtl = ttl != null ? ttl : Duration.ofMinutes(props.getWaitingMinutes());
+        Duration effectiveTtl = Duration.ofMinutes(props.getWaitingMinutes());
         Instant expire = now.plus(effectiveTtl);
         WSession session = WSession.builder()
                 .id(id)
                 .status(WSessionStatus.WAITING)
-                .worldId(worldId)
-                .playerId(playerId)
+                .worldId(worldId.getId())
+                .playerId(playerId.getId())
                 .createdAt(now)
                 .updatedAt(now)
                 .expireAt(expire)

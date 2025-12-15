@@ -35,8 +35,8 @@ public class AccessProperties {
      * Hardcoded for now, will be made dynamic later.
      * {worldId} placeholder will be replaced with actual worldId.
      */
-    private String jumpUrlAgentToken = "http://localhost:3001?worldId={worldId}";
-    private String jumpUrlSessionToken = "http://localhost:3002?worldId={worldId}&session={session}";
+    private String jumpUrlAgent = "http://localhost:3002?worldId={worldId}";
+    private String jumpUrlSession = "http://localhost:3001?worldId={worldId}&session={session}";
 
     /**
      * Session token TTL in seconds (for agent=false).

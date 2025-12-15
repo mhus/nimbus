@@ -50,6 +50,13 @@ public class PlayerId {
         characterId = parts[1];
     }
 
+    public static Optional<PlayerId> of(String userId, String characterId) {
+        if (userId == null || characterId == null) return Optional.empty();
+        var id = "@" + userId + ":" + characterId;
+        if (!validate(id)) return Optional.empty();
+        return Optional.of(new PlayerId(id));
+    }
+
     public static Optional<PlayerId> of(String id) {
         if (id == null) return Optional.empty();
         if (!id.startsWith("@")) id = "@" + id;

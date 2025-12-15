@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.security.Base64Service;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.shared.types.PlayerId;
 import de.mhus.nimbus.shared.types.UserId;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.shared.user.WorldRoles;
@@ -30,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -253,8 +253,11 @@ public class AccessService {
         log.info("Dev session login: user={}, world={}, character={}, actor={}",
                 request.getUserId(), request.getWorldId(), request.getCharacterId(), request.getActor());
 
+        WorldId worldId = WorldId.of(request.getWorldId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid worldId: " + request.getWorldId()));
+
         // Validate world exists
-        WWorld world = worldService.getByWorldId(request.getWorldId())
+        WWorld world = worldService.getByWorldId(worldId)
                 .orElseThrow(() -> new IllegalArgumentException("World not found: " + request.getWorldId()));
 
         // Validate character exists
@@ -269,32 +272,33 @@ public class AccessService {
             throw new IllegalArgumentException("Character does not belong to user: " + request.getUserId());
         }
 
-        // Generate sessionId and playerId
-        String sessionId = UUID.randomUUID().toString();
-        String playerId = "@" + request.getUserId() + ":" + request.getCharacterId();
+        PlayerId playerId = PlayerId.of(request.getUserId(), request.getCharacterId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid userId or characterId"));
+
+        WSession session = sessionService.create(worldId, playerId);
 
         // Create JWT token
         String token = createSessionToken(
                 world.getRegionId(),
-                request.getUserId(),
-                request.getWorldId(),
-                request.getCharacterId(),
+                playerId.getUserId(),
+                worldId.getId(),
+                playerId.getCharacterId(),
                 request.getActor().name(),
-                sessionId
+                session.getId()
         );
 
         // Build response with configured URLs
         return DevLoginResponse.builder()
                 .accessToken(token)
                 .accessUrls(properties.getAccessUrls())
-                .jumpUrl(findJumpUrl(properties,request, sessionId))
-                .sessionId(sessionId)
-                .playerId(playerId)
+                .jumpUrl(findJumpUrl(properties,request, session.getId()))
+                .sessionId(session.getId())
+                .playerId(playerId.getId())
                 .build();
     }
 
     private String findJumpUrl(AccessProperties properties, DevSessionLoginRequest request, String sessionId) {
-        var url = properties.getJumpUrlSessionToken();
+        var url = properties.getJumpUrlSession();
         url = url.replace("{worldId}", request.getWorldId());
         url = url.replace("{session}", sessionId);
         url = url.replace("{userId}", request.getUserId());
@@ -303,7 +307,7 @@ public class AccessService {
     }
 
     private String findJumpUrl(AccessProperties properties, DevAgentLoginRequest request) {
-        var url = properties.getJumpUrlSessionToken();
+        var url = properties.getJumpUrlAgent();
         url = url.replace("{worldId}", request.getWorldId());
         url = url.replace("{userId}", request.getUserId());
         return url;
