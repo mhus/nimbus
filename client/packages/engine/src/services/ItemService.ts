@@ -126,7 +126,9 @@ export class ItemService {
 
       logger.debug('Fetching item from server', { itemId, url });
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -438,7 +440,9 @@ export class ItemService {
 
       logger.debug('Fetching ItemType from server', { type, url });
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
       if (!response.ok) {
         if (response.status === 404) {
           logger.debug('ItemType not found', { type });

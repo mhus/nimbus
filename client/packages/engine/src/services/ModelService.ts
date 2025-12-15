@@ -96,6 +96,16 @@ export class ModelService {
       cacheCleanupInterval: config?.cacheCleanupInterval ?? 120000, // 2 minutes
     };
 
+    // Configure BabylonJS to use credentials for all requests
+    // This is required for cookie-based authentication
+    if (typeof XMLHttpRequest !== 'undefined') {
+      const originalOpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(...args: any[]) {
+        originalOpen.apply(this, args as any);
+        this.withCredentials = true;
+      };
+    }
+
     logger.debug('ModelService initialized', { config: this.config });
 
     // Start cache cleanup

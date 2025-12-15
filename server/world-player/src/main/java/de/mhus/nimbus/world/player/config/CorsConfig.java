@@ -12,11 +12,17 @@ import java.util.List;
 /**
  * CORS configuration for world-player API.
  * Allows requests from localhost frontend during development.
+ *
+ * IMPORTANT: When using credentials (cookies), wildcard (*) is NOT allowed.
+ * Configure specific origins via application.yml:
+ *   world.cors.allowed-origins:
+ *     - http://localhost:3000
+ *     - http://localhost:8003
  */
 @Configuration
 public class CorsConfig {
 
-    @Value("${world.cors.allowed-origins:*}")
+    @Value("${world.cors.allowed-origins:http://localhost:*}")
     private List<String> allowedOrigins;
 
     @Bean
@@ -24,10 +30,10 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow credentials
+        // Allow credentials (required for cookies)
         config.setAllowCredentials(true);
 
-        // Allow origins
+        // Allow origins (must be specific when using credentials)
         allowedOrigins.forEach(config::addAllowedOriginPattern);
 
         // Allow all headers

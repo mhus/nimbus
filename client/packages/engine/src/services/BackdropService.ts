@@ -394,7 +394,9 @@ export class BackdropService {
 
       logger.debug('Fetching backdrop type from server', { id, url });
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
 
       if (response.status === 404) {
         logger.warn('Backdrop type not found on server', { id, url });

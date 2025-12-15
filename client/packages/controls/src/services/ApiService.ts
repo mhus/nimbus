@@ -21,6 +21,7 @@ export class ApiService {
       headers: {
         'Content-Type': 'application/json',
       },
+      withCredentials: true, // Enable sending/receiving cookies for cross-origin requests
     });
 
     // Request interceptor for authentication

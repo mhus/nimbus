@@ -186,7 +186,9 @@ export class EntityService {
       // Load from REST API
       const url = this.networkService.getEntityModelUrl(modelId);
       logger.debug('Loading entity model from API', { modelId, url });
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -232,7 +234,9 @@ export class EntityService {
       // Load from REST API
       const url = this.networkService.getEntityUrl(entityId);
       logger.debug('Loading entity from API', { entityId, url });
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         if (response.status === 404) {

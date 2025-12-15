@@ -293,13 +293,6 @@
         </div>
       </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="footer footer-center p-4 bg-base-300 text-base-content">
-      <div>
-        <p>Nimbus Dev Login v1.0.0</p>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -431,6 +424,11 @@ const loadFromLocalStorage = async () => {
       if (savedSessionUser) {
         selectedSessionUser.value = JSON.parse(savedSessionUser) as User;
 
+        // Load session users list if empty (needed to show in UI)
+        if (sessionUsers.value.length === 0) {
+          await loadSessionUsers();
+        }
+
         // Load characters for this user if world is selected
         if (selectedWorld.value && selectedSessionUser.value) {
           await loadCharacters(selectedSessionUser.value.username, selectedWorld.value.worldId);
@@ -460,6 +458,11 @@ const loadFromLocalStorage = async () => {
       const savedAgentUser = localStorage.getItem(STORAGE_KEY_AGENT_USER);
       if (savedAgentUser) {
         selectedAgentUser.value = JSON.parse(savedAgentUser) as User;
+
+        // Load agent users list if empty (needed to show in UI)
+        if (agentUsers.value.length === 0) {
+          await loadAgentUsers();
+        }
       }
     }
   } catch (e) {
@@ -670,11 +673,14 @@ const handleLogin = async () => {
 /**
  * When login type changes, clear selections and load users
  */
-watch(loginType, (newType) => {
-  selectedSessionUser.value = null;
-  selectedAgentUser.value = null;
-  selectedCharacter.value = null;
-  loginError.value = null;
+watch(loginType, (newType, oldType) => {
+  // Only clear selections if user manually changed the type (not on initial load)
+  if (oldType !== undefined) {
+    selectedSessionUser.value = null;
+    selectedAgentUser.value = null;
+    selectedCharacter.value = null;
+    loginError.value = null;
+  }
 
   // Load users when switching to a tab
   if (newType === 'session' && sessionUsers.value.length === 0) {
@@ -683,8 +689,10 @@ watch(loginType, (newType) => {
     loadAgentUsers();
   }
 
-  // Save to localStorage
-  saveToLocalStorage();
+  // Save to localStorage (only if not initial load)
+  if (oldType !== undefined) {
+    saveToLocalStorage();
+  }
 });
 
 /**

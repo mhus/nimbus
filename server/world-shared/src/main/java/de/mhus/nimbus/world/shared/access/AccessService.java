@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.access;
 
+import de.mhus.nimbus.shared.security.Base64Service;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyType;
@@ -50,6 +51,7 @@ public class AccessService {
     private final de.mhus.nimbus.world.shared.session.WSessionService sessionService;
     private final JwtService jwtService;
     private final AccessProperties properties;
+    private final Base64Service base64Service;
 
     // ===== 1. getWorlds =====
 
@@ -315,8 +317,8 @@ public class AccessService {
         claims.put("sessionId", sessionId);
         claims.put("regionId", regionId);
 
-        // Calculate expiration
-        Instant expiresAt = Instant.now().plusSeconds(properties.getTokenExpirationSeconds());
+        // Calculate expiration (use sessionTokenTtlSeconds for session tokens)
+        Instant expiresAt = Instant.now().plusSeconds(properties.getSessionTokenTtlSeconds());
 
         // Create token using JwtService
         return jwtService.createTokenWithPrivateKey(
@@ -374,8 +376,8 @@ public class AccessService {
         claims.put("userId", userId);
         claims.put("regionId", regionId);
 
-        // Calculate expiration
-        Instant expiresAt = Instant.now().plusSeconds(properties.getTokenExpirationSeconds());
+        // Calculate expiration (use agentTokenTtlSeconds for agent tokens)
+        Instant expiresAt = Instant.now().plusSeconds(properties.getAgentTokenTtlSeconds());
 
         // Create token using JwtService
         return jwtService.createTokenWithPrivateKey(
@@ -429,10 +431,10 @@ public class AccessService {
         }
 
         // 4. Create session token
-        String sessionToken = createSessionTokenFromAccess(claims, claims.regionId());
+        SessionTokenWithExpiry tokenWithExpiry = createSessionTokenFromAccess(claims, claims.regionId());
 
         // 5. Set cookies
-        setCookies(response, sessionToken, claims);
+        setCookies(response, tokenWithExpiry.token(), tokenWithExpiry.expiresAt(), claims);
 
         log.info("Authorization successful - worldId={}, userId={}, agent={}",
                 claims.worldId(), claims.userId(), claims.agent());
@@ -577,7 +579,9 @@ public class AccessService {
     /**
      * Creates session token from validated access token claims.
      */
-    private String createSessionTokenFromAccess(AccessTokenClaims claims, String regionId) {
+    private record SessionTokenWithExpiry(String token, Instant expiresAt) {}
+
+    private SessionTokenWithExpiry createSessionTokenFromAccess(AccessTokenClaims claims, String regionId) {
         Map<String, Object> tokenClaims = new HashMap<>();
         tokenClaims.put("agent", claims.agent());
         tokenClaims.put("worldId", claims.worldId());
@@ -597,50 +601,71 @@ public class AccessService {
 
         Instant expiresAt = Instant.now().plusSeconds(ttlSeconds);
 
-        return jwtService.createTokenWithPrivateKey(
+        String token = jwtService.createTokenWithPrivateKey(
                 KeyType.REGION,
                 KeyIntent.of(regionId, KeyIntent.REGION_JWT_TOKEN),
                 claims.userId(),
                 tokenClaims,
                 expiresAt
         );
+
+        return new SessionTokenWithExpiry(token, expiresAt);
     }
 
     /**
      * Sets two cookies: sessionToken (httpOnly) and sessionData (JS-accessible).
      */
-    private void setCookies(HttpServletResponse response, String sessionToken, AccessTokenClaims claims) {
-        int maxAgeSeconds = (int) (claims.agent()
-                ? properties.getAgentTokenTtlSeconds()
-                : properties.getSessionTokenTtlSeconds());
+    private void setCookies(HttpServletResponse response, String sessionToken, Instant expiresAt, AccessTokenClaims claims) {
+        // Calculate maxAge from the difference between expiration and now (in UTC)
+        long maxAgeSeconds = expiresAt.getEpochSecond() - Instant.now().getEpochSecond();
 
         boolean secure = properties.isSecureCookies();
         String domain = properties.getCookieDomain();
 
-        // Cookie 1: sessionToken (httpOnly)
-        Cookie tokenCookie = new Cookie("sessionToken", sessionToken);
-        tokenCookie.setHttpOnly(true);
-        tokenCookie.setSecure(secure);
-        tokenCookie.setPath("/");
-        tokenCookie.setMaxAge(maxAgeSeconds);
-        if (domain != null && !domain.isBlank()) {
-            tokenCookie.setDomain(domain);
-        }
-        response.addCookie(tokenCookie);
+        // Build Set-Cookie headers manually to include SameSite attribute
+        String tokenCookieHeader = buildCookieHeader("sessionToken", sessionToken, secure, domain, (int) maxAgeSeconds, true);
+        response.addHeader("Set-Cookie", tokenCookieHeader);
 
-        // Cookie 2: sessionData (JS-accessible)
+        // Cookie 2: sessionData (JS-accessible, Base64-encoded)
         String sessionData = buildSessionDataJson(claims);
-        Cookie dataCookie = new Cookie("sessionData", sessionData);
-        dataCookie.setHttpOnly(false); // JS-accessible!
-        dataCookie.setSecure(secure);
-        dataCookie.setPath("/");
-        tokenCookie.setMaxAge(maxAgeSeconds);
-        if (domain != null && !domain.isBlank()) {
-            dataCookie.setDomain(domain);
-        }
-        response.addCookie(dataCookie);
+        String encodedSessionData = base64Service.encode(sessionData);
+        String dataCookieHeader = buildCookieHeader("sessionData", encodedSessionData, secure, domain, (int) maxAgeSeconds, false);
+        response.addHeader("Set-Cookie", dataCookieHeader);
 
-        log.debug("Cookies set - sessionToken (httpOnly), sessionData (JS-accessible)");
+        log.info("Cookies set - sessionToken (httpOnly, secure={}, domain='{}', path='/', maxAge={}, expiresAt={}), sessionData (JS-accessible, Base64-encoded, same settings)",
+                secure, domain != null ? domain : "(none)", maxAgeSeconds, expiresAt);
+    }
+
+    /**
+     * Builds Set-Cookie header with SameSite attribute.
+     */
+    private String buildCookieHeader(String name, String value, boolean secure, String domain, int maxAge, boolean httpOnly) {
+        StringBuilder cookie = new StringBuilder();
+        cookie.append(name).append("=").append(value);
+        cookie.append("; Path=/");
+        cookie.append("; Max-Age=").append(maxAge);
+
+        if (domain != null && !domain.isBlank()) {
+            cookie.append("; Domain=").append(domain);
+        }
+
+        if (secure) {
+            cookie.append("; Secure");
+        }
+
+        if (httpOnly) {
+            cookie.append("; HttpOnly");
+        }
+
+        // SameSite=None allows cross-site cookies (required for CORS), but needs Secure=true
+        // For development without HTTPS, use SameSite=Lax
+        if (secure) {
+            cookie.append("; SameSite=None");
+        } else {
+            cookie.append("; SameSite=Lax");
+        }
+
+        return cookie.toString();
     }
 
     /**

@@ -120,7 +120,7 @@ AccessToken:
 
 ## Access Filters
 
-[ ] Erstelle in world-shared einen AccessFilterBase
+[x] Erstelle in world-shared einen AccessFilterBase
 - Der Filter soll aktuell nur den sessionToken aus dem httpOnly Cookie lesen und prüfen
 - Falls es ein SessionToken ist die session pruefen
 - Ergebnisse an den HttpRequest anhaengen
@@ -128,6 +128,39 @@ AccessToken:
 - noch nicht Zugriff verhindern
 In world-player und world-control entsprechende Ableitungen PlayerAccessFilter und ControlAccessFilter.
 
+## Cookie & CORS Configuration
+
+**WICHTIG für Cookie-basierte Authentication:**
+
+1. **CORS mit Credentials**:
+   - `Access-Control-Allow-Credentials: true` MUSS gesetzt sein
+   - `Access-Control-Allow-Origin` darf NICHT `*` sein - muss spezifische Origin sein
+   - Konfiguration in `CorsConfig.java` (world-control, world-player)
+   - Default: `http://localhost:*` (Pattern für alle localhost Ports)
+   - Production: Spezifische Origins in `application.yml` konfigurieren
+
+2. **Cookie Einstellungen** (AccessService.java):
+   - **sessionToken Cookie**: httpOnly=true, SameSite=Lax (HTTP) oder SameSite=None (HTTPS)
+   - **sessionData Cookie**: httpOnly=false (JS-accessible), Base64-encoded JSON
+   - MaxAge wird aus JWT expiresAt berechnet (UTC-korrekt)
+   - Path: `/`
+   - Secure: true nur für HTTPS (Production)
+
+3. **Bekannte Probleme & Lösungen**:
+   - ❌ Cookie-Wert mit ungültigen Zeichen → ✅ Base64-Encoding für JSON-Daten
+   - ❌ Timezone-Problem bei MaxAge → ✅ Berechnung aus `expiresAt.getEpochSecond() - Instant.now().getEpochSecond()`
+   - ❌ CORS Wildcard mit Credentials → ✅ Spezifische Origins verwenden
+   - ❌ Tomcat verwirft Cookies → ✅ Manuelles Cookie-Header Parsing als Fallback in AccessFilterBase
+
+## Logout
+
+[ ] Fuege in world-control /control/aaa/status POST methode hinzu, die gibt nur die aktuellen daten aus dem sessionToken zurueck und die urls und die logoutUrl (neu!)
+- Siehe dazu auch devLogin
+[ ] Fuege in die bestehende routen /control/aaa/logout und /player/aaa/logout eine DELETE methode hinzu. Sie soll die sessionId aus dem httpOnly entfernen.
+- In /player/aaa/logout: Falls es ein SessionToken ist, soll die ession im redis mit SessionService auf CLOSED gesetzt werden.
+
+[ ] Fuege in ../client/packages/controls einen logout.html control hinzu. Der holt sich die urls, macht den DELETE auf alle urls 
+und leitet auf die login seite weiter.
 
 ---
 

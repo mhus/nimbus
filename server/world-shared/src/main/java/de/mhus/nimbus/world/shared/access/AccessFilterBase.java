@@ -49,7 +49,9 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
                                      HttpServletResponse response,
                                      FilterChain filterChain) throws ServletException, IOException {
 
-        log.debug("AccessFilter processing request: {} {}", request.getMethod(), request.getRequestURI());
+        log.info("AccessFilter processing request: {} {} from host: {}, origin: {}",
+                request.getMethod(), request.getRequestURI(),
+                request.getHeader("Host"), request.getHeader("Origin"));
 
         try {
             // 1. Extract sessionToken from cookie
@@ -108,17 +110,51 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
      * Extracts sessionToken from httpOnly cookie.
      */
     private String extractSessionTokenFromCookie(HttpServletRequest request) {
+        // Try to get cookies from request
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return null;
-        }
 
-        for (Cookie cookie : cookies) {
-            if ("sessionToken".equals(cookie.getName())) {
-                return cookie.getValue();
+        if (cookies != null) {
+            log.info("Found {} cookies in request", cookies.length);
+            for (Cookie cookie : cookies) {
+                log.info("Cookie: name='{}', value='{}...'",
+                        cookie.getName(),
+                        cookie.getValue() != null ? cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) : "null");
+
+                if ("sessionToken".equals(cookie.getName())) {
+                    log.info("sessionToken cookie found via getCookies()!");
+                    return cookie.getValue();
+                }
+            }
+            log.warn("sessionToken cookie NOT found among {} cookies", cookies.length);
+        } else {
+            // Fallback: Parse Cookie header manually if getCookies() returns null
+            String cookieHeader = request.getHeader("Cookie");
+            log.warn("request.getCookies() returned null, parsing Cookie header manually: {}", cookieHeader);
+
+            if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                return parseSessionTokenFromHeader(cookieHeader);
             }
         }
 
+        return null;
+    }
+
+    /**
+     * Manually parses sessionToken from Cookie header string.
+     * Fallback when request.getCookies() returns null.
+     */
+    private String parseSessionTokenFromHeader(String cookieHeader) {
+        // Cookie format: "name1=value1; name2=value2; ..."
+        String[] cookies = cookieHeader.split(";");
+        for (String cookie : cookies) {
+            String trimmed = cookie.trim();
+            if (trimmed.startsWith("sessionToken=")) {
+                String value = trimmed.substring("sessionToken=".length());
+                log.info("sessionToken found in Cookie header via manual parsing!");
+                return value;
+            }
+        }
+        log.warn("sessionToken NOT found in Cookie header");
         return null;
     }
 

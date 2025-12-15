@@ -66,7 +66,9 @@ export class ConfigService {
 
       logger.debug('Loading configuration from REST API', { url, clientType });
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include', // Include cookies for authentication
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to load config: ${response.statusText}`);
@@ -178,7 +180,9 @@ export class ConfigService {
     const apiUrl = this.appContext.config?.apiUrl;
     const url = `${apiUrl}/player/worlds/${targetWorldId}/config/worldinfo?t=${Date.now()}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(`Failed to load WorldInfo: ${response.statusText}`);
     }
@@ -241,7 +245,9 @@ export class ConfigService {
     const apiUrl = this.appContext.config?.apiUrl;
     const url = `${apiUrl}/player/worlds/${targetWorldId}/config/playerinfo`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(`Failed to load PlayerInfo: ${response.statusText}`);
     }
@@ -263,7 +269,9 @@ export class ConfigService {
     const apiUrl = this.appContext.config?.apiUrl;
     const url = `${apiUrl}/player/worlds/${targetWorldId}/config/playerbackpack`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(`Failed to load PlayerBackpack: ${response.statusText}`);
     }
@@ -284,7 +292,9 @@ export class ConfigService {
     const apiUrl = this.appContext.config?.apiUrl;
     const url = `${apiUrl}/player/worlds/${targetWorldId}/config/settings?client=${clientType}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
     if (!response.ok) {
       throw new Error(`Failed to load Settings: ${response.statusText}`);
     }

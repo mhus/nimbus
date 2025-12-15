@@ -130,7 +130,9 @@ export class BlockTypeService {
 
       logger.debug('Loading BlockType group', { groupName, url });
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to load group: ${response.status} ${response.statusText}`);

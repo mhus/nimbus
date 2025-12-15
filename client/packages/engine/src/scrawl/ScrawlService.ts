@@ -482,7 +482,9 @@ export class ScrawlService {
           logger.debug('Loading script from asset server', { id, scriptUrl });
 
           // Fetch script from server
-          const response = await fetch(scriptUrl);
+          const response = await fetch(scriptUrl, {
+            credentials: 'include',
+          });
           if (!response.ok) {
             logger.error('Failed to load script from server', {
               id,
