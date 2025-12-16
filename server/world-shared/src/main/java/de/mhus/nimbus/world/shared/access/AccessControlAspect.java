@@ -1,7 +1,5 @@
 package de.mhus.nimbus.world.shared.access;
 
-import de.mhus.nimbus.shared.user.SectorRoles;
-import de.mhus.nimbus.shared.user.WorldRoles;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +33,7 @@ import java.lang.reflect.Method;
 @Slf4j
 public class AccessControlAspect {
 
-    private final AccessUtil accessUtil;
+    private final AccessValidator accessUtil;
 
     /**
      * Intercepts all REST controller methods to check access annotations.

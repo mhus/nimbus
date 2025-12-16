@@ -1,12 +1,9 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.Entity;
-import de.mhus.nimbus.generated.types.PlayerInfo;
-import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.service.PlayerService;
-import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.ws.SessionManager;
-import de.mhus.nimbus.world.shared.access.AccessUtil;
+import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +34,7 @@ public class WorldEntityController {
     private final WEntityService service;
     private final SessionManager sessionManager;
     private final PlayerService playerService;
-    private final AccessUtil accessUtil;
+    private final AccessValidator accessUtil;
 
     /**
      * Get entity by ID.

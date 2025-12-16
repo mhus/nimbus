@@ -1,8 +1,7 @@
 package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.BlockType;
-import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.shared.access.AccessUtil;
+import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WBlockType;
 import de.mhus.nimbus.world.shared.world.WBlockTypeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +29,7 @@ import java.util.Map;
 public class BlockTypeController {
 
     private final WBlockTypeService service;
-    private final AccessUtil accessUtil;
+    private final AccessValidator accessUtil;
 
     /**
      * GET /player/worlds/{worldId}/blocktypeschunk/{groupName}

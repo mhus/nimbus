@@ -1,10 +1,8 @@
 package de.mhus.nimbus.world.player.api;
 
-import de.mhus.nimbus.generated.types.Entity;
 import de.mhus.nimbus.shared.types.PlayerId;
-import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.service.PlayerService;
-import de.mhus.nimbus.world.shared.access.AccessUtil;
+import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,9 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * REST Controller for Entity instances in the world (read-only).
@@ -34,7 +29,7 @@ public class EntityController {
 
     private final WEntityService service;
     private final PlayerService playerService;
-    private final AccessUtil accessUtil;
+    private final AccessValidator accessUtil;
 
     @GetMapping("/{entityId}")
     @Operation(summary = "Get Entity by world and entity ID", description = "Returns Entity instance for a specific entity in a world")

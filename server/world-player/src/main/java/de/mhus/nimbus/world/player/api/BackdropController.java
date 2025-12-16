@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.Backdrop;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.shared.access.AccessUtil;
+import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WBackdrop;
 import de.mhus.nimbus.world.shared.world.WBackdropService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +30,7 @@ import java.util.Map;
 public class BackdropController {
 
     private final WBackdropService service;
-    private final AccessUtil accessUtil;
+    private final AccessValidator accessUtil;
 
     @GetMapping("/backdrop/{backdropId}")
     @Operation(summary = "Get Backdrop by ID", description = "Returns Backdrop configuration for a specific backdrop ID")

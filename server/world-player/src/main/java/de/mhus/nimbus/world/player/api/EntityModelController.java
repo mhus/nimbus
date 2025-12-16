@@ -1,8 +1,6 @@
 package de.mhus.nimbus.world.player.api;
 
-import de.mhus.nimbus.generated.types.EntityModel;
-import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.shared.access.AccessUtil;
+import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WEntityModel;
 import de.mhus.nimbus.world.shared.world.WEntityModelService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,9 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * REST Controller for EntityModel templates (read-only).
@@ -30,7 +25,7 @@ import java.util.Map;
 public class EntityModelController {
 
     private final WEntityModelService service;
-    private final AccessUtil accessUtil;
+    private final AccessValidator accessUtil;
 
     @GetMapping("/{modelId}")
     @Operation(summary = "Get EntityModel by ID", description = "Returns EntityModel template for a specific model ID")

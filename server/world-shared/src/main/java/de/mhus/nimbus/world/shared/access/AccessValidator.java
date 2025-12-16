@@ -30,7 +30,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class AccessUtil {
+public class AccessValidator {
 
     private final RUserService userService;
     private final WWorldService worldService;
@@ -219,7 +219,7 @@ public class AccessUtil {
 
         try {
             var userRoles = userService.getRoles(userIdOpt.get().getId());
-            return userRoles.contains(role);
+            return userRoles.contains(SectorRoles.ADMIN) || userRoles.contains(role);
         } catch (Exception e) {
             log.error("Error checking sector role for user {}: {}", userIdOpt.get().getId(), e.getMessage());
             return false;

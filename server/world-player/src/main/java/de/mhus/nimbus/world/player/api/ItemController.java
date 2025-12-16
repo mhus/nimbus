@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.types.Item;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.shared.access.AccessUtil;
+import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WItem;
 import de.mhus.nimbus.world.shared.world.WItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,16 +10,12 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.actuate.endpoint.Access;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for Items (read-only).
@@ -33,7 +29,7 @@ import java.util.stream.Collectors;
 public class ItemController {
 
     private final WItemService itemService;
-    private final AccessUtil accessUtil;
+    private final AccessValidator accessUtil;
 
     // DTO for search results
     public record ItemSearchResult(
