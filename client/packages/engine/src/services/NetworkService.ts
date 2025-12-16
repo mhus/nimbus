@@ -69,7 +69,6 @@ export class NetworkService {
   private pendingRequests: Map<string, PendingRequest> = new Map();
   private eventListeners: Map<string, EventListener[]> = new Map();
 
-  private lastLoginMessage?: RequestMessage<LoginRequestData>;
   private reconnectAttempt: number = 0;
   private maxReconnectAttempts: number = 5;
   private shouldReconnect: boolean = true;
@@ -293,24 +292,20 @@ export class NetworkService {
           'Verbindung wiederhergestellt'
         );
       }
-
-      // Resend login with sessionId for session restoration
-      if (this.appContext.sessionId) {
-        logger.debug('Resending login with sessionId after reconnect', {
-          sessionId: this.appContext.sessionId,
-        });
-        this.sendLoginWithSession(this.appContext.sessionId);
-      } else if (this.lastLoginMessage) {
-        logger.warn('No sessionId available, resending original login');
-        this.send(this.lastLoginMessage);
-      }
     } else {
       logger.debug('Connected to WebSocket server');
       this.emit('connected');
-
-      // Send initial login
-      this.sendLogin();
     }
+
+    if (this.appContext.sessionId) {
+      logger.debug('Resending login with sessionId after reconnect', {
+        sessionId: this.appContext.sessionId,
+      });
+      this.sendLoginWithSession(this.appContext.sessionId);
+    } else {
+      logger.warn('No sessionId available, resending original login');
+    }
+
   }
 
   /**
@@ -477,27 +472,6 @@ export class NetworkService {
   }
 
   /**
-   * Send login message
-   */
-  private sendLogin(): void {
-    const loginMessage: RequestMessage<LoginRequestData> = {
-      i: this.generateMessageId(),
-      t: MessageType.LOGIN,
-      d: {
-        username: this.appContext.config.username,
-        password: this.appContext.config.password,
-        worldId: this.appContext.config.worldId,
-        clientType: ClientType.WEB,
-      },
-    };
-
-    this.lastLoginMessage = loginMessage;
-    this.send(loginMessage);
-
-    logger.debug('Sent login message', { username: loginMessage.d!.username, worldId: loginMessage.d!.worldId });
-  }
-
-  /**
    * Send login message with sessionId for session restoration
    */
   private sendLoginWithSession(sessionId: string): void {
@@ -511,7 +485,6 @@ export class NetworkService {
       },
     };
 
-    this.lastLoginMessage = loginMessage;
     this.send(loginMessage);
 
     logger.debug('Sent login message with sessionId', { sessionId, worldId: loginMessage.d!.worldId });

@@ -53,55 +53,41 @@ public class LoginHandler implements MessageHandler {
     public void handle(PlayerSession session, NetworkMessage message) throws Exception {
         JsonNode data = message.getD();
 
-        // Extract login data
-        String username = data.has("username") ? data.get("username").asText() : null;
-        String password = data.has("password") ? data.get("password").asText() : null;
-        String worldIdStr = data.has("worldId") ? data.get("worldId").asText() : null;
         String clientTypeStr = data.has("clientType") ? data.get("clientType").asText() : "web";
         String existingSessionId = data.has("sessionId") ? data.get("sessionId").asText() : null;
 
-        log.info("Login attempt: player={}, worldId={}, existingSessionId={}",
-                username, worldIdStr, existingSessionId);
+        log.info("Login attempt: existingSessionId={}", existingSessionId);
 
-        // Check if world exists
-        var worldId = WorldId.of(worldIdStr);
-        if (worldIdStr != null && worldId.isEmpty()) {
-            log.warn("Invalid world ID format: {}, login failed", worldIdStr);
-            sendLoginResponse(session, message.getI(), false, "Invalid world id", null, null);
+        var wSessionOpt = wSessionService.get(existingSessionId);
+        if (wSessionOpt.isEmpty()) {
+            log.debug("Invalid or expired session ID: {}, login failed", existingSessionId);
+            sendLoginResponse(session, message.getI(), false, "Invalid or expired session ID", null, null);
             return;
         }
+        var wSession = wSessionOpt.get();
+        var worldIdOpt = WorldId.of(wSession.getWorldId());
+        var playerId = PlayerId.of(wSession.getPlayerId());
 
         var clientType = ClientType.valueOf(clientTypeStr.trim().toUpperCase());
 
-        WWorld world = worldService.getByWorldId(worldId.get()).orElse(null);
-        if (world == null || world.getPublicData() == null) {
-            log.warn("World not found in database: {}, login failed", worldId);
-            sendLoginResponse(session, message.getI(), false, "World not found: " + worldId, null, null);
-            return;
-        }
-
-        var playerId = PlayerId.of(username);
-        if (playerId.isEmpty()) { // TODO if sessionId is given, get player from existing session !
-            log.warn("Invalid player ID format: {}, login failed", username);
+        if (playerId.isEmpty()) {
+            log.warn("Invalid player ID, login failed");
             sendLoginResponse(session, message.getI(), false, "Invalid player", null, null);
             return;
         }
-        var player = playerService.getPlayer(playerId.get(), clientType, worldId.get().getRegionId());
+        var player = playerService.getPlayer(playerId.get(), clientType, worldIdOpt.get().getRegionId());
 
-        if (applicationDevelopmentEnabled && username != null && password != null) {
-            if (Strings.CS.equals(
-                    password,
-                    player.get().user().getDevelopmentPassword())
-            ) {
-                var newSessionId = wSessionService.create(
-                        worldId.get(),
-                        PlayerId.of(player.get().character().getPublicData().getPlayerId()).get()
-                ).getId();
-                sessionManager.authenticateSession(session, newSessionId, worldId.get(), player.get(), clientType);
-            }
-        } else {
-            sessionManager.authenticateSession(session, existingSessionId, worldId.get(), player.get(), clientType);
+        var worldOpt = worldService.getByWorldId(worldIdOpt.get());
+        if (worldOpt.isEmpty()) {
+            log.warn("World not found: {}, login failed", worldIdOpt.get());
+            sendLoginResponse(session, message.getI(), false, "World not found", null, null);
+            return;
         }
+        var world = worldOpt.get();
+
+//        if (applicationDevelopmentEnabled && username != null && password != null) {
+
+        sessionManager.authenticateSession(session, existingSessionId, worldIdOpt.get(), player.get(), clientType);
 
         if (!session.isAuthenticated()) {
             sendLoginResponse(session, message.getI(), false, "Invalid credentials", null, null);
@@ -115,7 +101,7 @@ public class LoginHandler implements MessageHandler {
         sendLoginResponse(session, message.getI(), true, null, actualSessionId, world);
 
         log.info("Login successful: user={}, sessionId={}, worldId={}",
-                playerId.get(), actualSessionId, worldId.get());
+                playerId.get(), actualSessionId, worldIdOpt.get());
     }
 
     private void sendLoginResponse(PlayerSession session, String requestId, boolean success,

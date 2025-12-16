@@ -190,6 +190,10 @@ export interface AppContext {
   sessionId: string | null;
 }
 
+export function loadSessionCookie(context : AppContext): void {
+
+}
+
 /**
  * Create initial application context
  * @param config Client configuration
@@ -207,7 +211,7 @@ export function createAppContext(
     config,
     serverInfo: null,
     worldInfo: null,
-    playerInfo: null, // Will be initialized by server configuration via ConfigService
+    playerInfo: null,
     sessionId: null,
   };
 }

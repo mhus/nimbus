@@ -11,7 +11,7 @@
 import {SHARED_VERSION, getLogger, ExceptionHandler, LoggerFactory, LogLevel} from '@nimbus/shared';
 import { loadClientConfig } from './config/ClientConfig';
 import { ClientService } from './services/ClientService';
-import { createAppContext } from './AppContext';
+import {createAppContext, loadSessionCookie} from './AppContext';
 import type { AppContext } from './AppContext';
 import { NetworkService } from './services/NetworkService';
 import { BlockTypeService } from './services/BlockTypeService';
@@ -76,6 +76,7 @@ async function initializeApp(): Promise<AppContext> {
     // Create AppContext
     logger.debug('Creating AppContext...');
     const appContext = createAppContext(config, clientService);
+    loadSessionCookie(appContext);
 
     // PlayerInfo will be initialized by server configuration via ConfigService
 

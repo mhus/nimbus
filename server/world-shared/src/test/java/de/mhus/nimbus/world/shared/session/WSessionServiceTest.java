@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.shared.session;
 
+import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.shared.types.WorldId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.redis.core.HashOperations;
@@ -36,7 +38,7 @@ class WSessionServiceTest {
         ));
         Mockito.when(template.delete(anyString())).thenReturn(true);
         WSessionService svc = new WSessionService(template, props);
-        WSession session = svc.create("w1","u1:c1", null);
+        WSession session = svc.create(WorldId.of("r1:w1").get(), PlayerId.of("u1:c1").get());
         assertNotNull(session.getId());
         assertEquals(60, session.getId().length());
         assertTrue(Duration.between(Instant.now(), session.getExpireAt()).toMinutes() <= 5);

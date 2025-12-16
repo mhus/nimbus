@@ -47,10 +47,6 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
       // Debug log the response structure
       logger.debug('Login response data', { data: successData });
 
-      // Update AppContext with sessionId from server
-      // Note: WorldInfo is now loaded via ConfigService before login
-      this.appContext.sessionId = successData.sessionId;
-
       // Generate player entity ID from username and sessionId
       // Format: @{username}_{sessionId}
       if (this.appContext.playerInfo) {
