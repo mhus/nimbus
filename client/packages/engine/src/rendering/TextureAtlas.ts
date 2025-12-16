@@ -24,6 +24,7 @@ import { DynamicTexture, StandardMaterial, Color3, Scene, RawTexture } from '@ba
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { TextureDefinition } from '@nimbus/shared';
+import { loadImageWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('TextureAtlas');
 
@@ -251,22 +252,10 @@ export class TextureAtlas {
   }
 
   /**
-   * Load image from URL
+   * Load image from URL with credentials
    */
   private loadImage(url: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-
-      img.onload = () => resolve(img);
-      img.onerror = (e) => {
-        const error = e instanceof Error ? e : new Error('Failed to load image');
-        logger.error('Failed to load image', { url }, error);
-        reject(new Error(`Failed to load image: ${url}`));
-      };
-
-      img.src = url;
-    });
+    return loadImageWithCredentials(url);
   }
 
   /**

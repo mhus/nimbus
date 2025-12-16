@@ -28,6 +28,7 @@ import {
 import type { AppContext } from '../AppContext';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 import type { ShaderService } from './ShaderService';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('MaterialService');
 
@@ -453,10 +454,13 @@ export class MaterialService {
         return this.textures.get(cacheKey)!;
       }
 
-      logger.debug('Loading texture', { path: textureDef.path, url });
+      logger.debug('Loading texture with credentials', { path: textureDef.path, url });
 
-      // Create Babylon.js Texture
-      const texture = new Texture(url, this.scene);
+      // Load texture with credentials (returns blob URL)
+      const blobUrl = await loadTextureUrlWithCredentials(url);
+
+      // Create Babylon.js Texture from blob URL
+      const texture = new Texture(blobUrl, this.scene);
 
       // Apply UV mapping transformations if defined
       if (textureDef.uvMapping) {

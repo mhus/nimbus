@@ -16,6 +16,7 @@ import type { AudioEngine, StaticSound } from '@babylonjs/core';
 import type { NetworkService } from './NetworkService';
 import type { PhysicsService } from './PhysicsService';
 import type { ClientBlock } from '../types/ClientBlock';
+import { loadAudioUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('AudioService');
 
@@ -265,7 +266,8 @@ class AudioPool {
 
       // Grow pool
       logger.debug('Pool full, creating new instance', { path: this.path });
-      const newSound = await CreateSoundAsync(this.path, this.audioUrl);
+      const blobUrl = await loadAudioUrlWithCredentials(this.audioUrl);
+      const newSound = await CreateSoundAsync(this.path, blobUrl);
       item = new AudioPoolItem(newSound);
       this.items.push(item);
       logger.debug('Pool grown', { path: this.path, newSize: this.items.length });
@@ -587,10 +589,13 @@ export class AudioService {
         const audioUrl = networkService.getAssetUrl(path);
         logger.debug('Loading sound into pool', { path, audioUrl, initialPoolSize });
 
+        // Load audio URL with credentials (once for all instances)
+        const blobUrl = await loadAudioUrlWithCredentials(audioUrl);
+
         // Load initial sound instances
         const initialSounds: any[] = [];
         for (let i = 0; i < initialPoolSize; i++) {
-          const sound = await CreateSoundAsync(path, audioUrl);
+          const sound = await CreateSoundAsync(path, blobUrl);
           initialSounds.push(sound);
           logger.debug('Sound instance created', { path, instance: i + 1, total: initialPoolSize });
         }
@@ -719,10 +724,13 @@ export class AudioService {
     try {
       const audioUrl = this.networkService.getAssetUrl(assetPath);
 
-      logger.debug('Loading audio', { assetPath, audioUrl });
+      logger.debug('Loading audio with credentials', { assetPath, audioUrl });
+
+      // Load audio URL with credentials
+      const blobUrl = await loadAudioUrlWithCredentials(audioUrl);
 
       // Create Babylon.js Sound object using async API
-      const sound = await CreateSoundAsync(assetPath, audioUrl);
+      const sound = await CreateSoundAsync(assetPath, blobUrl);
 
       // Apply options - StaticSound uses direct properties
       if (options?.loop !== undefined) {
@@ -939,10 +947,13 @@ export class AudioService {
           volume: audioDef.volume
         });
 
+        // Load audio URL with credentials
+        const blobUrl = await loadAudioUrlWithCredentials(deferredWrapper._config.url);
+
         // Create spatial sound using CreateSoundAsync (returns StaticSound)
         const sound = await CreateSoundAsync(
           deferredWrapper._config.name,
-          deferredWrapper._config.url
+          blobUrl
         );
 
         if (deferredWrapper._disposed) {
@@ -1573,10 +1584,13 @@ export class AudioService {
     try {
       // Get speech URL from NetworkService
       const speechUrl = this.networkService.getSpeechUrl(streamPath);
-      logger.debug('Loading speech', { streamPath, speechUrl, volume });
+      logger.debug('Loading speech with credentials', { streamPath, speechUrl, volume });
+
+      // Load speech URL with credentials
+      const blobUrl = await loadAudioUrlWithCredentials(speechUrl);
 
       // Load speech (non-spatial, non-looping, streamed)
-      const sound = await CreateSoundAsync(streamPath, speechUrl);
+      const sound = await CreateSoundAsync(streamPath, blobUrl);
 
       if (!sound) {
         logger.error('Failed to load speech', { streamPath });
