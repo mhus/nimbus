@@ -139,3 +139,5 @@ Editieren:
 [ ] Alle textures / sound pfade umstellen von w/ auf w:
 [ ] Entferne worldId und sessionId von controls URLs, die kann das backend jetzt aus dem Cookie laden
 
+[ ] Job Scheduler und andere in Player deaktivieren durch Annotations am Service
+

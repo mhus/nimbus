@@ -51,7 +51,7 @@
 
 [?] Erstelle in world-control einen REST Controller JobController unter /control/worlds/{worldId}/jobs
 
-[ ] Erstelle in world-control ein FlatWorldGenerator, NormalWorldGenerator und HillyWorldGenerator die das Interface WorldGenerator implementieren.
+[?] Erstelle in world-control ein FlatWorldGenerator, NormalWorldGenerator und HillyWorldGenerator die das Interface WorldGenerator implementieren.
 - in parameters gibt es die Option "grid" in der die hexgrid position steht.
 - Lade die WWorldEntity um die gridSize zu bekommen und HexGridEntity
 - in parameters muss eine Optiin "layer" sein (layer name) die angibt welches Layer generiert werden soll
