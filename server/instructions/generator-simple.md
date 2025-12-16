@@ -49,7 +49,7 @@
   - Jobs koennen nur abgearbeitet werden, wenn ein entsrechender executor vorhanden ist.
 - Erstelle in JobService einen Scheduler der COMPLETED oder FAILED Jobs nach einer konfigurierbaren Zeit loescht.
 
-[ ] Erstelle in world-control einen REST Controller JobController unter /control/worlds/{worldId}/jobs
+[?] Erstelle in world-control einen REST Controller JobController unter /control/worlds/{worldId}/jobs
 
 [ ] Erstelle in world-control ein FlatWorldGenerator, NormalWorldGenerator und HillyWorldGenerator die das Interface WorldGenerator implementieren.
 - in parameters gibt es die Option "grid" in der die hexgrid position steht.
