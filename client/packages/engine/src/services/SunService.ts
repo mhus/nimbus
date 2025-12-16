@@ -206,7 +206,7 @@ export class SunService {
 
     // Set lens flare rendering group - only occlude by world meshes
     this.lensFlareSystem.meshesSelectionPredicate = (mesh) => {
-      return mesh.renderingGroupId === RENDERING_GROUPS.WORLD;
+      return mesh.renderingGroupId === RENDERING_GROUPS.ENVIRONMENT;
     };
 
     logger.debug('Lens flare system created', {
