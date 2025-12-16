@@ -29,7 +29,7 @@
   - Erstelle funktionen die ausrechnen welche Blocks in einem HexGrid sind basierend auf der gridSize (durchmesser) in WorldEntity und der position.
     - getFlatPositionSet(worldEntity) : Set<FlatPosition> // position as x:int,z:int
 
-[ ] Erstelle in world-control einen REST Controller HexGridController unter /control/worlds/{worldId}/hexgrid
+[?] Erstelle in world-control einen REST Controller HexGridController unter /control/worlds/{worldId}/hexgrid
 
 [ ] Erstelle einen JobEntity, JobRepository und JobService in world-shared Module.
 - JobEntity
