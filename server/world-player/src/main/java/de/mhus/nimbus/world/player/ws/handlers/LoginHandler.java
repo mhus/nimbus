@@ -76,6 +76,11 @@ public class LoginHandler implements MessageHandler {
             return;
         }
         var player = playerService.getPlayer(playerId.get(), clientType, worldIdOpt.get().getRegionId());
+        if (player.isEmpty()) {
+            log.warn("Player not found: {}, login failed", playerId.get());
+            sendLoginResponse(session, message.getI(), false, "Player not found", null, null);
+            return;
+        }
 
         var worldOpt = worldService.getByWorldId(worldIdOpt.get());
         if (worldOpt.isEmpty()) {
@@ -84,8 +89,6 @@ public class LoginHandler implements MessageHandler {
             return;
         }
         var world = worldOpt.get();
-
-//        if (applicationDevelopmentEnabled && username != null && password != null) {
 
         sessionManager.authenticateSession(session, existingSessionId, worldIdOpt.get(), player.get(), clientType);
 

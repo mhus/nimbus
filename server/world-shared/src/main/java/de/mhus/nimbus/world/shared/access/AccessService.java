@@ -193,7 +193,7 @@ public class AccessService {
      */
     private CharacterInfoDto mapToCharacterInfoDto(RCharacter character) {
         return CharacterInfoDto.builder()
-                .id(character.getId())
+                .id(character.getName())
                 .name(character.getName())
                 .display(character.getDisplay())
                 .userId(character.getUserId())
@@ -261,11 +261,9 @@ public class AccessService {
                 .orElseThrow(() -> new IllegalArgumentException("World not found: " + request.getWorldId()));
 
         // Validate character exists
-        RCharacter character = characterService.listCharactersByRegion(world.getRegionId())
-                .stream()
-                .filter(c -> c.getId().equals(request.getCharacterId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Character not found: " + request.getCharacterId()));
+        RCharacter character = characterService.getCharacter(request.getUserId(), world.getRegionId(), request.getCharacterId()).orElseThrow(
+                () -> new IllegalArgumentException("Character not found: " + request.getCharacterId())
+        );
 
         // Validate userId matches
         if (!character.getUserId().equals(request.getUserId())) {
@@ -547,9 +545,6 @@ public class AccessService {
         if (!expectedPlayerId.equals(session.getPlayerId())) {
             throw new IllegalStateException("Session playerId mismatch");
         }
-
-        // Update session to RUNNING
-        sessionService.updateStatus(claims.sessionId(), WSessionStatus.RUNNING);
 
         log.debug("Session validated and activated - sessionId={}", claims.sessionId());
     }
