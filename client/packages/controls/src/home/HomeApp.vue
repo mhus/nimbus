@@ -257,6 +257,30 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
           </svg>
         </EditorCard>
+
+        <!-- Hex Grid Editor -->
+        <EditorCard
+          v-if="hasAccess('HEXGRID_EDITOR')"
+          title="Hex Grid Editor"
+          description="Manage hexagonal world grids"
+          url="./hex-editor.html"
+        >
+          <svg class="w-8 h-8 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </EditorCard>
+
+        <!-- Job Controller -->
+        <EditorCard
+          v-if="hasAccess('JOB_CONTROLLER')"
+          title="Job Controller"
+          description="Manage and monitor background jobs"
+          url="./job-controller.html"
+        >
+          <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </EditorCard>
       </div>
     </main>
   </div>
@@ -287,6 +311,8 @@ const editorRoleMap: Record<string, string[]> = {
   'ITEMTYPE_EDITOR': ['SECTOR_ADMIN', 'ITEMTYPE_EDITOR', 'WORLD_EDITOR'],
   'SCRAWL_EDITOR': ['SECTOR_ADMIN', 'SCRAWL_EDITOR', 'WORLD_EDITOR'],
   'BLOCK_EDITOR': ['SECTOR_ADMIN', 'BLOCK_EDITOR', 'WORLD_EDITOR'],
+  'HEXGRID_EDITOR': ['SECTOR_ADMIN', 'HEXGRID_EDITOR', 'WORLD_EDITOR'],
+  'JOB_CONTROLLER': ['SECTOR_ADMIN', 'JOB_CONTROLLER', 'WORLD_EDITOR'],
 };
 
 /**
