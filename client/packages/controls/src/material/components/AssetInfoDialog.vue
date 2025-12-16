@@ -554,16 +554,15 @@ const handleDuplicate = async () => {
   duplicateError.value = null;
 
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
-    const url = `${apiUrl}/editor/user/asset/main/${props.worldId}/duplicate`;
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const url = `${apiUrl}/worlds/${props.worldId}/assets/duplicate/${props.assetPath}`;
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        sourcePath: props.assetPath,
         newPath: newAssetPath.value,
       }),
     });

@@ -11,7 +11,7 @@ export async function saveBlockAsBlockType(
   blockData: any
 ): Promise<{ success: boolean; error?: string; blockId?: string }> {
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
     const url = `${apiUrl}/control/worlds/${worldId}/blocktypes/fromBlock/${encodeURIComponent(newBlockTypeId)}`;
 
     // Send the block data as payload

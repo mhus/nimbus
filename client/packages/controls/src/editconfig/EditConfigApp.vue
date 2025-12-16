@@ -570,7 +570,7 @@ const { isEmbedded } = useModal();
 const params = new URLSearchParams(window.location.search);
 const worldId = ref(params.get('worldId'));
 const sessionId = ref(params.get('sessionId') || '');
-const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043'); // world-control
+const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL); // world-control
 
 // Edit State (unified)
 const editState = ref({

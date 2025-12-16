@@ -907,7 +907,7 @@ async function loadBlockTypeDetails(blockTypeId: number) {
 // Set marker in world-control (async, non-blocking)
 async function setMarker(x: number, y: number, z: number, sessionId: string) {
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
     const url = `${apiUrl}/control/worlds/${worldId}/session/${sessionId}/marker/${x}/${y}/${z}`;
 
     // Fire and forget - don't wait for response
@@ -936,7 +936,7 @@ async function loadBlock() {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
 
     // Get sessionId from URL
     const params = new URLSearchParams(window.location.search);
@@ -1091,7 +1091,7 @@ async function saveBlock(closeAfter: boolean = false) {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
 
     // Get sessionId from URL
     const params = new URLSearchParams(window.location.search);
@@ -1181,7 +1181,7 @@ async function deleteBlock() {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
 
     // Get sessionId from URL
     const params = new URLSearchParams(window.location.search);

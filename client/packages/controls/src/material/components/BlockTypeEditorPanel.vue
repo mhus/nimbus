@@ -517,7 +517,7 @@ const handleDuplicate = async () => {
   duplicateError.value = null;
 
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
+    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
     const sourceBlockId = props.blockType.id;
     const url = `${apiUrl}/control/worlds/${props.worldId}/blocktypes/duplicate/${encodeURIComponent(sourceBlockId)}`;
 
