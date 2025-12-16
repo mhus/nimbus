@@ -1,8 +1,7 @@
-package de.mhus.nimbus.region.api;
+package de.mhus.nimbus.world.control.api.region;
 
 import de.mhus.nimbus.world.shared.sector.RUser;
 import de.mhus.nimbus.world.shared.sector.RUserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 

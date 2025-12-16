@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region.api;
+package de.mhus.nimbus.world.control.api.region;
 
 import de.mhus.nimbus.world.shared.region.RRegion;
 import de.mhus.nimbus.world.shared.region.RRegionService;

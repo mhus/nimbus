@@ -1,16 +1,10 @@
-package de.mhus.nimbus.region.api;
+package de.mhus.nimbus.world.control.api.region;
 
-import de.mhus.nimbus.generated.dto.RegionCharacterResponse;
 import de.mhus.nimbus.generated.types.RegionItemInfo;
-import de.mhus.nimbus.world.shared.region.RCharacter;
 import de.mhus.nimbus.world.shared.region.RCharacterService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping(RUserCharacterController.BASE_PATH)
