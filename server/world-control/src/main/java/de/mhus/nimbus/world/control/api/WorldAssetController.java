@@ -75,49 +75,19 @@ public class WorldAssetController extends BaseEditorController {
         validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
-        // Get all assets for this world (regionId=worldId, worldId=worldId)
+        // Get assets using database-level filtering and pagination
         WorldId wid = toWorldId(worldId);
         if (wid == null) return ResponseEntity.badRequest().body(Map.of("error", "invalid worldId"));
 
+        // Use new search method with database-level filtering
+        SAssetService.AssetSearchResult searchResult = assetService.searchAssets(wid, query, ext, offset, limit);
 
-        List<SAsset> all = assetService.findByWorldId(wid).stream()
-                .collect(Collectors.toList());
-
-        // Apply search filter if provided
-        if (Strings.isNotBlank(query)) {
-            all = filterByQuery(all, query);
-        }
-
-        // Filter by extensions if provided (e.g., "png,jpg")
-        if (ext != null && !ext.isBlank()) {
-            String[] extensions = ext.split(",");
-            all = all.stream()
-                    .filter(asset -> {
-                        String assetExt = extractExtension(asset.getPath());
-                        for (String reqExt : extensions) {
-                            String normalizedExt = reqExt.trim().toLowerCase();
-                            if (!normalizedExt.startsWith(".")) {
-                                normalizedExt = "." + normalizedExt;
-                            }
-                            if (assetExt.equalsIgnoreCase(normalizedExt)) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList());
-            log.debug("Filtered assets by extensions: {}, count: {}", ext, all.size());
-        }
-
-        int totalCount = all.size();
-
-        // Apply pagination
-        List<AssetListItemDto> dtos = all.stream()
-                .skip(offset)
-                .limit(limit)
+        // Convert to DTOs
+        List<AssetListItemDto> dtos = searchResult.assets().stream()
                 .map(this::toListDto)
                 .collect(Collectors.toList());
 
+        int totalCount = searchResult.totalCount();
         log.debug("Returning {} assets (total: {})", dtos.size(), totalCount);
 
         // TypeScript compatible format (match test_server response)
@@ -432,15 +402,6 @@ public class WorldAssetController extends BaseEditorController {
         );
     }
 
-    private List<SAsset> filterByQuery(List<SAsset> assets, String query) {
-        String lowerQuery = query.toLowerCase();
-        return assets.stream()
-                .filter(asset -> {
-                    String path = asset.getPath();
-                    return (path != null && path.toLowerCase().contains(lowerQuery));
-                })
-                .collect(Collectors.toList());
-    }
 
     private String extractExtension(String path) {
         if (path == null || !path.contains(".")) {

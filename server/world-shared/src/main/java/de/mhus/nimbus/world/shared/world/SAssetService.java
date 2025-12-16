@@ -6,11 +6,16 @@ import de.mhus.nimbus.shared.types.WorldId;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -263,4 +268,166 @@ public class SAssetService {
         int idx = path.lastIndexOf('/');
         return idx >= 0 ? path.substring(idx + 1) : path;
     }
+
+    /**
+     * Search assets with database-level filtering and pagination.
+     * Supports prefix-based search (w:, r:, p:, or shared collections).
+     * Implements COW strategy for branches (search in branch first, then parent).
+     *
+     * @param worldId The world identifier (can be branch)
+     * @param query Search query (optional, prefix:path format, default prefix is "w:")
+     * @param extension Extension filter (optional, e.g., ".png")
+     * @param offset Pagination offset
+     * @param limit Pagination limit
+     * @return Page of assets with total count
+     */
+    public AssetSearchResult searchAssets(WorldId worldId, String query, String extension, int offset, int limit) {
+        // Parse prefix from query
+        final String prefix;
+        final String searchPath;
+
+        if (query != null && !query.isBlank()) {
+            int colonPos = query.indexOf(':');
+            if (colonPos > 0) {
+                prefix = query.substring(0, colonPos);
+                String tempPath = query.substring(colonPos + 1);
+                searchPath = tempPath.startsWith("/") ? tempPath.substring(1) : tempPath;
+            } else {
+                prefix = "w"; // default
+                searchPath = query;
+            }
+        } else {
+            prefix = "w"; // default
+            searchPath = null; // no filter
+        }
+
+        // Determine target worldId based on prefix
+        WorldId lookupWorld = worldId.withoutInstanceAndZone();
+        final String targetWorldId = switch (prefix.toLowerCase()) {
+            case "w" -> {
+                // World asset - use the provided worldId
+                yield lookupWorld.getId();
+            }
+            case "r" -> {
+                // Region asset
+                WorldId regionWorldId = WorldId.of(WorldId.COLLECTION_REGION, lookupWorld.getRegionId())
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + lookupWorld.getRegionId()));
+                yield regionWorldId.getId();
+            }
+            case "p" -> {
+                // Public asset
+                WorldId publicWorldId = WorldId.of(WorldId.COLLECTION_PUBLIC, lookupWorld.getRegionId())
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid public collection worldId: " + lookupWorld.getRegionId()));
+                yield publicWorldId.getId();
+            }
+            default -> {
+                // Shared collection
+                WorldId collectionWorldId = WorldId.of(WorldId.COLLECTION_SHARED, prefix)
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid shared collection worldId: " + prefix));
+                yield collectionWorldId.getId();
+            }
+        };
+
+        // Build regex pattern for path search and extension filter
+        StringBuilder regexBuilder = new StringBuilder();
+        if (searchPath != null && !searchPath.isBlank()) {
+            regexBuilder.append(".*").append(java.util.regex.Pattern.quote(searchPath)).append(".*");
+        }
+        if (extension != null && !extension.isBlank()) {
+            String normalizedExt = extension.trim().toLowerCase();
+            if (!normalizedExt.startsWith(".")) {
+                normalizedExt = "." + normalizedExt;
+            }
+            if (regexBuilder.length() == 0) {
+                regexBuilder.append(".*");
+            }
+            regexBuilder.append("\\").append(java.util.regex.Pattern.quote(normalizedExt)).append("$");
+        }
+
+        String pathPattern = regexBuilder.length() > 0 ? regexBuilder.toString() : null;
+
+        // COW strategy for branches: search in branch first, then in parent
+        if ("w".equals(prefix) && lookupWorld.isBranch()) {
+            return searchWithCowStrategy(lookupWorld, pathPattern, offset, limit);
+        }
+
+        // Direct search for non-branch or non-world assets
+        return searchInWorldId(targetWorldId, pathPattern, offset, limit);
+    }
+
+    /**
+     * COW strategy: Search in branch first, then fill with parent results if needed.
+     */
+    private AssetSearchResult searchWithCowStrategy(WorldId branchWorldId, String pathPattern, int offset, int limit) {
+        // Search in branch first
+        AssetSearchResult branchResult = searchInWorldId(branchWorldId.getId(), pathPattern, 0, offset + limit);
+        List<SAsset> branchAssets = branchResult.assets();
+
+        // Patch worldId for branch assets
+        branchAssets.forEach(asset -> asset.setPatchWorldId(branchWorldId.getId()));
+
+        // If we have enough results in branch, return them with pagination
+        if (branchAssets.size() >= offset + limit) {
+            List<SAsset> paginated = branchAssets.subList(offset, Math.min(offset + limit, branchAssets.size()));
+            return new AssetSearchResult(paginated, branchResult.totalCount(), offset, limit);
+        }
+
+        // Need to fetch from parent to fill the gap
+        WorldId parentWorldId = branchWorldId.withoutBranchAndInstance();
+        AssetSearchResult parentResult = searchInWorldId(parentWorldId.getId(), pathPattern, 0, offset + limit * 2);
+        List<SAsset> parentAssets = parentResult.assets();
+
+        // Patch worldId for parent assets
+        parentAssets.forEach(asset -> asset.setPatchWorldId(branchWorldId.getId()));
+
+        // Merge: branch assets override parent assets with same path
+        List<SAsset> merged = new ArrayList<>(branchAssets);
+        for (SAsset parentAsset : parentAssets) {
+            boolean existsInBranch = branchAssets.stream()
+                    .anyMatch(b -> b.getPath().equals(parentAsset.getPath()));
+            if (!existsInBranch) {
+                merged.add(parentAsset);
+            }
+        }
+
+        // Apply pagination on merged result
+        int totalCount = branchResult.totalCount() + parentResult.totalCount();
+        List<SAsset> paginated = merged.stream()
+                .skip(offset)
+                .limit(limit)
+                .toList();
+
+        return new AssetSearchResult(paginated, totalCount, offset, limit);
+    }
+
+    /**
+     * Search assets in a specific worldId with filtering and pagination.
+     */
+    private AssetSearchResult searchInWorldId(String worldId, String pathPattern, int offset, int limit) {
+        Pageable pageable = PageRequest.of(offset / limit, limit);
+        Page<SAsset> page;
+
+        if (pathPattern != null) {
+            page = repository.findByWorldIdAndPathContaining(worldId, pathPattern, pageable);
+        } else {
+            page = repository.findByWorldId(worldId, pageable);
+        }
+
+        return new AssetSearchResult(
+                page.getContent(),
+                (int) page.getTotalElements(),
+                offset,
+                limit
+        );
+    }
+
+    /**
+     * Result wrapper for asset search with pagination info.
+     */
+    public record AssetSearchResult(
+            List<SAsset> assets,
+            int totalCount,
+            int offset,
+            int limit
+    ) {}
 }
