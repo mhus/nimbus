@@ -97,7 +97,8 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
       });
 
       // Emit error event
-      this.networkService.emit('login:error', new Error(errorData.errorMessage));
+      // no need for this: this.networkService.emit('login:error', new Error(errorData.errorMessage));
+      this.appContext.services.config?.gotoLoginScreen();
     }
   }
 }

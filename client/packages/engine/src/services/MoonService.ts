@@ -13,6 +13,7 @@ import {
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('MoonService');
 
@@ -219,7 +220,9 @@ export class MoonService {
         ? networkService.getAssetUrl(moon.texture)
         : moon.texture;
 
-      moon.textureObject = new Texture(textureUrl, this.scene, false, true);
+      // Load texture with credentials
+      const blobUrl = await loadTextureUrlWithCredentials(textureUrl);
+      moon.textureObject = new Texture(blobUrl, this.scene, false, true);
       moon.textureObject.hasAlpha = true;
     }
 
@@ -435,7 +438,9 @@ export class MoonService {
         : texturePath;
 
       moon.texture = texturePath;
-      moon.textureObject = new Texture(textureUrl, this.scene, false, true);
+      // Load texture with credentials
+      const blobUrl = await loadTextureUrlWithCredentials(textureUrl);
+      moon.textureObject = new Texture(blobUrl, this.scene, false, true);
       moon.textureObject.hasAlpha = true;
 
       // Update shader

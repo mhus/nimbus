@@ -10,6 +10,7 @@ import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ShaderService } from './ShaderService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('ThinInstancesService');
 
@@ -316,9 +317,10 @@ export class ThinInstancesService {
     // Create material
     const material = new StandardMaterial(`thinInstance_${texturePath}`, this.scene);
 
-    // Load texture directly via NetworkService
+    // Load texture with credentials
     const url = networkService.getAssetUrl(texturePath);
-    const texture = new Texture(url, this.scene);
+    const blobUrl = await loadTextureUrlWithCredentials(url);
+    const texture = new Texture(blobUrl, this.scene);
 
     // Wait for texture to load to get dimensions
     await new Promise<void>((resolve) => {

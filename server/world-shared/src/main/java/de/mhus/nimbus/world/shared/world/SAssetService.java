@@ -103,46 +103,43 @@ public class SAssetService {
      * @return
      */
     public Optional<SAsset> findByPath(WorldId worldId, String path) {
-        log.info("Finding asset world={} path={}", worldId, path);
-//
-//        // world lookup
-//        var lookupWorld = worldId.withoutInstance();
-//        int pos = path.indexOf('/');
-//        if (pos < 0) {
-//            throw new IllegalArgumentException("path must have a groupId (first element): " + path);
-//        }
-//        var group = path.substring(0, pos);
-//        var relativePath = path.substring(pos + 1);
-//
-//        if ("w".equals(group)) {
-//            // world asset
-//            if (lookupWorld.isBranch()) {
-//                var item = repository.findByWorldIdAndPath(lookupWorld.getId(),  relativePath);
-//                if (item.isPresent()) return item;
-//                // fallback to parent world
-//                return patchWorldId(lookupWorld, repository.findByWorldIdAndPath(lookupWorld.withoutBranchAndInstance().getId(),  relativePath)); // TODO relativePath !!
-//            }
-//            return repository.findByWorldIdAndPath(lookupWorld.getId(), path);  // TODO relativePath !!
-//        } else
-//        if ("r".equals(group)) {
-//            // region asset
-//            var regionWorldId = WorldId.of(WorldId.COLLECTION_REGION, lookupWorld.getRegionId())
-//                    .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + lookupWorld.getRegionId()));
-//            return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
-//        } else
-//        if ("p".equals(group)) {
-//            // public asset
-//            var publicWorldId = WorldId.of(WorldId.COLLECTION_PUBLIC, lookupWorld.getRegionId())
-//                    .orElseThrow(() -> new IllegalArgumentException("Invalid public collection worldId:" + lookupWorld.getRegionId()));
-//            return repository.findByWorldIdAndPath(publicWorldId.getId(), relativePath);
-//        } else {
-//            // shared asset group
-//            var collectionWorldId = WorldId.of( WorldId.COLLECTION_SHARED, group)
-//                    .orElseThrow(() -> new IllegalArgumentException("Invalid shared collection worldId: " + group));
-//            return repository.findByWorldIdAndPath(collectionWorldId.getId(), relativePath);
-//        }
 
-        return repository.findByWorldIdAndPath(worldId.getId(), path);
+        // world lookup
+        var lookupWorld = worldId.withoutInstance();
+        int pos = path.indexOf('/');
+        if (pos < 0) {
+            throw new IllegalArgumentException("path must have a groupId (first element): " + path);
+        }
+        var group = path.substring(0, pos);
+        var relativePath = path.substring(pos + 1);
+
+        if ("w".equals(group)) {
+            // world asset
+            if (lookupWorld.isBranch()) {
+                var item = repository.findByWorldIdAndPath(lookupWorld.getId(),  relativePath);
+                if (item.isPresent()) return item;
+                // fallback to parent world
+                return patchWorldId(lookupWorld, repository.findByWorldIdAndPath(lookupWorld.withoutBranchAndInstance().getId(),  relativePath)); // TODO relativePath !!
+            }
+            return repository.findByWorldIdAndPath(lookupWorld.getId(), path);  // TODO relativePath !!
+        } else
+        if ("r".equals(group)) {
+            // region asset
+            var regionWorldId = WorldId.of(WorldId.COLLECTION_REGION, lookupWorld.getRegionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + lookupWorld.getRegionId()));
+            return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
+        } else
+        if ("p".equals(group)) {
+            // public asset
+            var publicWorldId = WorldId.of(WorldId.COLLECTION_PUBLIC, lookupWorld.getRegionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid public collection worldId:" + lookupWorld.getRegionId()));
+            return repository.findByWorldIdAndPath(publicWorldId.getId(), relativePath);
+        } else {
+            // shared asset group
+            var collectionWorldId = WorldId.of( WorldId.COLLECTION_SHARED, group)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid shared collection worldId: " + group));
+            return repository.findByWorldIdAndPath(collectionWorldId.getId(), relativePath);
+        }
     }
 
     private Optional<SAsset> patchWorldId(WorldId worldId, Optional<SAsset> item) {

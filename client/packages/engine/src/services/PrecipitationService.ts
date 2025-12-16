@@ -20,6 +20,7 @@ import {
 } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 import type { CameraService } from './CameraService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
 
@@ -224,7 +225,7 @@ export class PrecipitationService {
    * Set particle texture
    * @param texturePath Path to texture or null to remove
    */
-  public setParticleTexture(texturePath: string | null): void {
+  public async setParticleTexture(texturePath: string | null): Promise<void> {
     // Dispose old texture
     if (this.particleTexture) {
       this.particleTexture.dispose();
@@ -234,7 +235,9 @@ export class PrecipitationService {
     // Load new texture
     if (texturePath) {
       try {
-        this.particleTexture = new Texture(texturePath, this.scene);
+        // Load texture with credentials
+        const blobUrl = await loadTextureUrlWithCredentials(texturePath);
+        this.particleTexture = new Texture(blobUrl, this.scene);
         if (this.particleSystem) {
           this.particleSystem.particleTexture = this.particleTexture;
         }

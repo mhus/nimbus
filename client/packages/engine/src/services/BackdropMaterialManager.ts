@@ -11,6 +11,7 @@
 import { StandardMaterial, Texture, DynamicTexture, Color3, type Scene, type Material } from '@babylonjs/core';
 import { getLogger, ExceptionHandler, type Backdrop } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('BackdropMaterialManager');
 
@@ -94,12 +95,14 @@ export class BackdropMaterialManager {
 
       const textureUrl = networkService.getAssetUrl(config.texture);
 
-      logger.debug('Loading backdrop texture', {
+      logger.debug('Loading backdrop texture with credentials', {
         texturePath: config.texture,
         textureUrl
       });
 
-      const texture = new Texture(textureUrl, this.scene);
+      // Load texture with credentials
+      const blobUrl = await loadTextureUrlWithCredentials(textureUrl);
+      const texture = new Texture(blobUrl, this.scene);
       texture.hasAlpha = true; // Enable alpha channel from PNG
       texture.updateSamplingMode(Texture.NEAREST_SAMPLINGMODE); // Nearest neighbor filtering
       material.diffuseTexture = texture;
@@ -121,12 +124,14 @@ export class BackdropMaterialManager {
       if (networkService) {
         const noiseUrl = networkService.getAssetUrl(config.noiseTexture);
 
-        logger.debug('Loading noise texture', {
+        logger.debug('Loading noise texture with credentials', {
           noisePath: config.noiseTexture,
           noiseUrl
         });
 
-        const noiseTexture = new Texture(noiseUrl, this.scene);
+        // Load noise texture with credentials
+        const noiseBlobUrl = await loadTextureUrlWithCredentials(noiseUrl);
+        const noiseTexture = new Texture(noiseBlobUrl, this.scene);
         noiseTexture.hasAlpha = true;
         noiseTexture.updateSamplingMode(Texture.BILINEAR_SAMPLINGMODE);
 

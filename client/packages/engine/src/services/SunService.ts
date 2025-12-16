@@ -16,6 +16,7 @@ import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import type { NetworkService } from './NetworkService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('SunService');
 
@@ -243,10 +244,12 @@ export class SunService {
     if (this.networkService) {
       try {
         const texturePath = this.appContext.worldInfo?.settings?.sunTexture || 'w/textures/sun/sun1.png';
-        // Load texture from asset server
+        // Load texture from asset server with credentials
         const textureUrl = this.networkService.getAssetUrl(texturePath);
+        const blobUrl = await loadTextureUrlWithCredentials(textureUrl);
+
         this.sunTexture = new Texture(
-          textureUrl,
+          blobUrl,
           this.scene,
           false, // noMipmap
           true, // invertY
@@ -351,9 +354,12 @@ export class SunService {
       // Dispose old texture
       this.sunTexture?.dispose();
 
+      // Load texture with credentials
+      const blobUrl = await loadTextureUrlWithCredentials(textureUrl);
+
       // Load new texture
       this.sunTexture = new Texture(
-        textureUrl,
+        blobUrl,
         this.scene,
         false,
         true,

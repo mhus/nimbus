@@ -15,6 +15,7 @@ import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
 import type { NetworkService } from './NetworkService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('CloudsService');
 
@@ -638,9 +639,12 @@ export class CloudsService {
     try {
       const textureUrl = this.networkService.getAssetUrl(texturePath);
 
+      // Load texture with credentials
+      const blobUrl = await loadTextureUrlWithCredentials(textureUrl);
+
       return await new Promise<Texture>((resolve, reject) => {
         const texture = new Texture(
-          textureUrl,
+          blobUrl,
           this.scene,
           false,  // noMipmap
           true,   // invertY

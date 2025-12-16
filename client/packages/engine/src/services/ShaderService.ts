@@ -26,6 +26,7 @@ import {
   Color3,
 } from '@babylonjs/core';
 import type { EnvironmentService, WindParameters } from './EnvironmentService';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('ShaderService');
 
@@ -1153,9 +1154,10 @@ export class ShaderService {
     }
 
     try {
-      // Load texture
+      // Load texture with credentials
       const url = networkService.getAssetUrl(texturePath);
-      const texture = new Texture(url, this.scene);
+      const blobUrl = await loadTextureUrlWithCredentials(url);
+      const texture = new Texture(blobUrl, this.scene);
       texture.hasAlpha = true;
 
       // Also set after texture loads to ensure it takes effect

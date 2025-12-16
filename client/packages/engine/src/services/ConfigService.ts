@@ -73,7 +73,7 @@ export class ConfigService {
       if(response.status == 401) {
         // DEAD CODE: fetch will throw on 401
         // redirect to login page if unauthorized
-        window.location.href = this.appContext.config?.exitUrl || '/login';
+        this.gotoLoginScreen();
         throw new Error('Unauthorized: Redirecting to login');
       }
       if (!response.ok) {
@@ -321,5 +321,9 @@ export class ConfigService {
   clearCache(): void {
     logger.debug('Clearing config cache');
     this.config = null;
+  }
+
+  public gotoLoginScreen() {
+    window.location.href = this.appContext.config?.exitUrl || '/login';
   }
 }

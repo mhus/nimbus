@@ -11,6 +11,7 @@ import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { EnvironmentService } from './EnvironmentService';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
+import { loadTextureUrlWithCredentials } from '../utils/ImageLoader';
 
 const logger = getLogger('SpriteService');
 
@@ -120,10 +121,13 @@ export class SpriteService {
 
       const textureUrl = networkService.getAssetUrl(texturePath);
 
-      logger.debug('Loading sprite texture', { texturePath, textureUrl });
+      logger.debug('Loading sprite texture with credentials', { texturePath, textureUrl });
+
+      // Load texture with credentials
+      const blobUrl = await loadTextureUrlWithCredentials(textureUrl);
 
       // Load texture and wait for it to be ready
-      const texture = new Texture(textureUrl, this.scene, false, false);
+      const texture = new Texture(blobUrl, this.scene, false, false);
 
       await new Promise<void>((resolve, reject) => {
         if (texture.isReady()) {
