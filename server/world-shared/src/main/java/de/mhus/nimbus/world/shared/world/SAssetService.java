@@ -96,8 +96,36 @@ public class SAssetService {
         return repository.save(asset);
     }
 
+    /**
+     * Find all assets by worldId.
+     * Implements COW strategy for branches: returns branch assets + parent assets (branch overrides parent).
+     * WARNING: This loads ALL assets into memory. Use searchAssets() for large result sets.
+     */
     public List<SAsset> findByWorldId(WorldId worldId) {
-        return repository.findByWorldId(worldId.getId());
+        var lookupWorld = worldId.withoutInstanceAndZone();
+
+        if (lookupWorld.isBranch()) {
+            // COW strategy: get branch assets + parent assets
+            List<SAsset> branchAssets = repository.findByWorldId(lookupWorld.getId());
+            List<SAsset> parentAssets = repository.findByWorldId(lookupWorld.withoutBranchAndInstance().getId());
+
+            // Patch worldId for all assets
+            branchAssets.forEach(asset -> asset.setPatchWorldId(lookupWorld.getId()));
+            parentAssets.forEach(asset -> asset.setPatchWorldId(lookupWorld.getId()));
+
+            // Merge: branch assets override parent assets with same path
+            List<SAsset> merged = new ArrayList<>(branchAssets);
+            for (SAsset parentAsset : parentAssets) {
+                boolean existsInBranch = branchAssets.stream()
+                        .anyMatch(b -> b.getPath().equals(parentAsset.getPath()));
+                if (!existsInBranch) {
+                    merged.add(parentAsset);
+                }
+            }
+            return merged;
+        }
+
+        return repository.findByWorldId(lookupWorld.getId());
     }
 
     /**
@@ -139,7 +167,7 @@ public class SAssetService {
             // region asset
             var regionWorldId = WorldId.of(WorldId.COLLECTION_REGION, lookupWorld.getRegionId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + lookupWorld.getRegionId()));
-            return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
+            return repository.findByWorldIdAndPath(regionWorldId.getId(), relativePath);
         } else
         if ("p".equals(group)) {
             // public asset
@@ -404,7 +432,9 @@ public class SAssetService {
      * Search assets in a specific worldId with filtering and pagination.
      */
     private AssetSearchResult searchInWorldId(String worldId, String pathPattern, int offset, int limit) {
-        Pageable pageable = PageRequest.of(offset / limit, limit);
+        // Calculate page number from offset (Spring Data uses 0-based page numbers)
+        int pageNumber = offset / limit;
+        Pageable pageable = PageRequest.of(pageNumber, limit);
         Page<SAsset> page;
 
         if (pathPattern != null) {
