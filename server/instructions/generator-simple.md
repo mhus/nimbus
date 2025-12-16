@@ -62,6 +62,16 @@
 - Die generatoren erstellen fuer jeden FlatPosition im HexGrid Bereich zwei/drei... Blocks in dem angegebenen Layer mit dem entsprechenden BlockTypeId
 - Manipuliere die Block offsets um die Oberfläche organischer wirken zu lassen, siehe NormalGenerator.ts
 
-[ ] Erstelle ein neues modul world-generator fuer weitere Welt Generatoren.
+[?] Erstelle ein neues modul world-generator fuer weitere Welt Generatoren.
 - verlinke world-shared und shared module
 - erstelle die basis ordner und GeneratorApplication class
+
+[ ] Erstelle in ../client/packages/controls ein neues hex-editor.html das es erlaubt Hex grids in einer World zu bearbeiten
+- Als vorlage kann blocktype-editor.html dienen
+- Oben rechts soll eine auswahl der WolrdId sein wie in blocktype-editor.html
+- Erweitere HomeApp.vue um einen neuen Eintrag "Hex Grid Editor" der auf hex-editor.html verlinkt
+
+[ ] Erstelle in ../client/packages/controls einen neuen job-controller.html der es erlaubt Jobs in einer World zu verwalten
+- Als vorlage kann blocktype-editor.html dienen
+- Oben rechts soll eine auswahl der WolrdId sein wie in blocktype-editor.html
+- Erweitere HomeApp.vue um einen neuen Eintrag "Job Controller" der auf job-controller.html verlinkt

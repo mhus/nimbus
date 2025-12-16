@@ -24,6 +24,7 @@
         <module>world-player</module>
         <module>world-control</module>
         <module>world-life</module>
+        <module>world-generator</module>
         <module>tools</module>
     </modules>
 

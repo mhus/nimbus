@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: world-generator
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/nimbus}
+      auto-index-creation: true
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DATABASE:0}
+
+server:
+  port: ${SERVER_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    de.mhus.nimbus: DEBUG
+
+world:
+  job:
+    processing-enabled: true
+    processing-interval-ms: 5000
+    max-jobs-per-cycle: 10
+    cleanup-enabled: true
+    cleanup-interval-ms: 3600000
+    retention-hours: 24
+    hard-delete: false
