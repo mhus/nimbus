@@ -1,4 +1,4 @@
-package de.mhus.nimbus.region;
+package de.mhus.nimbus.world.control;
 
 import de.mhus.nimbus.world.shared.region.RRegionService;
 import de.mhus.nimbus.shared.security.KeyId;

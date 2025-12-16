@@ -11,6 +11,7 @@ import de.mhus.nimbus.shared.user.WorldRoles;
 import de.mhus.nimbus.world.shared.dto.*;
 import de.mhus.nimbus.world.shared.region.RCharacter;
 import de.mhus.nimbus.world.shared.region.RCharacterService;
+import de.mhus.nimbus.world.shared.region.RegionProperties;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
 import de.mhus.nimbus.world.shared.world.WWorld;
@@ -54,6 +55,7 @@ public class AccessService {
     private final AccessProperties properties;
     private final Base64Service base64Service;
     private final de.mhus.nimbus.shared.utils.LocationService locationService;
+    private final RegionProperties regionProperties;
 
     // Cache for world token (server-to-server authentication)
     private volatile String cachedWorldToken;
@@ -962,25 +964,19 @@ public class AccessService {
                 throw new IllegalStateException("Service name not configured (spring.application.name)");
             }
 
-            // Get regionId from properties or environment
-            String regionId = properties.getRegionId();
-            if (regionId == null || regionId.isBlank()) {
-                throw new IllegalStateException("Region ID not configured (world.access.regionId)");
-            }
-
             // Build claims for world token
             Map<String, Object> claims = new HashMap<>();
             claims.put("serviceName", serviceName);
             claims.put("serverToServer", true);
-            claims.put("regionId", regionId);
 
             // Calculate expiration (1 hour)
             Instant expiresAt = Instant.now().plusSeconds(properties.getAgentTokenTtlSeconds());
 
             // Create token
+            var intent = KeyIntent.of(regionProperties.getSectorServerId(), KeyIntent.REGION_SERVER_JWT_TOKEN);
             String token = jwtService.createTokenWithPrivateKey(
                     KeyType.REGION,
-                    KeyIntent.of(regionId, KeyIntent.REGION_JWT_TOKEN),
+                    intent,
                     "service:" + serviceName,
                     claims,
                     expiresAt

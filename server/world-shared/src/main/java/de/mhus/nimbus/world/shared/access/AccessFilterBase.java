@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.shared.access;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.world.shared.region.RegionProperties;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
@@ -43,6 +44,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final WSessionService sessionService;
+    private final RegionProperties regionProperties;
 
     /**
      * Determines if the given request path requires authentication.
@@ -417,18 +419,13 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
             }
 
             String payloadJson = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
-            String regionId = extractRegionIdFromJson(payloadJson);
-
-            if (regionId == null) {
-                log.warn("Bearer token missing regionId");
-                return false;
-            }
 
             // Validate token with JWT service
+            var intent = KeyIntent.of(regionProperties.getSectorServerId(), KeyIntent.REGION_SERVER_JWT_TOKEN);
             Optional<Jws<Claims>> jwsOpt = jwtService.validateTokenWithPublicKey(
                     token,
                     de.mhus.nimbus.shared.security.KeyType.REGION,
-                    de.mhus.nimbus.shared.security.KeyIntent.of(regionId, de.mhus.nimbus.shared.security.KeyIntent.REGION_JWT_TOKEN)
+                    intent
             );
 
             if (jwsOpt.isEmpty()) {
@@ -457,7 +454,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
             request.setAttribute("serverToServer", true);
             request.setAttribute("serviceName", serviceName);
 
-            log.info("Bearer token validated - serviceName={}, regionId={}", serviceName, regionId);
+            log.info("Bearer token validated - serviceName={}", serviceName);
             return true;
 
         } catch (Exception e) {

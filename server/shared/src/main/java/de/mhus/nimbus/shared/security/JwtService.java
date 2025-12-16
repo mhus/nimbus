@@ -44,7 +44,6 @@ public class JwtService {
         /**
          * Creates a JWT token signed with an ECC private key (secp256r1). No symmetric fallback.
          *
-         * @param keyId    the key id in format "owner:id" to locate the signing key
          * @param subject  the subject claim (e.g., user id)
          * @param claims   additional claims to include in the token
          * @param expiresAt expiration time (null for no expiration)

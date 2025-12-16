@@ -217,7 +217,7 @@ public class WorldClientService {
 
             } catch (RestClientException e) {
                 log.error("Command failed: cmd={}, target={}, error={}",
-                        commandName, targetServer, e.getMessage());
+                        commandName, targetServer, e.getMessage(), e);
                 return new CommandResponse(-4, "Communication error: " + e.getMessage(), null);
 
             } catch (Exception e) {

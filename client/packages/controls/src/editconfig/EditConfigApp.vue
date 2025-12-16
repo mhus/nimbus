@@ -1147,6 +1147,7 @@ async function pollMarkedBlockContent() {
   try {
     // Always try to fetch - server will return 404 if no block marked
     const url = `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
+    // const url = `http://localhost:9043/control/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
     console.log('[Polling] Fetching:', url);
 
     const response = await fetch(url);

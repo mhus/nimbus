@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.player.security;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.world.shared.access.AccessFilterBase;
 import de.mhus.nimbus.world.shared.access.AccessProperties;
+import de.mhus.nimbus.world.shared.region.RegionProperties;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,8 +25,8 @@ public class PlayerAccessFilter extends AccessFilterBase {
 
     private final AccessProperties accessProperties;
 
-    public PlayerAccessFilter(JwtService jwtService, WSessionService sessionService, AccessProperties accessProperties) {
-        super(jwtService, sessionService);
+    public PlayerAccessFilter(JwtService jwtService, WSessionService sessionService, AccessProperties accessProperties, RegionProperties regionProperties) {
+        super(jwtService, sessionService, regionProperties);
         this.accessProperties = accessProperties;
     }
 
