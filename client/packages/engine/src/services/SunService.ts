@@ -43,7 +43,7 @@ export class SunService {
   private lensFlareEnabled: boolean = true;
   private lensFlareIntensity: number = 1.0;
   private lensFlareColor: Color3 = new Color3(1, 0.9, 0.7); // Warm flare color
-  private lensFlareTexture: string = 'w/textures/sun/flare.png';
+  private lensFlareTexture: string = 'w:textures/sun/flare.png';
 
   // Sun position parameters
   private currentAngleY: number = 90; // Default: East
@@ -153,7 +153,7 @@ export class SunService {
     this.updateSunPosition();
 
     // Create lens flare system
-    this.createLensFlareSystem();
+    await this.createLensFlareSystem();
 
     logger.debug('SunService initialized', {
       angleY: this.currentAngleY,
@@ -165,7 +165,7 @@ export class SunService {
   /**
    * Create lens flare system attached to sun mesh
    */
-  private createLensFlareSystem(): void {
+  private async createLensFlareSystem(): Promise<void> {
     if (!this.sunMesh) {
       logger.error('Cannot create lens flare system: sun mesh not available');
       return;
@@ -174,10 +174,12 @@ export class SunService {
     // Create lens flare system with sun mesh as emitter
     this.lensFlareSystem = new LensFlareSystem('sunLensFlare', this.sunMesh, this.scene);
 
-    // Get lens flare texture URL from asset server
+    // Get lens flare texture URL from asset server with credentials
     let flareTextureUrl: string;
     if (this.networkService) {
-      flareTextureUrl = this.networkService.getAssetUrl(this.lensFlareTexture);
+      const textureUrl = this.networkService.getAssetUrl(this.lensFlareTexture);
+      // Load texture with credentials
+      flareTextureUrl = await loadTextureUrlWithCredentials(textureUrl);
     } else {
       // Fallback to data URL if network service not available
       flareTextureUrl = this.createLensFlareTextureDataUrl();
@@ -243,7 +245,7 @@ export class SunService {
 
     if (this.networkService) {
       try {
-        const texturePath = this.appContext.worldInfo?.settings?.sunTexture || 'w/textures/sun/sun1.png';
+        const texturePath = this.appContext.worldInfo?.settings?.sunTexture || 'w:textures/sun/sun1.png';
         // Load texture from asset server with credentials
         const textureUrl = this.networkService.getAssetUrl(texturePath);
         const blobUrl = await loadTextureUrlWithCredentials(textureUrl);

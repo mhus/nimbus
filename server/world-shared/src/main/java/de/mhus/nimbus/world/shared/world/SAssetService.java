@@ -105,13 +105,20 @@ public class SAssetService {
     public Optional<SAsset> findByPath(WorldId worldId, String path) {
 
         // world lookup
-        var lookupWorld = worldId.withoutInstance();
-        int pos = path.indexOf('/');
+        var lookupWorld = worldId.withoutInstanceAndZone();
+        int pos = path.indexOf(':');
         if (pos < 0) {
-            throw new IllegalArgumentException("path must have a groupId (first element): " + path);
+            if (path.startsWith("w/")) {
+                pos = 1; // legacy support
+            } else {
+                throw new IllegalArgumentException("path must have a groupId (first element): " + path);
+            }
         }
         var group = path.substring(0, pos);
         var relativePath = path.substring(pos + 1);
+        if (relativePath.startsWith("/")) {
+            relativePath = relativePath.substring(1);
+        }
 
         if ("w".equals(group)) {
             // world asset
@@ -119,7 +126,7 @@ public class SAssetService {
                 var item = repository.findByWorldIdAndPath(lookupWorld.getId(),  relativePath);
                 if (item.isPresent()) return item;
                 // fallback to parent world
-                return patchWorldId(lookupWorld, repository.findByWorldIdAndPath(lookupWorld.withoutBranchAndInstance().getId(),  relativePath)); // TODO relativePath !!
+                return BlockUtil.patchWorldId(lookupWorld, repository.findByWorldIdAndPath(lookupWorld.withoutBranchAndInstance().getId(),  relativePath));
             }
             return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
         } else
@@ -142,15 +149,7 @@ public class SAssetService {
         }
     }
 
-    private Optional<SAsset> patchWorldId(WorldId worldId, Optional<SAsset> item) {
-        if (item.isEmpty()) return item;
-        var asset = item.get();
-        // do I need a copy here? do I need to patch worldId?
-        asset.setWorldId(worldId.getId());
-        return item;
-    }
-
-    /** Lädt den Inhalt des Assets (inline oder extern). */
+    /** Lädt den Inhalt des Assets. */
     public InputStream loadContent(SAsset asset) {
         if (asset == null) return null;
         if (!asset.isEnabled()) throw new IllegalStateException("Asset disabled: " + asset.getId());

@@ -2,7 +2,11 @@ package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.shared.types.HasWorldPatch;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.experimental.UtilityClass;
+
+import java.util.Optional;
 
 /**
  * Utility methods for Block operations.
@@ -143,6 +147,14 @@ public class BlockUtil {
         int cx = world.getChunkX(position.getX());
         int cz = world.getChunkZ(position.getZ());
         return (int)cx + ":" + (int)cz;
+    }
+
+    public static <T extends HasWorldPatch> Optional<T> patchWorldId(WorldId worldId, Optional<T> item) {
+        if (item.isEmpty()) return item;
+        var obj = item.get();
+        // do I need a copy here? do I need to patch worldId?
+        obj.setPatchWorldId(worldId.getId());
+        return item;
     }
 
 }

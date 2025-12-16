@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.HasWorldPatch;
 import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -29,7 +31,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SAsset implements Identifiable {
+public class SAsset implements Identifiable, HasWorldPatch {
 
     @Id
     private String id;
@@ -66,6 +68,9 @@ public class SAsset implements Identifiable {
     /** Optional: Welt Identifier. */
     @Indexed
     private String worldId; // kann null sein
+
+    @Transient
+    private String patchWorldId;
 
 }
 

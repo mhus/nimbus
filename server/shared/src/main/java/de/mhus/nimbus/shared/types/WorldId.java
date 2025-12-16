@@ -171,4 +171,13 @@ public class WorldId implements Comparable<WorldId> {
         if (zone != null) sb.append(":").append(zone);
         return new WorldId(sb.toString());
     }
+
+    public WorldId withoutInstanceAndZone() {
+        parseId();
+        if (instance == null && zone == null) return this;
+        StringBuilder sb = new StringBuilder();
+        sb.append(regionId).append(":").append(worldName);
+        if (branch != null) sb.append("@").append(branch);
+        return new WorldId(sb.toString());
+    }
 }
