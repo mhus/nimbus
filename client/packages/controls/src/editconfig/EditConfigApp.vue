@@ -395,126 +395,6 @@
               </div>
             </div>
           </div>
-
-          <!-- Block Palette - Collapsible -->
-          <div class="collapse collapse-arrow bg-base-100 shadow-sm">
-            <input type="checkbox" v-model="blocksPanelOpen" />
-            <div class="collapse-title text-sm font-semibold p-2">
-              Blocks ({{ palette.length }})
-            </div>
-            <div class="collapse-content">
-              <div class="space-y-2">
-                <!-- Add Marked Block Button -->
-                <button
-                  @click="addMarkedBlockToPalette"
-                  :disabled="!markedBlockContent || addingToPalette"
-                  class="btn btn-success btn-xs w-full"
-                  title="Add currently marked block to palette"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  {{ addingToPalette ? 'Adding...' : 'Add Marked Block' }}
-                </button>
-
-                <!-- Palette Blocks List -->
-                <div v-if="palette.length === 0" class="text-xs text-center text-base-content/50 py-4">
-                  No blocks in palette. Mark a block and add it.
-                </div>
-
-                <div v-else class="space-y-1 max-h-64 overflow-y-auto">
-                  <div
-                    v-for="(paletteBlock, index) in palette"
-                    :key="index"
-                    class="relative group cursor-pointer"
-                    @click="selectPaletteBlock(index)"
-                  >
-                    <div
-                      class="bg-base-200 hover:bg-base-300 rounded p-2 transition-colors"
-                      :class="{ 'ring-2 ring-primary': selectedPaletteIndex === index }"
-                    >
-                      <div class="flex items-center gap-2">
-                        <!-- Block Icon/Texture -->
-                        <div class="w-8 h-8 bg-base-300 rounded flex items-center justify-center flex-shrink-0">
-                          <img
-                            v-if="paletteBlock.icon"
-                            :src="getTextureUrl(paletteBlock.icon)"
-                            :alt="paletteBlock.name"
-                            class="w-full h-full object-contain"
-                            @error="handleImageError($event, index)"
-                          />
-                          <svg v-else class="w-4 h-4 text-base-content/30" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                          </svg>
-                        </div>
-
-                        <!-- Block Info -->
-                        <div class="flex-1 min-w-0">
-                          <!-- Editable Name -->
-                          <input
-                            v-if="editingNameIndex === index"
-                            v-model="editingName"
-                            @click.stop
-                            @blur="saveBlockName(index)"
-                            @keyup.enter="saveBlockName(index)"
-                            @keyup.esc="cancelEditName"
-                            class="input input-xs input-bordered w-full text-xs font-bold"
-                            autofocus
-                          />
-                          <div
-                            v-else
-                            class="text-xs font-bold truncate cursor-text"
-                            :title="paletteBlock.name"
-                            @dblclick.stop="startEditName(index)"
-                          >
-                            {{ paletteBlock.name }}
-                          </div>
-
-                          <!-- BlockType ID -->
-                          <div class="text-xs text-base-content/50 font-mono truncate">
-                            {{ paletteBlock.block.blockTypeId }}
-                          </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            @click.stop="startEditName(index)"
-                            class="btn btn-xs btn-circle btn-ghost"
-                            title="Edit name"
-                          >
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                            </svg>
-                          </button>
-                          <button
-                            @click.stop="removePaletteBlock(index)"
-                            class="btn btn-xs btn-circle btn-error"
-                            title="Remove from palette"
-                          >
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Save Palette Button -->
-                <button
-                  v-if="palette.length > 0"
-                  @click="savePalette"
-                  :disabled="savingPalette"
-                  class="btn btn-primary btn-xs w-full mt-2"
-                >
-                  <span v-if="savingPalette" class="loading loading-spinner loading-xs"></span>
-                  <span v-else>💾 Save Palette</span>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       </div><!-- end v-else -->
@@ -1193,38 +1073,95 @@ async function pollMarkedBlockContent() {
 
     const blockData: Block = responseData;
 
+    console.info('[Polling] Full block data received:', JSON.stringify(blockData, null, 2));
+
     // Check if content changed (compare blockTypeId)
     if (markedBlockContent.value?.blockTypeId === blockData.blockTypeId) {
       console.log('[Polling] Content unchanged, skipping update');
       return;
     }
 
-    // Fetch BlockType to get description and texture
     let blockTypeName = `Block ${blockData.blockTypeId}`;
     let icon: string | null = null;
 
-    try {
-      const blockTypeResponse = await fetch(
-        `${apiUrl.value}/control/worlds/${worldId.value}/blocktypes/${blockData.blockTypeId}`,
-        {
-          credentials: 'include'
-        }
-      );
+    // First, try to get texture directly from block modifiers
+    const firstBlockModifier = blockData.modifiers?.[0];
+    if (firstBlockModifier) {
+      console.info('[Polling] Block has modifier[0], checking:', JSON.stringify(firstBlockModifier, null, 2));
 
-      if (blockTypeResponse.ok) {
-        const blockType: BlockType = await blockTypeResponse.json();
-        blockTypeName = blockType.description || blockTypeName;
+      if (firstBlockModifier.visibility?.textures) {
+        const textures = firstBlockModifier.visibility.textures;
+        console.info('[Polling] Found textures in block modifier:', JSON.stringify(textures, null, 2));
 
-        // Try to get texture from first modifier's visibility
-        const firstModifier = blockType.modifiers?.[0];
-        if (firstModifier?.visibility?.textures) {
-          const textures = firstModifier.visibility.textures;
-          // Get first available texture (top, front, or any face)
-          icon = textures.top || textures.front || textures.side || Object.values(textures)[0] || null;
+        // Get first available texture from numeric keys (0, 1, 2, ...)
+        for (let i = 0; i < 6; i++) {
+          const texture = textures[i];
+          if (texture) {
+            // If texture is a string, use it directly, otherwise get path from TextureDefinition
+            icon = typeof texture === 'string' ? texture : texture.path;
+            console.info('[Polling] Selected icon from block modifier key', i, ':', icon);
+            break;
+          }
         }
       }
-    } catch (err) {
-      console.warn('Failed to fetch BlockType details for marked block:', err);
+    }
+
+    // Only fetch BlockType if we don't have an icon yet
+    if (!icon) {
+      console.info('[Polling] No texture in block, fetching BlockType...');
+
+      try {
+        const blockTypeUrl = `${apiUrl.value}/control/worlds/${worldId.value}/blocktypes/type/${blockData.blockTypeId}`;
+        console.info('[Polling] Fetching BlockType from:', blockTypeUrl);
+
+        const blockTypeResponse = await fetch(blockTypeUrl, {
+          credentials: 'include'
+        });
+
+        console.info('[Polling] BlockType response status:', blockTypeResponse.status);
+
+        if (blockTypeResponse.ok) {
+          const blockType: BlockType = await blockTypeResponse.json();
+          console.info('[Polling] BlockType data:', JSON.stringify(blockType, null, 2));
+          blockTypeName = blockType.description || blockTypeName;
+
+          // Try to get texture from first modifier's visibility
+          const firstModifier = blockType.modifiers?.[0];
+          console.info('[Polling] First modifier:', JSON.stringify(firstModifier, null, 2));
+
+          if (firstModifier?.visibility?.textures) {
+            const textures = firstModifier.visibility.textures;
+            console.info('[Polling] Textures object:', JSON.stringify(textures, null, 2));
+            console.info('[Polling] Textures type:', typeof textures);
+            console.info('[Polling] Textures keys:', Object.keys(textures));
+
+            // Get first available texture from numeric keys (0, 1, 2, ...)
+            for (let i = 0; i < 6; i++) {
+              const texture = textures[i];
+              if (texture) {
+                // If texture is a string, use it directly, otherwise get path from TextureDefinition
+                icon = typeof texture === 'string' ? texture : texture.path;
+                console.info('[Polling] Selected icon from BlockType key', i, ':', icon);
+                break;
+              }
+            }
+
+            if (!icon) {
+              console.info('[Polling] No texture found in numeric keys');
+            }
+          } else {
+            console.info('[Polling] No textures found in first modifier');
+          }
+        } else {
+          console.info('[Polling] BlockType fetch failed with status:', blockTypeResponse.status);
+          const errorText = await blockTypeResponse.text();
+          console.info('[Polling] Error response:', errorText);
+        }
+      } catch (err) {
+        console.error('[Polling] Failed to fetch BlockType details for marked block:', err);
+      }
+    } else {
+      console.info('[Polling] Using texture from block data, skipping BlockType fetch');
     }
 
     // Truncate name if too long
