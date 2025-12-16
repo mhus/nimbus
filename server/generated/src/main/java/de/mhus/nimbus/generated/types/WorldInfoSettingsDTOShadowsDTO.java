@@ -13,7 +13,9 @@ package de.mhus.nimbus.generated.types;
 public class WorldInfoSettingsDTOShadowsDTO {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Boolean enabled;
-    @com.fasterxml.jackson.annotation.JsonProperty("mapSize")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double mapSize;
+    private java.lang.Double darkness;
+    @com.fasterxml.jackson.annotation.JsonProperty("maxDistance")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.lang.Double maxDistance;
 }

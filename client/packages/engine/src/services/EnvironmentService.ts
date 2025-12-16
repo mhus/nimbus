@@ -518,7 +518,8 @@ export class EnvironmentService {
       const shadowSettings = this.appContext.worldInfo?.settings?.shadows;
       const enabled = shadowSettings?.enabled ?? true; // Default: enabled
       const quality = shadowSettings?.quality ?? 'low'; // Default: low
-      const distance = shadowSettings?.maxDistance ?? 500; // Default: 500 blocks
+      const distance = shadowSettings?.maxDistance ?? 1000; // Default: 100 blocks
+      const darkness = shadowSettings?.darkness ?? 0.8; // Default: 0.5
 
       if (!enabled) {
         logger.debug('Shadows disabled in WorldInfo');
@@ -529,20 +530,20 @@ export class EnvironmentService {
       const mapSize = QUALITY_PRESETS[quality].mapSize;
 
       // Create CascadedShadowGenerator
-      const cascadedGen = new CascadedShadowGenerator(mapSize, this.sunLight);
-      cascadedGen.lambda = 0.2;
+      const cascadedGen = new CascadedShadowGenerator(mapSize, this.sunLight, true, this.appContext.services?.camera?.getCamera() );
+      cascadedGen.lambda = 0.1;
       cascadedGen.filter = 0;
       cascadedGen.numCascades = 2;
       cascadedGen.transparencyShadow = true;
+      cascadedGen.darkness = darkness;
       this.shadowGenerator = cascadedGen;
-
+      this.shadowQuality = quality;
+      this.shadowEnabled = true;
       this.setShadowDistance(distance);
 
       // Call splitFrustum (required for CascadedShadowGenerator)
       cascadedGen.splitFrustum();
 
-      this.shadowEnabled = true;
-      this.shadowQuality = quality;
       this.setShadowDistance(distance);
 
       logger.debug('Shadow system initialized', {
@@ -550,8 +551,6 @@ export class EnvironmentService {
         mapSize: mapSize,
         quality: quality,
         distance: distance,
-        lambda: 0.2,
-        numCascades: 2,
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'EnvironmentService.initializeShadows');

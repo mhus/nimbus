@@ -227,17 +227,18 @@ export interface WorldInfo {
       /** Enable shadow system (default: false) */
       enabled?: boolean;
 
-      /** Shadow map size: 512, 1024, 2048, 4096 (default: 512) */
-      mapSize?: number; // javaType: int
-
-      /** Shadow quality preset (default: 'low') */
-      quality?: 'low' | 'medium' | 'high';
-
       /** Initial shadow darkness 0.0-1.0 (default: 0.6, where 0=very dark, 1=no shadows) */
       darkness?: number;
 
       /** Max shadow distance in blocks for culling (default: 50) */
-      maxDistance?: number;
+      maxDistance?: number; // javaType: Integer
+
+      /** Shadow map size: 512, 1024, 2048, 4096 (default: 512) */
+      mapSize?: number; // javaType: Integer
+
+      /** Shadow quality preset (default: 'low') */
+      quality?: 'low' | 'medium' | 'high'; // javaType: String
+
     };
   };
 
