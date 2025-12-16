@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.job;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +13,10 @@ import java.util.List;
 /**
  * Scheduled task that cleans up old completed/failed jobs.
  * Runs periodically to delete jobs older than retention threshold.
+ * Disabled in WorldPlayer module (stateless, no persistent job state).
  */
 @Component
+@ConditionalOnExpression("'WorldEditor'.equals('${spring.application.name}')")
 @RequiredArgsConstructor
 @Slf4j
 public class JobCleanupScheduler {

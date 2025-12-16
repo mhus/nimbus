@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.job;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.function.Consumer;
  * Provides CRUD operations and job state transitions.
  */
 @Service
+@ConditionalOnExpression("!'WorldPlayer'.equals('${spring.application.name}')")
 @RequiredArgsConstructor
 @Slf4j
 public class WJobService {

@@ -4,6 +4,7 @@ import de.mhus.nimbus.world.control.service.ChunkUpdateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
  * Runs at fixed intervals to regenerate chunks affected by layer changes.
  */
 @Component
+@ConditionalOnExpression("'WorldEditor'.equals('${spring.application.name}')")
 @RequiredArgsConstructor
 @Slf4j
 public class ChunkUpdateTask {
