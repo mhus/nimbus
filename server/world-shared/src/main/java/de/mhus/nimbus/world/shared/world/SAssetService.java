@@ -36,6 +36,12 @@ public class SAssetService {
         if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
         if (stream == null) return null;
 
+        // world lookup
+        if (worldId.isInstance()) {
+            throw new IllegalArgumentException("can't be save to a world instance: " + worldId);
+        }
+
+        // action
         SAsset asset = new SAsset();
         asset.setWorldId(worldId.getId());
         asset.setPath(path);
@@ -62,6 +68,11 @@ public class SAssetService {
         if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
         if (stream == null) return null;
 
+        // world lookup
+        if (worldId.isInstance()) {
+            throw new IllegalArgumentException("can't be save to a world instance: " + worldId);
+        }
+
         SAsset asset = SAsset.builder()
                 .worldId(worldId.getId())
                 .path(path)
@@ -84,8 +95,62 @@ public class SAssetService {
         return repository.findByWorldId(worldId.getId());
     }
 
+    /**
+     * World instances never own Assets.
+     *
+     * @param worldId
+     * @param path
+     * @return
+     */
     public Optional<SAsset> findByPath(WorldId worldId, String path) {
+        log.info("Finding asset world={} path={}", worldId, path);
+//
+//        // world lookup
+//        var lookupWorld = worldId.withoutInstance();
+//        int pos = path.indexOf('/');
+//        if (pos < 0) {
+//            throw new IllegalArgumentException("path must have a groupId (first element): " + path);
+//        }
+//        var group = path.substring(0, pos);
+//        var relativePath = path.substring(pos + 1);
+//
+//        if ("w".equals(group)) {
+//            // world asset
+//            if (lookupWorld.isBranch()) {
+//                var item = repository.findByWorldIdAndPath(lookupWorld.getId(),  relativePath);
+//                if (item.isPresent()) return item;
+//                // fallback to parent world
+//                return patchWorldId(lookupWorld, repository.findByWorldIdAndPath(lookupWorld.withoutBranchAndInstance().getId(),  relativePath)); // TODO relativePath !!
+//            }
+//            return repository.findByWorldIdAndPath(lookupWorld.getId(), path);  // TODO relativePath !!
+//        } else
+//        if ("r".equals(group)) {
+//            // region asset
+//            var regionWorldId = WorldId.of(WorldId.COLLECTION_REGION, lookupWorld.getRegionId())
+//                    .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + lookupWorld.getRegionId()));
+//            return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
+//        } else
+//        if ("p".equals(group)) {
+//            // public asset
+//            var publicWorldId = WorldId.of(WorldId.COLLECTION_PUBLIC, lookupWorld.getRegionId())
+//                    .orElseThrow(() -> new IllegalArgumentException("Invalid public collection worldId:" + lookupWorld.getRegionId()));
+//            return repository.findByWorldIdAndPath(publicWorldId.getId(), relativePath);
+//        } else {
+//            // shared asset group
+//            var collectionWorldId = WorldId.of( WorldId.COLLECTION_SHARED, group)
+//                    .orElseThrow(() -> new IllegalArgumentException("Invalid shared collection worldId: " + group));
+//            return repository.findByWorldIdAndPath(collectionWorldId.getId(), relativePath);
+//        }
+
         return repository.findByWorldIdAndPath(worldId.getId(), path);
+    }
+
+    private Optional<SAsset> patchWorldId(WorldId worldId, Optional<SAsset> item) {
+        if (item.isEmpty()) return item;
+        var asset = item.get();
+        // do I need a copy here? do I need to patch worldId?
+        asset.setWorldId(worldId.getId());
+        return item;
     }
 
     /** Lädt den Inhalt des Assets (inline oder extern). */

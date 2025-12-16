@@ -12,6 +12,10 @@ import java.util.Optional;
  * Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
  */
 public class WorldId implements Comparable<WorldId> {
+    public static final String COLLECTION_REGION = "@region";
+    public static final String COLLECTION_SHARED = "@shared";
+    public static final String COLLECTION_PUBLIC = "@public";
+
     @Getter
     private String id;
     private String regionId;
@@ -97,6 +101,10 @@ public class WorldId implements Comparable<WorldId> {
         return id;
     }
 
+    public static Optional<WorldId> of(String first, String second) {
+        return of(first + ":" + second);
+    }
+
     public static Optional<WorldId> of(String id) {
         if (!validate(id)) return Optional.empty();
         return Optional.of(new WorldId(id));
@@ -145,4 +153,22 @@ public class WorldId implements Comparable<WorldId> {
         return this.id.compareTo(o.id);
     }
 
+    public WorldId withoutInstance() {
+        parseId();
+        if (instance == null) return this;
+        StringBuilder sb = new StringBuilder();
+        sb.append(regionId).append(":").append(worldName);
+        if (zone != null) sb.append(":").append(zone);
+        if (branch != null) sb.append("@").append(branch);
+        return new WorldId(sb.toString());
+    }
+
+    public WorldId withoutBranchAndInstance() {
+        parseId();
+        if (branch == null && instance == null) return this;
+        StringBuilder sb = new StringBuilder();
+        sb.append(regionId).append(":").append(worldName);
+        if (zone != null) sb.append(":").append(zone);
+        return new WorldId(sb.toString());
+    }
 }
