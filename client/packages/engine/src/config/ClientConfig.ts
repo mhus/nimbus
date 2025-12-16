@@ -11,12 +11,6 @@ const logger = getLogger('ClientConfig');
  * Client configuration interface
  */
 export interface ClientConfig {
-  /** Username for authentication */
-  username: string;
-
-  /** Password for authentication */
-  password: string;
-
   /** WebSocket server URL */
   websocketUrl: string;
 
@@ -66,8 +60,6 @@ export function loadClientConfig(): ClientConfig {
   const usernameFromUrl = urlParams.get('username');
 
   // Load required variables
-  const username = usernameFromUrl || env.CLIENT_USERNAME;
-  const password = env.CLIENT_PASSWORD;
   const websocketUrl = env.SERVER_WEBSOCKET_URL;
   const apiUrl = env.SERVER_API_URL;
   const worldId = env.WORLD_ID || 'main'; // Default to 'main' if not specified
@@ -78,8 +70,6 @@ export function loadClientConfig(): ClientConfig {
 
   // Validate required fields
   const missing: string[] = [];
-  if (!username) missing.push('CLIENT_USERNAME');
-  if (!password) missing.push('CLIENT_PASSWORD');
   if (!websocketUrl) missing.push('SERVER_WEBSOCKET_URL');
   if (!apiUrl) missing.push('SERVER_API_URL');
 
@@ -94,8 +84,6 @@ export function loadClientConfig(): ClientConfig {
   const exitUrl = env.EXIT_URL || '/login'; // Default to '/login' if not specified
 
   const config: ClientConfig = {
-    username: username!,
-    password: password!,
     websocketUrl: websocketUrl + "/world/" + worldId,
     apiUrl: apiUrl!,
     worldId,
@@ -104,7 +92,6 @@ export function loadClientConfig(): ClientConfig {
   };
 
   logger.debug('Client configuration loaded', {
-    username,
     websocketUrl,
     apiUrl,
     worldId,

@@ -70,6 +70,12 @@ export class ConfigService {
         credentials: 'include', // Include cookies for authentication
       });
 
+      if(response.status == 401) {
+        // DEAD CODE: fetch will throw on 401
+        // redirect to login page if unauthorized
+        window.location.href = this.appContext.config?.exitUrl || '/login';
+        throw new Error('Unauthorized: Redirecting to login');
+      }
       if (!response.ok) {
         throw new Error(`Failed to load config: ${response.statusText}`);
       }
@@ -116,6 +122,8 @@ export class ConfigService {
 
       return config;
     } catch (error) {
+        logger.error('Error loading configuration', {error});
+      window.location.href = this.appContext.config?.exitUrl || '/login';
       throw ExceptionHandler.handleAndRethrow(
         error,
         'ConfigService.loadConfig',

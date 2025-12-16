@@ -40,6 +40,9 @@ import type { TeamService } from './services/TeamService';
 import type { RenderService } from './services/RenderService';
 import type { EntityRenderService } from './services/EntityRenderService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('AppContext');
 
 /**
  * Server information (received after login)
@@ -190,8 +193,49 @@ export interface AppContext {
   sessionId: string | null;
 }
 
+/**
+ * Load session data from cookie
+ * Decodes the sessionData cookie containing a base64-encoded JWT token
+ * and extracts worldId, userId, sessionId, and characterId
+ */
 export function loadSessionCookie(context : AppContext): void {
+  try {
+    // Get cookie value
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('sessionData='))
+      ?.split('=')[1];
 
+    if (!cookieValue) {
+      logger.info('No sessionData cookie found');
+      return;
+    }
+
+    logger.debug('Found sessionData cookie');
+
+    // Decode base64 payload (handle URL-safe base64)
+    const decodedPayload = atob(cookieValue.replace(/-/g, '+').replace(/_/g, '/'));
+    const payload = JSON.parse(decodedPayload);
+
+    logger.debug('Decoded JWT payload from sessionData cookie', payload);
+
+    // Extract session data
+    const worldId = payload.worldId;
+    const userId = payload.userId;
+    const sessionId = payload.sessionId;
+    const characterId = payload.characterId;
+
+    logger.info('Session data', { worldId, userId, sessionId, characterId });
+
+    // Store sessionId in context
+    if (sessionId) {
+      context.sessionId = sessionId;
+      logger.info('Loaded sessionId from cookie', { sessionId });
+    }
+
+  } catch (error) {
+    logger.warn('Failed to load session cookie', error);
+  }
 }
 
 /**

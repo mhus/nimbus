@@ -298,7 +298,7 @@ export class NetworkService {
     }
 
     if (this.appContext.sessionId) {
-      logger.debug('Resending login with sessionId after reconnect', {
+      logger.info('sending login with sessionId', {
         sessionId: this.appContext.sessionId,
       });
       this.sendLoginWithSession(this.appContext.sessionId);
