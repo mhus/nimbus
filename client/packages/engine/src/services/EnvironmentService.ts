@@ -1198,6 +1198,29 @@ export class EnvironmentService {
     return { ...this.worldTimeConfig };
   }
 
+  setUnixEpochWorldTimeOffset(era : number, offsetMinutes: number): void {
+    // calculate deta to naw and call startWorldTime with that value
+    // if era > 0: also add era offset, its (era - 1) * yearsPerEra * monthsPerYear * daysPerMonth * hoursPerDay * minutesPerHour
+    const now = Date.now();
+    const realElapsedMinutes = now / (1000 * 60);
+    if (era > 0) {
+      const eraOffsetMinutes =
+        (era - 1) *
+          this.worldTimeConfig.yearsPerEra *
+        this.worldTimeConfig.monthsPerYear *
+        this.worldTimeConfig.daysPerMonth *
+        this.worldTimeConfig.hoursPerDay *
+        this.worldTimeConfig.minutesPerHour;
+      offsetMinutes += eraOffsetMinutes;
+    }
+    const worldElapsedMinutes = realElapsedMinutes * this.worldTimeConfig.minuteScaling;
+    const currentWorldMinute = offsetMinutes + worldElapsedMinutes;
+
+    this.startWorldTime(currentWorldMinute);
+
+    logger.debug('Unix Epoch World Time offset set', { offsetMinutes });
+  }
+
   /**
    * Start World Time
    * Command: worldTimeStart <worldMinute>

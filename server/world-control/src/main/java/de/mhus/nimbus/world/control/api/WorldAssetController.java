@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -77,11 +78,13 @@ public class WorldAssetController extends BaseEditorController {
         // Get all assets for this world (regionId=worldId, worldId=worldId)
         WorldId wid = toWorldId(worldId);
         if (wid == null) return ResponseEntity.badRequest().body(Map.of("error", "invalid worldId"));
+
+
         List<SAsset> all = assetService.findByWorldId(wid).stream()
                 .collect(Collectors.toList());
 
         // Apply search filter if provided
-        if (query != null && !query.isBlank()) {
+        if (Strings.isNotBlank(query)) {
             all = filterByQuery(all, query);
         }
 

@@ -481,6 +481,21 @@ async function postCoreServiceInitialization(appContext: AppContext): Promise<vo
 }
 
 async function postEngineInitialization(appContext: AppContext): Promise<void> {
+  // set time if defined
+  if (appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes !== undefined) {
+    appContext.services.environment?.setUnixEpochWorldTimeOffset(
+        appContext.worldInfo?.settings?.worldTime?.currentEra || 1,
+        appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes);
+  }
+  // set shortcuts if defined
+  if (appContext.playerInfo?.shortcuts) {
+    for (const [key, shortcut] of Object.entries(appContext.playerInfo.shortcuts)) {
+      // 'click0', 'use', {"itemId": "item_1763653693310_uv2m2pu", "wait": 100}
+      appContext.services.command?.executeCommand('setShortcut', [ key, 'use', { itemId: shortcut.itemId, wait: shortcut.wait  }]);
+    }
+  }
+
+  return new Promise((resolve) => {resolve});
 }
 
 async function startEngineAtPlayerPosition(appContext: AppContext): Promise<void> {

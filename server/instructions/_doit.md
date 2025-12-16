@@ -136,3 +136,4 @@ Editieren:
 [ ] jetzt doch umbenennen der rest endpunkte /api -> /player, /control
 [ ] Brauchen wir world-region noch oder kann das world-control auch?!
 
+[ ] Alle textures / sound pfade umstellen von w/ auf w:

@@ -15,20 +15,20 @@ public class WorldInfoSettingsDTOWorldTimeDTOCelestialBodiesDTO {
     private java.lang.Boolean enabled;
     @com.fasterxml.jackson.annotation.JsonProperty("updateIntervalSeconds")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double updateIntervalSeconds;
+    private int updateIntervalSeconds;
     @com.fasterxml.jackson.annotation.JsonProperty("activeMoons")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double activeMoons;
+    private byte activeMoons;
     @com.fasterxml.jackson.annotation.JsonProperty("sunRotationHours")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double sunRotationHours;
+    private int sunRotationHours;
     @com.fasterxml.jackson.annotation.JsonProperty("moon0RotationHours")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double moon0RotationHours;
+    private int moon0RotationHours;
     @com.fasterxml.jackson.annotation.JsonProperty("moon1RotationHours")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double moon1RotationHours;
+    private int moon1RotationHours;
     @com.fasterxml.jackson.annotation.JsonProperty("moon2RotationHours")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double moon2RotationHours;
+    private int moon2RotationHours;
 }

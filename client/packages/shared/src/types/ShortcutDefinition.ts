@@ -58,6 +58,12 @@ export interface ShortcutDefinition {
    * Optional - if not specified, uses item's description from ItemData
    */
   description?: string;
+
+  /**
+   * How long to wait after activation before allowing next action (in milliseconds)
+   */
+  wait: number;  // javaType: int
+
 }
 
 /**
@@ -65,6 +71,7 @@ export interface ShortcutDefinition {
  */
 export const DEFAULT_SHORTCUT: ShortcutDefinition = {
   type: 'none',
+  wait: 100
 };
 
 /**

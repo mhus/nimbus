@@ -655,18 +655,29 @@ public class TsParser {
 
             String typePart = body.substring(typeStart, typeEnd).trim();
 
+            // Extract javaType hint from inline comment (look in full line from typeStart to newline)
+            String javaTypeHint = null;
+            int lineEnd = body.indexOf('\n', typeStart);
+            if (lineEnd < 0) lineEnd = body.length();
+            String fullLine = body.substring(typeStart, Math.min(lineEnd, body.length()));
+            int commentIdx = fullLine.indexOf("//");
+            if (commentIdx >= 0) {
+                String comment = fullLine.substring(commentIdx);
+                javaTypeHint = extractJavaTypeHint(comment);
+            }
+
             // Remove trailing semicolon if present
             if (typePart.endsWith(";")) {
                 typePart = typePart.substring(0, typePart.length() - 1).trim();
             }
 
-            // Check if this property has a nested inline object BEFORE removing comments
+            // Check if this is a nested inline object (BEFORE removing comments!)
             boolean isNestedInline = typePart.startsWith("{") && typePart.contains(":");
 
-            // Remove comments from type - BUT ONLY if it's not an inline object!
-            // For inline objects, comments are part of the structure and will be handled during parsing
+            // Remove comments from type - BUT ONLY if it's NOT an inline object
+            // For inline objects, preserve comments so they can be extracted during recursive parsing
             if (!isNestedInline) {
-                int commentIdx = typePart.indexOf("//");
+                commentIdx = typePart.indexOf("//");
                 if (commentIdx >= 0) {
                     typePart = typePart.substring(0, commentIdx).trim();
                 }
@@ -696,6 +707,7 @@ public class TsParser {
             prop.name = namePart;
             prop.type = typePart;
             prop.optional = optional;
+            prop.javaTypeHint = javaTypeHint;
 
             iface.properties.add(prop);
 
@@ -723,33 +735,15 @@ public class TsParser {
     /**
      * Find the end of a property value (semicolon, newline, or end of string), handling nested braces
      * TypeScript allows properties without semicolons, so we also stop at newlines when at depth 0
-     * Inline comments (//) are part of the line and the newline after them ends the property
      */
     private int findPropertyEnd(String s, int start) {
         int depth = 0;
-
         for (int i = start; i < s.length(); i++) {
             char c = s.charAt(i);
-
-            // Check for comment start - skip to end of line but include the newline as property end
-            if (c == '/' && i + 1 < s.length() && s.charAt(i + 1) == '/') {
-                // Found a comment, skip to the newline
-                while (i < s.length() && s.charAt(i) != '\n' && s.charAt(i) != '\r') {
-                    i++;
-                }
-                // Now i points at the newline (or end of string)
-                // If we're at depth 0, this newline ends the property
-                if (depth == 0 && i < s.length()) {
-                    return i;
-                }
-                continue;
-            }
-
-            // Normal property parsing
             if (c == '{' || c == '[' || c == '<') depth++;
             else if (c == '}' || c == ']' || c == '>') depth--;
             else if (c == ';' && depth == 0) return i;
-            // Stop at newline if we're at depth 0
+            // Also stop at newline if we're at depth 0 (not inside braces)
             else if ((c == '\n' || c == '\r') && depth == 0) return i;
         }
         return s.length();

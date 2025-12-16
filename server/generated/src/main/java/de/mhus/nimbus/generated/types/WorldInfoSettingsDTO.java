@@ -12,13 +12,13 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class WorldInfoSettingsDTO {
     @com.fasterxml.jackson.annotation.JsonProperty("maxPlayers")
-    private double maxPlayers;
+    private int maxPlayers;
     @com.fasterxml.jackson.annotation.JsonProperty("allowGuests")
     private boolean allowGuests;
     @com.fasterxml.jackson.annotation.JsonProperty("pvpEnabled")
     private boolean pvpEnabled;
     @com.fasterxml.jackson.annotation.JsonProperty("pingInterval")
-    private double pingInterval;
+    private long pingInterval;
     @com.fasterxml.jackson.annotation.JsonProperty("allowedMovementModes")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.List<String> allowedMovementModes;
@@ -36,7 +36,7 @@ public class WorldInfoSettingsDTO {
     private WorldInfoSettingsDTOClearColorDTO clearColor;
     @com.fasterxml.jackson.annotation.JsonProperty("cameraMaxZ")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double cameraMaxZ;
+    private int cameraMaxZ;
     @com.fasterxml.jackson.annotation.JsonProperty("sunTexture")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String sunTexture;

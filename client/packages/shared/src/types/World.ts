@@ -198,13 +198,13 @@ export interface WorldInfo {
       /** Day section definitions (in @Hours) */
       daySections?: {
         /** Morning start @Hour (default: 6) */
-        morningStart?: number; // javaType: int
+        morningStart?: number; // javaType: Integer
         /** Day start @Hour (default: 12) */
-        dayStart?: number; // javaType: int
+        dayStart?: number; // javaType: Integer
         /** Evening start @Hour (default: 18) */
-        eveningStart?: number; // javaType: int
+        eveningStart?: number; // javaType: Integer
         /** Night start @Hour (default: 0) */
-        nightStart?: number; // javaType: int
+        nightStart?: number; // javaType: Integer
       };
 
       /** Celestial bodies automatic update configuration */
@@ -212,17 +212,17 @@ export interface WorldInfo {
         /** Enable automatic sun/moon position updates (default: false) */
         enabled?: boolean;
         /** Update interval in seconds (default: 10) */
-        updateIntervalSeconds?: number; // javaType: int
+        updateIntervalSeconds?: number; // javaType: Integer
         /** Number of active moons (0-3, default: 0) */
-        activeMoons?: number; // javaType: byte
+        activeMoons?: number; // javaType: Byte
         /** Full rotation time for sun in @Hours (default: 24, means sun completes circle in 24 @Hours) */
-        sunRotationHours?: number; // javaType: int
+        sunRotationHours?: number; // javaType: Integer
         /** Full rotation time for moon 0 in @Hours (default: 672 = 28 days) */
-        moon0RotationHours?: number; // javaType: int
+        moon0RotationHours?: number; // javaType: Integer
         /** Full rotation time for moon 1 in @Hours (default: 504 = 21 days) */
-        moon1RotationHours?: number; // javaType: int
+        moon1RotationHours?: number; // javaType: Integer
         /** Full rotation time for moon 2 in @Hours (default: 336 = 14 days) */
-        moon2RotationHours?: number; // javaType: int
+        moon2RotationHours?: number; // javaType: Integer
       };
     };
 

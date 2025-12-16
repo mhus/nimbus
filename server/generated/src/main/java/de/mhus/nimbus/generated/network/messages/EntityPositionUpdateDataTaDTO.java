@@ -14,5 +14,5 @@ public class EntityPositionUpdateDataTaDTO {
     private double x;
     private double y;
     private double z;
-    private double ts;
+    private long ts;
 }

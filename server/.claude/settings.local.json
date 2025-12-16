@@ -24,7 +24,10 @@
       "Bash(javap:*)",
       "Bash(xargs ls:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(javac:*)",
+      "Bash(1)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

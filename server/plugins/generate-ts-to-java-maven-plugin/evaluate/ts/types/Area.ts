@@ -2,13 +2,13 @@
  * AreaData - Defines an area with effects
  */
 
-import type { Vector3 } from './Vector3';
+import type { Vector3Int } from './Vector3Int';
 
 export interface Area {
   /** Start position */
-  a: Vector3;
+  a: Vector3Int;
 
   /** End position */
-  b: Vector3;
+  b: Vector3Int;
 
 }
