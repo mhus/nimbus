@@ -110,6 +110,50 @@ public class WorldRedisLockService {
         return Boolean.TRUE.equals(redis.hasKey(lockKey));
     }
 
+    /**
+     * Acquire a generic lock with custom key.
+     *
+     * @param lockKey Full lock key (e.g., "job:123", "export:world-abc")
+     * @param ttl Lock time-to-live
+     * @return Lock token if acquired, null if lock is held by another process
+     */
+    public String acquireGenericLock(String lockKey, Duration ttl) {
+        String fullKey = "world:lock:" + lockKey;
+        String token = UUID.randomUUID().toString();
+
+        Boolean acquired = redis.opsForValue().setIfAbsent(fullKey, token, ttl);
+
+        if (Boolean.TRUE.equals(acquired)) {
+            log.trace("Acquired lock: key={} token={} ttl={}ms",
+                    lockKey, token, ttl.toMillis());
+            return token;
+        }
+
+        log.trace("Failed to acquire lock (already held): key={}", lockKey);
+        return null;
+    }
+
+    /**
+     * Release a generic lock.
+     *
+     * @param lockKey Full lock key
+     * @param token Lock token from acquisition
+     * @return true if lock was released, false if token invalid
+     */
+    public boolean releaseGenericLock(String lockKey, String token) {
+        String fullKey = "world:lock:" + lockKey;
+        String currentToken = redis.opsForValue().get(fullKey);
+
+        if (token.equals(currentToken)) {
+            redis.delete(fullKey);
+            log.trace("Released lock: key={}", lockKey);
+            return true;
+        }
+
+        log.warn("Failed to release lock (token mismatch or already expired): key={}", lockKey);
+        return false;
+    }
+
     private String lockKey(String worldId) {
         return "world:" + worldId + ":" + LOCK_PREFIX;
     }

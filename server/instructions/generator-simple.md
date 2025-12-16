@@ -31,7 +31,7 @@
 
 [?] Erstelle in world-control einen REST Controller HexGridController unter /control/worlds/{worldId}/hexgrid
 
-[ ] Erstelle einen JobEntity, JobRepository und JobService in world-shared Module.
+[?] Erstelle einen JobEntity, JobRepository und JobService in world-shared Module.
 - JobEntity
   - worldId : String
   - executor : String
@@ -62,3 +62,6 @@
 - Die generatoren erstellen fuer jeden FlatPosition im HexGrid Bereich zwei/drei... Blocks in dem angegebenen Layer mit dem entsprechenden BlockTypeId
 - Manipuliere die Block offsets um die Oberfläche organischer wirken zu lassen, siehe NormalGenerator.ts
 
+[ ] Erstelle ein neues modul world-generator fuer weitere Welt Generatoren.
+- verlinke world-shared und shared module
+- erstelle die basis ordner und GeneratorApplication class
