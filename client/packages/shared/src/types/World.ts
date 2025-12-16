@@ -179,17 +179,21 @@ export interface WorldInfo {
     /** World Time configuration (optional) */
     worldTime?: {
       /** @Minute scaling: How many world minutes pass per real minute (default: 10) */
-      minuteScaling?: number; // javaType: int
+      minuteScaling?: number; // javaType: Integer
       /** @Hour: How many @Minutes in one @Hour (default: 60) */
-      minutesPerHour?: number; // javaType: int
+      minutesPerHour?: number; // javaType: Integer
       /** @Day: How many @Hours in one @Day (default: 24) */
-      hoursPerDay?: number; // javaType: int
+      hoursPerDay?: number; // javaType: Integer
       /** @Month: How many @Days in one @Month (default: 30) */
-      daysPerMonth?: number; // javaType: int
+      daysPerMonth?: number; // javaType: Integer
       /** @Year: How many @Months in one @Year (default: 12) */
-      monthsPerYear?: number; // javaType: int
+      monthsPerYear?: number; // javaType: Integer
       /** @Era: How many @Years in one @Era (default: 10000) */
-      yearsPerEra?: number; // javaType: int
+      yearsPerEra?: number; // javaType: Integer
+      /** current Era - starting at time 0 + Era * 10000 * 12 * 30 * 24 * 60 = 5.184.000.000 (one Era in minutes)*/
+      currentEra?: number; // javaType: Integer
+      /** linuxEpocheDeltaMinutes - delta at linux timestamp 0 */
+      linuxEpocheDeltaMinutes?: number; // javaType: Long
 
       /** Day section definitions (in @Hours) */
       daySections?: {

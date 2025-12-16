@@ -1,6 +1,6 @@
 /*
  * Source TS: World.ts
- * Original TS: 'interface WorldInfoSettingsDTOShadowsDTO'
+ * Original TS: 'interface WorldInfoSettingsDTOWorldTimeDTODaySectionsDTO'
  */
 package de.mhus.nimbus.generated.types;
 
@@ -10,17 +10,17 @@ package de.mhus.nimbus.generated.types;
 @lombok.experimental.SuperBuilder
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class WorldInfoSettingsDTOShadowsDTO {
+public class WorldInfoSettingsDTOWorldTimeDTODaySectionsDTO {
+    @com.fasterxml.jackson.annotation.JsonProperty("morningStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Boolean enabled;
+    private java.lang.Double morningStart;
+    @com.fasterxml.jackson.annotation.JsonProperty("dayStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double darkness;
-    @com.fasterxml.jackson.annotation.JsonProperty("maxDistance")
+    private java.lang.Double dayStart;
+    @com.fasterxml.jackson.annotation.JsonProperty("eveningStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double maxDistance;
-    @com.fasterxml.jackson.annotation.JsonProperty("mapSize")
+    private java.lang.Double eveningStart;
+    @com.fasterxml.jackson.annotation.JsonProperty("nightStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double mapSize;
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private String quality;
+    private java.lang.Double nightStart;
 }

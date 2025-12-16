@@ -660,14 +660,20 @@ public class TsParser {
                 typePart = typePart.substring(0, typePart.length() - 1).trim();
             }
 
-            // Remove comments from type
-            int commentIdx = typePart.indexOf("//");
-            if (commentIdx >= 0) {
-                typePart = typePart.substring(0, commentIdx).trim();
+            // Check if this property has a nested inline object BEFORE removing comments
+            boolean isNestedInline = typePart.startsWith("{") && typePart.contains(":");
+
+            // Remove comments from type - BUT ONLY if it's not an inline object!
+            // For inline objects, comments are part of the structure and will be handled during parsing
+            if (!isNestedInline) {
+                int commentIdx = typePart.indexOf("//");
+                if (commentIdx >= 0) {
+                    typePart = typePart.substring(0, commentIdx).trim();
+                }
             }
 
             // Check if this property has a nested inline object
-            if (typePart.startsWith("{") && typePart.contains(":")) {
+            if (isNestedInline) {
                 String nestedName = generateSyntheticInterfaceName(name, namePart);
                 TsDeclarations.TsInterface nestedInterface = parseInlineObjectType(nestedName, typePart, file, newInterfaces);
                 if (nestedInterface != null) {
@@ -717,15 +723,33 @@ public class TsParser {
     /**
      * Find the end of a property value (semicolon, newline, or end of string), handling nested braces
      * TypeScript allows properties without semicolons, so we also stop at newlines when at depth 0
+     * Inline comments (//) are part of the line and the newline after them ends the property
      */
     private int findPropertyEnd(String s, int start) {
         int depth = 0;
+
         for (int i = start; i < s.length(); i++) {
             char c = s.charAt(i);
+
+            // Check for comment start - skip to end of line but include the newline as property end
+            if (c == '/' && i + 1 < s.length() && s.charAt(i + 1) == '/') {
+                // Found a comment, skip to the newline
+                while (i < s.length() && s.charAt(i) != '\n' && s.charAt(i) != '\r') {
+                    i++;
+                }
+                // Now i points at the newline (or end of string)
+                // If we're at depth 0, this newline ends the property
+                if (depth == 0 && i < s.length()) {
+                    return i;
+                }
+                continue;
+            }
+
+            // Normal property parsing
             if (c == '{' || c == '[' || c == '<') depth++;
             else if (c == '}' || c == ']' || c == '>') depth--;
             else if (c == ';' && depth == 0) return i;
-            // Also stop at newline if we're at depth 0 (not inside braces)
+            // Stop at newline if we're at depth 0
             else if ((c == '\n' || c == '\r') && depth == 0) return i;
         }
         return s.length();
