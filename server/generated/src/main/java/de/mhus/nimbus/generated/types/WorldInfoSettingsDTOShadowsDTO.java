@@ -17,5 +17,10 @@ public class WorldInfoSettingsDTOShadowsDTO {
     private java.lang.Double darkness;
     @com.fasterxml.jackson.annotation.JsonProperty("maxDistance")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.lang.Double maxDistance;
+    private Integer maxDistance;
+    @com.fasterxml.jackson.annotation.JsonProperty("mapSize")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private Integer mapSize;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String quality;
 }

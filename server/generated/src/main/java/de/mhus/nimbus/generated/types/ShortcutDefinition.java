@@ -19,4 +19,5 @@ public class ShortcutDefinition {
     private String name;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String description;
+    private int wait;
 }

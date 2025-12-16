@@ -13,14 +13,14 @@ package de.mhus.nimbus.generated.types;
 public class WorldInfoSettingsDTOWorldTimeDTODaySectionsDTO {
     @com.fasterxml.jackson.annotation.JsonProperty("morningStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int morningStart;
+    private Integer morningStart;
     @com.fasterxml.jackson.annotation.JsonProperty("dayStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int dayStart;
+    private Integer dayStart;
     @com.fasterxml.jackson.annotation.JsonProperty("eveningStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int eveningStart;
+    private Integer eveningStart;
     @com.fasterxml.jackson.annotation.JsonProperty("nightStart")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int nightStart;
+    private Integer nightStart;
 }

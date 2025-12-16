@@ -3716,6 +3716,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "wait",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     } ],
@@ -5330,11 +5337,287 @@
       } ],
       "methods" : [ ]
     }, {
+      "name" : "WorldInfoSettingsDTOWorldTimeDTODaySectionsDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "morningStart",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "dayStart",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "eveningStart",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "nightStart",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOWorldTimeDTOCelestialBodiesDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "enabled",
+        "type" : "boolean",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "updateIntervalSeconds",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "activeMoons",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Byte",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Byte",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "sunRotationHours",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "moon0RotationHours",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "moon1RotationHours",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "moon2RotationHours",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
       "name" : "WorldInfoSettingsDTOWorldTimeDTO",
       "extendsList" : [ ],
       "properties" : [ {
         "name" : "minuteScaling",
         "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "minutesPerHour",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "hoursPerDay",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "daysPerMonth",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "monthsPerYear",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "yearsPerEra",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "currentEra",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "linuxEpocheDeltaMinutes",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Long",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Long",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "daySections",
+        "type" : "WorldInfoSettingsDTOWorldTimeDTODaySectionsDTO",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "celestialBodies",
+        "type" : "WorldInfoSettingsDTOWorldTimeDTOCelestialBodiesDTO",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -5362,6 +5645,41 @@
         "name" : "maxDistance",
         "type" : "number",
         "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "mapSize",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "Integer",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "quality",
+        "type" : "'low' | 'medium' | 'high'",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "String",
+        "comment" : null
+      }, {
+        "name" : "// javaType",
+        "type" : "String",
+        "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
@@ -5755,6 +6073,13 @@
         "name" : "groupId",
         "type" : "number",
         "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "// Deprecated?\n      [key: string]",
+        "type" : "any",
+        "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
