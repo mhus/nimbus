@@ -529,6 +529,7 @@ const handleDuplicate = async () => {
       body: JSON.stringify({
         newBlockId: newBlockTypeId.value,
       }),
+      credentials: 'include'
     });
 
     if (!response.ok) {

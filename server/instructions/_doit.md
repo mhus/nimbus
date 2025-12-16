@@ -137,3 +137,5 @@ Editieren:
 [ ] Brauchen wir world-region noch oder kann das world-control auch?!
 
 [ ] Alle textures / sound pfade umstellen von w/ auf w:
+[ ] Entferne worldId und sessionId von controls URLs, die kann das backend jetzt aus dem Cookie laden
+

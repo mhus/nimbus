@@ -21,6 +21,7 @@ export async function saveBlockAsBlockType(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(blockData),
+      credentials: 'include'
     });
 
     if (!response.ok) {

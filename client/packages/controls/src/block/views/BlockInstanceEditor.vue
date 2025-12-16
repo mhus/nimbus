@@ -796,7 +796,7 @@ async function handleNavigate(position: { x: number; y: number; z: number }) {
   try {
     const sessionId = params.get('sessionId');
     if (sessionId) {
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
       const response = await fetch(
         `${apiUrl}/control/worlds/${worldId}/session/${sessionId}/selectedEditBlock/navigate`,
         {
@@ -805,6 +805,7 @@ async function handleNavigate(position: { x: number; y: number; z: number }) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(position),
+          credentials: 'include'
         }
       );
 
@@ -959,7 +960,8 @@ async function loadBlock() {
       signal: controller.signal,
       headers: {
         'Accept': 'application/json',
-      }
+      },
+      credentials: 'include'
     }).finally(() => clearTimeout(timeoutId));
 
     if (response.status === 404) {
@@ -1130,6 +1132,7 @@ async function saveBlock(closeAfter: boolean = false) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(block),
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -1199,6 +1202,7 @@ async function deleteBlock() {
         blockId: 'air',
         meta: null,
       }),
+      credentials: 'include'
     });
 
     if (!response.ok && response.status !== 404) {

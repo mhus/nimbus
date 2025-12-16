@@ -52,7 +52,9 @@ class PresetService {
       const worldId = this.apiService.getCurrentWorldId();
       const url = `${this.apiService.getBaseUrl()}/control/worlds/${worldId}/assets/scrawl/effects.json`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        credentials: 'include'
+      });
       if (!response.ok) {
         console.warn('Failed to load effects.json, using empty library');
         this.library = { effects: [], commands: [] };

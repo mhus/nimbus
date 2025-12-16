@@ -657,7 +657,9 @@ function getActionDescription(action: EditAction): string {
 // Fetch available layers from API
 async function fetchLayers() {
   try {
-    const response = await fetch(`${apiUrl.value}/control/editor/${worldId.value}/layers`);
+    const response = await fetch(`${apiUrl.value}/control/editor/${worldId.value}/layers`, {
+      credentials: 'include'
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch layers: ${response.statusText}`);
@@ -694,7 +696,10 @@ function isEqual(a: any, b: any): boolean {
 async function fetchEditState() {
   try {
     const response = await fetch(
-      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/edit`
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/edit`,
+      {
+        credentials: 'include'
+      }
     );
 
     if (!response.ok) {
@@ -750,6 +755,7 @@ async function saveEditState() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(editState.value),
+        credentials: 'include'
       }
     );
 
@@ -851,7 +857,7 @@ async function activateEditMode() {
   try {
     const response = await fetch(
       `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/activate`,
-      { method: 'POST' }
+      { method: 'POST', credentials: 'include' }
     );
 
     if (!response.ok) {
@@ -882,7 +888,7 @@ async function confirmDiscard() {
   try {
     const response = await fetch(
       `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/discard`,
-      { method: 'POST' }
+      { method: 'POST', credentials: 'include' }
     );
 
     if (!response.ok) throw new Error('Discard failed');
@@ -904,7 +910,7 @@ async function saveOverlays() {
   try {
     const response = await fetch(
       `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/save`,
-      { method: 'POST', headers: { 'Accept': 'application/json' } }
+      { method: 'POST', headers: { 'Accept': 'application/json' }, credentials: 'include' }
     );
 
     if (!response.ok) throw new Error('Save failed');
@@ -926,7 +932,10 @@ async function saveOverlays() {
 async function loadEditSettings() {
   try {
     const response = await fetch(
-      `${apiUrl.value}/control/editor/settings/worlds/${worldId.value}/editsettings?sessionId=${sessionId.value}`
+      `${apiUrl.value}/control/editor/settings/worlds/${worldId.value}/editsettings?sessionId=${sessionId.value}`,
+      {
+        credentials: 'include'
+      }
     );
 
     if (!response.ok) {
@@ -955,7 +964,7 @@ async function loadEditSettings() {
 
 // Get texture URL for block icon
 function getTextureUrl(icon: string): string {
-  const apiBaseUrl = import.meta.env.VITE_API_URL;
+  const apiBaseUrl = import.meta.env.VITE_CONTROL_API_URL;
   return `${apiBaseUrl}/control/worlds/${worldId.value}/assets/${icon}`;
 }
 
@@ -1033,6 +1042,7 @@ async function selectPaletteBlock(index: number) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(paletteBlock.block),
+        credentials: 'include'
       }
     );
 
@@ -1114,6 +1124,7 @@ async function savePalette() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(palette.value),
+      credentials: 'include'
     });
 
     console.log('[Palette] Save response status:', response.status);
@@ -1147,10 +1158,11 @@ async function pollMarkedBlockContent() {
   try {
     // Always try to fetch - server will return 404 if no block marked
     const url = `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
-    // const url = `http://localhost:9043/control/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
     console.log('[Polling] Fetching:', url);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      credentials: 'include'
+    });
 
     console.log('[Polling] Response status:', response.status);
 
@@ -1193,7 +1205,10 @@ async function pollMarkedBlockContent() {
 
     try {
       const blockTypeResponse = await fetch(
-        `${apiUrl.value}/control/worlds/${worldId.value}/blocktypes/${blockData.blockTypeId}`
+        `${apiUrl.value}/control/worlds/${worldId.value}/blocktypes/${blockData.blockTypeId}`,
+        {
+          credentials: 'include'
+        }
       );
 
       if (blockTypeResponse.ok) {

@@ -14,7 +14,7 @@ export class ApiService {
   private apiUrl: string;
 
   constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL;
+    this.apiUrl = import.meta.env.VITE_CONTROL_API_URL;
 
     this.client = axios.create({
       baseURL: this.apiUrl,
@@ -29,13 +29,6 @@ export class ApiService {
     this.client.interceptors.request.use(
       (config) => {
         // Add authentication if needed
-        const username = import.meta.env.VITE_API_USERNAME;
-        const password = import.meta.env.VITE_API_PASSWORD;
-
-        if (username && password) {
-          const token = btoa(`${username}:${password}`);
-          config.headers.Authorization = `Basic ${token}`;
-        }
 
         return config;
       },

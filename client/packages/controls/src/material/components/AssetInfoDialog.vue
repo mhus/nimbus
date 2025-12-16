@@ -565,6 +565,7 @@ const handleDuplicate = async () => {
       body: JSON.stringify({
         newPath: newAssetPath.value,
       }),
+      credentials: 'include'
     });
 
     if (!response.ok) {

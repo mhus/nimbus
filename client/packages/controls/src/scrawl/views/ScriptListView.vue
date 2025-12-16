@@ -120,7 +120,9 @@ async function loadScripts() {
       try {
         // Fetch script content
         const scriptUrl = `${apiService.getBaseUrl()}/control/worlds/${currentWorldId.value}/assets/${asset.path}`;
-        const scriptResponse = await fetch(scriptUrl);
+        const scriptResponse = await fetch(scriptUrl, {
+          credentials: 'include'
+        });
         const script: ScrawlScript = await scriptResponse.json();
 
         loadedScripts.push({
