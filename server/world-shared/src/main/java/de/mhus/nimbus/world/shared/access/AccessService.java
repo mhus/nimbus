@@ -64,7 +64,7 @@ public class AccessService {
 
     /**
      * Retrieves worlds from the system with optional search filter.
-     * Always limits results to prevent overwhelming responses.
+     * Uses database-level filtering and pagination.
      *
      * @param searchQuery Optional search term to filter world names (can be null/empty)
      * @param limit Maximum number of results to return (default 100)
@@ -74,26 +74,12 @@ public class AccessService {
     public List<WorldInfoDto> getWorlds(String searchQuery, int limit) {
         log.debug("Fetching worlds with search='{}', limit={}", searchQuery, limit);
 
-        List<WWorld> worlds = worldService.findAll();
+        // Use database-level filtering and pagination
+        var result = worldService.searchWorlds(searchQuery, 0, limit);
 
-        // Filter by search query if provided (searches in worldId, name, and description)
-        if (searchQuery != null && !searchQuery.isBlank()) {
-            String queryLower = searchQuery.toLowerCase();
-            worlds = worlds.stream()
-                    .filter(w -> (w.getWorldId() != null && w.getWorldId().toLowerCase().contains(queryLower)) ||
-                                 (w.getName() != null && w.getName().toLowerCase().contains(queryLower)) ||
-                                 (w.getDescription() != null && w.getDescription().toLowerCase().contains(queryLower)))
-                    .collect(Collectors.toList());
-        }
-
-        // Always limit results (even without search)
-        worlds = worlds.stream()
-                .limit(limit)
-                .collect(Collectors.toList());
-
-        return worlds.stream()
+        return result.worlds().stream()
                 .map(this::mapToWorldInfoDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

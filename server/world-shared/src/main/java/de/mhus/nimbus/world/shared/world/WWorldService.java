@@ -4,6 +4,9 @@ import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +30,50 @@ public class WWorldService {
         return repository.findByWorldId(worldId);
     }
 
+    /**
+     * Find all worlds (no filtering, no pagination).
+     * WARNING: This loads ALL worlds into memory. Use searchWorlds() for large result sets.
+     */
     @Transactional(readOnly = true)
     public List<WWorld> findAll() {
         return repository.findAll();
+    }
+
+    /**
+     * Search worlds with database-level filtering and pagination.
+     * Searches in worldId, name, and description fields (case-insensitive).
+     *
+     * @param searchQuery Optional search query (can be null/empty for no filter)
+     * @param offset Pagination offset (0-based)
+     * @param limit Pagination limit
+     * @return WorldSearchResult with paginated worlds and total count
+     */
+    @Transactional(readOnly = true)
+    public WorldSearchResult searchWorlds(String searchQuery, int offset, int limit) {
+        log.debug("Searching worlds: query='{}', offset={}, limit={}", searchQuery, offset, limit);
+
+        // Calculate page number from offset
+        int pageNumber = offset / limit;
+        Pageable pageable = PageRequest.of(pageNumber, limit);
+
+        Page<WWorld> page;
+        if (searchQuery != null && !searchQuery.isBlank()) {
+            // Search with filter (MongoDB regex search across multiple fields)
+            String searchPattern = searchQuery; // MongoDB regex, no need to add .*
+            page = repository.findBySearchQuery(searchPattern, pageable);
+        } else {
+            // No filter, just pagination
+            page = repository.findAllBy(pageable);
+        }
+
+        log.debug("Found {} worlds (total: {})", page.getNumberOfElements(), page.getTotalElements());
+
+        return new WorldSearchResult(
+                page.getContent(),
+                (int) page.getTotalElements(),
+                offset,
+                limit
+        );
     }
 
     @Transactional(readOnly = true)
@@ -97,4 +141,14 @@ public class WWorldService {
             return true;
         }).orElse(false);
     }
+
+    /**
+     * Result wrapper for world search with pagination info.
+     */
+    public record WorldSearchResult(
+            List<WWorld> worlds,
+            int totalCount,
+            int offset,
+            int limit
+    ) {}
 }
