@@ -3054,6 +3054,53 @@
       "target" : null
     } ]
   }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/HexData.ts",
+    "imports" : [ "./HexVector2", "./Area" ],
+    "interfaces" : [ {
+      "name" : "HexGrid",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "position",
+        "type" : "HexVector2",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "entryPoint",
+        "type" : "Area",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "name",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "description",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "icon",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/BlockModifier.ts",
     "imports" : [ "./Shape", "./Vector3", "./RotationXY" ],
     "interfaces" : [ {
@@ -4902,7 +4949,14 @@
       }, {
         "name" : "chunkSize",
         "type" : "number",
-        "optional" : true,
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      }, {
+        "name" : "hexGridSize",
+        "type" : "number",
+        "optional" : false,
         "visibility" : null,
         "javaTypeHint" : "int",
         "comment" : "// javaType: int"

@@ -21,8 +21,9 @@ public class WorldInfo {
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Vector3 stop;
     @com.fasterxml.jackson.annotation.JsonProperty("chunkSize")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private int chunkSize;
+    @com.fasterxml.jackson.annotation.JsonProperty("hexGridSize")
+    private int hexGridSize;
     @com.fasterxml.jackson.annotation.JsonProperty("worldIcon")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String worldIcon;

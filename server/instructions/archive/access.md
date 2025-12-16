@@ -24,8 +24,8 @@
 
 ## Aufräumen
 
-[ ] Es gibt bereits eine implementierung in world-region die muss vorher geprueft werden.
-[ ] Timeout an Webscoket auf 24 Stunden setzen (aktuell 12 Stunden)
+[-] Es gibt bereits eine implementierung in world-region die muss vorher geprueft werden.
+[-] Timeout an Webscoket auf 24 Stunden setzen (aktuell 12 Stunden)
 [m] Rollen und AccessGruppen in Typen umsetzen
 [m] Alte Filter löschen (nicht universe)
 

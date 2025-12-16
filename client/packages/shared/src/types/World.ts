@@ -39,7 +39,10 @@ export interface WorldInfo {
   stop?: Vector3;
 
   /** Chunk size (default: 16) */
-  chunkSize?: number; // javaType: int
+  chunkSize: number; // javaType: int
+
+    /** Hex grid size in blocks */
+  hexGridSize: number; // javaType: int
 
   /** World icon asset path */
   worldIcon?: string;

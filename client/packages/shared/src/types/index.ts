@@ -57,3 +57,8 @@ export * from './Modal';
 // Edit action types
 export * from './EditAction';
 export * from './EditSettings';
+
+// Hex grid types
+export * from './HexData';
+export * from './HexVector2';
+export * from './Area';
