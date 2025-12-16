@@ -121,7 +121,7 @@ public class SAssetService {
                 // fallback to parent world
                 return patchWorldId(lookupWorld, repository.findByWorldIdAndPath(lookupWorld.withoutBranchAndInstance().getId(),  relativePath)); // TODO relativePath !!
             }
-            return repository.findByWorldIdAndPath(lookupWorld.getId(), path);  // TODO relativePath !!
+            return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
         } else
         if ("r".equals(group)) {
             // region asset
