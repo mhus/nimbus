@@ -1,13 +1,17 @@
 package de.mhus.nimbus.world.player.ws;
 
+import de.mhus.nimbus.generated.types.EntityStatusUpdate;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.session.SessionClosedConsumer;
 import de.mhus.nimbus.world.shared.redis.EntityStatusPublisher;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+
+import static de.mhus.nimbus.world.shared.redis.EntityStatusPublisher.GONE;
 
 /**
  * Service that broadcasts entity death status when a session is closed.
@@ -21,9 +25,10 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class EntityDeathBroadcastService implements SessionClosedConsumer {
+public class EntityGoneBroadcastService implements SessionClosedConsumer {
 
     private final EntityStatusPublisher entityStatusPublisher;
+    private final WWorldService worldService;
 
     /**
      * SessionClosedConsumer implementation.
@@ -45,21 +50,22 @@ public class EntityDeathBroadcastService implements SessionClosedConsumer {
         try {
             String worldId = session.getWorldId().getId();
             String entityId = session.getEntityId();
+            var world = worldService.getByWorldId(worldId).get();
 
             // Calculate chunk from last known position
             double x = session.getLastPosition().getX();
             double z = session.getLastPosition().getZ();
-            int cx = (int) Math.floor(x / 16);
-            int cz = (int) Math.floor(z / 16);
+            int cx = world.getChunkX(x);
+            int cz = world.getChunkZ(z);
 
             // Create death status map
-            Map<String, Object> deathStatus = Map.of("death", 1);
+            Map<String, Object> goneStatus = Map.of(GONE, 1);
 
             // Broadcast death status to chunk
             entityStatusPublisher.publishStatusUpdateToChunk(
                 worldId,
                 entityId,
-                deathStatus,
+                goneStatus,
                 cx,
                 cz,
                 session.getSessionId() // Originating session (will be filtered out, but that's OK)

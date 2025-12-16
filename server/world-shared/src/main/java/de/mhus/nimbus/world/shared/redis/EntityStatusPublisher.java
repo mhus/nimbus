@@ -3,7 +3,7 @@ package de.mhus.nimbus.world.shared.redis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import de.mhus.nimbus.world.shared.dto.EntityStatusUpdateDto;
+import de.mhus.nimbus.generated.types.EntityStatusUpdate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +26,8 @@ import java.util.Map;
 @Slf4j
 public class EntityStatusPublisher {
 
+    public static final String GONE = "gone";
+
     private final WorldRedisMessagingService redisMessaging;
     private final ObjectMapper objectMapper;
 
@@ -38,7 +40,7 @@ public class EntityStatusPublisher {
      */
     public void publishStatusUpdates(
         String worldId,
-        List<EntityStatusUpdateDto> statusUpdates,
+        List<EntityStatusUpdate> statusUpdates,
         String originatingSessionId
     ) {
         if (statusUpdates == null || statusUpdates.isEmpty()) {
@@ -77,7 +79,7 @@ public class EntityStatusPublisher {
      */
     public void publishStatusUpdatesWithChunks(
         String worldId,
-        List<EntityStatusUpdateDto> statusUpdates,
+        List<EntityStatusUpdate> statusUpdates,
         List<EntityStatusBroadcastMessage.ChunkCoordinate> affectedChunks,
         String originatingSessionId
     ) {
@@ -139,7 +141,7 @@ public class EntityStatusPublisher {
             return;
         }
 
-        EntityStatusUpdateDto dto = EntityStatusUpdateDto.builder()
+        EntityStatusUpdate dto = EntityStatusUpdate.builder()
             .entityId(entityId)
             .status(statusFields)
             .build();
@@ -170,7 +172,7 @@ public class EntityStatusPublisher {
             return;
         }
 
-        EntityStatusUpdateDto dto = EntityStatusUpdateDto.builder()
+        EntityStatusUpdate dto = EntityStatusUpdate.builder()
             .entityId(entityId)
             .status(statusFields)
             .build();

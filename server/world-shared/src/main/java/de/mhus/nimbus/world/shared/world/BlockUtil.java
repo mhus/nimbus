@@ -131,17 +131,17 @@ public class BlockUtil {
                 .build();
     }
 
-    public static String toCunkKey(int cx, int cz) {
+    public static String toChunkKey(int cx, int cz) {
         return cx + ":" + cz;
     }
 
-    public static String toCunkKey(double cx, double cz) {
-        return (int)cx + ":" + (int)cz;
+    public static String toChunkKey(double cx, double cz) {
+        return (int)Math.floor(cx) + ":" + (int)Math.floor(cz);
     }
 
-    public static String toCunkKey(WWorld world, Vector3 position) {
-        int cx = world.getChunkX((int)position.getX());
-        int cz = world.getChunkZ((int)position.getZ());
+    public static String toChunkKey(WWorld world, Vector3 position) {
+        int cx = world.getChunkX(position.getX());
+        int cz = world.getChunkZ(position.getZ());
         return (int)cx + ":" + (int)cz;
     }
 

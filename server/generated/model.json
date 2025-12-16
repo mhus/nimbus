@@ -1586,11 +1586,11 @@
         "comment" : null
       }, {
         "name" : "status",
-        "type" : "EntityStatusUpdateStatusDTO",
+        "type" : "Record<string, any>",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "Map<String,Object>",
+        "comment" : "// javaType: Map<String,Object>"
       } ],
       "methods" : [ ]
     }, {
@@ -1795,39 +1795,6 @@
       }, {
         "name" : "footprint",
         "type" : "number",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "EntityStatusUpdateStatusDTO",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "health",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "healthMax",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "death",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "// Future expansion",
-        "type" : "mana, stamina, effects, etc.",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,

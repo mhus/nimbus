@@ -52,7 +52,7 @@ export class EntityStatusUpdateMessageHandler extends MessageHandler<EntityStatu
       const { entityId, status } = update;
 
       // Check if entity has died
-      if (status.death === 1) {
+      if (status.gone === 1) {
         logger.info('Entity died, removing from entity list', { entityId });
         await this.entityService.removeEntity(entityId);
         return;

@@ -37,7 +37,7 @@ public class TerrainService {
             // Calculate chunk coordinates
             int chunkX = Math.floorDiv(x, 16);
             int chunkZ = Math.floorDiv(z, 16);
-            String chunkKey = BlockUtil.toCunkKey(chunkX, chunkZ);
+            String chunkKey = BlockUtil.toChunkKey(chunkX, chunkZ);
 
             // Load chunk from database (regionId = worldId for main world, create=false)
             Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, chunkKey, false);

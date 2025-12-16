@@ -87,7 +87,7 @@ public class WItemRegistryService {
     @Transactional(readOnly = true)
     public List<ItemBlockRef> getItemsInChunk(WorldId worldId, int cx, int cz) {
         WWorld world = worldService.getByWorldId(worldId.getId()).get();
-        String chunk = BlockUtil.toCunkKey(cx, cz);
+        String chunk = BlockUtil.toChunkKey(cx, cz);
         List<WItemPosition> positions = repository.findByWorldIdAndChunkAndEnabled(
                 worldId.getId(), chunk, true);
 
@@ -192,7 +192,7 @@ public class WItemRegistryService {
      */
     @Transactional(readOnly = true)
     public long countItemsInChunk(WorldId worldId, int cx, int cz) {
-        String chunk = BlockUtil.toCunkKey(cx, cz);
+        String chunk = BlockUtil.toChunkKey(cx, cz);
         return repository.findByWorldIdAndChunkAndEnabled(
                 worldId.getId(), chunk, true).size();
     }

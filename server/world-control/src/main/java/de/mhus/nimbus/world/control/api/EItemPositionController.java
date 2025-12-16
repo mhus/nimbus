@@ -139,7 +139,7 @@ public class EItemPositionController extends BaseEditorController {
             // Convert ItemBlockRef back to WItemPosition for filtering (simplified approach)
             all = itemRegistryService.getAllItems(wid).stream()
                     .filter(item -> {
-                        String chunkKey = BlockUtil.toCunkKey(cx, cz);
+                        String chunkKey = BlockUtil.toChunkKey(cx, cz);
                         return chunkKey.equals(item.getChunk());
                     })
                     .collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.shared.redis;
 
-import de.mhus.nimbus.world.shared.dto.EntityStatusUpdateDto;
+import de.mhus.nimbus.generated.types.EntityStatusUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +28,7 @@ public class EntityStatusBroadcastMessage {
     /**
      * List of entity status updates.
      */
-    private List<EntityStatusUpdateDto> statusUpdates;
+    private List<EntityStatusUpdate> statusUpdates;
 
     /**
      * Chunks affected by these status updates (for filtering).

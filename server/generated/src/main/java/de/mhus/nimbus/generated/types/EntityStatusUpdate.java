@@ -13,5 +13,5 @@ package de.mhus.nimbus.generated.types;
 public class EntityStatusUpdate {
     @com.fasterxml.jackson.annotation.JsonProperty("entityId")
     private String entityId;
-    private EntityStatusUpdateStatusDTO status;
+    private java.util.Map<String, Object> status;
 }

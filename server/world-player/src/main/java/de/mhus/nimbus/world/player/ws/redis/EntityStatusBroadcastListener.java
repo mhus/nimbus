@@ -2,8 +2,8 @@ package de.mhus.nimbus.world.player.ws.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.generated.types.EntityStatusUpdate;
 import de.mhus.nimbus.world.player.ws.BroadcastService;
-import de.mhus.nimbus.world.shared.dto.EntityStatusUpdateDto;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -77,9 +77,9 @@ public class EntityStatusBroadcastListener {
             }
 
             // Parse status updates
-            List<EntityStatusUpdateDto> statusUpdates = new ArrayList<>();
+            List<EntityStatusUpdate> statusUpdates = new ArrayList<>();
             for (JsonNode updateNode : statusUpdatesNode) {
-                EntityStatusUpdateDto update = objectMapper.treeToValue(updateNode, EntityStatusUpdateDto.class);
+                EntityStatusUpdate update = objectMapper.treeToValue(updateNode, EntityStatusUpdate.class);
                 statusUpdates.add(update);
             }
 

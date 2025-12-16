@@ -106,6 +106,10 @@ public class WWorld implements Identifiable {
         updatedAt = Instant.now();
     }
 
+    public int getChunkX(double worldX) {
+        return getChunkX((int) Math.floor(worldX));
+    }
+
     /**
      * Calculate chunk X coordinate from world X coordinate.
      * Uses configured chunkSize from WorldInfo.
@@ -121,6 +125,10 @@ public class WWorld implements Identifiable {
         return Math.floorDiv(worldX, chunkSize);
     }
 
+    public int getChunkZ(double worldZ) {
+        return getChunkZ((int) Math.floor(worldZ));
+    }
+
     /**
      * Calculate chunk Z coordinate from world Z coordinate.
      * Uses configured chunkSize from WorldInfo.
@@ -134,6 +142,18 @@ public class WWorld implements Identifiable {
         }
         int chunkSize = publicData.getChunkSize();
         return Math.floorDiv(worldZ, chunkSize);
+    }
+
+    /**
+     * Calculate chunk key from world coordinates.
+     * Format: "{cx}:{cz}"
+     *
+     * @param worldX World X coordinate
+     * @param worldZ World Z coordinate
+     * @return Chunk key string
+     */
+    public String getChunkKey(double worldX, double worldZ) {
+        return getChunkX(worldX) + ":" + getChunkZ(worldZ);
     }
 
     /**

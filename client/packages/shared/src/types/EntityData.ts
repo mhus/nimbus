@@ -413,17 +413,6 @@ export interface EntityStatusUpdate {
   /** Entity ID to update */
   entityId: string;
 
-  /** Status fields to update */
-  status: {
-    /** Current health value */
-    health?: number;
-
-    /** Maximum health value */
-    healthMax?: number;
-
-    /** Death flag - 1 means entity has died and should be removed */
-    death?: number;
-
-    // Future expansion: mana, stamina, effects, etc.
-  };
+  /** Status fields to update (offene Key-Value-Liste) */
+  status: Record<string, any>; // javaType: Map<String,Object>
 }
