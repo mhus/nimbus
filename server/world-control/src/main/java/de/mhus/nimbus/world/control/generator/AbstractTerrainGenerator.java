@@ -49,7 +49,7 @@ public abstract class AbstractTerrainGenerator implements JobExecutor {
             GeneratorContext context = parseParameters(job);
 
             WWorld world = loadWorld(context.worldId());
-            WHexGrid hexGrid = loadHexGrid(context.worldId(), context.gridPosition());
+            WHexGridEntity hexGrid = loadHexGrid(context.worldId(), context.gridPosition());
 
             configureGenerator(hexGrid.getGeneratorParameters());
 
@@ -68,7 +68,7 @@ public abstract class AbstractTerrainGenerator implements JobExecutor {
 
     protected abstract void configureGenerator(Map<String, String> genParams);
 
-    protected abstract int generateTerrain(WWorld world, WHexGrid hexGrid, GeneratorContext context)
+    protected abstract int generateTerrain(WWorld world, WHexGridEntity hexGrid, GeneratorContext context)
             throws JobExecutionException;
 
     protected abstract int getTerrainHeight(int worldX, int worldZ);
@@ -106,7 +106,7 @@ public abstract class AbstractTerrainGenerator implements JobExecutor {
                 .orElseThrow(() -> new JobExecutionException("World not found: " + worldId));
     }
 
-    protected WHexGrid loadHexGrid(String worldId, String gridPosition) throws JobExecutionException {
+    protected WHexGridEntity loadHexGrid(String worldId, String gridPosition) throws JobExecutionException {
         try {
             de.mhus.nimbus.generated.types.HexVector2 hexPos = HexMathUtil.parsePositionKey(gridPosition);
             return hexGridService.findByWorldIdAndPosition(worldId, hexPos)

@@ -128,6 +128,27 @@ public class HexMathUtil {
         return new HexPositionIterator(hex, gridSize);
     }
 
+    public static HexVector2 getNeighborPosition(HexVector2 position, WHexGridEntity.NEIGHBOR nabor) {
+        int q = position.getQ();
+        int r = position.getR();
+        switch (nabor) {
+            case TOP_RIGHT:
+                return HexVector2.builder().q(q + 1).r(r - 1).build();
+            case RIGHT:
+                return HexVector2.builder().q(q + 1).r(r).build();
+            case BOTTOM_RIGHT:
+                return HexVector2.builder().q(q).r(r + 1).build();
+            case BOTTOM_LEFT:
+                return HexVector2.builder().q(q - 1).r(r + 1).build();
+            case LEFT:
+                return HexVector2.builder().q(q - 1).r(r).build();
+            case TOP_LEFT:
+                return HexVector2.builder().q(q).r(r - 1).build();
+            default:
+                throw new IllegalArgumentException("Unknown nabor direction: " + nabor);
+        }
+    }
+
     /**
      * Internal iterator implementation for lazy position generation.
      */

@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.HexGrid;
+import de.mhus.nimbus.generated.types.HexVector2;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -32,7 +32,16 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WHexGrid implements Identifiable {
+public class WHexGridEntity implements Identifiable {
+
+    public enum NEIGHBOR {
+        TOP_RIGHT,
+        RIGHT,
+        BOTTOM_RIGHT,
+        BOTTOM_LEFT,
+        LEFT,
+        TOP_LEFT
+    }
 
     @Id
     private String id;
@@ -126,5 +135,23 @@ public class WHexGrid implements Identifiable {
         }
 
         return () -> HexMathUtil.createFlatPositionIterator(publicData.getPosition(), gridSize);
+    }
+
+    public HexVector2 getNeighborPosition(NEIGHBOR nabor) {
+        if (publicData == null || publicData.getPosition() == null) {
+            throw new IllegalStateException("Cannot calculate neighbor position: publicData or position is null");
+        }
+        return HexMathUtil.getNeighborPosition(publicData.getPosition(), nabor);
+    }
+
+    public Map<NEIGHBOR, HexVector2> getAllNeighborPositions() {
+        if (publicData == null || publicData.getPosition() == null) {
+            throw new IllegalStateException("Cannot calculate neighbor positions: publicData or position is null");
+        }
+        Map<NEIGHBOR, HexVector2> naborMap = new HashMap<>();
+        for (NEIGHBOR neighbor : NEIGHBOR.values()) {
+            naborMap.put(neighbor, HexMathUtil.getNeighborPosition(publicData.getPosition(), neighbor));
+        }
+        return naborMap;
     }
 }

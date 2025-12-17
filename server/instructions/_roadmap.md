@@ -24,9 +24,9 @@
 - Entry Points
 - Import / Exporter / Version management von Daten
   - Änderungsmanagement mongodb liquibase
-- Mechanismus der Interaktion mit interaktiven Elementen, ggf. Space-Key wenn selected
-- Balken+Name ueber Entities
-- Zeichen, zb. Menge + Namen ueber Items
+[x] Mechanismus der Interaktion mit interaktiven Elementen, ggf. Space-Key wenn selected
+[x] Balken+Name ueber Entities
+[x] Zeichen, zb. Menge + Namen ueber Items
 
 - lookup strategien
   - erweitere worldId um @ at start: @<collection type>:<collection id>

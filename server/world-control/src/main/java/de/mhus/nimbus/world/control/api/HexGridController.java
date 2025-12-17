@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.HexGrid;
 import de.mhus.nimbus.generated.types.HexVector2;
-import de.mhus.nimbus.world.shared.world.WHexGrid;
+import de.mhus.nimbus.world.shared.world.WHexGridEntity;
 import de.mhus.nimbus.world.shared.world.WHexGridService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -50,7 +50,7 @@ public class HexGridController extends BaseEditorController {
             boolean enabled
     ) {}
 
-    private HexGridResponse toResponse(WHexGrid hexGrid) {
+    private HexGridResponse toResponse(WHexGridEntity hexGrid) {
         return new HexGridResponse(
                 hexGrid.getId(),
                 hexGrid.getWorldId(),
@@ -143,7 +143,7 @@ public class HexGridController extends BaseEditorController {
         }
 
         try {
-            WHexGrid created = hexGridService.create(
+            WHexGridEntity created = hexGridService.create(
                     worldId,
                     request.publicData(),
                     request.generatorParameters()

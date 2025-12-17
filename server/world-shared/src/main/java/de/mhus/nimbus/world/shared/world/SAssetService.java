@@ -7,7 +7,6 @@ import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,38 +96,17 @@ public class SAssetService {
 
     /**
      * Find all assets by worldId.
-     * Implements COW strategy for branches: returns branch assets + parent assets (branch overrides parent).
+     * Assets are only stored in main worlds (no branches, no instances, no zones).
      * WARNING: This loads ALL assets into memory. Use searchAssets() for large result sets.
      */
     public List<SAsset> findByWorldId(WorldId worldId) {
-        var lookupWorld = worldId.withoutInstanceAndZone();
-
-        if (lookupWorld.isBranch()) {
-            // COW strategy: get branch assets + parent assets
-            List<SAsset> branchAssets = repository.findByWorldId(lookupWorld.getId());
-            List<SAsset> parentAssets = repository.findByWorldId(lookupWorld.withoutBranchAndInstance().getId());
-
-            // Patch worldId for all assets
-            branchAssets.forEach(asset -> asset.setPatchWorldId(lookupWorld.getId()));
-            parentAssets.forEach(asset -> asset.setPatchWorldId(lookupWorld.getId()));
-
-            // Merge: branch assets override parent assets with same path
-            List<SAsset> merged = new ArrayList<>(branchAssets);
-            for (SAsset parentAsset : parentAssets) {
-                boolean existsInBranch = branchAssets.stream()
-                        .anyMatch(b -> b.getPath().equals(parentAsset.getPath()));
-                if (!existsInBranch) {
-                    merged.add(parentAsset);
-                }
-            }
-            return merged;
-        }
-
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
         return repository.findByWorldId(lookupWorld.getId());
     }
 
     /**
-     * World instances never own Assets.
+     * World instances and branches never own Assets.
+     * Assets are only stored in main worlds.
      *
      * @param worldId
      * @param path
@@ -137,8 +114,8 @@ public class SAssetService {
      */
     public Optional<SAsset> findByPath(WorldId worldId, String path) {
 
-        // world lookup
-        var lookupWorld = worldId.withoutInstanceAndZone();
+        // world lookup - always use main world (no branches, no instances, no zones)
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
         int pos = path.indexOf(':');
         if (pos < 0) {
             if (path.startsWith("w/")) {
@@ -154,13 +131,7 @@ public class SAssetService {
         }
 
         if ("w".equals(group)) {
-            // world asset
-            if (lookupWorld.isBranch()) {
-                var item = repository.findByWorldIdAndPath(lookupWorld.getId(),  relativePath);
-                if (item.isPresent()) return item;
-                // fallback to parent world
-                return BlockUtil.patchWorldId(lookupWorld, repository.findByWorldIdAndPath(lookupWorld.withoutBranchAndInstance().getId(),  relativePath));
-            }
+            // world asset - always from main world
             return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
         } else
         if ("r".equals(group)) {
@@ -300,9 +271,9 @@ public class SAssetService {
     /**
      * Search assets with database-level filtering and pagination.
      * Supports prefix-based search (w:, r:, p:, or shared collections).
-     * Implements COW strategy for branches (search in branch first, then parent).
+     * Assets are only stored in main worlds (no branches, no instances, no zones).
      *
-     * @param worldId The world identifier (can be branch)
+     * @param worldId The world identifier
      * @param query Search query (optional, prefix:path format, default prefix is "w:")
      * @param extension Extension filter (optional, e.g., ".png")
      * @param offset Pagination offset
@@ -330,10 +301,11 @@ public class SAssetService {
         }
 
         // Determine target worldId based on prefix
-        WorldId lookupWorld = worldId.withoutInstanceAndZone();
+        // Always use main world (no branches, no instances, no zones)
+        WorldId lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
         final String targetWorldId = switch (prefix.toLowerCase()) {
             case "w" -> {
-                // World asset - use the provided worldId
+                // World asset - always use main world
                 yield lookupWorld.getId();
             }
             case "r" -> {
@@ -374,58 +346,8 @@ public class SAssetService {
 
         String pathPattern = regexBuilder.length() > 0 ? regexBuilder.toString() : null;
 
-        // COW strategy for branches: search in branch first, then in parent
-        if ("w".equals(prefix) && lookupWorld.isBranch()) {
-            return searchWithCowStrategy(lookupWorld, pathPattern, offset, limit);
-        }
-
-        // Direct search for non-branch or non-world assets
+        // Direct search - assets are only in main worlds
         return searchInWorldId(targetWorldId, pathPattern, offset, limit);
-    }
-
-    /**
-     * COW strategy: Search in branch first, then fill with parent results if needed.
-     */
-    private AssetSearchResult searchWithCowStrategy(WorldId branchWorldId, String pathPattern, int offset, int limit) {
-        // Search in branch first
-        AssetSearchResult branchResult = searchInWorldId(branchWorldId.getId(), pathPattern, 0, offset + limit);
-        List<SAsset> branchAssets = branchResult.assets();
-
-        // Patch worldId for branch assets
-        branchAssets.forEach(asset -> asset.setPatchWorldId(branchWorldId.getId()));
-
-        // If we have enough results in branch, return them with pagination
-        if (branchAssets.size() >= offset + limit) {
-            List<SAsset> paginated = branchAssets.subList(offset, Math.min(offset + limit, branchAssets.size()));
-            return new AssetSearchResult(paginated, branchResult.totalCount(), offset, limit);
-        }
-
-        // Need to fetch from parent to fill the gap
-        WorldId parentWorldId = branchWorldId.withoutBranchAndInstance();
-        AssetSearchResult parentResult = searchInWorldId(parentWorldId.getId(), pathPattern, 0, offset + limit * 2);
-        List<SAsset> parentAssets = parentResult.assets();
-
-        // Patch worldId for parent assets
-        parentAssets.forEach(asset -> asset.setPatchWorldId(branchWorldId.getId()));
-
-        // Merge: branch assets override parent assets with same path
-        List<SAsset> merged = new ArrayList<>(branchAssets);
-        for (SAsset parentAsset : parentAssets) {
-            boolean existsInBranch = branchAssets.stream()
-                    .anyMatch(b -> b.getPath().equals(parentAsset.getPath()));
-            if (!existsInBranch) {
-                merged.add(parentAsset);
-            }
-        }
-
-        // Apply pagination on merged result
-        int totalCount = branchResult.totalCount() + parentResult.totalCount();
-        List<SAsset> paginated = merged.stream()
-                .skip(offset)
-                .limit(limit)
-                .toList();
-
-        return new AssetSearchResult(paginated, totalCount, offset, limit);
     }
 
     /**

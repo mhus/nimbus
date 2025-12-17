@@ -31,7 +31,7 @@ public class WHexGridService {
      * @return Optional containing the hex grid if found
      */
     @Transactional(readOnly = true)
-    public Optional<WHexGrid> findByWorldIdAndPosition(String worldId, HexVector2 hexPos) {
+    public Optional<WHexGridEntity> findByWorldIdAndPosition(String worldId, HexVector2 hexPos) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -50,7 +50,7 @@ public class WHexGridService {
      * @return List of all hex grids in the world
      */
     @Transactional(readOnly = true)
-    public List<WHexGrid> findByWorldId(String worldId) {
+    public List<WHexGridEntity> findByWorldId(String worldId) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -64,7 +64,7 @@ public class WHexGridService {
      * @return List of enabled hex grids in the world
      */
     @Transactional(readOnly = true)
-    public List<WHexGrid> findAllEnabled(String worldId) {
+    public List<WHexGridEntity> findAllEnabled(String worldId) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -80,7 +80,7 @@ public class WHexGridService {
      * @throws IllegalStateException if position cannot be synchronized
      */
     @Transactional
-    public WHexGrid save(WHexGrid entity) {
+    public WHexGridEntity save(WHexGridEntity entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity required");
         }
@@ -98,7 +98,7 @@ public class WHexGridService {
             entity.touchUpdate();
         }
 
-        WHexGrid saved = repository.save(entity);
+        WHexGridEntity saved = repository.save(entity);
         log.debug("Saved WHexGrid: worldId={}, position={}", saved.getWorldId(), saved.getPosition());
         return saved;
     }
@@ -113,7 +113,7 @@ public class WHexGridService {
      * @throws IllegalStateException if a hex grid already exists at this position
      */
     @Transactional
-    public WHexGrid create(String worldId, HexGrid publicData, Map<String, String> generatorParams) {
+    public WHexGridEntity create(String worldId, HexGrid publicData, Map<String, String> generatorParams) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -128,7 +128,7 @@ public class WHexGridService {
             throw new IllegalStateException("Hex grid already exists at worldId=" + worldId + ", position=" + positionKey);
         }
 
-        WHexGrid entity = WHexGrid.builder()
+        WHexGridEntity entity = WHexGridEntity.builder()
                 .worldId(worldId)
                 .publicData(publicData)
                 .position(positionKey)
@@ -138,7 +138,7 @@ public class WHexGridService {
 
         entity.touchCreate();
 
-        WHexGrid saved = repository.save(entity);
+        WHexGridEntity saved = repository.save(entity);
         log.info("Created WHexGrid: worldId={}, position={}", worldId, positionKey);
         return saved;
     }
@@ -152,7 +152,7 @@ public class WHexGridService {
      * @return Optional containing the updated entity if found
      */
     @Transactional
-    public Optional<WHexGrid> update(String worldId, HexVector2 hexPos, Consumer<WHexGrid> updater) {
+    public Optional<WHexGridEntity> update(String worldId, HexVector2 hexPos, Consumer<WHexGridEntity> updater) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -170,7 +170,7 @@ public class WHexGridService {
             entity.syncPositionKey();
             entity.touchUpdate();
 
-            WHexGrid saved = repository.save(entity);
+            WHexGridEntity saved = repository.save(entity);
             log.debug("Updated WHexGrid: worldId={}, position={}", worldId, positionKey);
             return saved;
         });
