@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.Item;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.WItem;
 import de.mhus.nimbus.world.shared.world.WItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,15 +84,10 @@ public class EItemController extends BaseEditorController {
 
         log.debug("SEARCH items: worldId={}, query={}", worldId, query);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        List<WItem> all = itemService.findEnabledByWorldId(widOpt.get());
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("invalid worldId")
+        );
+        List<WItem> all = itemService.findEnabledByWorldId(wid);
         String lowerQuery = query.toLowerCase();
         final int maxResults = 100;
 
@@ -130,18 +126,13 @@ public class EItemController extends BaseEditorController {
 
         log.debug("GET item: worldId={}, itemId={}", worldId, itemId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("invalid worldId")
+        );
+        var validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        validation = validateId(itemId, "itemId");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        Optional<WItem> opt = itemService.findByItemId(widOpt.get(), itemId);
+        Optional<WItem> opt = itemService.findByItemId(wid, itemId);
         if (opt.isEmpty()) {
             log.warn("Item not found: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -170,9 +161,9 @@ public class EItemController extends BaseEditorController {
 
         log.debug("CREATE item: worldId={}, itemId={}", worldId, request.id());
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("invalid worldId")
+        );
         if (blank(request.name())) {
             return bad("name is required");
         }
@@ -187,12 +178,6 @@ public class EItemController extends BaseEditorController {
             itemId = "item_" + System.currentTimeMillis() + "_" +
                     Long.toHexString(Double.doubleToLongBits(Math.random())).substring(0, 7);
         }
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-        WorldId wid = widOpt.get();
 
         // Check if already exists
         if (itemService.findByItemId(wid, itemId).isPresent()) {
@@ -244,17 +229,11 @@ public class EItemController extends BaseEditorController {
 
         log.debug("UPDATE item: worldId={}, itemId={}", worldId, itemId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("invalid worldId")
+        );
+        var validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
-
-        validation = validateId(itemId, "itemId");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-        WorldId wid = widOpt.get();
 
         Optional<WItem> existing = itemService.findByItemId(wid, itemId);
         if (existing.isEmpty()) {
@@ -309,18 +288,13 @@ public class EItemController extends BaseEditorController {
 
         log.debug("DELETE item: worldId={}, itemId={}", worldId, itemId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("invalid worldId")
+        );
+        var validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
-        validation = validateId(itemId, "itemId");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        boolean deleted = itemService.delete(widOpt.get(), itemId);
+        boolean deleted = itemService.delete(wid, itemId);
         if (!deleted) {
             log.warn("Item not found for deletion: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");

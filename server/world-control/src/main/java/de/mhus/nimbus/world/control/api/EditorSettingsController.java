@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.entity.WWorldEditSettings;
 import de.mhus.nimbus.world.control.model.PaletteBlockDefinition;
 import de.mhus.nimbus.world.control.service.EditSettingsService;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import io.swagger.v3.oas.annotations.Operation;

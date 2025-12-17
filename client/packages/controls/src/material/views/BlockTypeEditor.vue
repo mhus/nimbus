@@ -95,6 +95,28 @@
       @close="closeModifierEditor"
       @save="handleModifierSaved"
     />
+
+    <!-- Delete Confirmation Dialog -->
+    <div v-if="showDeleteConfirmation" class="modal modal-open">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Delete Block Type</h3>
+        <p class="py-4">
+          Are you sure you want to delete block type
+          <strong>"{{ blockTypeToDelete?.description || blockTypeToDelete?.id }}"</strong>?
+        </p>
+        <p class="text-sm text-warning pb-4">
+          This action cannot be undone.
+        </p>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="cancelDelete">
+            Cancel
+          </button>
+          <button class="btn btn-error" @click="confirmDeleteAction">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -135,6 +157,10 @@ const selectedBlockType = ref<BlockType | null>(null);
 const isModifierEditorOpen = ref(false);
 const editingModifier = ref<{ blockType: BlockType; status: number; modifier: any } | null>(null);
 const blockTypeEditorRef = ref<any>(null);
+
+// Delete confirmation
+const showDeleteConfirmation = ref(false);
+const blockTypeToDelete = ref<BlockType | null>(null);
 
 // Load block types when world changes
 watch(currentWorldId, () => {
@@ -183,16 +209,32 @@ const handleSaved = () => {
 };
 
 /**
- * Handle delete
+ * Handle delete - show confirmation dialog
  */
-const handleDelete = async (blockType: BlockType) => {
-  if (!blockTypesComposable.value) return;
+const handleDelete = (blockType: BlockType) => {
+  blockTypeToDelete.value = blockType;
+  showDeleteConfirmation.value = true;
+};
 
-  if (!confirm(`Are you sure you want to delete block type "${blockType.description || blockType.id}"?`)) {
-    return;
-  }
+/**
+ * Cancel delete action
+ */
+const cancelDelete = () => {
+  showDeleteConfirmation.value = false;
+  blockTypeToDelete.value = null;
+};
 
-  await blockTypesComposable.value.deleteBlockType(blockType.id);
+/**
+ * Confirm delete action
+ */
+const confirmDeleteAction = async () => {
+  if (!blockTypesComposable.value || !blockTypeToDelete.value) return;
+
+  await blockTypesComposable.value.deleteBlockType(blockTypeToDelete.value.id);
+
+  // Close confirmation dialog
+  showDeleteConfirmation.value = false;
+  blockTypeToDelete.value = null;
 };
 
 /**

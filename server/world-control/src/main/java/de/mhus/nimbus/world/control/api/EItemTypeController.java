@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.ItemType;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.WItemType;
 import de.mhus.nimbus.world.shared.world.WItemTypeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,18 +71,13 @@ public class EItemTypeController extends BaseEditorController {
 
         log.debug("GET itemtype: worldId={}, itemType={}", worldId, itemType);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID is invalid")
+        );
+        var validation = validateId(itemType, "itemType");
         if (validation != null) return validation;
 
-        validation = validateId(itemType, "itemType");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        Optional<WItemType> opt = itemTypeService.findByItemType(widOpt.get(), itemType);
+        Optional<WItemType> opt = itemTypeService.findByItemType(wid, itemType);
         if (opt.isEmpty()) {
             log.warn("ItemType not found: itemType={}", itemType);
             return notFound("itemtype not found");
@@ -110,19 +106,14 @@ public class EItemTypeController extends BaseEditorController {
 
         log.debug("LIST itemtypes: worldId={}, query={}, offset={}, limit={}", worldId, query, offset, limit);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID is invalid")
+        );
+        var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
-
-        validation = validatePagination(offset, limit);
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
 
         // Get all ItemTypes for this world
-        List<WItemType> all = itemTypeService.findByWorldId(widOpt.get());
+        List<WItemType> all = itemTypeService.findByWorldId(wid);
 
         // Apply search filter if provided
         if (query != null && !query.isBlank()) {
@@ -166,9 +157,9 @@ public class EItemTypeController extends BaseEditorController {
 
         log.debug("CREATE itemtype: worldId={}, itemType={}", worldId, request.itemType());
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID is invalid")
+        );
         if (blank(request.itemType())) {
             return bad("itemType required");
         }
@@ -176,12 +167,6 @@ public class EItemTypeController extends BaseEditorController {
         if (request.publicData() == null) {
             return bad("publicData required");
         }
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-        WorldId wid = widOpt.get();
 
         // Check if ItemType already exists
         if (itemTypeService.findByItemType(wid, request.itemType()).isPresent()) {
@@ -219,23 +204,17 @@ public class EItemTypeController extends BaseEditorController {
             @RequestBody UpdateItemTypeRequest request) {
 
         log.debug("UPDATE itemtype: worldId={}, itemType={}", worldId, itemType);
-
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(itemType, "itemType");
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID is invalid")
+        );
+        var validation = validateId(itemType, "itemType");
         if (validation != null) return validation;
 
         if (request.publicData() == null && request.enabled() == null) {
             return bad("at least one field required for update");
         }
 
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        Optional<WItemType> updated = itemTypeService.update(widOpt.get(), itemType, item -> {
+        Optional<WItemType> updated = itemTypeService.update(wid, itemType, item -> {
             if (request.publicData() != null) {
                 item.setPublicData(request.publicData());
             }
@@ -271,18 +250,13 @@ public class EItemTypeController extends BaseEditorController {
 
         log.debug("DELETE itemtype: worldId={}, itemType={}", worldId, itemType);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID is invalid")
+        );
+        var validation = validateId(itemType, "itemType");
         if (validation != null) return validation;
 
-        validation = validateId(itemType, "itemType");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        boolean deleted = itemTypeService.delete(widOpt.get(), itemType);
+        boolean deleted = itemTypeService.delete(wid, itemType);
         if (!deleted) {
             log.warn("ItemType not found for deletion: itemType={}", itemType);
             return notFound("itemtype not found");

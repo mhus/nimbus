@@ -1,7 +1,6 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
-import de.mhus.nimbus.shared.types.HasWorldPatch;
 import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +30,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SAsset implements Identifiable, HasWorldPatch {
+public class SAsset implements Identifiable {
 
     @Id
     private String id;
@@ -68,9 +67,6 @@ public class SAsset implements Identifiable, HasWorldPatch {
     /** Optional: Welt Identifier. */
     @Indexed
     private String worldId; // kann null sein
-
-    @Transient
-    private String patchWorldId;
 
 }
 

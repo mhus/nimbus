@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.control.api;
 import de.mhus.nimbus.world.shared.job.JobStatus;
 import de.mhus.nimbus.world.shared.job.WJob;
 import de.mhus.nimbus.world.shared.job.WJobService;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

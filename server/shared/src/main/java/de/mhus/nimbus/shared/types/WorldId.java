@@ -193,4 +193,9 @@ public class WorldId implements Comparable<WorldId> {
         return WorldId.of(COLLECTION_REGION, regionId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + regionId));
     }
+
+    public WorldId mainWorld() {
+        parseId();
+        return WorldId.of(regionId + ":" + worldName).get();
+    }
 }

@@ -235,9 +235,9 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
         Cookie[] cookies = request.getCookies();
 
         if (cookies != null) {
-            log.info("Found {} cookies in request", cookies.length);
+            log.debug("Found {} cookies in request", cookies.length);
             for (Cookie cookie : cookies) {
-                log.info("Cookie: name='{}', value='{}...'",
+                log.debug("Cookie: name='{}', value='{}...'",
                         cookie.getName(),
                         cookie.getValue() != null ? cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) : "null");
 

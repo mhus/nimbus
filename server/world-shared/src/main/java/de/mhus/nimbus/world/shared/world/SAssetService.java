@@ -6,6 +6,7 @@ import de.mhus.nimbus.shared.types.WorldId;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,36 +33,6 @@ public class SAssetService {
     private final StorageService storageService; // optional injected
 
     /**
-     * Speichert ein Asset. Entscheidet ob inline oder extern.
-     */
-    @Transactional
-    public SAsset saveAsset(WorldId worldId, String path, InputStream stream, String createdBy) {
-        if (path == null || path.isBlank()) throw new IllegalArgumentException("path required");
-        if (stream == null) return null;
-
-        // world lookup
-        if (worldId.isInstance()) {
-            throw new IllegalArgumentException("can't be save to a world instance: " + worldId);
-        }
-
-        // action
-        SAsset asset = new SAsset();
-        asset.setWorldId(worldId.getId());
-        asset.setPath(path);
-        asset.setName(extractName(path));
-        asset.setCreatedAt(Instant.now());
-        asset.setCreatedBy(createdBy);
-        asset.setEnabled(true);
-
-        StorageService.StorageInfo storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId.getId(), "assets/" + path, stream);
-        asset.setSize(storageInfo.size());
-        asset.setStorageId(storageInfo.id());
-        log.debug("Storing asset externally path={} size={} storageId={} world={}", path, storageInfo.size(), storageInfo.id(), worldId);
-
-        return repository.save(asset);
-    }
-
-    /**
      * Speichert ein Asset mit Metadaten (publicData).
      * Für Import aus test_server mit .info Dateien.
      */
@@ -76,20 +47,22 @@ public class SAssetService {
             throw new IllegalArgumentException("can't be save to a world instance: " + worldId);
         }
 
+        var collection = WorldCollection.of(worldId.withoutInstanceAndZone(), path);
+
         SAsset asset = SAsset.builder()
-                .worldId(worldId.getId())
-                .path(path)
-                .name(extractName(path))
+                .worldId(collection.worldId().getId())
+                .path(collection.path())
+                .name(extractName(collection.path()))
                 .createdBy(createdBy)
                 .enabled(true)
                 .publicData(publicData)
                 .build();
         asset.setCreatedAt(Instant.now());
 
-        var storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId.getId(), "assets/" + path, stream);
+        var storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, collection.worldId().getId(), "assets/" + collection.path(), stream);
         asset.setStorageId(storageInfo.id());
         asset.setSize(storageInfo.size());
-        log.debug("Storing asset externally path={} size={} storageId={} world={}", path, storageInfo.size(), storageInfo.id(), worldId);
+        log.debug("Storing asset externally path={} size={} storageId={} world={}", collection.path(), storageInfo.size(), storageInfo.id(), collection.worldId());
 
         return repository.save(asset);
     }
@@ -116,41 +89,8 @@ public class SAssetService {
 
         // world lookup - always use main world (no branches, no instances, no zones)
         var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
-        int pos = path.indexOf(':');
-        if (pos < 0) {
-            if (path.startsWith("w/")) {
-                pos = 1; // legacy support
-            } else {
-                throw new IllegalArgumentException("path must have a groupId (first element): " + path);
-            }
-        }
-        var group = path.substring(0, pos);
-        var relativePath = path.substring(pos + 1);
-        if (relativePath.startsWith("/")) {
-            relativePath = relativePath.substring(1);
-        }
-
-        if ("w".equals(group)) {
-            // world asset - always from main world
-            return repository.findByWorldIdAndPath(lookupWorld.getId(), relativePath);
-        } else
-        if ("r".equals(group)) {
-            // region asset
-            var regionWorldId = WorldId.of(WorldId.COLLECTION_REGION, lookupWorld.getRegionId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + lookupWorld.getRegionId()));
-            return repository.findByWorldIdAndPath(regionWorldId.getId(), relativePath);
-        } else
-        if ("p".equals(group)) {
-            // public asset
-            var publicWorldId = WorldId.of(WorldId.COLLECTION_PUBLIC, lookupWorld.getRegionId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid public collection worldId:" + lookupWorld.getRegionId()));
-            return repository.findByWorldIdAndPath(publicWorldId.getId(), relativePath);
-        } else {
-            // shared asset group
-            var collectionWorldId = WorldId.of( WorldId.COLLECTION_SHARED, group)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid shared collection worldId: " + group));
-            return repository.findByWorldIdAndPath(collectionWorldId.getId(), relativePath);
-        }
+        var collection = WorldCollection.of(lookupWorld, path);
+        return repository.findByWorldIdAndPath(collection.worldId().getId(), path);
     }
 
     /** Lädt den Inhalt des Assets. */
@@ -281,73 +221,22 @@ public class SAssetService {
      * @return Page of assets with total count
      */
     public AssetSearchResult searchAssets(WorldId worldId, String query, String extension, int offset, int limit) {
-        // Parse prefix from query
-        final String prefix;
-        final String searchPath;
 
-        if (query != null && !query.isBlank()) {
-            int colonPos = query.indexOf(':');
-            if (colonPos > 0) {
-                prefix = query.substring(0, colonPos);
-                String tempPath = query.substring(colonPos + 1);
-                searchPath = tempPath.startsWith("/") ? tempPath.substring(1) : tempPath;
-            } else {
-                prefix = "w"; // default
-                searchPath = query;
+        WorldId lookupWorld = worldId.mainWorld();
+        if (Strings.isNotBlank(query)) {
+            int pos = query.indexOf(':');
+            if (pos > 0) {
+                var collection = WorldCollection.of(lookupWorld, query);
+                lookupWorld = collection.worldId();
+                query = query.substring(pos + 1);
             }
+            query = ".*" + java.util.regex.Pattern.quote(query) + ".*";
         } else {
-            prefix = "w"; // default
-            searchPath = null; // no filter
+            query = ".*";
         }
-
-        // Determine target worldId based on prefix
-        // Always use main world (no branches, no instances, no zones)
-        WorldId lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
-        final String targetWorldId = switch (prefix.toLowerCase()) {
-            case "w" -> {
-                // World asset - always use main world
-                yield lookupWorld.getId();
-            }
-            case "r" -> {
-                // Region asset
-                WorldId regionWorldId = WorldId.of(WorldId.COLLECTION_REGION, lookupWorld.getRegionId())
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + lookupWorld.getRegionId()));
-                yield regionWorldId.getId();
-            }
-            case "p" -> {
-                // Public asset
-                WorldId publicWorldId = WorldId.of(WorldId.COLLECTION_PUBLIC, lookupWorld.getRegionId())
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid public collection worldId: " + lookupWorld.getRegionId()));
-                yield publicWorldId.getId();
-            }
-            default -> {
-                // Shared collection
-                WorldId collectionWorldId = WorldId.of(WorldId.COLLECTION_SHARED, prefix)
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid shared collection worldId: " + prefix));
-                yield collectionWorldId.getId();
-            }
-        };
-
-        // Build regex pattern for path search and extension filter
-        StringBuilder regexBuilder = new StringBuilder();
-        if (searchPath != null && !searchPath.isBlank()) {
-            regexBuilder.append(".*").append(java.util.regex.Pattern.quote(searchPath)).append(".*");
-        }
-        if (extension != null && !extension.isBlank()) {
-            String normalizedExt = extension.trim().toLowerCase();
-            if (!normalizedExt.startsWith(".")) {
-                normalizedExt = "." + normalizedExt;
-            }
-            if (regexBuilder.length() == 0) {
-                regexBuilder.append(".*");
-            }
-            regexBuilder.append("\\").append(java.util.regex.Pattern.quote(normalizedExt)).append("$");
-        }
-
-        String pathPattern = regexBuilder.length() > 0 ? regexBuilder.toString() : null;
 
         // Direct search - assets are only in main worlds
-        return searchInWorldId(targetWorldId, pathPattern, offset, limit);
+        return searchInWorldId(lookupWorld.getId(), query, offset, limit);
     }
 
     /**

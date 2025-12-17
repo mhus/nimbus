@@ -11,16 +11,10 @@ import java.util.Optional;
  */
 @Repository
 public interface WBlockTypeRepository extends MongoRepository<WBlockType, String> {
-
-    Optional<WBlockType> findByWorldIdAndBlockId(String worldId, String blockId);
-
-    List<WBlockType> findByWorldIdAndBlockTypeGroup(String worldId, String blockTypeGroup);
-
+    
     List<WBlockType> findByWorldId(String worldId);
 
     List<WBlockType> findByWorldIdAndEnabled(String worldId, boolean enabled);
 
-    boolean existsByWorldIdAndBlockId(String worldId, String blockId);
-
-    void deleteByWorldIdAndBlockId(String worldId, String blockId);
+    Optional<WBlockType> findByWorldIdAndBlockId(String worldId, String blockId);
 }

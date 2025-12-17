@@ -6,6 +6,7 @@ import de.mhus.nimbus.world.shared.dto.DevAgentLoginRequest;
 import de.mhus.nimbus.world.shared.dto.DevLoginResponse;
 import de.mhus.nimbus.world.shared.dto.DevSessionLoginRequest;
 import de.mhus.nimbus.world.shared.dto.WorldInfoDto;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

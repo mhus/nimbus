@@ -1,8 +1,10 @@
 package de.mhus.nimbus.world.control.api;
 
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.layer.LayerType;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -102,10 +104,10 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("GET layer: worldId={}, id={}", worldId, id);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(id, "id");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(id, "id");
         if (validation != null) return validation;
 
         Optional<WLayer> opt = layerService.findById(id);
@@ -142,10 +144,10 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("LIST layers: worldId={}, query={}, offset={}, limit={}", worldId, query, offset, limit);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validatePagination(offset, limit);
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
         // Get all Layers for this world
@@ -197,9 +199,9 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("CREATE layer: worldId={}, name={}", worldId, request.name());
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(request.name())) {
             return bad("name required");
         }
@@ -263,10 +265,10 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("UPDATE layer: worldId={}, id={}", worldId, id);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(id, "id");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(id, "id");
         if (validation != null) return validation;
 
         Optional<WLayer> opt = layerService.findById(id);
@@ -352,10 +354,10 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("DELETE layer: worldId={}, id={}", worldId, id);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(id, "id");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(id, "id");
         if (validation != null) return validation;
 
         Optional<WLayer> opt = layerService.findById(id);

@@ -141,3 +141,17 @@ Editieren:
 
 [ ] Job Scheduler und andere in Player deaktivieren durch Annotations am Service
 
+Problem:
+
+TypeError: Cannot read properties of undefined (reading 'effect')
+at _LensFlareSystem.render (http://localhost:3001/node_modules/.vite/deps/@babylonjs_core.js?v=e0e904a5:77422:31)
+at LensFlareSystemSceneComponent._draw (http://localhost:3001/node_modules/.vite/deps/@babylonjs_core.js?v=e0e904a5:77641:27)
+at _Scene._renderForCamera (http://localhost:3001/node_modules/.vite/deps/chunk-ECC4QPWM.js?v=e0e904a5:6946:12)
+at _Scene._processSubCameras (http://localhost:3001/node_modules/.vite/deps/chunk-ECC4QPWM.js?v=e0e904a5:6963:12)
+at _Scene.render (http://localhost:3001/node_modules/.vite/deps/chunk-ECC4QPWM.js?v=e0e904a5:7242:14)
+at http://localhost:3001/src/services/EngineService.ts?t=1765978422912:261:20
+at _Engine._renderFrame (http://localhost:3001/node_modules/.vite/deps/chunk-N75LTW2W.js?v=e0e904a5:4298:7)
+at _Engine._processFrame (http://localhost:3001/node_modules/.vite/deps/chunk-N75LTW2W.js?v=e0e904a5:4281:16)
+at _Engine._renderLoop (http://localhost:3001/node_modules/.vite/deps/chunk-SHYPJ4RV.js?v=e0e904a5:5381:10)
+at _boundRenderFunction (http://localhost:3001/node_modules/.vite/deps/chunk-N75LTW2W.js?v=e0e904a5:4772:53)
+

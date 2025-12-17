@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.control.api;
+package de.mhus.nimbus.world.shared.rest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,13 +33,6 @@ public abstract class BaseEditorController {
 
     protected boolean blank(String s) {
         return s == null || s.isBlank();
-    }
-
-    protected ResponseEntity<?> validateWorldId(String worldId) {
-        if (blank(worldId)) {
-            return bad("worldId required");
-        }
-        return null;
     }
 
     protected ResponseEntity<?> validateId(String id, String fieldName) {

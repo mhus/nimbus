@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.SAssetService;
 import de.mhus.nimbus.world.shared.world.AssetMetadata;
 import de.mhus.nimbus.world.shared.world.SAsset;
@@ -51,14 +52,14 @@ public class WorldAssetLicenseController extends BaseEditorController {
 
         log.debug("GET asset license: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
-        Optional<SAsset> opt = assetService.findByPath(WorldId.of(worldId).orElse(null), path);
+        Optional<SAsset> opt = assetService.findByPath(wid, path);
         if (opt.isEmpty()) {
             return ResponseEntity.ok(Map.of(
                     "source", "",
@@ -112,15 +113,15 @@ public class WorldAssetLicenseController extends BaseEditorController {
 
         log.debug("SET asset license: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
         try {
-            Optional<SAsset> existing = assetService.findByPath(WorldId.of(worldId).orElse(null), path);
+            Optional<SAsset> existing = assetService.findByPath(wid, path);
             if (existing.isEmpty()) {
                 return notFound("asset not found");
             }

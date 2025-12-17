@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.SAssetService;
 import de.mhus.nimbus.world.shared.world.SAsset;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -69,15 +69,13 @@ public class WorldAssetController extends BaseEditorController {
 
         log.debug("LIST assets: worldId={}, query={}, ext={}, offset={}, limit={}", worldId, query, ext, offset, limit);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validatePagination(offset, limit);
-        if (validation != null) return validation;
-
         // Get assets using database-level filtering and pagination
-        WorldId wid = toWorldId(worldId);
-        if (wid == null) return ResponseEntity.badRequest().body(Map.of("error", "invalid worldId"));
+        WorldId wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalArgumentException("invalid worldId")
+        );
+
+        var validation = validatePagination(offset, limit);
+        if (validation != null) return validation;
 
         // Use new search method with database-level filtering
         SAssetService.AssetSearchResult searchResult = assetService.searchAssets(wid, query, ext, offset, limit);
@@ -123,15 +121,15 @@ public class WorldAssetController extends BaseEditorController {
 
         log.debug("GET asset file: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
         // Find asset (regionId=worldId, worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(toWorldId(worldId), path);
+        Optional<SAsset> opt = assetService.findByPath(wid, path);
         if (opt.isEmpty()) {
             log.warn("Asset not found: worldId={}, path={}", worldId, path);
             return notFound("asset not found");
@@ -190,20 +188,20 @@ public class WorldAssetController extends BaseEditorController {
 
         log.debug("CREATE asset: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
         // Check if asset already exists
-        if (assetService.findByPath(toWorldId(worldId), path).isPresent()) {
+        if (assetService.findByPath(wid, path).isPresent()) {
             return conflict("asset already exists");
         }
 
         try {
-            SAsset saved = assetService.saveAsset(toWorldId(worldId), path, contentStream, "editor");
+            SAsset saved = assetService.saveAsset(wid, path, contentStream, "editor", null);
             log.info("Created asset: path={}, size={}", path, saved.getSize());
             return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
         } catch (IllegalArgumentException e) {
@@ -241,15 +239,15 @@ public class WorldAssetController extends BaseEditorController {
 
         log.debug("UPDATE asset content: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
         try {
-            Optional<SAsset> existing = assetService.findByPath(toWorldId(worldId), path);
+            Optional<SAsset> existing = assetService.findByPath(wid, path);
 
             // Update/create binary content
             if (existing.isPresent()) {
@@ -263,7 +261,7 @@ public class WorldAssetController extends BaseEditorController {
                 }
             } else {
                 // Create new
-                SAsset saved = assetService.saveAsset(toWorldId(worldId), path, contentStream, "editor");
+                SAsset saved = assetService.saveAsset(wid, path, contentStream, "editor", null);
                 log.info("Created asset via PUT: path={}, size={}", path, saved.getSize());
                 return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
             }
@@ -299,14 +297,14 @@ public class WorldAssetController extends BaseEditorController {
 
         log.debug("DELETE asset: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
-        Optional<SAsset> existing = assetService.findByPath(toWorldId(worldId), path);
+        Optional<SAsset> existing = assetService.findByPath(wid, path);
         if (existing.isEmpty()) {
             log.warn("Asset not found for deletion: path={}", path);
             return notFound("asset not found");
@@ -417,10 +415,6 @@ public class WorldAssetController extends BaseEditorController {
         }
         int firstSlash = path.indexOf('/');
         return path.substring(0, firstSlash);
-    }
-
-    private WorldId toWorldId(String worldIdStr) {
-        return WorldId.of(worldIdStr).orElse(null);
     }
 
     private String determineMimeType(String path) {

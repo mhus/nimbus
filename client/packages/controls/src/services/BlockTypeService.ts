@@ -70,9 +70,14 @@ export class BlockTypeService {
    * Update existing block type
    */
   async updateBlockType(worldId: string, id: number, blockType: Partial<BlockType>): Promise<BlockType> {
+    // Server expects UpdateBlockTypeRequest format with publicData wrapper
+    const updateRequest = {
+      publicData: blockType
+    };
+
     return apiService.put<BlockType>(
       `/control/worlds/${worldId}/blocktypes/type/${id}`,
-      blockType
+      updateRequest
     );
   }
 

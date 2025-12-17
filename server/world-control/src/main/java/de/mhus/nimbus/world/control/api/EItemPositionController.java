@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.ItemBlockRef;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WItemPosition;
 import de.mhus.nimbus.world.shared.world.WItemPositionService;
@@ -74,19 +75,15 @@ public class EItemPositionController extends BaseEditorController {
 
         log.debug("GET item: worldId={}, itemId={}", worldId, itemId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
 
-        validation = validateId(itemId, "itemId");
+        var validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
 
         // Use worldId as universeId (per user decision)
-        Optional<WItemPosition> opt = itemRegistryService.findItem(widOpt.get(), itemId);
+        Optional<WItemPosition> opt = itemRegistryService.findItem(wid, itemId);
         if (opt.isEmpty()) {
             log.warn("Item not found: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");
@@ -118,17 +115,11 @@ public class EItemPositionController extends BaseEditorController {
         log.debug("LIST items: worldId={}, query={}, cx={}, cz={}, offset={}, limit={}",
                 worldId, query, cx, cz, offset, limit);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
+        var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
-
-        validation = validatePagination(offset, limit);
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-        WorldId wid = widOpt.get();
 
         // Use worldId as universeId (per user decision)
         List<WItemPosition> all;
@@ -190,9 +181,9 @@ public class EItemPositionController extends BaseEditorController {
         log.debug("CREATE item: worldId={}, itemId={}", worldId,
                 request.itemBlockRef() != null ? request.itemBlockRef().getId() : "null");
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
         if (request.itemBlockRef() == null) {
             return bad("itemBlockRef required");
         }
@@ -206,12 +197,6 @@ public class EItemPositionController extends BaseEditorController {
         if (itemBlockRef.getPosition() == null) {
             return bad("itemBlockRef.position required");
         }
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-        WorldId wid = widOpt.get();
 
         // Check if Item already exists
         // Use worldId as universeId (per user decision)
@@ -251,10 +236,10 @@ public class EItemPositionController extends BaseEditorController {
 
         log.debug("UPDATE item: worldId={}, itemId={}", worldId, itemId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(itemId, "itemId");
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
+        var validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
 
         if (request.itemBlockRef() == null) {
@@ -275,12 +260,6 @@ public class EItemPositionController extends BaseEditorController {
                     .amount(itemBlockRef.getAmount())
                     .build();
         }
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-        WorldId wid = widOpt.get();
 
         // Use worldId as universeId (per user decision)
         Optional<WItemPosition> existing = itemRegistryService.findItem(wid, itemId);
@@ -321,19 +300,14 @@ public class EItemPositionController extends BaseEditorController {
 
         log.debug("DELETE item: worldId={}, itemId={}", worldId, itemId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("World ID not found in request")
+        );
+        var validation = validateId(itemId, "itemId");
         if (validation != null) return validation;
-
-        validation = validateId(itemId, "itemId");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
 
         // Use worldId as universeId (per user decision)
-        boolean deleted = itemRegistryService.deleteItemPosition(widOpt.get(), itemId);
+        boolean deleted = itemRegistryService.deleteItemPosition(wid, itemId);
         if (!deleted) {
             log.warn("Item not found for deletion: worldId={}, itemId={}", worldId, itemId);
             return notFound("item not found");

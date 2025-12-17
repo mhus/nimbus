@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.world.shared.region.RRegion;
 import de.mhus.nimbus.world.shared.region.RRegionService;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

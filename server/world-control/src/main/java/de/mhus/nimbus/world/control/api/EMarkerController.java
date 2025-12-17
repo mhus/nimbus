@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.control.api;
 
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.service.EditService;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -46,10 +48,10 @@ public class EMarkerController extends BaseEditorController {
 
         log.debug("Mark block: worldId={}, sessionId={}, pos=({},{},{})", worldId, sessionId, x, y, z);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         try {
@@ -93,10 +95,10 @@ public class EMarkerController extends BaseEditorController {
 
         log.debug("Clear marker: worldId={}, sessionId={}", worldId, sessionId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         try {

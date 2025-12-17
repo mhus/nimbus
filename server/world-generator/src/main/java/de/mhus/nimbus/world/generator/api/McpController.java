@@ -1,10 +1,10 @@
-package de.mhus.nimbus.world.control.api;
+package de.mhus.nimbus.world.generator.api;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.shared.layer.*;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.world.WBlockType;
@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 public class McpController extends BaseEditorController {
 
     private final WSessionService sessionService;
-    private final EditService editService;
     private final WLayerService layerService;
     private final WLayerModelRepository modelRepository;
     private final WLayerTerrainRepository terrainRepository;
@@ -335,83 +334,83 @@ public class McpController extends BaseEditorController {
      * Get marked block position from session.
      * GET /control/mcp/sessions/{sessionId}/marked-block
      */
-    @GetMapping("/sessions/{sessionId}/marked-block")
-    @Operation(summary = "Get marked block position from session")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Success (may return null if no block marked)"),
-            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
-            @ApiResponse(responseCode = "404", description = "Session not found")
-    })
-    public ResponseEntity<?> getMarkedBlock(@Parameter(description = "Session ID") @PathVariable String sessionId) {
-        log.debug("MCP: Get marked block: sessionId={}", sessionId);
+//    @GetMapping("/sessions/{sessionId}/marked-block")
+//    @Operation(summary = "Get marked block position from session")
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "Success (may return null if no block marked)"),
+//            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+//            @ApiResponse(responseCode = "404", description = "Session not found")
+//    })
+//    public ResponseEntity<?> getMarkedBlock(@Parameter(description = "Session ID") @PathVariable String sessionId) {
+//        log.debug("MCP: Get marked block: sessionId={}", sessionId);
+//
+//        ResponseEntity<?> validation = validateId(sessionId, "sessionId");
+//        if (validation != null) return validation;
+//
+//        // Get session to find worldId
+//        Optional<WSession> sessionOpt = sessionService.get(sessionId);
+//        if (sessionOpt.isEmpty()) {
+//            return notFound("session not found");
+//        }
+//
+//        String worldId = sessionOpt.get().getWorldId();
+//        Optional<Block> markedBlock = editService.getRegisterBlockData(worldId, sessionId);
+//
+//        if (markedBlock.isEmpty()) {
+//            return ResponseEntity.ok(Map.of("marked", false));
+//        }
+//
+//        // Extract position from block data
+//        Block block = markedBlock.get();
+//        if (block.getPosition() == null) {
+//            return ResponseEntity.ok(Map.of("marked", false));
+//        }
+//
+//        return ResponseEntity.ok(Map.of(
+//                "marked", true,
+//                "x", (int) block.getPosition().getX(),
+//                "y", (int) block.getPosition().getY(),
+//                "z", (int) block.getPosition().getZ()
+//        ));
+//    }
 
-        ResponseEntity<?> validation = validateId(sessionId, "sessionId");
-        if (validation != null) return validation;
-
-        // Get session to find worldId
-        Optional<WSession> sessionOpt = sessionService.get(sessionId);
-        if (sessionOpt.isEmpty()) {
-            return notFound("session not found");
-        }
-
-        String worldId = sessionOpt.get().getWorldId();
-        Optional<Block> markedBlock = editService.getRegisterBlockData(worldId, sessionId);
-
-        if (markedBlock.isEmpty()) {
-            return ResponseEntity.ok(Map.of("marked", false));
-        }
-
-        // Extract position from block data
-        Block block = markedBlock.get();
-        if (block.getPosition() == null) {
-            return ResponseEntity.ok(Map.of("marked", false));
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "marked", true,
-                "x", (int) block.getPosition().getX(),
-                "y", (int) block.getPosition().getY(),
-                "z", (int) block.getPosition().getZ()
-        ));
-    }
-
-    /**
-     * Get selected block position from session.
-     * GET /control/mcp/sessions/{sessionId}/selected-block
-     */
-    @GetMapping("/sessions/{sessionId}/selected-block")
-    @Operation(summary = "Get selected block position from session")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Success (may return null if no block selected)"),
-            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
-            @ApiResponse(responseCode = "404", description = "Session not found")
-    })
-    public ResponseEntity<?> getSelectedBlock(@Parameter(description = "Session ID") @PathVariable String sessionId) {
-        log.debug("MCP: Get selected block: sessionId={}", sessionId);
-
-        ResponseEntity<?> validation = validateId(sessionId, "sessionId");
-        if (validation != null) return validation;
-
-        Optional<WSession> sessionOpt = sessionService.get(sessionId);
-        if (sessionOpt.isEmpty()) {
-            return notFound("session not found");
-        }
-
-        String worldId = sessionOpt.get().getWorldId();
-        Optional<EditService.BlockPosition> selectedBlock = editService.getSelectedBlock(worldId, sessionId);
-
-        if (selectedBlock.isEmpty()) {
-            return ResponseEntity.ok(Map.of("selected", false));
-        }
-
-        EditService.BlockPosition pos = selectedBlock.get();
-        return ResponseEntity.ok(Map.of(
-                "selected", true,
-                "x", pos.x(),
-                "y", pos.y(),
-                "z", pos.z()
-        ));
-    }
+//    /**
+//     * Get selected block position from session.
+//     * GET /control/mcp/sessions/{sessionId}/selected-block
+//     */
+//    @GetMapping("/sessions/{sessionId}/selected-block")
+//    @Operation(summary = "Get selected block position from session")
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "Success (may return null if no block selected)"),
+//            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+//            @ApiResponse(responseCode = "404", description = "Session not found")
+//    })
+//    public ResponseEntity<?> getSelectedBlock(@Parameter(description = "Session ID") @PathVariable String sessionId) {
+//        log.debug("MCP: Get selected block: sessionId={}", sessionId);
+//
+//        ResponseEntity<?> validation = validateId(sessionId, "sessionId");
+//        if (validation != null) return validation;
+//
+//        Optional<WSession> sessionOpt = sessionService.get(sessionId);
+//        if (sessionOpt.isEmpty()) {
+//            return notFound("session not found");
+//        }
+//
+//        String worldId = sessionOpt.get().getWorldId();
+//        Optional<EditService.BlockPosition> selectedBlock = editService.getSelectedBlock(worldId, sessionId);
+//
+//        if (selectedBlock.isEmpty()) {
+//            return ResponseEntity.ok(Map.of("selected", false));
+//        }
+//
+//        EditService.BlockPosition pos = selectedBlock.get();
+//        return ResponseEntity.ok(Map.of(
+//                "selected", true,
+//                "x", pos.x(),
+//                "y", pos.y(),
+//                "z", pos.z()
+//        ));
+//    }
 
     // ==================== WORLD OPERATIONS ====================
 
@@ -875,7 +874,6 @@ public class McpController extends BaseEditorController {
     private Map<String, Object> toBlockTypeDto(WBlockType blockType) {
         Map<String, Object> dto = new HashMap<>();
         dto.put("blockId", blockType.getBlockId());
-        dto.put("blockTypeGroup", blockType.getBlockTypeGroup());
         dto.put("enabled", blockType.isEnabled());
         if (blockType.getPublicData() != null) {
             dto.put("description", blockType.getPublicData().getDescription());

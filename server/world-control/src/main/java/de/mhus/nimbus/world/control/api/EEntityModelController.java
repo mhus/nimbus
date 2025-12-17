@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.generated.types.EntityModel;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.WEntityModel;
 import de.mhus.nimbus.world.shared.world.WEntityModelService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,18 +71,13 @@ public class EEntityModelController extends BaseEditorController {
 
         log.debug("GET entitymodel: worldId={}, modelId={}", worldId, modelId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(modelId, "modelId");
         if (validation != null) return validation;
 
-        validation = validateId(modelId, "modelId");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        Optional<WEntityModel> opt = entityModelService.findByModelId(widOpt.get(), modelId);
+        Optional<WEntityModel> opt = entityModelService.findByModelId(wid, modelId);
         if (opt.isEmpty()) {
             log.warn("EntityModel not found: modelId={}", modelId);
             return notFound("entitymodel not found");
@@ -110,19 +106,14 @@ public class EEntityModelController extends BaseEditorController {
 
         log.debug("LIST entitymodels: worldId={}, query={}, offset={}, limit={}", worldId, query, offset, limit);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
-
-        validation = validatePagination(offset, limit);
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
 
         // Get all EntityModels for this world
-        List<WEntityModel> all = entityModelService.findByWorldId(widOpt.get());
+        List<WEntityModel> all = entityModelService.findByWorldId(wid);
 
         // Apply search filter if provided
         if (query != null && !query.isBlank()) {
@@ -166,9 +157,9 @@ public class EEntityModelController extends BaseEditorController {
 
         log.debug("CREATE entitymodel: worldId={}, modelId={}", worldId, request.modelId());
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(request.modelId())) {
             return bad("modelId required");
         }
@@ -176,12 +167,6 @@ public class EEntityModelController extends BaseEditorController {
         if (request.publicData() == null) {
             return bad("publicData required");
         }
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-        WorldId wid = widOpt.get();
 
         // Check if EntityModel already exists
         if (entityModelService.findByModelId(wid, request.modelId()).isPresent()) {
@@ -220,22 +205,17 @@ public class EEntityModelController extends BaseEditorController {
 
         log.debug("UPDATE entitymodel: worldId={}, modelId={}", worldId, modelId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(modelId, "modelId");
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(modelId, "modelId");
         if (validation != null) return validation;
 
         if (request.publicData() == null && request.enabled() == null) {
             return bad("at least one field required for update");
         }
 
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        Optional<WEntityModel> updated = entityModelService.update(widOpt.get(), modelId, model -> {
+        Optional<WEntityModel> updated = entityModelService.update(wid, modelId, model -> {
             if (request.publicData() != null) {
                 model.setPublicData(request.publicData());
             }
@@ -271,18 +251,13 @@ public class EEntityModelController extends BaseEditorController {
 
         log.debug("DELETE entitymodel: worldId={}, modelId={}", worldId, modelId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(modelId, "modelId");
         if (validation != null) return validation;
 
-        validation = validateId(modelId, "modelId");
-        if (validation != null) return validation;
-
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        boolean deleted = entityModelService.delete(widOpt.get(), modelId);
+        boolean deleted = entityModelService.delete(wid, modelId);
         if (!deleted) {
             log.warn("EntityModel not found for deletion: modelId={}", modelId);
             return notFound("entitymodel not found");

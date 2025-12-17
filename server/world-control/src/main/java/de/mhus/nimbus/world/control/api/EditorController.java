@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.control.api;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.EditAction;
 import de.mhus.nimbus.shared.engine.EngineMapper;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.commands.CommitLayerCommand;
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.control.service.EditState;
@@ -11,6 +12,7 @@ import de.mhus.nimbus.world.shared.commands.CommandContext;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.world.WWorld;
@@ -63,10 +65,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @PathVariable String sessionId) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         EditState state = editService.getEditState(worldId, sessionId);
@@ -106,10 +108,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String sessionId,
             @RequestBody EditStateUpdateRequest request) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         EditState updated = editService.updateEditState(worldId, sessionId, state -> {
@@ -162,8 +164,9 @@ public class EditorController extends BaseEditorController {
     @GetMapping("/{worldId}/layers")
     public ResponseEntity<?> listLayers(@PathVariable String worldId) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
         List<WLayer> layers = layerService.findLayersByWorld(worldId);
 
@@ -194,10 +197,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @RequestBody CreateLayerRequest request) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(request.name, "name");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(request.name, "name");
         if (validation != null) return validation;
 
         // Check if layer already exists
@@ -244,10 +247,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @PathVariable String layerName) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(layerName, "layerName");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(layerName, "layerName");
         if (validation != null) return validation;
 
         // Check if layer exists
@@ -274,10 +277,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String sessionId,
             @RequestBody String request) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         // Get edit state
@@ -411,9 +414,9 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @PathVariable String sessionId) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         try {
             // 1. Validate: selectedLayer must be set
             EditState state = editService.getEditState(worldId, sessionId);
@@ -478,9 +481,9 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @PathVariable String sessionId) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         try {
             // 1. Validate: editMode must be active
             EditState state = editService.getEditState(worldId, sessionId);
@@ -544,9 +547,9 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @PathVariable String sessionId) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         try {
             // 1. Validate
             EditState state = editService.getEditState(worldId, sessionId);
@@ -604,10 +607,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @PathVariable String sessionId) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         // Get marked block from EditService
@@ -653,10 +656,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String sessionId,
             @RequestBody String blockJson) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         if (Strings.isEmpty(blockJson)) {
@@ -699,10 +702,10 @@ public class EditorController extends BaseEditorController {
             @PathVariable String worldId,
             @PathVariable String sessionId) {
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
-        validation = validateId(sessionId, "sessionId");
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(sessionId, "sessionId");
         if (validation != null) return validation;
 
         try {

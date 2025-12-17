@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.SAssetService;
 import de.mhus.nimbus.world.shared.world.AssetMetadata;
 import de.mhus.nimbus.world.shared.world.SAsset;
@@ -56,15 +57,15 @@ public class WorldAssetInfoController extends BaseEditorController {
 
         log.debug("GET asset info: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
         // Find asset (worldId=worldId)
-        Optional<SAsset> opt = assetService.findByPath(WorldId.of(worldId).orElse(null), path);
+        Optional<SAsset> opt = assetService.findByPath(wid, path);
         if (opt.isEmpty()) {
             // Return empty description if not found (like test_server)
             log.debug("Asset not found for info request: {}", path);
@@ -106,15 +107,15 @@ public class WorldAssetInfoController extends BaseEditorController {
 
         log.debug("UPDATE asset metadata: worldId={}, path={}", worldId, path);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
-
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
         if (blank(path)) {
             return bad("asset path required");
         }
 
         try {
-            Optional<SAsset> existing = assetService.findByPath(WorldId.of(worldId).orElse(null), path);
+            Optional<SAsset> existing = assetService.findByPath(wid, path);
             if (existing.isEmpty()) {
                 return notFound("asset not found");
             }

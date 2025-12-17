@@ -42,13 +42,6 @@ public class WBlockType implements Identifiable {
     private String blockId;
 
     /**
-     * BlockType group for chunked loading (e.g., "w", "core", "custom").
-     * Used by /blocktypeschunk/{groupName} endpoint.
-     */
-    @Indexed
-    private String blockTypeGroup;
-
-    /**
      * Public data containing the generated BlockType DTO.
      * This is what gets serialized and sent to clients.
      */

@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.control.generator;
+package de.mhus.nimbus.world.generator.generator;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.world.shared.job.JobExecutionException;

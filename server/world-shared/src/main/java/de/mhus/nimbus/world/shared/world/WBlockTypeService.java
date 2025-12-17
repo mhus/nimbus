@@ -4,12 +4,15 @@ import de.mhus.nimbus.generated.types.BlockType;
 import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Service for managing WBlockType entities.
@@ -31,20 +34,22 @@ public class WBlockTypeService {
      */
     @Transactional(readOnly = true)
     public Optional<WBlockType> findByBlockId(WorldId worldId, String blockId) {
+
         var lookupWorld = worldId.withoutInstanceAndZone();
+        var collection = WorldCollection.of(lookupWorld, blockId);
 
         // Try branch first if this is a branch world
-        if (lookupWorld.isBranch()) {
-            var blockType = repository.findByWorldIdAndBlockId(lookupWorld.getId(), blockId);
+        if (collection.worldId().isBranch()) {
+            var blockType = repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
             if (blockType.isPresent()) {
                 return blockType;
             }
             // Fallback to parent world (COW)
-            var parentWorld = lookupWorld.withoutBranchAndInstance();
-            return repository.findByWorldIdAndBlockId(parentWorld.getId(), blockId);
+            var parentWorld = collection.worldId().withoutBranchAndInstance();
+            return repository.findByWorldIdAndBlockId(parentWorld.getId(), collection.path());
         }
 
-        return repository.findByWorldIdAndBlockId(lookupWorld.getId(), blockId);
+        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
     }
 
     /**
@@ -53,8 +58,9 @@ public class WBlockTypeService {
      */
     @Transactional(readOnly = true)
     public List<WBlockType> findByBlockTypeGroup(WorldId worldId, String blockTypeGroup) {
-        var lookupWorld = worldId.withoutInstanceAndZone();
-        return repository.findByWorldIdAndBlockTypeGroup(lookupWorld.getId(), blockTypeGroup);
+        var collection = WorldCollection.of(worldId.withoutInstanceAndZone(), blockTypeGroup + ":");
+        var lookupWorld = collection.worldId();
+        return repository.findByWorldId(lookupWorld.getId());
     }
 
     /**
@@ -84,27 +90,29 @@ public class WBlockTypeService {
      */
     @Transactional
     public WBlockType save(WorldId worldId, String blockId, BlockType publicData) {
-        if (blank(blockId)) {
+        if (Strings.isBlank(blockId)) {
             throw new IllegalArgumentException("blockId required");
         }
         if (publicData == null) {
             throw new IllegalArgumentException("publicData required");
         }
 
-        var lookupWorld = worldId.withoutInstanceAndZone();
-
-        WBlockType entity = repository.findByWorldIdAndBlockId(lookupWorld.getId(), blockId).orElseGet(() -> {
-            WBlockType neu = WBlockType.builder()
-                    .blockId(blockId)
-                    .worldId(lookupWorld.getId())
-                    .blockTypeGroup("w") // Default storage group
+        var collection = WorldCollection.of(worldId.withoutInstanceAndZone(), blockId);
+        var entityOpt = repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
+        WBlockType entity = null;
+        if (entityOpt.isEmpty()) {
+            entity = WBlockType.builder()
+                    .blockId(collection.path())
+                    .worldId(collection.worldId().getId())
                     .enabled(true)
                     .build();
-            neu.touchCreate();
+            entity.touchCreate();
             log.debug("Creating new WBlockType: {}", blockId);
-            return neu;
-        });
+        } else {
+            entity = entityOpt.get();
+        }
 
+        entity.setBlockId(collection.path()); // maybe update if group changed
         entity.setPublicData(publicData);
         entity.touchUpdate();
 
@@ -115,14 +123,10 @@ public class WBlockTypeService {
 
     @Transactional
     public List<WBlockType> saveAll(WorldId worldId, List<WBlockType> entities) {
+        final List<WBlockType> saved = new ArrayList<>();
         entities.forEach(e -> {
-            if (e.getCreatedAt() == null) {
-                e.touchCreate();
-            }
-            e.touchUpdate();
+            saved.add(save(worldId, e.getBlockId(), e.getPublicData()));
         });
-        List<WBlockType> saved = repository.saveAll(entities);
-        log.debug("Saved {} WBlockType entities", saved.size());
         return saved;
     }
 
@@ -132,8 +136,8 @@ public class WBlockTypeService {
      */
     @Transactional
     public Optional<WBlockType> update(WorldId worldId, String blockId, Consumer<WBlockType> updater) {
-        var lookupWorld = worldId.withoutInstanceAndZone();
-        return repository.findByWorldIdAndBlockId(lookupWorld.getId(), blockId).map(entity -> {
+        var collection = WorldCollection.of(worldId.withoutInstanceAndZone(), blockId);
+        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path()).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WBlockType saved = repository.save(entity);
@@ -149,15 +153,15 @@ public class WBlockTypeService {
      */
     @Transactional
     public boolean delete(WorldId worldId, String blockId) {
-        var lookupWorld = worldId.withoutInstanceAndZone();
+        var collection = WorldCollection.of(worldId.withoutInstanceAndZone(), blockId);
 
         // Prevent deletion in branches
-        if (lookupWorld.isBranch()) {
-            log.warn("Attempted to delete block type '{}' in branch world '{}' - not allowed", blockId, lookupWorld.getId());
-            throw new IllegalArgumentException("Block types cannot be deleted in branches: " + lookupWorld.getId());
+        if (collection.worldId().isBranch()) {
+            log.warn("Attempted to delete block type '{}' in branch world '{}' - not allowed", blockId, worldId.getId());
+            throw new IllegalArgumentException("Block types cannot be deleted in branches: " + worldId.getId());
         }
 
-        return repository.findByWorldIdAndBlockId(lookupWorld.getId(), blockId).map(entity -> {
+        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path()).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WBlockType: {}", blockId);
             return true;
@@ -174,7 +178,40 @@ public class WBlockTypeService {
         return update(worldId, blockId, entity -> entity.setEnabled(true)).isPresent();
     }
 
-    private boolean blank(String s) {
-        return s == null || s.isBlank();
+    public List<WBlockType> findByWorldIdAndQuery(WorldId worldId, String query) {
+
+        // check query for prefix filter
+        WorldId lookupWid = worldId;
+        if (Strings.isNotBlank(query)) {
+            int pos = query.indexOf(':');
+            if (pos > 0) {
+                var collection = WorldCollection.of(worldId, query);
+                query = query.substring(pos + 1); // remaining query after prefix
+                lookupWid = collection.worldId();
+            }
+        }
+
+        List<WBlockType> all = findByWorldId(lookupWid);
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
     }
+
+    private List<WBlockType> filterByQuery(List<WBlockType> blockTypes, String query) {
+        String lowerQuery = query.toLowerCase();
+        return blockTypes.stream()
+                .filter(blockType -> {
+                    String blockId = blockType.getBlockId();
+                    BlockType publicData = blockType.getPublicData();
+                    return (blockId != null && blockId.toLowerCase().contains(lowerQuery)) ||
+                            (publicData != null && publicData.getDescription() != null &&
+                                    publicData.getDescription().toLowerCase().contains(lowerQuery));
+                })
+                .collect(Collectors.toList());
+    }
+
 }
