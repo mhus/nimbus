@@ -1,7 +1,31 @@
 <template>
   <div class="space-y-4">
-    <!-- Header with Search and Actions -->
-    <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
+    <!-- Tabs -->
+    <div class="tabs tabs-boxed">
+      <a
+        class="tab"
+        :class="{ 'tab-active': activeTab === 'list' }"
+        @click="activeTab = 'list'"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+        Liste
+      </a>
+      <a
+        class="tab"
+        :class="{ 'tab-active': activeTab === 'grid' }"
+        @click="activeTab = 'grid'"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+        Grid
+      </a>
+    </div>
+
+    <!-- Header with Search and Actions (only for list view) -->
+    <div v-if="activeTab === 'list'" class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
       <div class="flex-1">
         <SearchInput
           v-model="searchQuery"
@@ -22,27 +46,40 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <LoadingSpinner v-if="loading && hexGrids.length === 0" />
+    <!-- List View -->
+    <div v-if="activeTab === 'list'">
+      <!-- Loading State -->
+      <LoadingSpinner v-if="loading && hexGrids.length === 0" />
 
-    <!-- Error State -->
-    <ErrorAlert v-else-if="error" :message="error" />
+      <!-- Error State -->
+      <ErrorAlert v-else-if="error" :message="error" />
 
-    <!-- Empty State -->
-    <div v-else-if="!loading && hexGrids.length === 0" class="text-center py-12">
-      <p class="text-base-content/70 text-lg">No hex grids found</p>
-      <p class="text-base-content/50 text-sm mt-2">Create your first hex grid to get started</p>
+      <!-- Empty State -->
+      <div v-else-if="!loading && hexGrids.length === 0" class="text-center py-12">
+        <p class="text-base-content/70 text-lg">No hex grids found</p>
+        <p class="text-base-content/50 text-sm mt-2">Create your first hex grid to get started</p>
+      </div>
+
+      <!-- Hex Grid List -->
+      <HexGridList
+        v-else
+        :hex-grids="filteredHexGrids"
+        :loading="loading"
+        @edit="openEditDialog"
+        @delete="handleDelete"
+        @toggle-enabled="handleToggleEnabled"
+      />
     </div>
 
-    <!-- Hex Grid List -->
-    <HexGridList
-      v-else
-      :hex-grids="filteredHexGrids"
-      :loading="loading"
-      @edit="openEditDialog"
-      @delete="handleDelete"
-      @toggle-enabled="handleToggleEnabled"
-    />
+    <!-- Grid View -->
+    <div v-else-if="activeTab === 'grid'">
+      <HexGridVisual
+        :hex-grids="hexGrids"
+        :loading="loading"
+        @edit="openEditDialog"
+        @create="openCreateDialogAtPosition"
+      />
+    </div>
 
     <!-- Editor Dialog -->
     <HexGridEditorPanel
@@ -64,8 +101,11 @@ import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import HexGridList from '@material/components/HexGridList.vue';
 import HexGridEditorPanel from '@material/components/HexGridEditorPanel.vue';
+import HexGridVisual from '@material/components/HexGridVisual.vue';
 
 const { currentWorldId } = useWorld();
+
+const activeTab = ref<'list' | 'grid'>('list');
 
 const hexGridsComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -125,6 +165,26 @@ const handleSearch = (query: string) => {
  */
 const openCreateDialog = () => {
   selectedHexGrid.value = null;
+  isEditorOpen.value = true;
+};
+
+/**
+ * Open create dialog with pre-filled position
+ */
+const openCreateDialogAtPosition = (q: number, r: number) => {
+  // We'll handle this by passing initial position to the editor
+  // For now, just open the create dialog - position will be set in the form
+  selectedHexGrid.value = {
+    id: '',
+    worldId: currentWorldId.value || '',
+    position: `${q}:${r}`,
+    publicData: {
+      position: { q, r },
+      name: '',
+      description: ''
+    },
+    enabled: true
+  } as HexGridWithId;
   isEditorOpen.value = true;
 };
 

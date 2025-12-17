@@ -137,13 +137,6 @@ const isCreateDialogOpen = ref(false);
 const isDetailsDialogOpen = ref(false);
 const selectedJob = ref<Job | null>(null);
 
-// Load jobs and summary when world changes
-watch(currentWorldId, () => {
-  if (currentWorldId.value) {
-    loadData();
-  }
-}, { immediate: true });
-
 /**
  * Load jobs and summary
  */
@@ -154,6 +147,13 @@ const loadData = async () => {
     jobsComposable.value.loadSummary(),
   ]);
 };
+
+// Load jobs and summary when world changes
+watch(currentWorldId, () => {
+  if (currentWorldId.value && currentWorldId.value !== '?') {
+    loadData();
+  }
+}, { immediate: true });
 
 /**
  * Handle status filter change

@@ -69,6 +69,11 @@ export function useJobs(worldId: string): UseJobsReturn {
    * Load all jobs or filter by status
    */
   const loadJobs = async (status?: JobStatus) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      return;
+    }
+
     loading.value = true;
     error.value = null;
 
@@ -92,6 +97,11 @@ export function useJobs(worldId: string): UseJobsReturn {
    * Load single job
    */
   const loadJob = async (jobId: string): Promise<Job | null> => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      return null;
+    }
+
     loading.value = true;
     error.value = null;
 
@@ -114,6 +124,11 @@ export function useJobs(worldId: string): UseJobsReturn {
    * Load job summary
    */
   const loadSummary = async () => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      return;
+    }
+
     loading.value = true;
     error.value = null;
 
@@ -135,6 +150,11 @@ export function useJobs(worldId: string): UseJobsReturn {
    * Create job
    */
   const createJob = async (request: JobCreateRequest) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
@@ -159,6 +179,11 @@ export function useJobs(worldId: string): UseJobsReturn {
    * Retry failed job
    */
   const retryJob = async (jobId: string) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
@@ -182,6 +207,11 @@ export function useJobs(worldId: string): UseJobsReturn {
    * Cancel pending/running job
    */
   const cancelJob = async (jobId: string) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
@@ -206,6 +236,11 @@ export function useJobs(worldId: string): UseJobsReturn {
    * Delete job
    */
   const deleteJob = async (jobId: string) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 

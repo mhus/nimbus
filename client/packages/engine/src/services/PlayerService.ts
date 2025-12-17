@@ -1668,26 +1668,18 @@ export class PlayerService {
 
     const area = entryPoint.area;
 
-    // Get min and max coordinates from area
-    const minX = Math.min(area.a.x, area.b.x);
-    const maxX = Math.max(area.a.x, area.b.x);
-    const minY = Math.min(area.a.y, area.b.y);
-    const maxY = Math.max(area.a.y, area.b.y);
-    const minZ = Math.min(area.a.z, area.b.z);
-    const maxZ = Math.max(area.a.z, area.b.z);
-
-    // Generate random position within area bounds
-    const randomX = minX + Math.random() * (maxX - minX);
-    const randomY = minY + Math.random() * (maxY - minY);
-    const randomZ = minZ + Math.random() * (maxZ - minZ);
+    // Generate random position within area bounds (position + random offset within size)
+    const randomX = area.position.x + Math.random() * area.size.x;
+    const randomY = area.position.y + Math.random() * area.size.y;
+    const randomZ = area.position.z + Math.random() * area.size.z;
 
     const position = new Vector3(randomX, randomY, randomZ);
 
     logger.info('Player spawned at random position within entryPoint.area', {
       position: { x: position.x, y: position.y, z: position.z },
       area: {
-        min: { x: minX, y: minY, z: minZ },
-        max: { x: maxX, y: maxY, z: maxZ }
+        position: { x: area.position.x, y: area.position.y, z: area.position.z },
+        size: { x: area.size.x, y: area.size.y, z: area.size.z }
       }
     });
 

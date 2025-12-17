@@ -3,7 +3,7 @@
 
 ## Aufräumen 
 
-[ ] In WorldAssetController.list() wird die komplette liste aller Assets geladen. Das geht so nicht.
+[x] In WorldAssetController.list() wird die komplette liste aller Assets geladen. Das geht so nicht.
 - Assets muessen direkt aus der datenbank heraus gefiltert und paginiert werden. Soweit möglich, denn es kann viele 
   Assets geben. Vor allem pro WeltId müssen die Assets gefiltert werden.
 - Assets haben einen prefix, der entscheidet in welcher Welt/Collection sie sind (es werden shared world collections unterstuetzt).
@@ -15,14 +15,32 @@
 - Wie schon in findByPath() werden instanzen und zonen ignoriert bei assets. Bei branches wird eine COW strategie verwendet. Das
   Muss auch bei sder suche beruecksichtigt werden, erst im branch, dann in der parent world suchen.
 
+## Ablage
+
+Pfade haben eine Ablage (storage) und pfad im storage, getrennt mit einem ':'. z.b. 'w:1234/models/tree.glb'
+Default ist 'w' fuer world storage. Andere moeglichkeiten sind 'r' fuer shared region ablage, 'p' fuer shared
+public region ablage. Alle anderen sind zentrale Ablagen.
+
+Ablagen werden wie besondere Welten verwaltet, nur ohne Welt funktionalität. Sie beginnen immer mit einem '@' zeichen.
+z.b. '@region', '@public', '@shared'.
+
+
 ## Assets
 
-Assets werden immer nur in der HauptWelt gespeichert. Instanzen und Zonen haben keine eigenen Assets. Branches koennen eigene Assets haben,
+[x] Assets werden immer nur in der HauptWelt gespeichert. Instanzen und Zonen haben keine eigenen Assets. Branches koennen eigene Assets haben,
 die aber auf die Hauptwelt zurueckfallen, wenn sie dort nicht gefunden werden (COW - Copy On Write).
+
 
 ## BackDrops
 
-BackDrops werden wie Assets behandelt. Sie werden immer in der Hauptwelt gespeichert. Instanzen und Zonen haben keine eigenen BackDrops. Branches koennen eigene BackDrops haben,
+[x] BackDrops werden wie Assets behandelt. Sie werden immer in der Hauptwelt gespeichert. Instanzen und Zonen haben keine eigenen BackDrops. Branches koennen eigene BackDrops haben,
 die aber auf die Hauptwelt zurueckfallen, wenn sie dort nicht gefunden werden (COW - Copy On Write).
+
+## ItemTypes
+
+[ ] Item Types kommen immer aus der Hauptwelt.
+
+
+## Layers
 
 
