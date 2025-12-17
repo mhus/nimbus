@@ -251,7 +251,7 @@ export class FlipboxRenderer extends BlockRenderer {
     const texture = await materialService.loadTexture(texturePath);
 
     // Get effect parameters
-    const effectParameters = modifier.visibility.effectParameters;
+    const effectParameters = modifier.visibility?.effectParameters;
 
     // Create FLIPBOX material
     const material = shaderService.createMaterial('flipbox', {

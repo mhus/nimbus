@@ -61,9 +61,11 @@ export default defineConfig(({ mode }) => {
         logLevel: 'info',
       },
       // Include dependencies that need pre-bundling
+      // Also include @nimbus/shared to prevent issues with dynamic/static imports
       include: [
         '@babylonjs/core',
         '@babylonjs/loaders',
+        '@nimbus/shared',
       ],
     },
     // Performance optimizations for large projects

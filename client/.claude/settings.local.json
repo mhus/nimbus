@@ -81,7 +81,8 @@
       "Bash(pnpm build:controls:*)",
       "Bash(mvn clean compile:*)",
       "Bash(mvn compile:*)",
-      "Bash(egrep:*)"
+      "Bash(egrep:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

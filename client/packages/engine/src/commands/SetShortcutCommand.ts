@@ -138,12 +138,14 @@ export class SetShortcutCommand extends CommandHandler {
       }
 
       // Create shortcut definition
-      // Note: pose, wait, duration are now stored in ItemData, not in ShortcutDefinition
+      // Note: pose, duration are now stored in ItemData, not in ShortcutDefinition
+      // wait is still required in ShortcutDefinition
       const shortcut: ShortcutDefinition = {
         type,
         itemId: options.itemId,
         name: options.name,
         description: options.description,
+        wait: options.wait ?? 0, // Default: no wait time
       };
 
       // Set shortcut

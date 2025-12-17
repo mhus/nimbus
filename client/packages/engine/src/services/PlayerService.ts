@@ -13,6 +13,7 @@ import {
   PlayerMovementState,
   movementStateToKey,
   getStateValues,
+  createClientEntity,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { CameraService } from './CameraService';
@@ -1120,7 +1121,6 @@ export class PlayerService {
       }
 
       // Create Entity for player avatar
-      const { createClientEntity } = await import('@nimbus/shared');
       const playerAvatarEntity: any = {
         id: '@player_avatar', // Special ID for player avatar
         name: this.playerEntity.playerInfo.displayName,
