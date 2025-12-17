@@ -144,24 +144,17 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("LIST layers: worldId={}, query={}, offset={}, limit={}", worldId, query, offset, limit);
 
-        WorldId.of(worldId).orElseThrow(
+        var wid = WorldId.of(worldId).orElseThrow(
                 () -> new IllegalStateException("Invalid worldId: " + worldId)
         );
         var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
-        // Get all Layers for this world
-        List<WLayer> all = layerService.findByWorldId(worldId);
+        // IMPORTANT: Filter out instances - layers are per world/zone only
+        String lookupWorldId = wid.withoutInstance().getId();
 
-        // Apply search filter if provided
-        if (query != null && !query.isBlank()) {
-            all = filterByQuery(all, query);
-        }
-
-        // Sort by order
-        all = all.stream()
-                .sorted((a, b) -> Integer.compare(a.getOrder(), b.getOrder()))
-                .collect(Collectors.toList());
+        // Get all Layers for this world with query filter
+        List<WLayer> all = layerService.findByWorldIdAndQuery(lookupWorldId, query);
 
         int totalCount = all.size();
 
@@ -199,7 +192,7 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("CREATE layer: worldId={}, name={}", worldId, request.name());
 
-        WorldId.of(worldId).orElseThrow(
+        var wid = WorldId.of(worldId).orElseThrow(
                 () -> new IllegalStateException("Invalid worldId: " + worldId)
         );
         if (blank(request.name())) {
@@ -210,14 +203,17 @@ public class ELayerController extends BaseEditorController {
             return bad("layerType required");
         }
 
+        // IMPORTANT: Filter out instances - layers are per world/zone only
+        String lookupWorldId = wid.withoutInstance().getId();
+
         // Check if Layer with same name already exists
-        if (layerService.findByWorldIdAndName(worldId, request.name()).isPresent()) {
+        if (layerService.findByWorldIdAndName(lookupWorldId, request.name()).isPresent()) {
             return conflict("layer name already exists");
         }
 
         try {
             WLayer layer = WLayer.builder()
-                    .worldId(worldId)
+                    .worldId(lookupWorldId)
                     .name(request.name())
                     .layerType(request.layerType())
                     .mountX(request.mountX())
@@ -399,17 +395,5 @@ public class ELayerController extends BaseEditorController {
                 layer.getCreatedAt(),
                 layer.getUpdatedAt()
         );
-    }
-
-    private List<WLayer> filterByQuery(List<WLayer> layers, String query) {
-        String lowerQuery = query.toLowerCase();
-        return layers.stream()
-                .filter(layer -> {
-                    String name = layer.getName();
-                    String id = layer.getId();
-                    return (name != null && name.toLowerCase().contains(lowerQuery)) ||
-                            (id != null && id.toLowerCase().contains(lowerQuery));
-                })
-                .collect(Collectors.toList());
     }
 }

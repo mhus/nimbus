@@ -163,3 +163,66 @@ Instanzen haben keine eigenen Jobs.
 
 [ ] Player Progress nur auf 'world'
 
+### Nochmal neu ...
+
+Resource lookup muss im controller weitergegeben werden an den Service.
+Suche mit query nach service.search(worldId, query, ....)
+
+Die anforderungen sind jeweils etwas anders, aber benutze
+var lookupWorldId = worldId.without... oder worldId.mainWorld() je nach anforderung.
+var collection = WordlCollection.of(worldId, path);  um die correcte welt und path zu bestimmen
+lookupWorld = collection.worldId();
+path = collection.path();
+
+Umgesetz wurde bewrits WorldAssetController -> SAssetService und EBlockTypeController -> WBlockTypeService
+
+Setze nun auch EBackdropController um.
+
+Setze nun auch EItemTypeController um.
+Item Types kommen immer aus der @region collection oder shared collections. Damit werden sie in der kompletten Region geshared.
+Baranches koennen keine eigenen ItemTypes haben.
+ItemTypes haben storage funktionalität, unterstuetzen aber nicht 'w'. Default ist 'r'.
+
+Setze nun auch EItemController um.
+Items kommen immer aus der @region collection. Damit werden sie in der kompletten Region geshared.
+Items unterstuetzen keine storage funktionalitaet.
+Damit haben branches auch keine eigenen Items.
+
+Setze nun auch WItemPositionService um (kein controller glaube ich) - wird in world-palyer benutzt.
+Item Positionen gibt es fuer jede Welt/Zone/Branch/Instanze separarat. Jede welt wird als separate Instanze behandelt.
+COW für Branches (copy on write). Es können keine Item Positionen gelöscht werden in Branches.
+Beim laden von listen wird kein fallback auf die Hauptwelt gemacht.
+Es werden keine storage unterstuetzt, da sie immer welt instanze spezifisch sind.
+
+Setze nun EEntityModelController um.
+Entity Models kommen immer aus der @region collection oder shared collections. Damit werden sie in der kompletten Region geshared.
+Entity Models haben storage funktionalität, unterstuetzen aber nicht 'w'. Default ist 'r'.
+Damit haben branches auch keine eigenen Entity Models.
+
+Setze nun EEntityController um.
+Entities gibt es pro Welt/Zone/Instanze separarat. Jede welt wird als separate Instanze behandelt.
+Ausser Branches, diese verfolgen einen COW ansatz (copy on write). Es können keine Entities gelöscht werden in Branches.
+Entities unterstuetzen keine storage funktionalitaet, da sie immer welt instanze spezifisch sind.
+
+Prüfe WChunkService - ob hier noch angepasst werden muss.
+Chunks gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
+Ausser Branches, diese verfolgen einen COW ansatz (copy on write).
+Instanzen keonnen keine eigenen Chunks haben, diese werden immer von der definierten Welt genommen.
+Beim laden von listen wird kein fallback auf die Hauptwelt gemacht.
+
+Setze ELayerController um.
+Layers gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
+Instanzen keonnen keine eigenen Layers haben, diese werden immer von der defineirten Welt genommen.
+Für Branches können Layers kopiert werden. Der Layer muss aber erst kopiert sein, bevor er geändert werden kann.
+Beim erzeugen von Chunks in Branches muss auf kopierte Layers geprüft werden.
+Beim laden von listen wird kein fallback auf die Hauptwelt gemacht.
+
+Setze HexGridController um.
+HexGrid gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
+Instanzen keonnen kein eigenes HexGrid haben, dieses wird immer von der definierten Welt genommen.
+In Branches wird ein COW ansatz verfolgt (copy on write). Es können keine HexGrids gelöscht werden in Branches.
+
+Setze auch JobController um.
+Jobs haben keine storage funktionalität. Werden geladen / gespeichert wie sie sind.
+Instanzen haben keine eigenen Jobs.
+

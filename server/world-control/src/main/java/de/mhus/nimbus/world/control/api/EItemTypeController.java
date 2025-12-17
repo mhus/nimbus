@@ -112,13 +112,8 @@ public class EItemTypeController extends BaseEditorController {
         var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
-        // Get all ItemTypes for this world
-        List<WItemType> all = itemTypeService.findByWorldId(wid);
-
-        // Apply search filter if provided
-        if (query != null && !query.isBlank()) {
-            all = filterByQuery(all, query);
-        }
+        // Get all ItemTypes for this world with query filter
+        List<WItemType> all = itemTypeService.findByWorldIdAndQuery(wid, query);
 
         int totalCount = all.size();
 
@@ -277,18 +272,5 @@ public class EItemTypeController extends BaseEditorController {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
-    }
-
-    private List<WItemType> filterByQuery(List<WItemType> itemTypes, String query) {
-        String lowerQuery = query.toLowerCase();
-        return itemTypes.stream()
-                .filter(itemType -> {
-                    String type = itemType.getItemType();
-                    ItemType publicData = itemType.getPublicData();
-                    return (type != null && type.toLowerCase().contains(lowerQuery)) ||
-                            (publicData != null && publicData.getName() != null &&
-                                    publicData.getName().toLowerCase().contains(lowerQuery));
-                })
-                .collect(Collectors.toList());
     }
 }

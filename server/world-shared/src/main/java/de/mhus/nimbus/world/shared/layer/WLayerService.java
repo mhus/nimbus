@@ -209,6 +209,36 @@ public class WLayerService {
     }
 
     /**
+     * Find all layers for a world with optional query filter.
+     * No fallback to parent world - returns only layers in this specific world.
+     *
+     * NOTE: worldId should NOT include instance suffix (use worldId.withoutInstance()).
+     */
+    @Transactional(readOnly = true)
+    public List<WLayer> findByWorldIdAndQuery(String worldId, String query) {
+        List<WLayer> all = layerRepository.findByWorldIdOrderByOrderAsc(worldId);
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
+    }
+
+    private List<WLayer> filterByQuery(List<WLayer> layers, String query) {
+        String lowerQuery = query.toLowerCase();
+        return layers.stream()
+                .filter(layer -> {
+                    String name = layer.getName();
+                    String id = layer.getId();
+                    return (name != null && name.toLowerCase().contains(lowerQuery)) ||
+                            (id != null && id.toLowerCase().contains(lowerQuery));
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Save a layer.
      */
     @Transactional

@@ -90,6 +90,8 @@ public class SAssetService {
         // world lookup - always use main world (no branches, no instances, no zones)
         var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
         var collection = WorldCollection.of(lookupWorld, path);
+        if (path.startsWith("w/")) // legacy
+            path = path.substring(2);
         return repository.findByWorldIdAndPath(collection.worldId().getId(), path);
     }
 

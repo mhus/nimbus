@@ -112,12 +112,7 @@ public class EBackdropController extends BaseEditorController {
         var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
-        List<WBackdrop> all = backdropService.findByWorldId(wid);
-
-        // Apply search filter if provided
-        if (query != null && !query.isBlank()) {
-            all = filterByQuery(all, query);
-        }
+        List<WBackdrop> all = backdropService.findByWorldIdAndQuery(wid, query);
 
         int totalCount = all.size();
 
@@ -282,15 +277,5 @@ public class EBackdropController extends BaseEditorController {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
-    }
-
-    private List<WBackdrop> filterByQuery(List<WBackdrop> backdrops, String query) {
-        String lowerQuery = query.toLowerCase();
-        return backdrops.stream()
-                .filter(backdrop -> {
-                    String backdropId = backdrop.getBackdropId();
-                    return (backdropId != null && backdropId.toLowerCase().contains(lowerQuery));
-                })
-                .collect(Collectors.toList());
     }
 }

@@ -119,8 +119,9 @@ public class WItemPositionService {
     }
 
     /**
-     * Find a specific item by ID.
-     * No fallback to parent world - searches only in this specific world context.
+     * Find a specific item by ID with COW fallback for branches.
+     * If this is a branch world and item is not found, falls back to parent world (COW).
+     * For instances/zones, no fallback is performed.
      *
      * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param itemId Item identifier
@@ -128,20 +129,38 @@ public class WItemPositionService {
      */
     @Transactional(readOnly = true)
     public Optional<WItemPosition> findItem(WorldId worldId, String itemId) {
+        // Try branch first if this is a branch world
+        if (worldId.isBranch()) {
+            var itemPosition = repository.findByWorldIdAndItemId(worldId.getId(), itemId);
+            if (itemPosition.isPresent()) {
+                return itemPosition;
+            }
+            // Fallback to parent world (COW)
+            var parentWorld = worldId.withoutBranchAndInstance();
+            return repository.findByWorldIdAndItemId(parentWorld.getId(), itemId);
+        }
+
         return repository.findByWorldIdAndItemId(worldId.getId(), itemId);
     }
 
     /**
      * Delete an item position.
      * Performs soft delete by setting enabled=false.
-     * Deletes only from this specific world context (no parent modification).
+     * IMPORTANT: Deletion is NOT allowed in branches - item positions can only be deleted in main worlds.
      *
      * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param itemId Item identifier
      * @return True if item was found and disabled
+     * @throws IllegalArgumentException if attempting to delete in a branch world
      */
     @Transactional
     public boolean deleteItemPosition(WorldId worldId, String itemId) {
+        // Prevent deletion in branches
+        if (worldId.isBranch()) {
+            log.warn("Attempted to delete item position '{}' in branch world '{}' - not allowed", itemId, worldId.getId());
+            throw new IllegalArgumentException("Item positions cannot be deleted in branches: " + worldId.getId());
+        }
+
         Optional<WItemPosition> itemOpt = repository.findByWorldIdAndItemId(worldId.getId(), itemId);
 
         if (itemOpt.isEmpty()) {
@@ -162,13 +181,20 @@ public class WItemPositionService {
 
     /**
      * Permanently delete an item position.
-     * Hard deletes only from this specific world context (no parent modification).
+     * IMPORTANT: Deletion is NOT allowed in branches - item positions can only be deleted in main worlds.
      *
      * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param itemId Item identifier
+     * @throws IllegalArgumentException if attempting to delete in a branch world
      */
     @Transactional
     public void hardDeleteItemPosition(WorldId worldId, String itemId) {
+        // Prevent deletion in branches
+        if (worldId.isBranch()) {
+            log.warn("Attempted to hard delete item position '{}' in branch world '{}' - not allowed", itemId, worldId.getId());
+            throw new IllegalArgumentException("Item positions cannot be deleted in branches: " + worldId.getId());
+        }
+
         repository.deleteByWorldIdAndItemId(worldId.getId(), itemId);
         log.info("Hard deleted item: world={}, itemId={}",
                 worldId, itemId);

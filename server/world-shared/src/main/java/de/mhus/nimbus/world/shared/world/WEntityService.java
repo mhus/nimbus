@@ -178,6 +178,37 @@ public class WEntityService {
         return update(worldId, entityId, entity -> entity.setEnabled(false)).isPresent();
     }
 
+    /**
+     * Find all entities for specific world with optional query filter.
+     * No COW fallback for lists - returns only entities in this specific world context.
+     * Filters out instances and zones.
+     */
+    @Transactional(readOnly = true)
+    public List<WEntity> findByWorldIdAndQuery(WorldId worldId, String query) {
+        var lookupWorld = worldId.withoutInstanceAndZone();
+        List<WEntity> all = repository.findByWorldId(lookupWorld.getId());
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
+    }
+
+    private List<WEntity> filterByQuery(List<WEntity> entities, String query) {
+        String lowerQuery = query.toLowerCase();
+        return entities.stream()
+                .filter(entity -> {
+                    String entityId = entity.getEntityId();
+                    Entity publicData = entity.getPublicData();
+                    return (entityId != null && entityId.toLowerCase().contains(lowerQuery)) ||
+                            (publicData != null && publicData.getName() != null &&
+                                    publicData.getName().toLowerCase().contains(lowerQuery));
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     private boolean blank(String s) {
         return s == null || s.isBlank();
     }

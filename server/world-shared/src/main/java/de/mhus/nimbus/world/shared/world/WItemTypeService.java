@@ -142,6 +142,36 @@ public class WItemTypeService {
         return update(worldId, itemType, entity -> entity.setEnabled(true)).isPresent();
     }
 
+    /**
+     * Find all item types for the region with optional query filter.
+     * Always looks up in the region collection (shared across entire region).
+     */
+    @Transactional(readOnly = true)
+    public List<WItemType> findByWorldIdAndQuery(WorldId worldId, String query) {
+        var regionWorldId = worldId.toRegionWorldId();
+        List<WItemType> all = repository.findByWorldId(regionWorldId.getId());
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
+    }
+
+    private List<WItemType> filterByQuery(List<WItemType> itemTypes, String query) {
+        String lowerQuery = query.toLowerCase();
+        return itemTypes.stream()
+                .filter(itemType -> {
+                    String type = itemType.getItemType();
+                    ItemType publicData = itemType.getPublicData();
+                    return (type != null && type.toLowerCase().contains(lowerQuery)) ||
+                            (publicData != null && publicData.getName() != null &&
+                                    publicData.getName().toLowerCase().contains(lowerQuery));
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     private boolean blank(String s) {
         return s == null || s.isBlank();
     }

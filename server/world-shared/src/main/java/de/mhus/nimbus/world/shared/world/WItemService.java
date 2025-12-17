@@ -142,4 +142,36 @@ public class WItemService {
     public List<WItem> saveAll(WorldId worldId, List<WItem> items) {
         return repository.saveAll(items);
     }
+
+    /**
+     * Find enabled items with optional query filter.
+     * Always looks up in the region collection (shared across entire region).
+     */
+    @Transactional(readOnly = true)
+    public List<WItem> findEnabledByWorldIdAndQuery(WorldId worldId, String query) {
+        var regionWorldId = worldId.toRegionWorldId();
+        List<WItem> all = repository.findByWorldIdAndEnabled(regionWorldId.getId(), true);
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
+    }
+
+    private List<WItem> filterByQuery(List<WItem> items, String query) {
+        String lowerQuery = query.toLowerCase();
+        return items.stream()
+                .filter(item -> {
+                    Item publicData = item.getPublicData();
+                    if (publicData == null) return false;
+
+                    // Match query against itemId, name, or description
+                    return (publicData.getId() != null && publicData.getId().toLowerCase().contains(lowerQuery)) ||
+                            (publicData.getName() != null && publicData.getName().toLowerCase().contains(lowerQuery)) ||
+                            (publicData.getDescription() != null && publicData.getDescription().toLowerCase().contains(lowerQuery));
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
 }

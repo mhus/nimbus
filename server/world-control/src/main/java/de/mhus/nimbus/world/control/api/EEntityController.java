@@ -113,13 +113,8 @@ public class EEntityController extends BaseEditorController {
         var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
-        // Get all Entities for this world
-        List<WEntity> all = entityService.findByWorldId(wid);
-
-        // Apply search filter if provided
-        if (query != null && !query.isBlank()) {
-            all = filterByQuery(all, query);
-        }
+        // Get all Entities for this world with query filter
+        List<WEntity> all = entityService.findByWorldIdAndQuery(wid, query);
 
         int totalCount = all.size();
 
@@ -288,19 +283,6 @@ public class EEntityController extends BaseEditorController {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
-    }
-
-    private List<WEntity> filterByQuery(List<WEntity> entities, String query) {
-        String lowerQuery = query.toLowerCase();
-        return entities.stream()
-                .filter(entity -> {
-                    String entityId = entity.getEntityId();
-                    Entity publicData = entity.getPublicData();
-                    return (entityId != null && entityId.toLowerCase().contains(lowerQuery)) ||
-                            (publicData != null && publicData.getName() != null &&
-                                    publicData.getName().toLowerCase().contains(lowerQuery));
-                })
-                .collect(Collectors.toList());
     }
 
 }

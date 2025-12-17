@@ -15,6 +15,10 @@ import java.util.function.Consumer;
 /**
  * Service for job management.
  * Provides CRUD operations and job state transitions.
+ *
+ * Jobs exist per world (no instances).
+ * Instances cannot have their own jobs - always taken from the defined world.
+ * No COW for branches - jobs are independent per world/branch.
  */
 @Service
 @ConditionalOnExpression("!'WorldPlayer'.equals('${spring.application.name}')")
@@ -39,8 +43,12 @@ public class WJobService {
             log.warn("Creating job with unknown executor: {}", executor);
         }
 
+        // IMPORTANT: Filter out instances - jobs are per world only
+        de.mhus.nimbus.shared.types.WorldId parsedWorldId = de.mhus.nimbus.shared.types.WorldId.unchecked(worldId);
+        String lookupWorldId = parsedWorldId.withoutInstance().getId();
+
         WJob job = WJob.builder()
-                .worldId(worldId)
+                .worldId(lookupWorldId)
                 .executor(executor)
                 .type(type)
                 .status(JobStatus.PENDING.name())
@@ -65,12 +73,20 @@ public class WJobService {
 
     @Transactional(readOnly = true)
     public List<WJob> getJobsByWorld(String worldId) {
-        return jobRepository.findByWorldId(worldId);
+        // IMPORTANT: Filter out instances - jobs are per world only
+        de.mhus.nimbus.shared.types.WorldId parsedWorldId = de.mhus.nimbus.shared.types.WorldId.unchecked(worldId);
+        String lookupWorldId = parsedWorldId.withoutInstance().getId();
+
+        return jobRepository.findByWorldId(lookupWorldId);
     }
 
     @Transactional(readOnly = true)
     public List<WJob> getJobsByWorldAndStatus(String worldId, JobStatus status) {
-        return jobRepository.findByWorldIdAndStatus(worldId, status.name());
+        // IMPORTANT: Filter out instances - jobs are per world only
+        de.mhus.nimbus.shared.types.WorldId parsedWorldId = de.mhus.nimbus.shared.types.WorldId.unchecked(worldId);
+        String lookupWorldId = parsedWorldId.withoutInstance().getId();
+
+        return jobRepository.findByWorldIdAndStatus(lookupWorldId, status.name());
     }
 
     @Transactional(readOnly = true)
@@ -162,7 +178,47 @@ public class WJobService {
 
     @Transactional(readOnly = true)
     public long countJobs(String worldId, JobStatus status) {
-        return jobRepository.countByWorldIdAndStatus(worldId, status.name());
+        // IMPORTANT: Filter out instances - jobs are per world only
+        de.mhus.nimbus.shared.types.WorldId parsedWorldId = de.mhus.nimbus.shared.types.WorldId.unchecked(worldId);
+        String lookupWorldId = parsedWorldId.withoutInstance().getId();
+
+        return jobRepository.countByWorldIdAndStatus(lookupWorldId, status.name());
+    }
+
+    /**
+     * Find all jobs for a world with optional query filter.
+     * Filters out instances - jobs are per world only.
+     */
+    @Transactional(readOnly = true)
+    public List<WJob> getJobsByWorldAndQuery(String worldId, String query) {
+        // IMPORTANT: Filter out instances - jobs are per world only
+        de.mhus.nimbus.shared.types.WorldId parsedWorldId = de.mhus.nimbus.shared.types.WorldId.unchecked(worldId);
+        String lookupWorldId = parsedWorldId.withoutInstance().getId();
+
+        List<WJob> all = jobRepository.findByWorldId(lookupWorldId);
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
+    }
+
+    private List<WJob> filterByQuery(List<WJob> jobs, String query) {
+        String lowerQuery = query.toLowerCase();
+        return jobs.stream()
+                .filter(job -> {
+                    String id = job.getId();
+                    String executor = job.getExecutor();
+                    String type = job.getType();
+                    String status = job.getStatus();
+                    return (id != null && id.toLowerCase().contains(lowerQuery)) ||
+                            (executor != null && executor.toLowerCase().contains(lowerQuery)) ||
+                            (type != null && type.toLowerCase().contains(lowerQuery)) ||
+                            (status != null && status.toLowerCase().contains(lowerQuery));
+                })
+                .toList();
     }
 
     private Long calculateDuration(WJob job) {

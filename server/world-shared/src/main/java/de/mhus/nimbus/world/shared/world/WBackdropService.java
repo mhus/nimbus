@@ -29,8 +29,9 @@ public class WBackdropService {
      */
     @Transactional(readOnly = true)
     public Optional<WBackdrop> findByBackdropId(WorldId worldId, String backdropId) {
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
-        return repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId);
+        var lookupWorld = worldId.withoutInstanceAndZone().mainWorld();
+        var collection = WorldCollection.of(lookupWorld, backdropId);
+        return repository.findByWorldIdAndBackdropId(collection.worldId().getId(), backdropId);
     }
 
     /**
@@ -39,7 +40,7 @@ public class WBackdropService {
      */
     @Transactional(readOnly = true)
     public List<WBackdrop> findByWorldId(WorldId worldId) {
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        var lookupWorld = worldId.mainWorld();
         return repository.findByWorldId(lookupWorld.getId());
     }
 
@@ -138,6 +139,33 @@ public class WBackdropService {
     @Transactional
     public boolean enable(WorldId worldId, String backdropId) {
         return update(worldId, backdropId, entity -> entity.setEnabled(true)).isPresent();
+    }
+
+    /**
+     * Find all backdrops for a world with optional query filter.
+     * Always looks up in main world only (no branches, no instances, no zones).
+     */
+    @Transactional(readOnly = true)
+    public List<WBackdrop> findByWorldIdAndQuery(WorldId worldId, String query) {
+        var lookupWorld = worldId.mainWorld();
+        List<WBackdrop> all = repository.findByWorldId(lookupWorld.getId());
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
+    }
+
+    private List<WBackdrop> filterByQuery(List<WBackdrop> backdrops, String query) {
+        String lowerQuery = query.toLowerCase();
+        return backdrops.stream()
+                .filter(backdrop -> {
+                    String backdropId = backdrop.getBackdropId();
+                    return (backdropId != null && backdropId.toLowerCase().contains(lowerQuery));
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 
     private boolean blank(String s) {

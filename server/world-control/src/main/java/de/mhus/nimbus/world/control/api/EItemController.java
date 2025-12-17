@@ -87,21 +87,11 @@ public class EItemController extends BaseEditorController {
         var wid = WorldId.of(worldId).orElseThrow(
                 () -> new IllegalArgumentException("invalid worldId")
         );
-        List<WItem> all = itemService.findEnabledByWorldId(wid);
-        String lowerQuery = query.toLowerCase();
         final int maxResults = 100;
 
-        List<ItemSearchResult> results = all.stream()
-                .filter(item -> {
-                    if (query.isBlank()) return true;
-                    Item publicData = item.getPublicData();
-                    if (publicData == null) return false;
+        List<WItem> all = itemService.findEnabledByWorldIdAndQuery(wid, query);
 
-                    // Match query against itemId, name, or description
-                    return (publicData.getId() != null && publicData.getId().toLowerCase().contains(lowerQuery)) ||
-                            (publicData.getName() != null && publicData.getName().toLowerCase().contains(lowerQuery)) ||
-                            (publicData.getDescription() != null && publicData.getDescription().toLowerCase().contains(lowerQuery));
-                })
+        List<ItemSearchResult> results = all.stream()
                 .limit(maxResults)
                 .map(this::toSearchResult)
                 .collect(Collectors.toList());

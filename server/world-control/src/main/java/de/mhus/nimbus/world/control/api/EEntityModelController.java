@@ -112,13 +112,8 @@ public class EEntityModelController extends BaseEditorController {
         var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
-        // Get all EntityModels for this world
-        List<WEntityModel> all = entityModelService.findByWorldId(wid);
-
-        // Apply search filter if provided
-        if (query != null && !query.isBlank()) {
-            all = filterByQuery(all, query);
-        }
+        // Get all EntityModels for this world with query filter
+        List<WEntityModel> all = entityModelService.findByWorldIdAndQuery(wid, query);
 
         int totalCount = all.size();
 
@@ -278,15 +273,5 @@ public class EEntityModelController extends BaseEditorController {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
-    }
-
-    private List<WEntityModel> filterByQuery(List<WEntityModel> models, String query) {
-        String lowerQuery = query.toLowerCase();
-        return models.stream()
-                .filter(model -> {
-                    String modelId = model.getModelId();
-                    return (modelId != null && modelId.toLowerCase().contains(lowerQuery));
-                })
-                .collect(Collectors.toList());
     }
 }

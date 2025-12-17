@@ -141,4 +141,31 @@ public class WEntityModelService {
         return update(worldId, modelId, entity -> entity.setEnabled(true)).isPresent();
     }
 
+    /**
+     * Find all entity models for the region with optional query filter.
+     * Always looks up in the region collection (shared across entire region).
+     */
+    @Transactional(readOnly = true)
+    public List<WEntityModel> findByWorldIdAndQuery(WorldId worldId, String query) {
+        var regionWorldId = worldId.toRegionWorldId();
+        List<WEntityModel> all = repository.findByWorldId(regionWorldId.getId());
+
+        // Apply search filter if provided
+        if (query != null && !query.isBlank()) {
+            all = filterByQuery(all, query);
+        }
+
+        return all;
+    }
+
+    private List<WEntityModel> filterByQuery(List<WEntityModel> models, String query) {
+        String lowerQuery = query.toLowerCase();
+        return models.stream()
+                .filter(model -> {
+                    String modelId = model.getModelId();
+                    return (modelId != null && modelId.toLowerCase().contains(lowerQuery));
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
 }
