@@ -481,21 +481,46 @@ async function postCoreServiceInitialization(appContext: AppContext): Promise<vo
 }
 
 async function postEngineInitialization(appContext: AppContext): Promise<void> {
-  // set time if defined
-  // if (appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes !== undefined) {
-  //   appContext.services.environment?.setUnixEpochWorldTimeOffset(
-  //       appContext.worldInfo?.settings?.worldTime?.currentEra || 1,
-  //       appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes);
-  // }
-  // // set shortcuts if defined
-  // if (appContext.playerInfo?.shortcuts) {
-  //   for (const [key, shortcut] of Object.entries(appContext.playerInfo.shortcuts)) {
-  //     // 'click0', 'use', {"itemId": "item_1763653693310_uv2m2pu", "wait": 100}
-  //     appContext.services.command?.executeCommand('setShortcut', [ key, 'use', { itemId: shortcut.itemId, wait: shortcut.wait  }]);
-  //   }
-  // }
-  //
-  // return new Promise((resolve) => {resolve});
+  // set time if defined (synchronous)
+  if (appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes !== undefined) {
+    appContext.services.environment?.setUnixEpochWorldTimeOffset(
+        appContext.worldInfo?.settings?.worldTime?.currentEra || 1,
+        appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes);
+    logger.info('World time initialized from worldInfo', {
+      era: appContext.worldInfo?.settings?.worldTime?.currentEra,
+      offsetMinutes: appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes
+    });
+  }
+
+  // set shortcuts if defined (asynchronous - fire and forget)
+  if (appContext.playerInfo?.shortcuts) {
+    logger.info('Initializing player shortcuts asynchronously', { count: Object.keys(appContext.playerInfo.shortcuts).length });
+
+    // Execute all shortcut initializations in parallel without waiting
+    Promise.all(
+      Object.entries(appContext.playerInfo.shortcuts).map(async ([key, shortcut]) => {
+        try {
+          await appContext.services.command?.executeCommand('setShortcut', [
+            key,
+            shortcut.type,
+            {
+              itemId: shortcut.itemId,
+              wait: shortcut.wait,
+              name: shortcut.name,
+              description: shortcut.description
+            }
+          ]);
+          logger.info('Shortcut initialized', { key, shortcut });
+        } catch (error) {
+          logger.error('Failed to initialize shortcut', { key, shortcut }, error as Error);
+        }
+      })
+    ).then(() => {
+      logger.info('All shortcuts initialized');
+    }).catch((error) => {
+      logger.error('Error during shortcuts initialization', undefined, error as Error);
+    });
+  }
 }
 
 async function startEngineAtPlayerPosition(appContext: AppContext): Promise<void> {

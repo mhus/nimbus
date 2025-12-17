@@ -396,8 +396,7 @@ export class PhysicsService {
 
     // Everything is ready - position player and enable physics
     const oldY = entity.position.y;
-    // TODO: Reduce offset from 20 to 4 once groundLevel calculation is more accurate
-    const targetY = heightData[4] + 20; // 4 = groundLevel
+    const targetY = heightData[4]; // 4 = groundLevel
 
     logger.debug('Teleportation ready - positioning player', {
       entityId,
@@ -407,7 +406,7 @@ export class PhysicsService {
       playerZ: entity.position.z
     });
 
-    entity.position.y = targetY;
+//    entity.position.y = targetY;
     entity.velocity.y = 0; // Reset vertical velocity
 
     logger.debug('Teleportation complete - player positioned', {
