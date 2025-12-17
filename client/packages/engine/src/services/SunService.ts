@@ -40,7 +40,7 @@ export class SunService {
 
   // Lens flare system
   private lensFlareSystem?: LensFlareSystem;
-  private lensFlareEnabled: boolean = true;
+  private lensFlareEnabled: boolean = false;
   private lensFlareIntensity: number = 1.0;
   private lensFlareColor: Color3 = new Color3(1, 0.9, 0.7); // Warm flare color
   private lensFlareTexture: string = 'w:textures/sun/flare.png';

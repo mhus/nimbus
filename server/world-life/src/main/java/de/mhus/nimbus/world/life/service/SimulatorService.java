@@ -109,8 +109,13 @@ public class SimulatorService {
                 if (!entity.isEnabled()) {
                     continue;
                 }
-
                 // Check if entity has position set
+                if (entity.getEntityId().startsWith("@")) {
+                    // Skip system/internal entities
+                    log.info("World {}: Skipping player entity {} from simulation",
+                            worldId, entity.getEntityId());
+                    continue;
+                }
                 if (entity.getPosition() == null) {
                     log.warn("World {}: Entity {} has no position set, skipping simulation",
                             worldId, entity.getEntityId());
@@ -427,27 +432,26 @@ public class SimulatorService {
      * Runs every 60 seconds to persist in-memory position changes.
      * Snapshots entities from all worlds.
      */
-    @Scheduled(fixedDelay = 60000)
-    public void snapshotEntityPositions() {
-        List<WEntity> toUpdate = new ArrayList<>();
-
-        for (Map.Entry<WorldId, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
-            WorldId worldId = worldEntry.getKey();
-            Map<String, SimulationState> simulationStates = worldEntry.getValue();
-
-            for (SimulationState state : simulationStates.values()) {
-                WEntity entity = state.getEntity();
-
-                // Only snapshot entities owned by this pod
-                if (ownershipService.isOwnedByThisPod(worldId, entity.getEntityId())) {
-                    toUpdate.add(entity);
-                }
-            }
-        }
-
-        if (!toUpdate.isEmpty()) {
-            entityService.saveAll(toUpdate);
-            log.info("Snapshotted {} entity positions to database across all worlds", toUpdate.size());
-        }
-    }
+//    public void snapshotEntityPositions() {
+//        List<WEntity> toUpdate = new ArrayList<>();
+//
+//        for (Map.Entry<WorldId, Map<String, SimulationState>> worldEntry : worldSimulationStates.entrySet()) {
+//            WorldId worldId = worldEntry.getKey();
+//            Map<String, SimulationState> simulationStates = worldEntry.getValue();
+//
+//            for (SimulationState state : simulationStates.values()) {
+//                WEntity entity = state.getEntity();
+//
+//                // Only snapshot entities owned by this pod
+//                if (ownershipService.isOwnedByThisPod(worldId, entity.getEntityId())) {
+//                    toUpdate.add(entity);
+//                }
+//            }
+//        }
+//
+//        if (!toUpdate.isEmpty()) {
+//            entityService.saveAll(toUpdate);
+//            log.info("Snapshotted {} entity positions to database across all worlds", toUpdate.size());
+//        }
+//    }
 }
