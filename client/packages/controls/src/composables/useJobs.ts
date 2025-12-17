@@ -4,7 +4,7 @@
  */
 
 import { ref, type Ref } from 'vue';
-import { apiClient } from '../services/ApiClient';
+import { apiService } from '../services/ApiService';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('useJobs');
@@ -77,7 +77,7 @@ export function useJobs(worldId: string): UseJobsReturn {
         ? `/control/worlds/${worldId}/jobs/status/${status}`
         : `/control/worlds/${worldId}/jobs`;
 
-      const response = await apiClient.get<Job[]>(url);
+      const response = await apiService.get<Job[]>(url);
       jobs.value = response;
       logger.info('Loaded jobs', { worldId, status, count: jobs.value.length });
     } catch (err) {
@@ -96,7 +96,7 @@ export function useJobs(worldId: string): UseJobsReturn {
     error.value = null;
 
     try {
-      const response = await apiClient.get<Job>(
+      const response = await apiService.get<Job>(
         `/control/worlds/${worldId}/jobs/${jobId}`
       );
       logger.info('Loaded job', { worldId, jobId });
@@ -118,7 +118,7 @@ export function useJobs(worldId: string): UseJobsReturn {
     error.value = null;
 
     try {
-      const response = await apiClient.get<JobSummary>(
+      const response = await apiService.get<JobSummary>(
         `/control/worlds/${worldId}/jobs/summary`
       );
       summary.value = response;
@@ -139,7 +139,7 @@ export function useJobs(worldId: string): UseJobsReturn {
     error.value = null;
 
     try {
-      await apiClient.post<Job>(
+      await apiService.post<Job>(
         `/control/worlds/${worldId}/jobs`,
         request
       );
@@ -163,7 +163,7 @@ export function useJobs(worldId: string): UseJobsReturn {
     error.value = null;
 
     try {
-      await apiClient.post<void>(
+      await apiService.post<void>(
         `/control/worlds/${worldId}/jobs/${jobId}/retry`
       );
       logger.info('Retried job', { worldId, jobId });
@@ -186,7 +186,7 @@ export function useJobs(worldId: string): UseJobsReturn {
     error.value = null;
 
     try {
-      await apiClient.patch<void>(
+      await apiService.patch<void>(
         `/control/worlds/${worldId}/jobs/${jobId}`,
         { status: 'FAILED' }
       );
@@ -210,7 +210,7 @@ export function useJobs(worldId: string): UseJobsReturn {
     error.value = null;
 
     try {
-      await apiClient.delete(
+      await apiService.delete(
         `/control/worlds/${worldId}/jobs/${jobId}`
       );
       logger.info('Deleted job', { worldId, jobId });

@@ -11,6 +11,6 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Area {
-    private Vector3Int a;
-    private Vector3Int b;
+    private Vector3Int position;
+    private Vector3Int size;
 }

@@ -6,9 +6,9 @@ import type { Vector3Int } from './Vector3Int';
 
 export interface Area {
   /** Start position */
-  a: Vector3Int;
+  position: Vector3Int;
 
   /** End position */
-  b: Vector3Int;
+  size: Vector3Int;
 
 }

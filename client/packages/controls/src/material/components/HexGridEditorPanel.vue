@@ -1,12 +1,36 @@
 <template>
-  <div class="modal modal-open">
-    <div class="modal-box max-w-3xl">
-      <h3 class="font-bold text-lg mb-4">
-        {{ isEditMode ? 'Edit Hex Grid' : 'Create Hex Grid' }}
-      </h3>
+  <TransitionRoot :show="true" as="template">
+    <Dialog as="div" class="relative z-50" @close="$emit('close')">
+      <TransitionChild
+        as="template"
+        enter="ease-out duration-300"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="ease-in duration-200"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black bg-opacity-25" />
+      </TransitionChild>
 
-      <!-- Form -->
-      <form @submit.prevent="handleSave" class="space-y-4">
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+          <TransitionChild
+            as="template"
+            enter="ease-out duration-300"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle class="text-2xl font-bold mb-4">
+                {{ isEditMode ? 'Edit Hex Grid' : 'Create Hex Grid' }}
+              </DialogTitle>
+
+              <!-- Form -->
+              <form @submit.prevent="handleSave" class="space-y-4">
         <!-- Position -->
         <div class="grid grid-cols-2 gap-4">
           <div class="form-control">
@@ -76,42 +100,79 @@
           />
         </div>
 
-        <!-- Generator Parameters -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Generator Parameters (JSON)</span>
-          </label>
-          <textarea
-            v-model="generatorParamsJson"
-            class="textarea textarea-bordered font-mono text-sm"
-            rows="6"
-            placeholder='{"seed": "12345", "waterLevel": "62", ...}'
-          />
-          <label v-if="generatorParamsError" class="label">
-            <span class="label-text-alt text-error">{{ generatorParamsError }}</span>
-          </label>
-          <label class="label">
-            <span class="label-text-alt">Enter generator parameters as JSON object. These will be passed to the terrain generator.</span>
-          </label>
+        <!-- Entry Point Position -->
+        <div class="divider">Entry Point (optional)</div>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Entry X</span>
+            </label>
+            <input
+              v-model.number="formData.entryPoint.position.x"
+              type="number"
+              class="input input-bordered"
+              placeholder="0"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Entry Y</span>
+            </label>
+            <input
+              v-model.number="formData.entryPoint.position.y"
+              type="number"
+              class="input input-bordered"
+              placeholder="0"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Entry Z</span>
+            </label>
+            <input
+              v-model.number="formData.entryPoint.position.z"
+              type="number"
+              class="input input-bordered"
+              placeholder="0"
+            />
+          </div>
         </div>
 
-        <!-- Entry Point -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Entry Point (optional, JSON)</span>
-          </label>
-          <textarea
-            v-model="entryPointJson"
-            class="textarea textarea-bordered font-mono text-sm"
-            rows="3"
-            placeholder='{"position": {"x": 0, "y": 0, "z": 0}, "size": {"x": 10, "y": 10, "z": 10}}'
-          />
-          <label v-if="entryPointError" class="label">
-            <span class="label-text-alt text-error">{{ entryPointError }}</span>
-          </label>
-          <label class="label">
-            <span class="label-text-alt">Define the entry point area where players spawn.</span>
-          </label>
+        <!-- Entry Point Size -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Size X</span>
+            </label>
+            <input
+              v-model.number="formData.entryPoint.size.x"
+              type="number"
+              class="input input-bordered"
+              placeholder="10"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Size Y</span>
+            </label>
+            <input
+              v-model.number="formData.entryPoint.size.y"
+              type="number"
+              class="input input-bordered"
+              placeholder="10"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Size Z</span>
+            </label>
+            <input
+              v-model.number="formData.entryPoint.size.z"
+              type="number"
+              class="input input-bordered"
+              placeholder="10"
+            />
+          </div>
         </div>
 
         <!-- Enabled -->
@@ -130,34 +191,60 @@
         <ErrorAlert v-if="saveError" :message="saveError" />
 
         <!-- Actions -->
-        <div class="modal-action">
-          <button
-            type="button"
-            class="btn"
-            @click="$emit('close')"
-            :disabled="saving"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            class="btn btn-primary"
-            :disabled="saving || !isFormValid"
-          >
-            <span v-if="saving" class="loading loading-spinner loading-sm"></span>
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
+        <div class="mt-6 flex justify-between gap-2">
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="btn btn-outline btn-sm"
+              @click="showJsonEditor = true"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              JSON
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="btn"
+              @click="$emit('close')"
+              :disabled="saving"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              :disabled="saving || !isFormValid"
+            >
+              <span v-if="saving" class="loading loading-spinner loading-sm"></span>
+              {{ saving ? 'Saving...' : 'Save' }}
+            </button>
+          </div>
         </div>
       </form>
-    </div>
-    <div class="modal-backdrop" @click="$emit('close')"></div>
-  </div>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </div>
+    </Dialog>
+  </TransitionRoot>
+
+  <!-- JSON Editor Dialog -->
+  <JsonEditorDialog
+    v-model:is-open="showJsonEditor"
+    :model-value="formData"
+    @apply="handleJsonApply"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import { useHexGrids, type HexGridWithId } from '@/composables/useHexGrids';
 import ErrorAlert from '@components/ErrorAlert.vue';
+import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 
 const props = defineProps<{
   hexGrid: HexGridWithId | null;
@@ -180,39 +267,33 @@ const formData = ref({
   description: '',
   icon: '',
   enabled: true,
+  entryPoint: {
+    position: { x: 0, y: 0, z: 0 },
+    size: { x: 10, y: 10, z: 10 }
+  }
 });
 
-const generatorParamsJson = ref('');
-const generatorParamsError = ref<string | null>(null);
-const entryPointJson = ref('');
-const entryPointError = ref<string | null>(null);
 const saving = ref(false);
 const saveError = ref<string | null>(null);
+const showJsonEditor = ref(false);
 
 // Initialize form with existing data
 watch(() => props.hexGrid, (hexGrid) => {
   if (hexGrid) {
     formData.value = {
-      position: { ...hexGrid.position },
-      name: hexGrid.name || '',
-      description: hexGrid.description || '',
-      icon: hexGrid.icon || '',
+      position: { ...hexGrid.publicData.position },
+      name: hexGrid.publicData.name || '',
+      description: hexGrid.publicData.description || '',
+      icon: hexGrid.publicData.icon || '',
       enabled: hexGrid.enabled ?? true,
+      entryPoint: hexGrid.publicData.entryPoint ? {
+        position: { ...hexGrid.publicData.entryPoint.position },
+        size: { ...hexGrid.publicData.entryPoint.size }
+      } : {
+        position: { x: 0, y: 0, z: 0 },
+        size: { x: 10, y: 10, z: 10 }
+      }
     };
-
-    // Initialize generator parameters
-    if (hexGrid.generatorParameters) {
-      generatorParamsJson.value = JSON.stringify(hexGrid.generatorParameters, null, 2);
-    } else {
-      generatorParamsJson.value = '';
-    }
-
-    // Initialize entry point
-    if (hexGrid.entryPoint) {
-      entryPointJson.value = JSON.stringify(hexGrid.entryPoint, null, 2);
-    } else {
-      entryPointJson.value = '';
-    }
   } else {
     // Reset for create mode
     formData.value = {
@@ -221,9 +302,11 @@ watch(() => props.hexGrid, (hexGrid) => {
       description: '',
       icon: '',
       enabled: true,
+      entryPoint: {
+        position: { x: 0, y: 0, z: 0 },
+        size: { x: 10, y: 10, z: 10 }
+      }
     };
-    generatorParamsJson.value = '';
-    entryPointJson.value = '';
   }
 }, { immediate: true });
 
@@ -233,60 +316,20 @@ watch(() => props.hexGrid, (hexGrid) => {
 const isFormValid = computed(() => {
   return (
     formData.value.name.trim() !== '' &&
-    formData.value.description.trim() !== '' &&
-    !generatorParamsError.value &&
-    !entryPointError.value
+    formData.value.description.trim() !== ''
   );
 });
 
 /**
- * Parse generator parameters JSON
+ * Check if entry point has any non-zero values
+ * Entry point is only valid if at least one position or size value is non-default
  */
-const parseGeneratorParams = (): Record<string, string> | null => {
-  generatorParamsError.value = null;
-
-  if (!generatorParamsJson.value.trim()) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(generatorParamsJson.value);
-
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      generatorParamsError.value = 'Generator parameters must be a JSON object';
-      return null;
-    }
-
-    // Convert all values to strings
-    const result: Record<string, string> = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      result[key] = String(value);
-    }
-
-    return result;
-  } catch (err) {
-    generatorParamsError.value = `Invalid JSON: ${(err as Error).message}`;
-    return null;
-  }
-};
-
-/**
- * Parse entry point JSON
- */
-const parseEntryPoint = (): any | null => {
-  entryPointError.value = null;
-
-  if (!entryPointJson.value.trim()) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(entryPointJson.value);
-    return parsed;
-  } catch (err) {
-    entryPointError.value = `Invalid JSON: ${(err as Error).message}`;
-    return null;
-  }
+const hasEntryPoint = (): boolean => {
+  const ep = formData.value.entryPoint;
+  // Check if any position value is non-zero OR any size value is non-default (not 10)
+  const hasNonZeroPosition = ep.position.x !== 0 || ep.position.y !== 0 || ep.position.z !== 0;
+  const hasNonDefaultSize = ep.size.x !== 10 || ep.size.y !== 10 || ep.size.z !== 10;
+  return hasNonZeroPosition || hasNonDefaultSize;
 };
 
 /**
@@ -297,30 +340,29 @@ const handleSave = async () => {
     return;
   }
 
-  // Parse and validate generator parameters
-  const generatorParams = parseGeneratorParams();
-  if (generatorParamsJson.value.trim() && !generatorParams) {
-    return; // Error is already set
-  }
-
-  // Parse and validate entry point
-  const entryPoint = parseEntryPoint();
-  if (entryPointJson.value.trim() && !entryPoint) {
-    return; // Error is already set
-  }
-
   saving.value = true;
   saveError.value = null;
 
   try {
-    const payload: Partial<HexGridWithId> = {
+    // Build publicData
+    const publicData: any = {
       position: formData.value.position,
       name: formData.value.name,
       description: formData.value.description,
-      icon: formData.value.icon || undefined,
+    };
+
+    // Add optional fields
+    if (formData.value.icon) {
+      publicData.icon = formData.value.icon;
+    }
+    if (hasEntryPoint()) {
+      publicData.entryPoint = formData.value.entryPoint;
+    }
+
+    // Build request payload matching backend DTO
+    const payload = {
+      publicData: publicData,
       enabled: formData.value.enabled,
-      generatorParameters: generatorParams || undefined,
-      entryPoint: entryPoint || undefined,
     };
 
     if (isEditMode.value) {
@@ -339,5 +381,12 @@ const handleSave = async () => {
   } finally {
     saving.value = false;
   }
+};
+
+/**
+ * Handle JSON apply from JSON editor
+ */
+const handleJsonApply = (jsonData: any) => {
+  formData.value = jsonData;
 };
 </script>

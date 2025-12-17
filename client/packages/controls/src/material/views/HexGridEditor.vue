@@ -82,7 +82,7 @@ const selectedHexGrid = ref<HexGridWithId | null>(null);
 
 // Load hex grids when world changes
 watch(currentWorldId, () => {
-  if (currentWorldId.value) {
+  if (currentWorldId.value && currentWorldId.value !== '?') {
     hexGridsComposable.value?.loadHexGrids();
   }
 }, { immediate: true });
@@ -97,14 +97,21 @@ const filteredHexGrids = computed(() => {
 
   const query = searchQuery.value.toLowerCase();
   return hexGrids.value.filter(grid => {
-    const position = `${grid.position.q}:${grid.position.r}`;
     return (
-      grid.name?.toLowerCase().includes(query) ||
-      grid.description?.toLowerCase().includes(query) ||
-      position.includes(query)
+      grid.publicData.name?.toLowerCase().includes(query) ||
+      grid.publicData.description?.toLowerCase().includes(query) ||
+      grid.position.includes(query)
     );
   });
 });
+
+/**
+ * Parse position string (e.g., "0:0") to q and r
+ */
+const parsePosition = (position: string): { q: number; r: number } => {
+  const [q, r] = position.split(':').map(Number);
+  return { q, r };
+};
 
 /**
  * Handle search
@@ -124,9 +131,17 @@ const openCreateDialog = () => {
 /**
  * Open edit dialog
  */
-const openEditDialog = (hexGrid: HexGridWithId) => {
-  selectedHexGrid.value = hexGrid;
-  isEditorOpen.value = true;
+const openEditDialog = async (hexGrid: HexGridWithId) => {
+  if (!hexGridsComposable.value) return;
+
+  // Load fresh data from server
+  const { q, r } = parsePosition(hexGrid.position);
+  const freshData = await hexGridsComposable.value.loadHexGrid(q, r);
+
+  if (freshData) {
+    selectedHexGrid.value = freshData;
+    isEditorOpen.value = true;
+  }
 };
 
 /**
@@ -140,7 +155,11 @@ const closeEditor = () => {
 /**
  * Handle saved
  */
-const handleSaved = () => {
+const handleSaved = async () => {
+  if (!hexGridsComposable.value) return;
+
+  // Reload list after save
+  await hexGridsComposable.value.loadHexGrids();
   closeEditor();
 };
 
@@ -150,12 +169,13 @@ const handleSaved = () => {
 const handleDelete = async (hexGrid: HexGridWithId) => {
   if (!hexGridsComposable.value) return;
 
-  const position = `${hexGrid.position.q}:${hexGrid.position.r}`;
-  if (!confirm(`Are you sure you want to delete hex grid "${hexGrid.name || position}"?`)) {
+  const name = hexGrid.publicData.name || hexGrid.position;
+  if (!confirm(`Are you sure you want to delete hex grid "${name}"?`)) {
     return;
   }
 
-  await hexGridsComposable.value.deleteHexGrid(hexGrid.position.q, hexGrid.position.r);
+  const { q, r } = parsePosition(hexGrid.position);
+  await hexGridsComposable.value.deleteHexGrid(q, r);
 };
 
 /**
@@ -164,10 +184,11 @@ const handleDelete = async (hexGrid: HexGridWithId) => {
 const handleToggleEnabled = async (hexGrid: HexGridWithId) => {
   if (!hexGridsComposable.value) return;
 
+  const { q, r } = parsePosition(hexGrid.position);
   if (hexGrid.enabled) {
-    await hexGridsComposable.value.disableHexGrid(hexGrid.position.q, hexGrid.position.r);
+    await hexGridsComposable.value.disableHexGrid(q, r);
   } else {
-    await hexGridsComposable.value.enableHexGrid(hexGrid.position.q, hexGrid.position.r);
+    await hexGridsComposable.value.enableHexGrid(q, r);
   }
 };
 </script>

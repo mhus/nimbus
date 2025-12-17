@@ -12,27 +12,31 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="hexGrid in hexGrids" :key="`${hexGrid.position.q}:${hexGrid.position.r}`">
+        <tr
+          v-for="hexGrid in hexGrids"
+          :key="hexGrid.position"
+          class="hover:bg-base-200 cursor-pointer"
+        >
           <!-- Position -->
-          <td>
-            <code class="text-sm font-mono">{{ hexGrid.position.q }}:{{ hexGrid.position.r }}</code>
+          <td @click="$emit('edit', hexGrid)">
+            <code class="text-sm font-mono">{{ hexGrid.position }}</code>
           </td>
 
           <!-- Name -->
-          <td>
-            <div class="font-medium">{{ hexGrid.name || '-' }}</div>
-            <div v-if="hexGrid.icon" class="text-xs text-base-content/50">{{ hexGrid.icon }}</div>
+          <td @click="$emit('edit', hexGrid)">
+            <div class="font-medium">{{ hexGrid.publicData.name || '-' }}</div>
+            <div v-if="hexGrid.publicData.icon" class="text-xs text-base-content/50">{{ hexGrid.publicData.icon }}</div>
           </td>
 
           <!-- Description -->
-          <td>
+          <td @click="$emit('edit', hexGrid)">
             <div class="text-sm text-base-content/70 max-w-xs truncate">
-              {{ hexGrid.description || '-' }}
+              {{ hexGrid.publicData.description || '-' }}
             </div>
           </td>
 
           <!-- Status -->
-          <td>
+          <td @click="$emit('edit', hexGrid)">
             <span
               class="badge badge-sm"
               :class="hexGrid.enabled ? 'badge-success' : 'badge-error'"
@@ -42,7 +46,7 @@
           </td>
 
           <!-- Created -->
-          <td>
+          <td @click="$emit('edit', hexGrid)">
             <div v-if="hexGrid.createdAt" class="text-sm text-base-content/70">
               {{ formatDate(hexGrid.createdAt) }}
             </div>
@@ -50,18 +54,8 @@
           </td>
 
           <!-- Actions -->
-          <td>
+          <td @click.stop>
             <div class="flex gap-2">
-              <button
-                class="btn btn-xs btn-ghost"
-                @click="$emit('edit', hexGrid)"
-                title="Edit"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-
               <button
                 class="btn btn-xs btn-ghost"
                 :class="hexGrid.enabled ? 'text-warning' : 'text-success'"

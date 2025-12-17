@@ -2172,14 +2172,14 @@
       "name" : "Area",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "a",
+        "name" : "position",
         "type" : "Vector3Int",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "b",
+        "name" : "size",
         "type" : "Vector3Int",
         "optional" : false,
         "visibility" : null,

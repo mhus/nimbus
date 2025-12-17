@@ -161,6 +161,14 @@ export class ApiService {
   }
 
   /**
+   * Generic PATCH request
+   */
+  async patch<T>(url: string, data?: any, config?: any): Promise<T> {
+    const response = await this.client.patch<T>(url, data, config);
+    return response.data;
+  }
+
+  /**
    * Generic DELETE request
    */
   async delete<T>(url: string): Promise<T> {

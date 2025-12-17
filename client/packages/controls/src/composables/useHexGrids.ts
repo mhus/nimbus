@@ -4,18 +4,20 @@
  */
 
 import { ref, type Ref } from 'vue';
-import { apiClient } from '../services/ApiClient';
+import { apiService } from '../services/ApiService';
 import { getLogger, type HexGrid } from '@nimbus/shared';
 
 const logger = getLogger('useHexGrids');
 
-export interface HexGridWithId extends HexGrid {
+export interface HexGridWithId {
   id: string;
   worldId: string;
-  enabled: boolean;
-  createdAt?: string;
-  modifiedAt?: string;
+  position: string;
+  publicData: HexGrid;
   generatorParameters?: Record<string, string>;
+  createdAt?: string;
+  updatedAt?: string;
+  enabled: boolean;
 }
 
 export interface UseHexGridsReturn {
@@ -40,11 +42,16 @@ export function useHexGrids(worldId: string): UseHexGridsReturn {
    * Load all hex grids for world
    */
   const loadHexGrids = async () => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      return;
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      const response = await apiClient.get<HexGridWithId[]>(
+      const response = await apiService.get<HexGridWithId[]>(
         `/control/worlds/${worldId}/hexgrid`
       );
       hexGrids.value = response;
@@ -61,11 +68,16 @@ export function useHexGrids(worldId: string): UseHexGridsReturn {
    * Load single hex grid
    */
   const loadHexGrid = async (q: number, r: number): Promise<HexGridWithId | null> => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      return null;
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      const response = await apiClient.get<HexGridWithId>(
+      const response = await apiService.get<HexGridWithId>(
         `/control/worlds/${worldId}/hexgrid/${q}/${r}`
       );
       logger.info('Loaded hex grid', { worldId, q, r });
@@ -83,11 +95,16 @@ export function useHexGrids(worldId: string): UseHexGridsReturn {
    * Create hex grid
    */
   const createHexGrid = async (hexGrid: Partial<HexGridWithId>) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      await apiClient.post<HexGridWithId>(
+      await apiService.post<HexGridWithId>(
         `/control/worlds/${worldId}/hexgrid`,
         hexGrid
       );
@@ -106,11 +123,16 @@ export function useHexGrids(worldId: string): UseHexGridsReturn {
    * Update hex grid
    */
   const updateHexGrid = async (q: number, r: number, hexGrid: Partial<HexGridWithId>) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      await apiClient.put<HexGridWithId>(
+      await apiService.put<HexGridWithId>(
         `/control/worlds/${worldId}/hexgrid/${q}/${r}`,
         hexGrid
       );
@@ -129,11 +151,16 @@ export function useHexGrids(worldId: string): UseHexGridsReturn {
    * Delete hex grid
    */
   const deleteHexGrid = async (q: number, r: number) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      await apiClient.delete(
+      await apiService.delete(
         `/control/worlds/${worldId}/hexgrid/${q}/${r}`
       );
       logger.info('Deleted hex grid', { worldId, q, r });
@@ -151,11 +178,16 @@ export function useHexGrids(worldId: string): UseHexGridsReturn {
    * Enable hex grid
    */
   const enableHexGrid = async (q: number, r: number) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      await apiClient.post<void>(
+      await apiService.post<void>(
         `/control/worlds/${worldId}/hexgrid/${q}/${r}/enable`
       );
       logger.info('Enabled hex grid', { worldId, q, r });
@@ -173,11 +205,16 @@ export function useHexGrids(worldId: string): UseHexGridsReturn {
    * Disable hex grid
    */
   const disableHexGrid = async (q: number, r: number) => {
+    // Skip if worldId is not set
+    if (!worldId || worldId === '?') {
+      throw new Error('World ID not set');
+    }
+
     loading.value = true;
     error.value = null;
 
     try {
-      await apiClient.post<void>(
+      await apiService.post<void>(
         `/control/worlds/${worldId}/hexgrid/${q}/${r}/disable`
       );
       logger.info('Disabled hex grid', { worldId, q, r });
