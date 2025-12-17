@@ -42,83 +42,84 @@ z.b. '@region', '@public', '@shared'.
 [x] Assets werden immer nur in der HauptWelt gespeichert. Instanzen und Zonen haben keine eigenen Assets. 
 Branches haben keine eigenen Assets! Assets muessen neu angelegt werden in der Hauptwelt, wenn sie in einem Branch genutzt werden sollen.
 
-[ ] ENTFERNEN: Branches koennen eigene Assets haben, die aber auf die Hauptwelt zurueckfallen, wenn sie dort nicht gefunden werden (COW - Copy On Write).
+[?] ENTFERNEN: Branches koennen eigene Assets haben, die aber auf die Hauptwelt zurueckfallen, wenn sie dort nicht gefunden werden (COW - Copy On Write).
 
-[ ] Im assets-editor bei der Welt-Auswahl auf HauptWelt einschränken (im REST Controller filter option einfügen). Keine Collection Welten hier.
+[?] Im assets-editor bei der Welt-Auswahl auf HauptWelt einschränken (im REST Controller filter option einfügen). Keine Collection Welten hier.
 
 Assets haben storage funktionalität.
 
 ## Block Types
 
-[ ] Block Types gibt es pro HauptWelt. Zonen und Instanzen haben keine eigenen Block Types.
+[?] Block Types gibt es pro HauptWelt. Zonen und Instanzen haben keine eigenen Block Types.
 
 Branches haben einen COW ansatz (copy on write). Es können keine Block Types gelöscht werden in Branches.
 Block Types haben storage funktionalität. Default ist 'w'.
 
 Beim laden von listen wird kein fallback gemacht.
 
-[ ] Im blocktype-editor bei der Welt-Auswahl auf HauptWelt + Branches einschränken (im REST Controller filter option einfügen). Keine Collection Welten hier.
+[?] Im blocktype-editor bei der Welt-Auswahl auf HauptWelt + Branches einschränken (im REST Controller filter option einfügen). Keine Collection Welten hier.
 
 ## BackDrops
 
 [x] BackDrops werden wie Assets behandelt. Sie werden immer in der Hauptwelt gespeichert. Instanzen und Zonen haben keine eigenen BackDrops. 
 Branches haben keine eigenen BackDrops! BackDrops muessen neu angelegt werden in der Hauptwelt, wenn sie in einem Branch genutzt werden sollen.
 
-[ ] ENTFERNEN: Branches koennen eigene BackDrops haben, die aber auf die Hauptwelt zurueckfallen, wenn sie dort nicht gefunden werden (COW - Copy On Write).
-
-[ ] Im backdrop-editor bei der Welt-Auswahl auf HauptWelt einschränken (im REST Controller filter option einfügen). Keine Collection Welten hier.
+[?] ENTFERNEN: Branches koennen eigene BackDrops haben, die aber auf die Hauptwelt zurueckfallen, wenn sie dort nicht gefunden werden (COW - Copy On Write).
 
 BackDrops haben storage funktionalität.
 
+[?] Im backdrop-editor bei der Welt-Auswahl auf HauptWelt einschränken (im REST Controller filter option einfügen). Keine Collection Welten hier.
+
 ## ItemTypes
 
-[ ] Item Types kommen immer aus der @region collection oder shared collections. Damit werden sie in der kompletten Region geshared.
+[?] Item Types kommen immer aus der @region collection oder shared collections. Damit werden sie in der kompletten Region geshared.
 Baranches koennen keine eigenen ItemTypes haben.
 
 ItemTypes haben storage funktionalität, unterstuetzen aber nicht 'w'. Default ist 'r'.
 
-[ ] Im itemtype-editor bei der Welt-Auswahl auf @region + shared collections einschränken (im REST Controller filter option einfügen). ???
+[?] Im itemtype-editor bei der Welt-Auswahl auf @region + shared collections einschränken (im REST Controller filter option einfügen). ???
 
 ## Items
 
-[ ] Items kommen immer aus der @region collection. Damit werden sie in der kompletten Region geshared.
+[?] Items kommen immer aus der @region collection. Damit werden sie in der kompletten Region geshared.
 
 Items unterstuetzen keine storage funktionalitaet.
 Damit haben branches auch keine eigenen Items.
 
-[ ] Im item-editor bei der Welt-Auswahl auf @region einschränken (im REST Controller filter option einfügen). ???
+[?] Im item-editor bei der Welt-Auswahl auf @region einschränken (im REST Controller filter option einfügen). ???
 
 ## Item Positions
 
-[ ] Item Positionen gibt es fuer jede Welt/Zone/Branch/Instanze separarat. Jede welt wird als separate Instanze behandelt. 
+[?] Item Positionen gibt es fuer jede Welt/Zone/Branch/Instanze separarat. Jede welt wird als separate Instanze behandelt. 
 
-(Für Branches müssen alle Item Positionen aus der Basis-Welt kopiert werden. Keine COW logik!)
+COW für Branches (copy on write). Es können keine Item Positionen gelöscht werden in Branches.
 
+Beim laden von listen wird kein fallback auf die Hauptwelt gemacht.
 Es werden keine storage unterstuetzt, da sie immer welt instanze spezifisch sind.
 
-[ ] Im itemposition-editor bei der Welt-Auswahl auf alle Welten/Instanzen/Branches einschränken. Keine Collection Welten hier.
+[?] Im itemposition-editor bei der Welt-Auswahl auf alle Welten/Instanzen/Branches einschränken. Keine Collection Welten hier.
 
 ## Entity Models
 
-[ ] Entity Models kommen immer aus der @region collection oder shared collections. Damit werden sie in der kompletten Region geshared.
+[?] Entity Models kommen immer aus der @region collection oder shared collections. Damit werden sie in der kompletten Region geshared.
 
 Entity Models haben storage funktionalität, unterstuetzen aber nicht 'w'. Default ist 'r'.
 Damit haben branches auch keine eigenen Entity Models.
 
-[ ] Im entitymodel-editor bei der Welt-Auswahl auf @region + shared collections einschränken (im REST Controller filter option einfügen). ???
+[?] Im entitymodel-editor bei der Welt-Auswahl auf @region + shared collections einschränken (im REST Controller filter option einfügen). ???
 
 ## Entities
 
-[ ] Entities gibt es pro Welt/Zone/Instanze separarat. Jede welt wird als separate Instanze behandelt.
+[?] Entities gibt es pro Welt/Zone/Instanze separarat. Jede welt wird als separate Instanze behandelt.
 Ausser Branches, diese verfolgen einen COW ansatz (copy on write). Es können keine Entities gelöscht werden in Branches.
 
 Entities unterstuetzen keine storage funktionalitaet, da sie immer welt instanze spezifisch sind.
 
-[ ] Im entity-editor bei der Welt-Auswahl auf alle Welten/Instanzen/Branches einschränken. Keine Collection Welten hier.
+[?] Im entity-editor bei der Welt-Auswahl auf alle Welten/Instanzen/Branches einschränken. Keine Collection Welten hier.
 
 ## Chunk
 
-[ ] Chunks gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
+[?] Chunks gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
 Ausser Branches, diese verfolgen einen COW ansatz (copy on write).
 Instanzen keonnen keine eigenen Chunks haben, diese werden immer von der definierten Welt genommen.
 
@@ -128,7 +129,7 @@ Kein Editor!
 
 ## Layers / TerrainLayer / ModelLayer
 
-[ ] Layers gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
+[?] Layers gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
 Instanzen keonnen keine eigenen Layers haben, diese werden immer von der defineirten Welt genommen.
 Für Branches können Layers kopiert werden. Der Layer muss aber erst kopiert sein, bevor er geändert werden kann.
 
@@ -136,16 +137,16 @@ Beim erzeugen von Chunks in Branches muss auf kopierte Layers geprüft werden.
 
 Beim laden von listen wird kein fallback auf die Hauptwelt gemacht.
 
-[ ] im Layer-Editor bei der Welt-Auswahl auf alle Welten/Zone/Branches einschränken. Keine Collection Welten hier.
+[?] im Layer-Editor bei der Welt-Auswahl auf alle Welten/Zone/Branches einschränken. Keine Collection Welten hier.
 
 ## HexGrid
 
-[ ] HexGrid gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
+[?] HexGrid gibt es pro Welt/Zone separarat. Jede welt wird als separate Instanze behandelt.
 Instanzen keonnen kein eigenes HexGrid haben, dieses wird immer von der definierten Welt genommen.
 
 In Branches wird ein COW ansatz verfolgt (copy on write). Es können keine HexGrids gelöscht werden in Branches.
 
-[ ] im HexGrid-Editor bei der Welt-Auswahl auf alle Welten/Zone/Branches einschränken. Keine Collection Welten hier.
+[?] im HexGrid-Editor bei der Welt-Auswahl auf alle Welten/Zone/Branches einschränken. Keine Collection Welten hier.
 
 ## World
 
@@ -153,10 +154,10 @@ In Branches wird ein COW ansatz verfolgt (copy on write). Es können keine HexGr
 
 ## Jobs
 
-[ ] Jobs haben keine storage funktionalität. Werden geladen / gespeichert wie sie sind.
+[?] Jobs haben keine storage funktionalität. Werden geladen / gespeichert wie sie sind.
 Instanzen haben keine eigenen Jobs.
 
-[ ] Im Job-Editor bei der Welt-Auswahl auf alle Welten/Zonen/Branches einschränken. Keine Collection Welten hier.
+[?] Im Job-Editor bei der Welt-Auswahl auf alle Welten/Zonen/Branches einschränken. Keine Collection Welten hier.
 
 ## PlayerProgress (future)
 

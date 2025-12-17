@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import type { WLayer } from '@nimbus/shared';
 import { useWorld } from '@/composables/useWorld';
 import { useLayers } from '@/composables/useLayers';
@@ -112,7 +112,7 @@ import ErrorAlert from '@components/ErrorAlert.vue';
 import LayerList from '@layer/components/LayerList.vue';
 import LayerEditorPanel from '@layer/components/LayerEditorPanel.vue';
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const layersComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -141,6 +141,11 @@ watch(currentWorldId, () => {
     layersComposable.value?.loadLayers();
   }
 }, { immediate: true });
+
+onMounted(() => {
+  // Load worlds with allWithoutInstances filter for layer editor
+  loadWorlds('allWithoutInstances');
+});
 
 /**
  * Handle search

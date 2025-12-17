@@ -184,7 +184,7 @@ const props = defineProps<{
   isNew: boolean;
 }>();
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const emit = defineEmits<{
   save: [];
@@ -351,6 +351,8 @@ watch(() => props.itemId, () => {
 });
 
 onMounted(() => {
+  // Load worlds with regionOnly filter for item editor
+  loadWorlds('regionOnly');
   loadItem();
 });
 </script>

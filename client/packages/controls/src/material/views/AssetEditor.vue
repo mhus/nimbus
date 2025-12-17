@@ -108,7 +108,7 @@ import AssetGrid from '@material/components/AssetGrid.vue';
 import AssetUploadDialog from '@material/components/AssetUploadDialog.vue';
 import AssetInfoDialog from '@material/components/AssetInfoDialog.vue';
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const assetsComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -224,6 +224,9 @@ const handlePreviousPage = () => {
 };
 
 onMounted(() => {
+  // Load worlds with mainOnly filter for asset editor
+  loadWorlds('mainOnly');
+
   if (currentWorldId.value && assetsComposable.value) {
     assetsComposable.value.loadAssets();
   }

@@ -180,4 +180,17 @@ public class WorldId implements Comparable<WorldId> {
         if (branch != null) sb.append("@").append(branch);
         return new WorldId(sb.toString());
     }
+
+    /**
+     * Converts this WorldId to its corresponding region collection WorldId.
+     * The region collection is shared across all worlds in the same region.
+     * This is used for region-scoped entities like ItemTypes.
+     *
+     * @return WorldId for the region collection (@region:regionId)
+     */
+    public WorldId toRegionWorldId() {
+        parseId();
+        return WorldId.of(COLLECTION_REGION, regionId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid region worldId: " + regionId));
+    }
 }

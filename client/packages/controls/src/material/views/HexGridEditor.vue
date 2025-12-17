@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useWorld } from '@/composables/useWorld';
 import { useHexGrids, type HexGridWithId } from '@/composables/useHexGrids';
 import SearchInput from '@components/SearchInput.vue';
@@ -103,7 +103,7 @@ import HexGridList from '@material/components/HexGridList.vue';
 import HexGridEditorPanel from '@material/components/HexGridEditorPanel.vue';
 import HexGridVisual from '@material/components/HexGridVisual.vue';
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const activeTab = ref<'list' | 'grid'>('list');
 
@@ -126,6 +126,11 @@ watch(currentWorldId, () => {
     hexGridsComposable.value?.loadHexGrids();
   }
 }, { immediate: true });
+
+onMounted(() => {
+  // Load worlds with allWithoutInstances filter for hex grid editor
+  loadWorlds('allWithoutInstances');
+});
 
 /**
  * Filter hex grids based on search query

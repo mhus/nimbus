@@ -14,11 +14,17 @@ import java.util.Optional;
 /**
  * Service for managing item positions in the world.
  * Items are stored per chunk for efficient spatial queries.
+ *
+ * Item positions exist separately for each world/zone/branch/instance.
+ * Each world context is treated as a separate instance.
+ * COW (Copy On Write) on save for branches - items saved in a branch stay in that branch.
+ * No storage functionality supported (always world-instance-specific).
+ * List loading does NOT fall back to main world.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class WItemRegistryService {
+public class WItemPositionService {
 
     private final WItemPositionRepository repository;
     private final WWorldService worldService;
@@ -26,8 +32,9 @@ public class WItemRegistryService {
     /**
      * Save or update an item position.
      * Automatically calculates chunk key from item position.
+     * COW for branches: Items are saved directly to the branch (no parent modification).
      *
-     * @param worldId World identifier
+     * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param itemBlockRef ItemBlockRef containing position and display data
      * @return Saved item position entity
      */
@@ -78,8 +85,9 @@ public class WItemRegistryService {
     /**
      * Get all items in a specific chunk.
      * Returns only enabled items.
+     * No fallback to parent world - returns only items in this specific world context.
      *
-     * @param worldId World identifier
+     * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param cx Chunk X coordinate
      * @param cz Chunk Z coordinate
      * @return List of ItemBlockRef objects for the chunk
@@ -100,8 +108,9 @@ public class WItemRegistryService {
     /**
      * Get all items in a world.
      * Returns only enabled items.
+     * No fallback to parent world - returns only items in this specific world context.
      *
-     * @param worldId World identifier
+     * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @return List of all item positions
      */
     @Transactional(readOnly = true)
@@ -111,8 +120,9 @@ public class WItemRegistryService {
 
     /**
      * Find a specific item by ID.
+     * No fallback to parent world - searches only in this specific world context.
      *
-     * @param worldId World identifier
+     * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param itemId Item identifier
      * @return Optional containing the item position if found
      */
@@ -124,8 +134,9 @@ public class WItemRegistryService {
     /**
      * Delete an item position.
      * Performs soft delete by setting enabled=false.
+     * Deletes only from this specific world context (no parent modification).
      *
-     * @param worldId World identifier
+     * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param itemId Item identifier
      * @return True if item was found and disabled
      */
@@ -151,8 +162,9 @@ public class WItemRegistryService {
 
     /**
      * Permanently delete an item position.
+     * Hard deletes only from this specific world context (no parent modification).
      *
-     * @param worldId World identifier
+     * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param itemId Item identifier
      */
     @Transactional
@@ -184,8 +196,9 @@ public class WItemRegistryService {
 
     /**
      * Count items in a chunk.
+     * Counts only items in this specific world context (no parent fallback).
      *
-     * @param worldId World identifier
+     * @param worldId World identifier (can be main world, branch, instance, or zone)
      * @param cx Chunk X coordinate
      * @param cz Chunk Z coordinate
      * @return Number of items in the chunk

@@ -89,22 +89,75 @@ public class WWorldController extends BaseEditorController {
     }
 
     /**
-     * List all worlds in a region
+     * List all worlds in a region with optional filtering
      * GET /control/regions/{regionId}/worlds
+     *
+     * Query parameters:
+     * - filter: Filter type for world selection
+     *   - "mainOnly": Only main worlds (no branches, zones, instances, collections)
+     *   - "mainAndBranches": Main worlds + branches (no zones, instances, collections)
+     *   - "mainWorldsAndInstances": Main worlds + instances + branches (no zones, no collections)
+     *   - "allWithoutInstances": Worlds + zones + branches (no instances, no collections)
+     *   - "regionCollections": Only @region + shared collections
+     *   - "regionOnly": Only @region collection
      */
     @GetMapping
-    public ResponseEntity<?> list(@PathVariable String regionId) {
+    public ResponseEntity<?> list(
+            @PathVariable String regionId,
+            @RequestParam(required = false) String filter) {
         var error = validateId(regionId, "regionId");
         if (error != null) return error;
 
         try {
             List<WorldResponse> result = worldService.findByRegionId(regionId).stream()
+                    .filter(world -> matchesFilter(world, filter))
                     .map(this::toResponse)
                     .toList();
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return bad(e.getMessage());
         }
+    }
+
+    /**
+     * Check if a world matches the given filter criteria.
+     */
+    private boolean matchesFilter(WWorld world, String filter) {
+        if (filter == null || filter.isBlank()) {
+            return true; // No filter = show all
+        }
+
+        WorldId worldId = WorldId.unchecked(world.getWorldId());
+
+        return switch (filter) {
+            case "mainOnly" ->
+                // Only main worlds (no branches, zones, instances, collections)
+                worldId.isMain() && !worldId.isCollection();
+
+            case "mainAndBranches" ->
+                // Main worlds + branches (no zones, instances, collections)
+                !worldId.isCollection() && !worldId.isZone() && !worldId.isInstance();
+
+            case "mainWorldsAndInstances" ->
+                // Main worlds + instances + branches (no zones, no collections)
+                !worldId.isCollection() && !worldId.isZone();
+
+            case "allWithoutInstances" ->
+                // Worlds + zones + branches (no instances, no collections)
+                !worldId.isCollection() && !worldId.isInstance();
+
+            case "regionCollections" ->
+                // Only @region + shared collections
+                worldId.isCollection() &&
+                (world.getWorldId().startsWith(WorldId.COLLECTION_REGION) ||
+                 world.getWorldId().startsWith(WorldId.COLLECTION_SHARED));
+
+            case "regionOnly" ->
+                // Only @region collection
+                worldId.isCollection() && world.getWorldId().startsWith(WorldId.COLLECTION_REGION);
+
+            default -> true; // Unknown filter = show all
+        };
     }
 
     /**

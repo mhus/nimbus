@@ -4,7 +4,7 @@ import de.mhus.nimbus.generated.types.ItemBlockRef;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WItemPosition;
-import de.mhus.nimbus.world.shared.world.WItemRegistryService;
+import de.mhus.nimbus.world.shared.world.WItemPositionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Tag(name = "ItemPositions", description = "Item position management (placed items in world)")
 public class EItemPositionController extends BaseEditorController {
 
-    private final WItemRegistryService itemRegistryService;
+    private final WItemPositionService itemRegistryService;
 
     // DTOs
     public record ItemPositionDto(

@@ -13,6 +13,8 @@ import java.util.function.Consumer;
 
 /**
  * Service for managing WBackdrop entities.
+ * Backdrops are only stored in main worlds (no branches, no instances, no zones).
+ * Similar to assets, backdrops must be created in the main world to be used in branches.
  */
 @Service
 @RequiredArgsConstructor
@@ -21,21 +23,40 @@ public class WBackdropService {
 
     private final WBackdropRepository repository;
 
+    /**
+     * Find backdrop by ID.
+     * Always looks up in main world only (no branches, no instances, no zones).
+     */
     @Transactional(readOnly = true)
     public Optional<WBackdrop> findByBackdropId(WorldId worldId, String backdropId) {
-        return repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId);
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        return repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId);
     }
 
+    /**
+     * Find all backdrops for a world.
+     * Always looks up in main world only (no branches, no instances, no zones).
+     */
     @Transactional(readOnly = true)
     public List<WBackdrop> findByWorldId(WorldId worldId) {
-        return repository.findByWorldId(worldId.getId());
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        return repository.findByWorldId(lookupWorld.getId());
     }
 
+    /**
+     * Find all enabled backdrops for a world.
+     * Always looks up in main world only (no branches, no instances, no zones).
+     */
     @Transactional(readOnly = true)
     public List<WBackdrop> findAllEnabled(WorldId worldId) {
-        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        return repository.findByWorldIdAndEnabled(lookupWorld.getId(), true);
     }
 
+    /**
+     * Save or update a backdrop.
+     * Always saves to main world only (no branches, no instances, no zones).
+     */
     @Transactional
     public WBackdrop save(WorldId worldId, String backdropId, Backdrop publicData) {
         if (blank(backdropId)) {
@@ -45,10 +66,12 @@ public class WBackdropService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WBackdrop entity = repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId).orElseGet(() -> {
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+
+        WBackdrop entity = repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId).orElseGet(() -> {
             WBackdrop neu = WBackdrop.builder()
                     .backdropId(backdropId)
-                    .worldId(worldId.getId())
+                    .worldId(lookupWorld.getId())
                     .enabled(true)
                     .build();
             neu.touchCreate();
@@ -77,9 +100,14 @@ public class WBackdropService {
         return saved;
     }
 
+    /**
+     * Update a backdrop.
+     * Always updates in main world only (no branches, no instances, no zones).
+     */
     @Transactional
     public Optional<WBackdrop> update(WorldId worldId, String backdropId, Consumer<WBackdrop> updater) {
-        return repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId).map(entity -> {
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        return repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WBackdrop saved = repository.save(entity);
@@ -88,9 +116,14 @@ public class WBackdropService {
         });
     }
 
+    /**
+     * Delete a backdrop.
+     * Always deletes from main world only (no branches, no instances, no zones).
+     */
     @Transactional
     public boolean delete(WorldId worldId, String backdropId) {
-        return repository.findByWorldIdAndBackdropId(worldId.getId(), backdropId).map(entity -> {
+        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        return repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WBackdrop: {}", backdropId);
             return true;

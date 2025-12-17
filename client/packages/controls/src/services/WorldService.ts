@@ -11,12 +11,22 @@ import type { WorldInfo } from '@nimbus/shared';
  */
 export type WorldListResponse = WorldInfo;
 
+export type WorldFilter =
+  | 'mainOnly'
+  | 'mainAndBranches'
+  | 'mainWorldsAndInstances'
+  | 'allWithoutInstances'
+  | 'regionCollections'
+  | 'regionOnly';
+
 export class WorldService {
   /**
-   * Get all worlds
+   * Get all worlds with optional filter
+   * @param filter Optional filter type for world selection
    */
-  async getWorlds(): Promise<WorldInfo[]> {
-    return apiService.get<WorldInfo[]>('/control/worlds');
+  async getWorlds(filter?: WorldFilter): Promise<WorldInfo[]> {
+    const params = filter ? `?filter=${filter}` : '';
+    return apiService.get<WorldInfo[]>(`/control/worlds${params}`);
   }
 
   /**

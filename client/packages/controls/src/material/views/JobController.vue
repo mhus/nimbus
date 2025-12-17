@@ -120,7 +120,7 @@ import JobList from '@material/components/JobList.vue';
 import JobCreatePanel from '@material/components/JobCreatePanel.vue';
 import JobDetailsPanel from '@material/components/JobDetailsPanel.vue';
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const jobsComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -253,6 +253,9 @@ const handleDelete = async (job: Job) => {
 let refreshInterval: number | null = null;
 
 onMounted(() => {
+  // Load worlds with allWithoutInstances filter for job controller
+  loadWorlds('allWithoutInstances');
+
   refreshInterval = window.setInterval(() => {
     if (currentWorldId.value && !isCreateDialogOpen.value && !isDetailsDialogOpen.value) {
       loadData();

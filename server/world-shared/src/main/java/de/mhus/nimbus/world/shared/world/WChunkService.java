@@ -10,7 +10,6 @@ import de.mhus.nimbus.shared.types.SchemaVersion;
 import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +22,10 @@ import java.util.Optional;
 
 /**
  * Service für Verwaltung von Welt-Chunks (inline oder extern gespeicherter Datenblock).
+ * Chunks exist separately for each world/zone.
+ * Branches use COW (Copy On Write) - they can have their own chunks, falling back to parent.
+ * Instances CANNOT have their own chunks - always taken from the defined world.
+ * List loading does NOT fall back to main world.
  */
 @Service
 @RequiredArgsConstructor
@@ -35,21 +38,45 @@ public class WChunkService {
     private final WChunkRepository repository;
     private final StorageService storageService;
     private final WWorldService worldService;
-    private final WItemRegistryService itemRegistryService;
+    private final WItemPositionService itemRegistryService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Find chunk by chunkKey with COW fallback for branches.
+     * Instances always look up in their world (without instance suffix).
+     * Branches first check their own chunks, then fall back to parent world.
+     */
     @Transactional(readOnly = true)
     public Optional<WChunk> find(WorldId worldId, String chunkKey) {
-        return repository.findByWorldIdAndChunk(worldId.getId(), chunkKey);
+        var lookupWorld = worldId.withoutInstance();
+
+        // Try branch first if this is a branch world
+        if (lookupWorld.isBranch()) {
+            var chunk = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey);
+            if (chunk.isPresent()) {
+                return chunk;
+            }
+            // Fallback to parent world (COW)
+            var parentWorld = lookupWorld.withoutBranchAndInstance();
+            return repository.findByWorldIdAndChunk(parentWorld.getId(), chunkKey);
+        }
+
+        return repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey);
     }
 
+    /**
+     * Save chunk data.
+     * Filters out instances - chunks are stored per world/zone (not per instance).
+     */
     @Transactional
     public WChunk saveChunk(WorldId worldId, String chunkKey, ChunkData data) {
         if (blank(worldId.getId()) || blank(chunkKey)) {
             throw new IllegalArgumentException("worldId und chunkKey erforderlich");
         }
         if (data == null) throw new IllegalArgumentException("ChunkData erforderlich");
+
+        var lookupWorld = worldId.withoutInstance();
 
         // Felder 'status' und 'i' vor Serialisierung null setzen
         data.setStatus(null);
@@ -62,9 +89,9 @@ public class WChunkService {
             throw new IllegalStateException("Serialisierung ChunkData fehlgeschlagen", e);
         }
 
-        WChunk entity = repository.findByWorldIdAndChunk(worldId.getId(), chunkKey)
+        WChunk entity = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey)
                 .orElseGet(() -> {
-                    WChunk neu = WChunk.builder().worldId(worldId.getId()).chunk(chunkKey).build();
+                    WChunk neu = WChunk.builder().worldId(lookupWorld.getId()).chunk(chunkKey).build();
                     neu.touchCreate();
                     return neu;
                 });
@@ -77,11 +104,11 @@ public class WChunkService {
                 storageInfo = storageService.update(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, entity.getStorageId(), stream);
             } else {
                 // Create new chunk
-                storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId.getId(), "chunk/" + chunkKey, stream);
+                storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, lookupWorld.getId(), "chunk/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
             log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} world={}",
-                    chunkKey, storageInfo.size(), storageInfo.id(), worldId.getId());
+                    chunkKey, storageInfo.size(), storageInfo.id(), lookupWorld.getId());
         } catch (Exception e) {
             throw new IllegalStateException("Speichern ChunkData fehlgeschlagen", e);
         }
@@ -90,9 +117,28 @@ public class WChunkService {
         return repository.save(entity);
     }
 
+    /**
+     * Get chunk stream with COW fallback for branches.
+     * Filters out instances.
+     */
     @Transactional(readOnly = true)
     public InputStream getStream(WorldId worldId, String chunkKey) {
-        WChunk chunk = repository.findByWorldIdAndChunk(worldId.getId(), chunkKey).orElse(null);
+        var lookupWorld = worldId.withoutInstance();
+
+        WChunk chunk = null;
+
+        // Try branch first if this is a branch world
+        if (lookupWorld.isBranch()) {
+            chunk = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey).orElse(null);
+            if (chunk == null) {
+                // Fallback to parent world (COW)
+                var parentWorld = lookupWorld.withoutBranchAndInstance();
+                chunk = repository.findByWorldIdAndChunk(parentWorld.getId(), chunkKey).orElse(null);
+            }
+        } else {
+            chunk = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey).orElse(null);
+        }
+
         if (chunk == null || chunk.getStorageId() == null) {
             return new ByteArrayInputStream(new byte[0]);
         }
@@ -105,10 +151,26 @@ public class WChunkService {
     /**
      * Streams chunk content directly to HTTP response without loading into memory.
      * Verhindert Memory-Probleme bei großen Chunks.
+     * Uses COW fallback for branches. Filters out instances.
      */
     @Transactional(readOnly = true)
     public boolean streamToResponse(WorldId worldId, String chunkKey, jakarta.servlet.http.HttpServletResponse response) {
-        WChunk chunk = repository.findByWorldIdAndChunk(worldId.getId(), chunkKey).orElse(null);
+        var lookupWorld = worldId.withoutInstance();
+
+        WChunk chunk = null;
+
+        // Try branch first if this is a branch world
+        if (lookupWorld.isBranch()) {
+            chunk = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey).orElse(null);
+            if (chunk == null) {
+                // Fallback to parent world (COW)
+                var parentWorld = lookupWorld.withoutBranchAndInstance();
+                chunk = repository.findByWorldIdAndChunk(parentWorld.getId(), chunkKey).orElse(null);
+            }
+        } else {
+            chunk = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey).orElse(null);
+        }
+
         if (chunk == null || chunk.getStorageId() == null) {
             return false;
         }
@@ -137,9 +199,27 @@ public class WChunkService {
         }
     }
 
+    /**
+     * Load chunk data with COW fallback for branches.
+     * Filters out instances.
+     */
     @Transactional(readOnly = true)
     public Optional<ChunkData> loadChunkData(WorldId worldId, String chunkKey, boolean create) {
-        Optional<WChunk> chunkOpt = repository.findByWorldIdAndChunk(worldId.getId(), chunkKey);
+        var lookupWorld = worldId.withoutInstance();
+
+        Optional<WChunk> chunkOpt = Optional.empty();
+
+        // Try branch first if this is a branch world
+        if (lookupWorld.isBranch()) {
+            chunkOpt = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey);
+            if (chunkOpt.isEmpty()) {
+                // Fallback to parent world (COW)
+                var parentWorld = lookupWorld.withoutBranchAndInstance();
+                chunkOpt = repository.findByWorldIdAndChunk(parentWorld.getId(), chunkKey);
+            }
+        } else {
+            chunkOpt = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey);
+        }
 
         if (chunkOpt.isPresent()) {
             // Chunk exists in database - load it
@@ -165,8 +245,8 @@ public class WChunkService {
             }
         } else if (create) {
             // Chunk not found - generate default chunk based on world settings
-            log.debug("Chunk not found in DB, generating default: chunkKey={} world={}", chunkKey, worldId.getId());
-            return Optional.ofNullable(generateDefaultChunk(worldId.getId(), chunkKey));
+            log.debug("Chunk not found in DB, generating default: chunkKey={} world={}", chunkKey, lookupWorld.getId());
+            return Optional.ofNullable(generateDefaultChunk(lookupWorld.getId(), chunkKey));
         } else {
             // Chunk not found and create=false - return empty
             return Optional.empty();
@@ -262,14 +342,19 @@ public class WChunkService {
         return block;
     }
 
+    /**
+     * Delete chunk.
+     * Filters out instances.
+     */
     @Transactional
     public boolean delete(WorldId worldId, String chunkKey) {
-        return repository.findByWorldIdAndChunk(worldId.getId(), chunkKey).map(c -> {
+        var lookupWorld = worldId.withoutInstance();
+        return repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey).map(c -> {
             if (c.getStorageId() != null) {
                 safeDeleteExternal(storageService, c.getStorageId());
             }
             repository.delete(c);
-            log.debug("Chunk gelöscht chunkKey={} world={}", chunkKey, worldId.getId());
+            log.debug("Chunk gelöscht chunkKey={} world={}", chunkKey, lookupWorld.getId());
             return true;
         }).orElse(false);
     }

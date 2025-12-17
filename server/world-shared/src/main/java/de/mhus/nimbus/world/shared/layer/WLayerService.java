@@ -19,6 +19,16 @@ import java.util.stream.Collectors;
 
 /**
  * Service for layer management (CRUD operations).
+ *
+ * Layers exist separately for each world/zone.
+ * Instances CANNOT have their own layers - always taken from the defined world.
+ * Branches can have copied layers (TODO: not yet implemented).
+ * - Layers must be copied first before they can be modified in a branch.
+ * - When generating chunks in branches, check for copied layers.
+ * List loading does NOT fall back to main world.
+ *
+ * IMPORTANT: This service uses String worldId parameters.
+ * Callers must ensure instances are filtered out before calling (use worldId.withoutInstance()).
  */
 @Service
 @RequiredArgsConstructor
@@ -40,7 +50,9 @@ public class WLayerService {
     /**
      * Create a new layer.
      *
-     * @param worldId         World identifier
+     * NOTE: worldId should NOT include instance suffix (use worldId.withoutInstance()).
+     *
+     * @param worldId         World identifier (without instance)
      * @param name            Layer name (unique per world)
      * @param layerType       Layer type (TERRAIN or MODEL)
      * @param order           Overlay order
@@ -176,6 +188,9 @@ public class WLayerService {
 
     /**
      * Find all layers for a world.
+     * No fallback to parent world - returns only layers in this specific world.
+     *
+     * NOTE: worldId should NOT include instance suffix (use worldId.withoutInstance()).
      */
     @Transactional(readOnly = true)
     public List<WLayer> findLayersByWorld(String worldId) {
@@ -184,6 +199,9 @@ public class WLayerService {
 
     /**
      * Find all layers for a world (alias for REST API).
+     * No fallback to parent world - returns only layers in this specific world.
+     *
+     * NOTE: worldId should NOT include instance suffix (use worldId.withoutInstance()).
      */
     @Transactional(readOnly = true)
     public List<WLayer> findByWorldId(String worldId) {
@@ -225,7 +243,11 @@ public class WLayerService {
     /**
      * Get layers affecting a specific chunk (sorted by order).
      *
-     * @param worldId  World identifier
+     * TODO: For branches, also check for copied layers.
+     *
+     * NOTE: worldId should NOT include instance suffix (use worldId.withoutInstance()).
+     *
+     * @param worldId  World identifier (without instance)
      * @param chunkKey Chunk key
      * @return List of layers sorted by order
      */

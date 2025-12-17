@@ -110,7 +110,7 @@ import BlockTypeList from '@material/components/BlockTypeList.vue';
 import BlockTypeEditorPanel from '@material/components/BlockTypeEditorPanel.vue';
 import ModifierEditorDialog from '@components/ModifierEditorDialog.vue';
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const blockTypesComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -239,6 +239,9 @@ const handlePreviousPage = () => {
 };
 
 onMounted(async () => {
+  // Load worlds with mainAndBranches filter for block type editor
+  loadWorlds('mainAndBranches');
+
   if (currentWorldId.value && blockTypesComposable.value) {
     await blockTypesComposable.value.loadBlockTypes();
 

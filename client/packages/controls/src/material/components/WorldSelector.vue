@@ -31,10 +31,19 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useWorld } from '@/composables/useWorld';
+import type { WorldFilter } from '@/services/WorldService';
+
+interface Props {
+  filter?: WorldFilter;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  filter: undefined
+});
 
 const { currentWorld, currentWorldId, worlds, loading, error, loadWorlds, selectWorld } = useWorld();
 
 onMounted(() => {
-  loadWorlds();
+  loadWorlds(props.filter);
 });
 </script>

@@ -13,6 +13,9 @@ import java.util.function.Consumer;
 
 /**
  * Service for managing WEntityModel entities.
+ * Entity models are always stored in the @region collection and shared across the entire region.
+ * Branches cannot have their own entity models.
+ * Entity models support storage functionality with default 'r' (region), but NOT 'w' (world).
  */
 @Service
 @RequiredArgsConstructor
@@ -21,21 +24,40 @@ public class WEntityModelService {
 
     private final WEntityModelRepository repository;
 
+    /**
+     * Find entity model by modelId.
+     * Always looks up in the region collection (shared across entire region).
+     */
     @Transactional(readOnly = true)
     public Optional<WEntityModel> findByModelId(WorldId worldId, String modelId) {
-        return repository.findByWorldIdAndModelId(worldId.getId(), modelId);
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndModelId(regionWorldId.getId(), modelId);
     }
 
+    /**
+     * Find all entity models for the region.
+     * Always looks up in the region collection (shared across entire region).
+     */
     @Transactional(readOnly = true)
     public List<WEntityModel> findByWorldId(WorldId worldId) {
-        return repository.findByWorldId(worldId.getId());
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldId(regionWorldId.getId());
     }
 
+    /**
+     * Find all enabled entity models for the region.
+     * Always looks up in the region collection (shared across entire region).
+     */
     @Transactional(readOnly = true)
     public List<WEntityModel> findAllEnabled(WorldId worldId) {
-        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndEnabled(regionWorldId.getId(), true);
     }
 
+    /**
+     * Save or update an entity model.
+     * Always saves to region collection (shared across entire region).
+     */
     @Transactional
     public WEntityModel save(WorldId worldId, String modelId, EntityModel publicData) {
         if (modelId == null) {
@@ -45,10 +67,12 @@ public class WEntityModelService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WEntityModel entity = repository.findByWorldIdAndModelId(worldId.getId(), modelId).orElseGet(() -> {
+        var regionWorldId = worldId.toRegionWorldId();
+
+        WEntityModel entity = repository.findByWorldIdAndModelId(regionWorldId.getId(), modelId).orElseGet(() -> {
             WEntityModel neu = WEntityModel.builder()
                     .modelId(modelId)
-                    .worldId(worldId.getId())
+                    .worldId(regionWorldId.getId())
                     .enabled(true)
                     .build();
             neu.touchCreate();
@@ -77,9 +101,14 @@ public class WEntityModelService {
         return saved;
     }
 
+    /**
+     * Update an entity model.
+     * Always updates in region collection.
+     */
     @Transactional
     public Optional<WEntityModel> update(WorldId worldId, String modelId, Consumer<WEntityModel> updater) {
-        return repository.findByWorldIdAndModelId(worldId.getId(), modelId).map(entity -> {
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndModelId(regionWorldId.getId(), modelId).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WEntityModel saved = repository.save(entity);
@@ -88,9 +117,14 @@ public class WEntityModelService {
         });
     }
 
+    /**
+     * Delete an entity model.
+     * Always deletes from region collection.
+     */
     @Transactional
     public boolean delete(WorldId worldId, String modelId) {
-        return repository.findByWorldIdAndModelId(worldId.getId(), modelId).map(entity -> {
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndModelId(regionWorldId.getId(), modelId).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WEntityModel: {}", modelId);
             return true;

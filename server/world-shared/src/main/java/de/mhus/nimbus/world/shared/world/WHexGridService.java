@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.HexGrid;
 import de.mhus.nimbus.generated.types.HexVector2;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,11 @@ import java.util.function.Consumer;
 /**
  * Service for managing WHexGrid entities.
  * Provides business logic for hexagonal grid operations in the world.
+ *
+ * HexGrids exist separately for each world/zone.
+ * Instances CANNOT have their own hex grids - always taken from the defined world.
+ * Branches use COW (Copy On Write) - they can have their own hex grids, falling back to parent.
+ * HexGrids cannot be deleted in branches.
  */
 @Service
 @RequiredArgsConstructor
@@ -24,7 +30,9 @@ public class WHexGridService {
     private final WHexGridRepository repository;
 
     /**
-     * Finds a hex grid by world ID and hex position.
+     * Finds a hex grid by world ID and hex position with COW fallback for branches.
+     * Instances always look up in their world (without instance suffix).
+     * Branches first check their own hex grids, then fall back to parent world.
      *
      * @param worldId The world identifier
      * @param hexPos The hex vector with q and r coordinates
@@ -40,11 +48,28 @@ public class WHexGridService {
         }
 
         String positionKey = HexMathUtil.positionKey(hexPos);
-        return repository.findByWorldIdAndPosition(worldId, positionKey);
+
+        // Parse WorldId and filter instances
+        WorldId parsedWorldId = WorldId.unchecked(worldId);
+        var lookupWorld = parsedWorldId.withoutInstance();
+
+        // Try branch first if this is a branch world
+        if (lookupWorld.isBranch()) {
+            var hexGrid = repository.findByWorldIdAndPosition(lookupWorld.getId(), positionKey);
+            if (hexGrid.isPresent()) {
+                return hexGrid;
+            }
+            // Fallback to parent world (COW)
+            var parentWorld = lookupWorld.withoutBranchAndInstance();
+            return repository.findByWorldIdAndPosition(parentWorld.getId(), positionKey);
+        }
+
+        return repository.findByWorldIdAndPosition(lookupWorld.getId(), positionKey);
     }
 
     /**
-     * Finds all hex grids in a world.
+     * Finds all hex grids in a world (no COW fallback for lists).
+     * Filters out instances.
      *
      * @param worldId The world identifier
      * @return List of all hex grids in the world
@@ -54,11 +79,16 @@ public class WHexGridService {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
-        return repository.findByWorldId(worldId);
+
+        WorldId parsedWorldId = WorldId.unchecked(worldId);
+        var lookupWorld = parsedWorldId.withoutInstance();
+
+        return repository.findByWorldId(lookupWorld.getId());
     }
 
     /**
-     * Finds all enabled hex grids in a world.
+     * Finds all enabled hex grids in a world (no COW fallback for lists).
+     * Filters out instances.
      *
      * @param worldId The world identifier
      * @return List of enabled hex grids in the world
@@ -68,7 +98,11 @@ public class WHexGridService {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
-        return repository.findByWorldIdAndEnabled(worldId, true);
+
+        WorldId parsedWorldId = WorldId.unchecked(worldId);
+        var lookupWorld = parsedWorldId.withoutInstance();
+
+        return repository.findByWorldIdAndEnabled(lookupWorld.getId(), true);
     }
 
     /**
@@ -105,6 +139,7 @@ public class WHexGridService {
 
     /**
      * Creates a new hex grid.
+     * Filters out instances.
      *
      * @param worldId The world identifier
      * @param publicData The hex grid public data with position and metadata
@@ -121,15 +156,18 @@ public class WHexGridService {
             throw new IllegalArgumentException("publicData with position required");
         }
 
+        WorldId parsedWorldId = WorldId.unchecked(worldId);
+        var lookupWorld = parsedWorldId.withoutInstance();
+
         String positionKey = HexMathUtil.positionKey(publicData.getPosition());
 
         // Check if already exists
-        if (repository.existsByWorldIdAndPosition(worldId, positionKey)) {
-            throw new IllegalStateException("Hex grid already exists at worldId=" + worldId + ", position=" + positionKey);
+        if (repository.existsByWorldIdAndPosition(lookupWorld.getId(), positionKey)) {
+            throw new IllegalStateException("Hex grid already exists at worldId=" + lookupWorld.getId() + ", position=" + positionKey);
         }
 
         WHexGridEntity entity = WHexGridEntity.builder()
-                .worldId(worldId)
+                .worldId(lookupWorld.getId())
                 .publicData(publicData)
                 .position(positionKey)
                 .generatorParameters(generatorParams != null ? generatorParams : Map.of())
@@ -139,12 +177,13 @@ public class WHexGridService {
         entity.touchCreate();
 
         WHexGridEntity saved = repository.save(entity);
-        log.info("Created WHexGrid: worldId={}, position={}", worldId, positionKey);
+        log.info("Created WHexGrid: worldId={}, position={}", lookupWorld.getId(), positionKey);
         return saved;
     }
 
     /**
      * Updates a hex grid using a consumer function.
+     * Filters out instances.
      *
      * @param worldId The world identifier
      * @param hexPos The hex vector with q and r coordinates
@@ -163,15 +202,18 @@ public class WHexGridService {
             throw new IllegalArgumentException("updater required");
         }
 
+        WorldId parsedWorldId = WorldId.unchecked(worldId);
+        var lookupWorld = parsedWorldId.withoutInstance();
+
         String positionKey = HexMathUtil.positionKey(hexPos);
 
-        return repository.findByWorldIdAndPosition(worldId, positionKey).map(entity -> {
+        return repository.findByWorldIdAndPosition(lookupWorld.getId(), positionKey).map(entity -> {
             updater.accept(entity);
             entity.syncPositionKey();
             entity.touchUpdate();
 
             WHexGridEntity saved = repository.save(entity);
-            log.debug("Updated WHexGrid: worldId={}, position={}", worldId, positionKey);
+            log.debug("Updated WHexGrid: worldId={}, position={}", lookupWorld.getId(), positionKey);
             return saved;
         });
     }
@@ -202,6 +244,8 @@ public class WHexGridService {
 
     /**
      * Deletes a hex grid (hard delete).
+     * Filters out instances.
+     * IMPORTANT: Deletion is NOT allowed in branches - hex grids can only be deleted in main worlds.
      *
      * @param worldId The world identifier
      * @param hexPos The hex vector with q and r coordinates
@@ -216,11 +260,21 @@ public class WHexGridService {
             throw new IllegalArgumentException("hexPos required");
         }
 
+        WorldId parsedWorldId = WorldId.unchecked(worldId);
+        var lookupWorld = parsedWorldId.withoutInstance();
+
+        // Prevent deletion in branches
+        if (lookupWorld.isBranch()) {
+            String positionKey = HexMathUtil.positionKey(hexPos);
+            log.warn("Attempted to delete hex grid at position '{}' in branch world '{}' - not allowed", positionKey, lookupWorld.getId());
+            throw new IllegalArgumentException("Hex grids cannot be deleted in branches: " + lookupWorld.getId());
+        }
+
         String positionKey = HexMathUtil.positionKey(hexPos);
 
-        return repository.findByWorldIdAndPosition(worldId, positionKey).map(entity -> {
+        return repository.findByWorldIdAndPosition(lookupWorld.getId(), positionKey).map(entity -> {
             repository.delete(entity);
-            log.info("Deleted WHexGrid: worldId={}, position={}", worldId, positionKey);
+            log.info("Deleted WHexGrid: worldId={}, position={}", lookupWorld.getId(), positionKey);
             return true;
         }).orElse(false);
     }

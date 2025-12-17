@@ -421,7 +421,7 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const isNew = computed(() => props.entityModel === 'new');
 
@@ -553,6 +553,8 @@ const handleBack = () => {
 };
 
 onMounted(() => {
+  // Load worlds with regionOnly filter for entity model editor
+  loadWorlds('regionOnly');
   loadEntityModel();
 });
 </script>

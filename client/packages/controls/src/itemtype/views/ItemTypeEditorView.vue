@@ -274,7 +274,7 @@ const emit = defineEmits<{
   delete: [];
 }>();
 
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 
 const itemType = ref<ItemType>({
   type: '',
@@ -422,6 +422,8 @@ watch(() => props.itemTypeId, () => {
 });
 
 onMounted(() => {
+  // Load worlds with regionOnly filter for item type editor
+  loadWorlds('regionOnly');
   loadItemType();
 });
 </script>

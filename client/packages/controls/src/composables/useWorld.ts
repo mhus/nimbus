@@ -4,7 +4,7 @@
  */
 
 import { ref, computed, type Ref, type ComputedRef } from 'vue';
-import { worldService } from '../services/WorldService';
+import { worldService, type WorldFilter } from '../services/WorldService';
 import { getLogger, type WorldInfo } from '@nimbus/shared';
 
 const logger = getLogger('useWorld');
@@ -15,7 +15,7 @@ export interface UseWorldReturn {
   worlds: Ref<WorldInfo[]>;
   loading: Ref<boolean>;
   error: Ref<string | null>;
-  loadWorlds: () => Promise<void>;
+  loadWorlds: (filter?: WorldFilter) => Promise<void>;
   selectWorld: (worldId: string) => void;
 }
 
@@ -42,15 +42,16 @@ export function useWorld(): UseWorldReturn {
   });
 
   /**
-   * Load all worlds from API
+   * Load all worlds from API with optional filter
+   * @param filter Optional filter type for world selection
    */
-  const loadWorlds = async () => {
+  const loadWorlds = async (filter?: WorldFilter) => {
     loading.value = true;
     error.value = null;
 
     try {
-      worlds.value = await worldService.getWorlds();
-      logger.info('Loaded worlds', { count: worlds.value.length });
+      worlds.value = await worldService.getWorlds(filter);
+      logger.info('Loaded worlds', { count: worlds.value.length, filter });
 
       // Verify current world ID exists
       if (!worlds.value.find(w => w.worldId === currentWorldId.value)) {

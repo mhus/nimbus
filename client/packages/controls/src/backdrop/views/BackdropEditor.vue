@@ -283,7 +283,7 @@ import { backdropService, type BackdropData } from '../services/BackdropService'
 
 const props = defineProps<{ backdrop: BackdropData | 'new' }>();
 const emit = defineEmits<{ back: []; saved: [] }>();
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 const isNew = computed(() => props.backdrop === 'new');
 
 const saving = ref(false);
@@ -411,5 +411,9 @@ const handleSaveJson = async () => {
 
 const handleBack = () => emit('back');
 
-onMounted(() => loadBackdrop());
+onMounted(() => {
+  // Load worlds with mainOnly filter for backdrop editor
+  loadWorlds('mainOnly');
+  loadBackdrop();
+});
 </script>

@@ -13,6 +13,9 @@ import java.util.function.Consumer;
 
 /**
  * Service for managing WItemType entities.
+ * Item types are always stored in the @region collection and shared across the entire region.
+ * Branches cannot have their own item types.
+ * Item types support storage functionality with default 'r' (region), but NOT 'w' (world).
  */
 @Service
 @RequiredArgsConstructor
@@ -21,21 +24,41 @@ public class WItemTypeService {
 
     private final WItemTypeRepository repository;
 
+    /**
+     * Find item type by itemType ID.
+     * Always looks up in the region collection (shared across entire region).
+     */
     @Transactional(readOnly = true)
     public Optional<WItemType> findByItemType(WorldId worldId, String itemType) {
-        return repository.findByWorldIdAndItemType(worldId.getId(), itemType);
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndItemType(regionWorldId.getId(), itemType);
     }
 
+    /**
+     * Find all item types for the region.
+     * Always looks up in the region collection (shared across entire region).
+     */
     @Transactional(readOnly = true)
     public List<WItemType> findByWorldId(WorldId worldId) {
-        return repository.findByWorldId(worldId.getId());
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldId(regionWorldId.getId());
     }
 
+    /**
+     * Find all enabled item types for the region.
+     * Always looks up in the region collection (shared across entire region).
+     */
     @Transactional(readOnly = true)
     public List<WItemType> findAllEnabled(WorldId worldId) {
-        return repository.findByWorldIdAndEnabled(worldId.getId(), true);
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndEnabled(regionWorldId.getId(), true);
     }
 
+    /**
+     * Save or update an item type.
+     * Always saves to region collection (shared across entire region).
+     * Default itemTypeGroup is 'r' (region).
+     */
     @Transactional
     public WItemType save(WorldId worldId, String itemType, ItemType publicData) {
         if (blank(itemType)) {
@@ -45,10 +68,12 @@ public class WItemTypeService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        WItemType entity = repository.findByWorldIdAndItemType(worldId.getId(), itemType).orElseGet(() -> {
+        var regionWorldId = worldId.toRegionWorldId();
+
+        WItemType entity = repository.findByWorldIdAndItemType(regionWorldId.getId(), itemType).orElseGet(() -> {
             WItemType neu = WItemType.builder()
                     .itemType(itemType)
-                    .worldId(worldId.getId())
+                    .worldId(regionWorldId.getId())
                     .enabled(true)
                     .build();
             neu.touchCreate();
@@ -77,9 +102,14 @@ public class WItemTypeService {
         return saved;
     }
 
+    /**
+     * Update an item type.
+     * Always updates in region collection.
+     */
     @Transactional
     public Optional<WItemType> update(WorldId worldId, String itemType, Consumer<WItemType> updater) {
-        return repository.findByWorldIdAndItemType(worldId.getId(), itemType).map(entity -> {
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndItemType(regionWorldId.getId(), itemType).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WItemType saved = repository.save(entity);
@@ -88,9 +118,14 @@ public class WItemTypeService {
         });
     }
 
+    /**
+     * Delete an item type.
+     * Always deletes from region collection.
+     */
     @Transactional
     public boolean delete(WorldId worldId, String itemType) {
-        return repository.findByWorldIdAndItemType(worldId.getId(), itemType).map(entity -> {
+        var regionWorldId = worldId.toRegionWorldId();
+        return repository.findByWorldIdAndItemType(regionWorldId.getId(), itemType).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WItemType: {}", itemType);
             return true;
