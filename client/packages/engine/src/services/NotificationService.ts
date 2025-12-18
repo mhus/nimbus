@@ -912,30 +912,44 @@ export class NotificationService {
    */
   private async loadShortcutItem(slot: HTMLElement, shortcut: any): Promise<void> {
     try {
-      const itemService = this.appContext.services.item;
-      if (!itemService) {
-        logger.warn('ItemService not available');
-        return;
+      let textureUrl: string | null = null;
+
+      // Check if shortcut has custom iconPath
+      if (shortcut.iconPath) {
+        // Use custom icon path directly
+        const networkService = this.appContext.services.network;
+        if (networkService) {
+          textureUrl = networkService.getAssetUrl(shortcut.iconPath);
+          logger.debug('Using custom iconPath for shortcut', { iconPath: shortcut.iconPath, textureUrl });
+        }
+      } else {
+        // Fall back to itemId texture
+        const itemService = this.appContext.services.item;
+        if (!itemService) {
+          logger.warn('ItemService not available');
+          return;
+        }
+
+        // Get item ID from shortcut definition
+        const itemId = shortcut.itemId || shortcut.id;
+        if (!itemId) {
+          logger.debug('No itemId in shortcut', { shortcut });
+          return;
+        }
+
+        // Load item from server
+        const item = await itemService.getItem(itemId);
+        if (!item) {
+          logger.debug('Item not found', { itemId });
+          return;
+        }
+
+        // Get texture URL (now async)
+        textureUrl = await itemService.getTextureUrl(item);
       }
 
-      // Get item ID from shortcut definition
-      const itemId = shortcut.itemId || shortcut.id;
-      if (!itemId) {
-        logger.debug('No itemId in shortcut', { shortcut });
-        return;
-      }
-
-      // Load item from server
-      const item = await itemService.getItem(itemId);
-      if (!item) {
-        logger.debug('Item not found', { itemId });
-        return;
-      }
-
-      // Get texture URL (now async)
-      const textureUrl = await itemService.getTextureUrl(item);
       if (!textureUrl) {
-        logger.debug('No texture for item', { itemId });
+        logger.debug('No texture available for shortcut', { shortcut });
         return;
       }
 
@@ -949,7 +963,7 @@ export class NotificationService {
         image-rendering: pixelated;
       `;
       img.onerror = () => {
-        logger.warn('Failed to load item texture', { textureUrl });
+        logger.warn('Failed to load shortcut texture', { textureUrl });
       };
 
       slot.appendChild(img);

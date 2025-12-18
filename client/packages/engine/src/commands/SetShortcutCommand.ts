@@ -142,7 +142,8 @@ export class SetShortcutCommand extends CommandHandler {
         description: options.description,
         wait: options.wait ?? 0, // Default: no wait time
         command: options.command,
-        commandArgs: options.commandArgs
+        commandArgs: options.commandArgs,
+        iconPath: options.iconPath,
       };
 
       // Set shortcut
@@ -194,6 +195,10 @@ export class SetShortcutCommand extends CommandHandler {
       if (shortcut.itemId) output += ` (item: ${shortcut.itemId})`;
       if (shortcut.name) output += ` [${shortcut.name}]`;
       if (shortcut.description) output += ` - ${shortcut.description}`;
+      if (shortcut.command) output += ` - ${shortcut.command}`;
+      if (shortcut.commandArgs) output += ` - ${JSON.stringify(shortcut.commandArgs)}`;
+      if (shortcut.wait > 0) output += `, wait: ${shortcut.wait}ms`;
+      if (shortcut.iconPath) output += `, icon: ${shortcut.iconPath}`;
     }
 
     output += '\n' + '─'.repeat(60);

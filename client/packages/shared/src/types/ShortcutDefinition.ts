@@ -70,6 +70,7 @@ export interface ShortcutDefinition {
    */
   command?: string; // Optional command to execute
   commandArgs?: any[]; // Optional command arguments
+  iconPath?: string; // Optional icon path for UI
 
 }
 

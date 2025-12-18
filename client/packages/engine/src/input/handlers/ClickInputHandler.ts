@@ -169,7 +169,7 @@ export class ClickInputHandler extends InputHandler {
           duration,
         });
       } else {
-        logger.warn('No active shortcut found to end', {
+        logger.debug('No active shortcut found to end', {
           buttonNumber: this.activeButtonNumber
         });
       }

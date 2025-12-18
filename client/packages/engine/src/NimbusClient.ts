@@ -509,7 +509,8 @@ async function postEngineInitialization(appContext: AppContext): Promise<void> {
               name: shortcut.name,
               description: shortcut.description,
               command: shortcut.command,
-              commandArgs: shortcut.commandArgs
+              commandArgs: shortcut.commandArgs,
+              iconPath: shortcut.iconPath
             }
           ]);
           logger.info('Shortcut initialized', { key, shortcut });

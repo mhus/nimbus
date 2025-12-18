@@ -110,7 +110,7 @@ export class ShortcutService {
 
       if (shortcutDef.command) {
         // execute command instead
-        logger.info('Executing shortcut command', { shortcutNr, shortcutKey });
+        logger.debug('Executing shortcut command', { shortcutNr, shortcutKey });
         // get selected target
         const execCommand = shortcutDef.command;
         let execArgs = shortcutDef.commandArgs || [];
@@ -119,15 +119,18 @@ export class ShortcutService {
             logger.warn('CommandService not available for shortcut command execution');
             return;
         }
-        let targetPosition = null;
+        let targetPosition: { x: number; y: number; z: number } | undefined = undefined;
+        let visualTarget: 'entity' | 'block' | undefined = undefined;
         if (selectService) {
           const selectedEntity = selectService.getCurrentSelectedEntity();
           if (selectedEntity) {
             targetPosition = selectedEntity.currentPosition;
+            visualTarget = 'entity';
           } else {
             const selectedBlock = selectService.getCurrentSelectedBlock();
             if (selectedBlock) {
               targetPosition = selectedBlock.block.position;
+              visualTarget = 'block';
             }
           }
         }
@@ -141,8 +144,19 @@ export class ShortcutService {
             return argStr;
           });
         }
-        logger.info('Executing command', { execCommand, execArgs });
+        logger.debug('Executing command', { execCommand, execArgs });
         commandService.executeCommand(execCommand, execArgs);
+
+        // Show shortcut activation in UI
+        playerService.emitShortcutActivated(
+          shortcutKey,
+          shortcutDef.itemId,
+          visualTarget,
+          targetPosition
+        );
+
+        // Highlight shortcut slot in UI
+        playerService.highlightShortcut(shortcutKey);
 
         return;
       }
@@ -286,7 +300,7 @@ export class ShortcutService {
   updateShortcut(shortcutNr: number, playerPos: Vector3, targetPos?: Vector3): void {
     const shortcut = this.activeShortcuts.get(shortcutNr);
     if (!shortcut) {
-      logger.warn(`Cannot update inactive shortcut: ${shortcutNr}`);
+      logger.debug(`Cannot update inactive shortcut: ${shortcutNr}`);
       return;
     }
 
