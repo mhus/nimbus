@@ -47,8 +47,7 @@ interface BlockTypesResponse {
  * - "CUSTOM:Tree" → normalized to "custom:tree", loads group "custom"
  */
 export class BlockTypeService {
-  private blockTypes: Map<string, BlockType> = new Map();
-  private loadedGroups: Set<string> = new Set(); // Track which groups are loaded ('core', 'w', 'custom', ...)
+  private loadedGroups: Map<string, Map<string, BlockType>> = new Map(); // Track which groups are loaded ('core', 'w', 'custom', ...)
   private loadingGroups: Map<string, Promise<void>> = new Map(); // Track groups currently being loaded
 
   constructor(private appContext: AppContext) {
@@ -301,7 +300,16 @@ export class BlockTypeService {
    */
   getBlockType(id: string | number): BlockType | undefined {
     const normalizedId = this.normalizeIdWithGroup(id);
-    return this.blockTypes.get(normalizedId);
+    const group = this.getIdGroup(normalizedId);
+    var groups = this.loadedGroups.get(group);
+    if (!groups) {
+      await this.loadGroup(group);
+      groups = this.loadedGroups.get(group);
+      if (!groups) {
+        return undefined;
+      }
+    }
+    return groups.get(normalizedId);
   }
 
   /**
@@ -421,4 +429,11 @@ export class BlockTypeService {
 
     logger.debug('Block type cache cleared');
   }
+
+  private getIdGroup(id: string) {
+    // split by ':', return first part or 'w' if no ':'
+    const parts = id.split(':');
+    return parts.length > 1 ? parts[0].toLowerCase() : 'w';
+  }
+
 }

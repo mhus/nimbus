@@ -373,7 +373,6 @@ export class SelectService {
       chunk: { cx, cz },
       blockType: airBlockType,
       currentModifier,
-      clientBlockType: airBlockType as any, // Cast to ClientBlockType
       isVisible: true,
       isDirty: false,
       lastUpdate: Date.now(),

@@ -51,12 +51,6 @@ export interface ClientBlock {
   currentModifier: BlockModifier;
 
   /**
-   * Customized/optimized BlockType for rendering
-   * Pre-processed for fast rendering access
-   */
-  clientBlockType: ClientBlockType;
-
-  /**
    * Current status (string representation for debugging)
    * @example "OPEN", "CLOSED", "WINTER"
    */

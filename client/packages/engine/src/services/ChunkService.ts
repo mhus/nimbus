@@ -22,7 +22,7 @@ import {
   itemToBlock,
   type AudioDefinition, ItemBlockRef,
   normalizeBlockTypeId,
-  getBlockTypeGroup,
+  getBlockTypeGroup, BlockType,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { NetworkService } from './NetworkService';
@@ -50,6 +50,24 @@ const logger = getLogger('ChunkService');
 const DEFAULT_BACKDROP: Backdrop = {
   id: 'none'
 };
+
+const ERROR_BLOCK_TYPE: BlockType = {
+    id: 'error:block',
+    description: 'This block type is used when the specified block type cannot be found.',
+    modifiers: {
+      0: {
+        visibility: {
+            shape: Shape.CUBE,
+            textures: {
+              0: {
+                path: '',
+                color: '#ff0000'
+              }
+            }
+        }
+      }
+    }
+}
 /**
  * Event listener
  */
@@ -77,7 +95,6 @@ export class ChunkService {
 
   // Track if initial chunks are loaded (to enable physics)
   private initialChunksLoaded: boolean = false;
-  private initialPlayerChunk: { cx: number; cz: number } | null = null;
 
   constructor(
     private networkService: NetworkService,
@@ -508,20 +525,32 @@ export class ChunkService {
       // Process batch
       for (let i = batchStart; i < batchEnd; i++) {
         const block = blocks[i];
-      const blockType = blockTypeService.getBlockType(block.blockTypeId);
-      if (!blockType) {
-        logger.warn('BlockType not found for block', {
-          blockTypeId: block.blockTypeId,
-          position: block.position,
-          loadedGroups: blockTypeService.getLoadedGroups(),
-          knownBlockTypeIds: blockTypeService.getAllBlockTypeIds(),
-          knownBlockTypeCount: blockTypeService.getBlockTypeCount(),
-        });
-        continue;
-      }
 
-      // Get position key for this block
-      const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
+        // Get position key for this block
+        const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
+
+        const blockType = blockTypeService.getBlockType(block.blockTypeId);
+        if (!blockType) {
+          logger.warn('BlockType not found for block', {
+            blockTypeId: block.blockTypeId,
+            position: block.position,
+            // loadedGroups: blockTypeService.getLoadedGroups(),
+            // knownBlockTypeIds: blockTypeService.getAllBlockTypeIds(),
+            // knownBlockTypeCount: blockTypeService.getBlockTypeCount(),
+          });
+
+          const clientBlock: ClientBlock = {
+            block,
+            chunk: { cx: chunkData.cx, cz: chunkData.cz },
+            blockType: ERROR_BLOCK_TYPE,
+            currentModifier: ERROR_BLOCK_TYPE.modifiers[0],
+            isVisible: true,
+            isDirty: false,
+            lastUpdate: Date.now(),
+          };
+          clientBlocksMap.set(posKey, clientBlock);
+          continue;
+        }
 
       // Merge block modifiers according to priority rules
       const currentModifier = mergeBlockModifier(this.appContext, block, blockType, statusData.get(posKey));
@@ -532,7 +561,6 @@ export class ChunkService {
         chunk: { cx: chunkData.cx, cz: chunkData.cz },
         blockType,
         currentModifier,
-        clientBlockType: blockType as any, // TODO: Convert to ClientBlockType
         isVisible: true,
         isDirty: false,
         lastUpdate: Date.now(),
@@ -731,7 +759,6 @@ export class ChunkService {
           chunk: itemChunkCoord, // Use calculated chunk coords, not chunkData coords
           blockType,
           currentModifier: block.modifiers?.[0] || blockType.modifiers[0],
-          clientBlockType: blockType as any,
           isVisible: true,
           isDirty: false,
           lastUpdate: Date.now(),
@@ -989,7 +1016,6 @@ export class ChunkService {
           chunk: { cx: chunkCoord.cx, cz: chunkCoord.cz },
           blockType,
           currentModifier,
-          clientBlockType: blockType as any,
           isVisible: true,
           isDirty: true,
           lastUpdate: Date.now(),
@@ -1166,7 +1192,6 @@ export class ChunkService {
           chunk: { cx: chunkCoord.cx, cz: chunkCoord.cz },
           blockType,
           currentModifier: block.modifiers?.[0] || blockType.modifiers[0],
-          clientBlockType: blockType as any,
           isVisible: true,
           isDirty: true,
           lastUpdate: Date.now(),

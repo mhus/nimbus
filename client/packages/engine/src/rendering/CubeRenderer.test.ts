@@ -147,7 +147,6 @@ describe('CubeRenderer', () => {
       chunk: { cx: 0, cz: 0 },
       blockType,
       currentModifier,
-      clientBlockType: blockType as any,
       isVisible: true,
       isDirty: false
     };

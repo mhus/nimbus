@@ -148,6 +148,11 @@ export class MaterialService {
       }
     }
 
+    // 6. Color (if defined)
+    if (textureDef.color) {
+        parts.push(`c:${textureDef.color}`);
+    }
+
     // Note: Texture path is NOT part of the key (except for FLIPBOX) - UVs handle texture selection via atlas
     // Note: UV mapping is NOT part of the key - handled per-vertex in geometry
 
@@ -216,6 +221,9 @@ export class MaterialService {
           break;
         case 'tex':
           props.texturePath = value;
+          break;
+        case 'c':
+          props.color = value;
           break;
       }
     }
@@ -334,6 +342,7 @@ export class MaterialService {
       transparencyMode: number;
       opacity: number;
       samplingMode: number;
+      color?: string;
     }
   ): StandardMaterial {
     const material = new StandardMaterial(name, this.scene);
@@ -390,8 +399,19 @@ export class MaterialService {
     material.alpha = props.opacity;
 
     // Disable specular highlights for blocks
-    material.specularColor = new Color3(0, 0, 0);
-
+    if (props.color) {
+      try {
+        const color = Color3.FromHexString(props.color);
+        material.diffuseColor = color;
+        material.specularColor = color;
+        material.emissiveColor = color;
+        material.diffuseTexture = null; // Remove texture if color tint is applied
+      } catch (error) {
+        logger.warn('Failed to parse color for material', { color: props.color, error });
+      }
+    } else {
+      material.specularColor = new Color3(0, 0, 0);
+    }
     return material;
   }
 
