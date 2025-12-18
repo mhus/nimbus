@@ -17,6 +17,9 @@ public class PlayerInfo {
     private String displayName;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.Map<String, ShortcutDefinition> shortcuts;
+    @com.fasterxml.jackson.annotation.JsonProperty("editorShortcuts")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.util.Map<String, ShortcutDefinition> editorShortcuts;
     @com.fasterxml.jackson.annotation.JsonProperty("stateValues")
     private java.util.Map<String, MovementStateValues> stateValues;
     @com.fasterxml.jackson.annotation.JsonProperty("baseWalkSpeed")

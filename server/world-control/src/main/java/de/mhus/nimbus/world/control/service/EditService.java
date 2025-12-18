@@ -118,11 +118,13 @@ public class EditService {
      * Reads current EditAction from state and performs corresponding operation.
      */
     @Transactional
-    public void doAction(String worldId, String sessionId, int x, int y, int z) {
+    public void doAction(String worldId, String sessionId, int x, int y, int z, String command, List<String> args) {
         // Get current edit state
-        EditState state = getEditState(worldId, sessionId);
-        EditAction action = state.getEditAction();
-
+        EditAction action = toAction(command);
+        if (action == null) {
+            EditState state = getEditState(worldId, sessionId);
+            action = state.getEditAction();
+        }
         // Get playerUrl from WSession (not from EditState)
         Optional<WSession> wSession = wSessionService.getWithPlayerUrl(sessionId);
         if (wSession.isEmpty() || Strings.isBlank(wSession.get().getPlayerUrl())) {
@@ -186,6 +188,16 @@ public class EditService {
                 setSelectedBlock(worldId, sessionId, x, y, z);
                 break;
         }
+    }
+
+    private EditAction toAction(String command) {
+        if (command == null) return null;
+        try {
+            return EditAction.valueOf(command.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.debug("Invalid edit action command: {}", command);
+        }
+        return null;
     }
 
     private void roughBlocks(String worldId, String sessionId, int x, int y, int z) {
@@ -403,7 +415,7 @@ public class EditService {
         setBlock(worldId, sessionId, originalBlock, x, y, z);
     }
 
-    private void setBlock(String worldId, String sessionId, Block originalBlock, int x, int y, int z) {
+    public void setBlock(String worldId, String sessionId, Block originalBlock, int x, int y, int z) {
         // Clone block with all properties (without position)
         Block pastedBlock = BlockUtil.cloneBlock(originalBlock);
 

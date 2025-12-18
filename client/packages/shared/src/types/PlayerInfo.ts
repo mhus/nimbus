@@ -69,6 +69,7 @@ export interface PlayerInfo {
    * Keys: 'key0'-'key9', 'click0'-'click2', 'slot0'-'slotN'
    */
   shortcuts?: Record<string, ShortcutDefinition>; // javaType: Map<String,ShortcutDefinition>
+  editorShortcuts?: Record<string, ShortcutDefinition>; // javaType: Map<String,ShortcutDefinition>
 
   // ============================================
   // State-Based Values (NEW UNIFIED STRUCTURE)

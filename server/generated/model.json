@@ -3770,6 +3770,27 @@
         "visibility" : null,
         "javaTypeHint" : "int",
         "comment" : "// javaType: int"
+      }, {
+        "name" : "command",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Optional command to execute"
+      }, {
+        "name" : "commandArgs",
+        "type" : "any[]",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Optional command arguments"
+      }, {
+        "name" : "iconPath",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Optional icon path for UI"
       } ],
       "methods" : [ ]
     } ],
@@ -6331,6 +6352,13 @@
         "comment" : null
       }, {
         "name" : "shortcuts",
+        "type" : "Record<string, ShortcutDefinition>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Map<String,ShortcutDefinition>",
+        "comment" : "// javaType: Map<String,ShortcutDefinition>"
+      }, {
+        "name" : "editorShortcuts",
         "type" : "Record<string, ShortcutDefinition>",
         "optional" : true,
         "visibility" : null,

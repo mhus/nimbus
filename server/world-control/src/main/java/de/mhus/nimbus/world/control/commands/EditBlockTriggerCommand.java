@@ -29,9 +29,9 @@ public class EditBlockTriggerCommand implements Command {
 
     @Override
     public CommandResult execute(CommandContext context, List<String> args) {
-        // Args: [x, y, z]
-        if (args.size() != 3) {
-            return CommandResult.error(-3, "Usage: EditBlockTrigger <x> <y> <z>");
+        // Args: [x, y, z, command]
+        if (args.size() < 3) {
+            return CommandResult.error(-3, "Usage: EditBlockTrigger <x> <y> <z> [command]");
         }
 
         String sessionId = context.getSessionId();
@@ -43,12 +43,15 @@ public class EditBlockTriggerCommand implements Command {
             int x = Integer.parseInt(args.get(0));
             int y = Integer.parseInt(args.get(1));
             int z = Integer.parseInt(args.get(2));
+            String command = args.size() >= 4 ? args.get(3) : null;
 
             // Update selected block in Redis
             editService.doAction(
                     context.getWorldId(),
                     sessionId,
-                    x, y, z
+                    x, y, z,
+                    command,
+                    args
             );
 
             return CommandResult.success("Block selected at (" + x + "," + y + "," + z + ")");

@@ -122,3 +122,7 @@ doSplashscreen('screens/blizzardskull.png','audio/ambiente/blackmoor_tides.mp3')
 
 doSend('teamData','RedTeam','Player1','Player2','Player3')
 doSend('teamStatus','team_ teamData','player_0',50,1);    # Player1 health=50, alive - not working yet
+
+
+doSetShortcut('click0', 'use', {"command":"notification", commandArgs: [0,"Title","Message {{x}} {{y}} {{z}}","textures/magic/blue_crystal.png"], iconPath:"textures/magic/blue_crystal.png" })
+doSend('control.EditBlockTrigger','[x,y,z]')

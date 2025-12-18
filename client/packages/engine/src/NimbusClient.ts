@@ -493,12 +493,19 @@ async function postEngineInitialization(appContext: AppContext): Promise<void> {
   }
 
   // set shortcuts if defined (asynchronous - fire and forget)
-  if (appContext.playerInfo?.shortcuts) {
-    logger.info('Initializing player shortcuts asynchronously', { count: Object.keys(appContext.playerInfo.shortcuts).length });
+  // Use editorShortcuts in EDITOR mode, otherwise use shortcuts
+  const shortcuts = __EDITOR__
+    ? (appContext.playerInfo?.editorShortcuts || appContext.playerInfo?.shortcuts)
+    : appContext.playerInfo?.shortcuts;
+  if (shortcuts) {
+    logger.info('Initializing player shortcuts asynchronously', {
+      count: Object.keys(shortcuts).length,
+      mode: __EDITOR__ ? 'editor' : 'viewer'
+    });
 
     // Execute all shortcut initializations in parallel without waiting
     Promise.all(
-      Object.entries(appContext.playerInfo.shortcuts).map(async ([key, shortcut]) => {
+      Object.entries(shortcuts).map(async ([key, shortcut]) => {
         try {
           await appContext.services.command?.executeCommand('setShortcut', [
             key,
