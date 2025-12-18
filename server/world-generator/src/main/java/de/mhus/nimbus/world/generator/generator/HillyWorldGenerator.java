@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.generator.generator;
 
 import de.mhus.nimbus.generated.types.Block;
-import de.mhus.nimbus.world.control.util.FastNoiseLite;
+import de.mhus.nimbus.shared.utils.FastNoiseLite;
 import de.mhus.nimbus.world.shared.job.JobExecutionException;
 import de.mhus.nimbus.world.shared.layer.LayerBlock;
 import de.mhus.nimbus.world.shared.world.FlatPosition;

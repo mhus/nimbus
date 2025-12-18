@@ -52,7 +52,7 @@
 // /*FNLfloat*/ float
 // /*FNLfloat*/ double
 
-package de.mhus.nimbus.world.control.util;
+package de.mhus.nimbus.shared.utils;
 
 public class FastNoiseLite
 {

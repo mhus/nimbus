@@ -451,15 +451,11 @@ public class McpController extends BaseEditorController {
     public ResponseEntity<?> getWorld(@Parameter(description = "World ID") @PathVariable String worldId) {
         log.debug("MCP: Get world: worldId={}", worldId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
-        Optional<WWorld> worldOpt = worldService.getByWorldId(worldId);
-        if (worldOpt.isEmpty()) {
-            return notFound("world not found");
-        }
-
-        return ResponseEntity.ok(toWorldDto(worldOpt.get()));
+        return ResponseEntity.ok(wid);
     }
 
     // ==================== LAYER OPERATIONS ====================
@@ -477,8 +473,9 @@ public class McpController extends BaseEditorController {
     public ResponseEntity<?> listLayers(@Parameter(description = "World ID") @PathVariable String worldId) {
         log.debug("MCP: List layers: worldId={}", worldId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
         List<WLayer> layers = layerService.findByWorldId(worldId);
         List<Map<String, Object>> layerDtos = layers.stream()
@@ -508,10 +505,11 @@ public class McpController extends BaseEditorController {
 
         log.debug("MCP: Get layer: worldId={}, layerId={}", worldId, layerId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
-        validation = validateId(layerId, "layerId");
+        var validation = validateId(layerId, "layerId");
         if (validation != null) return validation;
 
         Optional<WLayer> layerOpt = layerService.findById(layerId);
@@ -539,8 +537,9 @@ public class McpController extends BaseEditorController {
 
         log.debug("MCP: Create layer: worldId={}, name={}", worldId, request.name());
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
         if (blank(request.name())) {
             return bad("name required");
@@ -601,10 +600,11 @@ public class McpController extends BaseEditorController {
 
         log.debug("MCP: Update layer groups: worldId={}, layerId={}", worldId, layerId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
-        validation = validateId(layerId, "layerId");
+        var validation = validateId(layerId, "layerId");
         if (validation != null) return validation;
 
         Optional<WLayer> layerOpt = layerService.findById(layerId);
@@ -641,10 +641,11 @@ public class McpController extends BaseEditorController {
 
         log.debug("MCP: Get layer blocks: worldId={}, layerId={}", worldId, layerId);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
-        validation = validateId(layerId, "layerId");
+        var validation = validateId(layerId, "layerId");
         if (validation != null) return validation;
 
         Optional<WLayer> layerOpt = layerService.findById(layerId);
@@ -695,10 +696,11 @@ public class McpController extends BaseEditorController {
 
         log.debug("MCP: Add layer blocks: worldId={}, layerId={}, count={}", worldId, layerId, request.blocks().size());
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
-        validation = validateId(layerId, "layerId");
+        var validation = validateId(layerId, "layerId");
         if (validation != null) return validation;
 
         if (request.blocks() == null || request.blocks().isEmpty()) {
@@ -794,15 +796,11 @@ public class McpController extends BaseEditorController {
 
         log.debug("MCP: Get block types: worldId={}, limit={}", worldId, limit);
 
-        ResponseEntity<?> validation = validateWorldId(worldId);
-        if (validation != null) return validation;
+        var wid = WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
 
-        Optional<WorldId> widOpt = WorldId.of(worldId);
-        if (widOpt.isEmpty()) {
-            return bad("invalid worldId");
-        }
-
-        List<WBlockType> blockTypes = blockTypeService.findByWorldId(widOpt.get());
+        List<WBlockType> blockTypes = blockTypeService.findByWorldId(wid);
         List<Map<String, Object>> blockTypeDtos = blockTypes.stream()
                 .limit(limit)
                 .map(this::toBlockTypeDto)

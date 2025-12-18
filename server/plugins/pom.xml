@@ -15,6 +15,7 @@
 
     <modules>
         <module>generate-ts-to-java-maven-plugin</module>
+        <module>generate-java-to-ts-maven-plugin</module>
     </modules>
 </project>
 
