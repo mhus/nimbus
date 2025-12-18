@@ -35,6 +35,13 @@ public class TypeScriptGenerator {
             TypeScriptType tt = new TypeScriptType();
             tt.setName(jm.getName());
             tt.setSubfolder(jm.getGenerateSubfolder());
+            // vollqualifizierten Java-Quellklassennamen setzen (für Header-Kommentar)
+            String pkg = jm.getPackageName();
+            if (pkg != null && !pkg.isBlank()) {
+                tt.setSourceFqn(pkg + "." + jm.getName());
+            } else {
+                tt.setSourceFqn(jm.getName());
+            }
             // Übernehme Import-Zeilen
             tt.getImports().addAll(jm.getTypeScriptImports());
 
@@ -48,7 +55,9 @@ public class TypeScriptGenerator {
                     if (f.isIgnored()) continue;
                     String tsType = resolveTsType(f);
                     boolean optional = f.isOptional();
-                    tt.getFields().add(new TypeScriptField(f.getName(), tsType, optional));
+                    TypeScriptField tf = new TypeScriptField(f.getName(), tsType, optional);
+                    tf.setDescription(f.getDescription());
+                    tt.getFields().add(tf);
                 }
             }
 

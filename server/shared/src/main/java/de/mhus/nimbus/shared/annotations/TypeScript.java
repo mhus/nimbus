@@ -1,4 +1,4 @@
-package de.mhus.nimbus.tools.generatej2ts.annotations;
+package de.mhus.nimbus.shared.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

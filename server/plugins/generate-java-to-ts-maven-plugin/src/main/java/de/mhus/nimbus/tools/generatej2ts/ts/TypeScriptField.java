@@ -4,6 +4,7 @@ public class TypeScriptField {
     private String name;
     private String tsType; // resolved TypeScript type
     private boolean optional;
+    private String description; // optionaler Kommentar
 
     public TypeScriptField() {}
 
@@ -21,4 +22,7 @@ public class TypeScriptField {
 
     public boolean isOptional() { return optional; }
     public void setOptional(boolean optional) { this.optional = optional; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }

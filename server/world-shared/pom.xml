@@ -80,6 +80,29 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!-- Generate TypeScript from annotated Java classes -->
+            <plugin>
+                <groupId>de.mhus.nimbus</groupId>
+                <artifactId>generate-java-to-ts-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-typescript-from-java</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Achtung: Pfade bei Bedarf anpassen -->
+                            <inputDirectory>${project.basedir}/src/main/java</inputDirectory>
+                            <!-- Schreibe generierte TS-Dateien nach target/ts-generated -->
+                            <outputDirectory>${project.build.directory}/ts-generated</outputDirectory>
+                            <!-- Optionale Konfigurationsdatei, falls vorhanden -->
+                            <configFile>${project.basedir}/java-to-ts.yaml</configFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

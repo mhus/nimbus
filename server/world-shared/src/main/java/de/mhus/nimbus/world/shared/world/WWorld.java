@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.WorldInfo;
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
+import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.Identifiable;
 import de.mhus.nimbus.shared.types.UserId;
@@ -24,6 +26,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Document(collection = "worlds")
 @ActualSchemaVersion("1.0.0")
+@GenerateTypeScript("entities")
 public class WWorld implements Identifiable {
 
     @Id
@@ -43,6 +46,7 @@ public class WWorld implements Identifiable {
      * Public data containing the generated WorldInfo DTO.
      * This is what gets serialized and sent to clients.
      */
+    @TypeScript(type="WorldInfo")
     private WorldInfo publicData; // eingebettete Struktur aus generated Modul
 
     private Instant createdAt;

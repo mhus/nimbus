@@ -6,7 +6,7 @@ public class Person {
 
     private String name;
 
-    @TypeScript(optional=true)
+    @TypeScript(optional=true, description="age in years")
     private Integer age;
 
     @TypeScript(follow=true)

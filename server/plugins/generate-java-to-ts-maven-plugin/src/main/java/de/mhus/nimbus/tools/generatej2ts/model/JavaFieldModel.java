@@ -11,6 +11,7 @@ public class JavaFieldModel {
     private boolean ignored;
     private boolean follow;
     private String importOverride; // from @TypeScript(import="...")
+    private String description; // from @TypeScript(description="...")
 
     private final Set<String> referencedTypes = new HashSet<>();
 
@@ -36,4 +37,7 @@ public class JavaFieldModel {
     public void setImportOverride(String importOverride) { this.importOverride = importOverride; }
 
     public Set<String> getReferencedTypes() { return referencedTypes; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }

@@ -53,9 +53,12 @@ public class GenerateJavaToTsMojoTest {
 
         // content checks
         String person = Files.readString(personTs, StandardCharsets.UTF_8);
+        // Header mit Source-FQN prüfen
+        Assertions.assertTrue(person.contains("Source: de.example.models.Person"), "Header enthält nicht die Java Source FQN");
         Assertions.assertTrue(person.contains("export interface Person"));
         Assertions.assertTrue(person.contains("name: string;"), "name: string fehlt");
         Assertions.assertTrue(person.contains("age?: number;"), "age?: number fehlt (optional)");
+        Assertions.assertTrue(person.contains("age?: number; /* age in years */"), "Beschreibungskommentar fehlt oder falsch");
         // Klassen-Import aus @TypeScriptImport
         Assertions.assertTrue(person.contains("import { ColorHex } from '../types/ColorHex';"), "Import wurde nicht übernommen");
 

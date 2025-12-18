@@ -105,6 +105,7 @@ public class JavaAstParser {
                             }
                             f.setIgnored(getBooleanAttribute(an, "ignore").orElse(false));
                             f.setOptional(getBooleanAttribute(an, "optional").orElse(false));
+                            getStringAttribute(an, "description").ifPresent(f::setDescription);
                         }
                     }
                     // try to collect referenced types from the raw java type (for follow)
