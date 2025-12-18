@@ -4,7 +4,6 @@ import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
-import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
