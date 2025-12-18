@@ -36,6 +36,10 @@ import java.util.function.Consumer;
 @Slf4j
 public class EditService {
 
+    private static final Block AIR_BLOCK = Block.builder()
+            .blockTypeId("0")
+            .position(Vector3.builder().x(0.0).y(0.0).z(0.0).build())
+            .build();
     private final WorldRedisService redisService;
     private final WLayerService layerService;
     private final WorldClientService worldClient;
@@ -396,7 +400,10 @@ public class EditService {
         }
 
         Block originalBlock = originalBlockOpt.get();
+        setBlock(worldId, sessionId, originalBlock, x, y, z);
+    }
 
+    private void setBlock(String worldId, String sessionId, Block originalBlock, int x, int y, int z) {
         // Clone block with all properties (without position)
         Block pastedBlock = BlockUtil.cloneBlock(originalBlock);
 
@@ -431,12 +438,8 @@ public class EditService {
      */
     @Transactional
     private void deleteBlock(String worldId, String sessionId, int x, int y, int z) {
-        // TODO: Write air block to position (requires block data access)
-        // For now: Just log the operation
-        log.info("Delete block: session={} pos=({},{},{})", sessionId, x, y, z);
-
-        // Update selected block position
-        setSelectedBlock(worldId, sessionId, x, y, z);
+        log.debug("Delete block: session={} pos=({},{},{})", sessionId, x, y, z);
+        setBlock(worldId, sessionId, AIR_BLOCK, x, y, z);
     }
 
     /**

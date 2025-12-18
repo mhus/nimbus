@@ -64,6 +64,13 @@ export interface ShortcutDefinition {
    */
   wait: number;  // javaType: int
 
+  /**
+   * Optional command to execute when the shortcut is triggered
+   * this will be executed instead of the item action
+   */
+  command?: string; // Optional command to execute
+  commandArgs?: any[]; // Optional command arguments
+
 }
 
 /**

@@ -59,11 +59,9 @@ export class ClickInputHandler extends InputHandler {
 
       // Check if SelectService is in INTERACTIVE mode (game mode, not editor)
       // INTERACTIVE mode is required for shortcuts to work
-      // Note: actionTargeting determines what target is needed, but player must be in INTERACTIVE mode
-      if (!selectService || selectService.getAutoSelectMode() !== 'INTERACTIVE') {
-        logger.debug('Click ignored - not in INTERACTIVE mode', {
-          currentMode: selectService?.getAutoSelectMode(),
-        });
+      // Note: actionTargeting determines what target is needed
+      if (!selectService) {
+        logger.debug('Click ignored');
         return;
       }
 

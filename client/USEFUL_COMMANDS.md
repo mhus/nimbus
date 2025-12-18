@@ -26,6 +26,8 @@ doSend('world','status', 0 )
 
 doSetShortcut('click0', 'use', {"itemId": "item_1763653693310_uv2m2pu", "wait": 100})
 
+doSetShortcut('click0', 'use', {"command":"notification", commandArgs: [0,"Title","Message","textures/magic/blue_crystal.png"]})
+
 doSend('world','season', 0 ) // NONE
 doSend('world','season', 1 ) // WINTER
 doSend('world','season', 3 ) // SUMMER

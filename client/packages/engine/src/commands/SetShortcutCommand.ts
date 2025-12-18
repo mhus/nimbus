@@ -115,11 +115,6 @@ export class SetShortcutCommand extends CommandHandler {
         return `Error: Invalid key format: ${key}\nValid formats: key0-key9, click0-click2, slot0-slotN`;
       }
 
-      // Validate type
-      if (!['none', 'block', 'attack', 'use'].includes(type)) {
-        return `Error: Invalid type: ${type}\nValid types: none, block, attack, use`;
-      }
-
       // Parse options (optional JSON parameter)
       let options: Partial<ShortcutDefinition> = {};
       if (parameters.length >= 3) {
@@ -146,6 +141,8 @@ export class SetShortcutCommand extends CommandHandler {
         name: options.name,
         description: options.description,
         wait: options.wait ?? 0, // Default: no wait time
+        command: options.command,
+        commandArgs: options.commandArgs
       };
 
       // Set shortcut

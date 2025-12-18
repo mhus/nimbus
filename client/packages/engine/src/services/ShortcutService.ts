@@ -79,6 +79,7 @@ export class ShortcutService {
    * @param shortcutKey Shortcut key identifier
    */
   async fireShortcut(shortcutNr: number, shortcutKey: string): Promise<void> {
+    logger.info('Firing shortcut', { shortcutNr, shortcutKey });
     try {
       // Check if blocked
       if (this.isShortcutBlocked(shortcutNr)) {
@@ -102,6 +103,52 @@ export class ShortcutService {
 
       if (!shortcutDef) {
         logger.debug('No shortcut definition', { shortcutKey });
+        return;
+      }
+
+      const selectService = this.appContext.services.select;
+
+      if (shortcutDef.command) {
+        // execute command instead
+        logger.info('Executing shortcut command', { shortcutNr, shortcutKey });
+        // get selected target
+        const execCommand = shortcutDef.command;
+        let execArgs = shortcutDef.commandArgs || [];
+        const commandService = this.appContext.services.command;
+        if (!commandService) {
+            logger.warn('CommandService not available for shortcut command execution');
+            return;
+        }
+        let targetPosition = null;
+        if (selectService) {
+          const selectedEntity = selectService.getCurrentSelectedEntity();
+          if (selectedEntity) {
+            targetPosition = selectedEntity.currentPosition;
+          } else {
+            const selectedBlock = selectService.getCurrentSelectedBlock();
+            if (selectedBlock) {
+              targetPosition = selectedBlock.block.position;
+            }
+          }
+        }
+        if (targetPosition) {
+          // replace placeholders in args
+          execArgs = execArgs.map(arg => {
+            let argStr = String(arg);
+            if (argStr.includes('{{x}}')) argStr = argStr.replaceAll('{{x}}', String(targetPosition.x));
+            if (argStr.includes('{{y}}')) argStr = argStr.replaceAll('{{y}}', String(targetPosition.y));
+            if (argStr.includes('{{z}}')) argStr =  argStr.replaceAll('{{z}}', String(targetPosition.z));
+            return argStr;
+          });
+        }
+        logger.info('Executing command', { execCommand, execArgs });
+        commandService.executeCommand(execCommand, execArgs);
+
+        return;
+      }
+      // execute item action
+      if (!selectService || selectService.getAutoSelectMode() !== 'INTERACTIVE') {
+        logger.warn('Auto-selection mode is not INTERACTIVE - cannot fire shortcut');
         return;
       }
 
