@@ -46,7 +46,7 @@ export class BlockTypeInfoCommand extends CommandHandler {
 
     try {
       // Get BlockType from service
-      const blockType = blockTypeService.getBlockType(blockTypeId);
+      const blockType = await blockTypeService.getBlockType(blockTypeId);
 
       if (!blockType) {
         return `BlockType ${blockTypeId} not found in cache.\n\nTry accessing a block with this type first, or it may not exist on the server.`;

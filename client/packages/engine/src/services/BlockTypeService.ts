@@ -49,22 +49,26 @@ interface BlockTypesResponse {
 export class BlockTypeService {
   private loadedGroups: Map<string, Map<string, BlockType>> = new Map(); // Track which groups are loaded ('core', 'w', 'custom', ...)
   private loadingGroups: Map<string, Promise<void>> = new Map(); // Track groups currently being loaded
+  private airBlockType: BlockType; // Static AIR BlockType (id 0), always available
 
   constructor(private appContext: AppContext) {
     // Register static AIR BlockType (id 0)
     // This ensures AIR is always available, even before server block types are loaded
-    this.registerAirBlockType();
+    this.airBlockType = this.createAirBlockType();
 
     logger.debug('BlockTypeService initialized with group-based lazy loading');
   }
 
   /**
-   * Register static AIR BlockType (id 0)
+   * Create static AIR BlockType (id 0)
    *
    * AIR is a special block type that represents empty space.
    * It must always be available for the SelectService and other systems.
+   *
+   * NOTE: AIR is stored separately and NOT in the loadedGroups map,
+   * so that group 'w' can be properly loaded from server later.
    */
-  private registerAirBlockType(): void {
+  private createAirBlockType(): BlockType {
     const airBlockType: BlockType = {
       id: '0',
       initialStatus: 0,
@@ -80,8 +84,8 @@ export class BlockTypeService {
       },
     };
 
-    this.blockTypes.set('0', airBlockType);
-    logger.debug('Static AIR BlockType (id 0) registered');
+    logger.debug('Static AIR BlockType (id 0) created');
+    return airBlockType;
   }
 
   /**
@@ -143,6 +147,17 @@ export class BlockTypeService {
         throw new Error('Invalid group response: expected array of BlockTypes');
       }
 
+      // Get or create group map
+      let groupMap = this.loadedGroups.get(groupName);
+      if (!groupMap) {
+        groupMap = new Map();
+        if (groupName === 'w') {
+          groupMap.set("0", this.airBlockType); // Ensure AIR BlockType is present in 'w' group
+          groupMap.set("w:0", this.airBlockType); // Ensure AIR BlockType is present in 'w' group
+        }
+        this.loadedGroups.set(groupName, groupMap);
+      }
+
       // Validate and cache block types from this group
       let validCount = 0;
       for (const blockType of blockTypes) {
@@ -176,17 +191,14 @@ export class BlockTypeService {
             });
           }
 
-          // Store BlockType with corrected ID
+          // Store BlockType with corrected ID in group map
           blockType.id = correctedId;
-          this.blockTypes.set(correctedId, blockType);
+          groupMap.set(correctedId, blockType);
           validCount++;
         } else {
           logger.warn('Invalid block type received in group', { blockType, groupName });
         }
       }
-
-      // Mark group as loaded
-      this.loadedGroups.add(groupName);
 
       logger.debug('BlockType group loaded successfully', {
         groupName,
@@ -200,19 +212,6 @@ export class BlockTypeService {
         'BlockTypeService.doLoadGroup',
         { groupName }
       );
-    }
-  }
-
-  /**
-   * Ensure a BlockType is loaded (loads its group if needed)
-   * @param blockTypeId The BlockType ID to ensure is loaded
-   */
-  private async ensureBlockTypeLoaded(blockTypeId: string | number): Promise<void> {
-    const groupName = getBlockTypeGroup(blockTypeId);
-
-    // If group not loaded, load it
-    if (!this.loadedGroups.has(groupName)) {
-      await this.loadGroup(groupName);
     }
   }
 
@@ -234,19 +233,22 @@ export class BlockTypeService {
    *
    * Clears all cached BlockTypes and loaded group flags.
    * Next BlockType access will reload from server.
+   * AIR BlockType is preserved as it's always available.
    */
   clearCache(): void {
-    const beforeCount = this.blockTypes.size;
+    // Count total block types before clearing
+    let beforeCount = 0;
+    for (const groupMap of this.loadedGroups.values()) {
+      beforeCount += groupMap.size;
+    }
     const beforeGroups = this.loadedGroups.size;
 
-    this.blockTypes.clear();
     this.loadedGroups.clear();
 
-    // Re-register AIR BlockType (id 0)
-    this.registerAirBlockType();
+    // Note: AIR BlockType is preserved (stored separately)
 
     logger.debug('BlockType cache cleared', {
-      clearedBlockTypes: beforeCount - 1, // -1 for AIR
+      clearedBlockTypes: beforeCount,
       clearedGroups: beforeGroups,
     });
   }
@@ -290,51 +292,46 @@ export class BlockTypeService {
   }
 
   /**
-   * Get a block type by ID (synchronous - returns cached value)
+   * Get a block type by ID (synchronous - returns cached value only)
    *
    * Use this when you need immediate access to a BlockType.
-   * Returns undefined if the chunk containing this BlockType is not loaded yet.
+   * Returns undefined if the group containing this BlockType is not loaded yet.
    *
    * @param id Block type ID (string or legacy number)
    * @returns BlockType or undefined if not loaded
    */
-  getBlockType(id: string | number): BlockType | undefined {
+  getBlockTypeSync(id: string | number): BlockType | undefined {
     const normalizedId = this.normalizeIdWithGroup(id);
+
     const group = this.getIdGroup(normalizedId);
-    var groups = this.loadedGroups.get(group);
-    if (!groups) {
-      await this.loadGroup(group);
-      groups = this.loadedGroups.get(group);
-      if (!groups) {
-        return undefined;
-      }
-    }
-    return groups.get(normalizedId);
+    const groupMap = this.loadedGroups.get(group);
+    return groupMap?.get(normalizedId);
   }
 
   /**
-   * Get a block type by ID (asynchronous - loads chunk if needed)
+   * Get a block type by ID (asynchronous - loads group if needed)
    *
-   * Use this when you can await and want to ensure the BlockType is available.
-   * This will automatically load the chunk containing the BlockType if needed.
+   * This will automatically load the group containing the BlockType if needed.
    *
    * @param id Block type ID (string or legacy number)
    * @returns BlockType or undefined if not found on server
    */
-  async getBlockTypeAsync(id: string | number): Promise<BlockType | undefined> {
+  async getBlockType(id: string | number): Promise<BlockType | undefined> {
     const normalizedId = this.normalizeIdWithGroup(id);
 
-    // Check if already in cache
-    const cached = this.blockTypes.get(normalizedId);
-    if (cached) {
-      return cached;
+    const group = this.getIdGroup(normalizedId);
+
+    // Get group map, load if not present
+    let groupMap = this.loadedGroups.get(group);
+    if (!groupMap) {
+      await this.loadGroup(group);
+      groupMap = this.loadedGroups.get(group);
+      if (!groupMap) {
+        return undefined;
+      }
     }
 
-    // Load the chunk containing this BlockType
-    await this.ensureBlockTypeLoaded(normalizedId);
-
-    // Return from cache (may still be undefined if server doesn't have it)
-    return this.blockTypes.get(normalizedId);
+    return groupMap.get(normalizedId);
   }
 
   /**
@@ -346,7 +343,11 @@ export class BlockTypeService {
    * @returns Array of loaded block types
    */
   getAllBlockTypes(): BlockType[] {
-    return Array.from(this.blockTypes.values());
+    const allBlockTypes: BlockType[] = [];
+    for (const groupMap of this.loadedGroups.values()) {
+      allBlockTypes.push(...Array.from(groupMap.values()));
+    }
+    return allBlockTypes;
   }
 
   /**
@@ -360,9 +361,13 @@ export class BlockTypeService {
    * Get statistics about loaded groups
    */
   getLoadedGroupsStats(): { loadedGroups: number; totalBlockTypes: number } {
+    let totalBlockTypes = 0;
+    for (const groupMap of this.loadedGroups.values()) {
+      totalBlockTypes += groupMap.size;
+    }
     return {
       loadedGroups: this.loadedGroups.size,
-      totalBlockTypes: this.blockTypes.size,
+      totalBlockTypes,
     };
   }
 
@@ -370,7 +375,11 @@ export class BlockTypeService {
    * Get the number of loaded block types
    */
   getBlockTypeCount(): number {
-    return this.blockTypes.size;
+    let count = 0;
+    for (const groupMap of this.loadedGroups.values()) {
+      count += groupMap.size;
+    }
+    return count;
   }
 
   /**
@@ -378,7 +387,7 @@ export class BlockTypeService {
    * @returns Array of loaded group names
    */
   getLoadedGroups(): string[] {
-    return Array.from(this.loadedGroups);
+    return Array.from(this.loadedGroups.keys());
   }
 
   /**
@@ -386,7 +395,11 @@ export class BlockTypeService {
    * @returns Array of all BlockType IDs in cache
    */
   getAllBlockTypeIds(): string[] {
-    return Array.from(this.blockTypes.keys());
+    const allIds: string[] = [];
+    for (const groupMap of this.loadedGroups.values()) {
+      allIds.push(...Array.from(groupMap.keys()));
+    }
+    return allIds;
   }
 
   /**
@@ -417,15 +430,14 @@ export class BlockTypeService {
   /**
    * Clear the cache and reset loaded state
    *
-   * Useful for testing or when switching worlds
+   * Useful for testing or when switching worlds.
+   * AIR BlockType is preserved as it's always available.
    */
   clear(): void {
-    this.blockTypes.clear();
     this.loadedGroups.clear();
     this.loadingGroups.clear();
 
-    // Re-register static AIR BlockType
-    this.registerAirBlockType();
+    // Note: AIR BlockType is preserved (stored separately)
 
     logger.debug('Block type cache cleared');
   }

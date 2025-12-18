@@ -333,7 +333,7 @@ export class SelectService {
   private createAirClientBlock(x: number, y: number, z: number): ClientBlock {
     // Get AIR blockType from registry (id 0)
     const blockTypeService = this.appContext.services.blockType;
-    let airBlockType: BlockType | undefined = blockTypeService?.getBlockType('0');
+    let airBlockType: BlockType | undefined = blockTypeService?.getBlockTypeSync('0');
 
     // Fallback: Create minimal AIR BlockType if not found
     if (!airBlockType) {

@@ -465,7 +465,7 @@ export class ChunkService {
 
       // Collect all unique audio paths from blocks (with merged modifiers)
       for (const block of chunkData.b) {
-        const blockType = blockTypeService.getBlockType(block.blockTypeId);
+        const blockType = await blockTypeService.getBlockType(block.blockTypeId);
         if (!blockType) {
           continue;
         }
@@ -529,7 +529,7 @@ export class ChunkService {
         // Get position key for this block
         const posKey = getBlockPositionKey(block.position.x, block.position.y, block.position.z);
 
-        const blockType = blockTypeService.getBlockType(block.blockTypeId);
+        const blockType = await blockTypeService.getBlockType(block.blockTypeId);
         if (!blockType) {
           logger.warn('BlockType not found for block', {
             blockTypeId: block.blockTypeId,
@@ -742,7 +742,7 @@ export class ChunkService {
         // }
 
         // STEP 3: Get BlockType 1 (ITEM type)
-        const blockType = blockTypeService.getBlockType('1');
+        const blockType = await blockTypeService.getBlockType('1');
         if (!blockType) {
           logger.warn('BlockType 1 (ITEM) not found');
           continue;
@@ -989,7 +989,7 @@ export class ChunkService {
         }
 
         // Handle update/create
-        const blockType = blockTypeService.getBlockType(block.blockTypeId);
+        const blockType = await blockTypeService.getBlockType(block.blockTypeId);
         if (!blockType) {
           logger.warn('BlockType not found for block update', {
             blockTypeId: block.blockTypeId,
@@ -1177,7 +1177,7 @@ export class ChunkService {
         }
 
         // Get BlockType 1 (ITEM)
-        const blockType = blockTypeService.getBlockType('1');
+        const blockType = await blockTypeService.getBlockType('1');
         if (!blockType) {
           logger.warn('BlockType 1 (ITEM) not found');
           continue;

@@ -155,3 +155,16 @@ at _Engine._processFrame (http://localhost:3001/node_modules/.vite/deps/chunk-N7
 at _Engine._renderLoop (http://localhost:3001/node_modules/.vite/deps/chunk-SHYPJ4RV.js?v=e0e904a5:5381:10)
 at _boundRenderFunction (http://localhost:3001/node_modules/.vite/deps/chunk-N75LTW2W.js?v=e0e904a5:4772:53)
 
+- ERROR_MODIFIER (red) for Blocks ✅
+- prüfen ob chunk keinen prefix haben ✅
+- delete aktion geht nicht
+- block type id gruppen werden nicht nachgeladen ✅
+
+- backup_all mongodb script ✅
+- assets und blocktypes in region verschieben, default dann r:
+- shortcuts mit commands - kann dann auch edit sachen machen
+- immer group: dran
+- komprimieren von chunks
+- wenn dirty, dann ggf alle branches rendern
+- session status beim close speichern
+- terrain layer mit branch: COW
