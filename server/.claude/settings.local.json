@@ -28,7 +28,8 @@
       "Bash(javac:*)",
       "Bash(1)",
       "Bash(git checkout:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

@@ -6,7 +6,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search users by username or email..."
+          placeholder="Search users by username, email or display name..."
           class="input input-bordered w-full"
           @input="handleSearch"
         />
@@ -57,8 +57,8 @@
               {{ user.username }}
             </h3>
             <div class="space-y-2">
-              <div class="text-xs text-base-content/70 truncate" :title="user.email">
-                {{ user.email }}
+              <div class="text-xs text-base-content/70 truncate" :title="user.publicData?.displayName || user.email">
+                {{ user.publicData?.displayName || user.email }}
               </div>
               <div class="flex items-center gap-2">
                 <span
@@ -134,13 +134,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { userService, type User } from '../services/UserService';
+import { userService, type RUser } from '../services/UserService';
 
 const emit = defineEmits<{
   select: [username: string];
 }>();
 
-const users = ref<User[]>([]);
+const users = ref<RUser[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const searchQuery = ref('');
@@ -157,7 +157,8 @@ const filteredUsers = computed(() => {
     const query = searchQuery.value.toLowerCase();
     result = result.filter(u =>
       u.username.toLowerCase().includes(query) ||
-      u.email.toLowerCase().includes(query)
+      u.email.toLowerCase().includes(query) ||
+      (u.publicData?.displayName || '').toLowerCase().includes(query)
     );
   }
 

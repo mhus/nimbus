@@ -5,6 +5,7 @@ import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.sector.RUser;
 import de.mhus.nimbus.world.shared.sector.RUserService;
 import de.mhus.nimbus.shared.user.SectorRoles;
+import de.mhus.nimbus.shared.types.PlayerUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class RUserController extends BaseEditorController {
     private final RUserService userService;
 
     // DTOs
-    public record UserRequest(String username, String email, String sectorRolesRaw) {}
+    public record UserRequest(String email, String sectorRolesRaw, PlayerUser publicData) {}
     public record UserResponse(
             String id,
             String username,
@@ -65,14 +66,13 @@ public class RUserController extends BaseEditorController {
      * GET /control/user/{username}
      */
     @GetMapping("/{username}")
-    public ResponseEntity<?> get(@PathVariable String username) {
+    public ResponseEntity<RUser> get(@PathVariable String username) {
         var error = validateId(username, "username");
-        if (error != null) return error;
+        if (error != null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 
         return userService.getByUsername(username)
-                .<ResponseEntity<?>>map(u -> ResponseEntity.ok(toResponse(u)))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "User not found: " + username)));
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     /**
@@ -87,13 +87,16 @@ public class RUserController extends BaseEditorController {
         var error = validateId(username, "username");
         if (error != null) return error;
 
-        if (userService.getByUsername(username).isEmpty()) {
+        var optUser = userService.getByUsername(username);
+        if (optUser.isEmpty()) {
             return notFound("User not found: " + username);
         }
 
         try {
-            RUser updated = userService.update(username, request.email(), request.sectorRolesRaw());
-            return ResponseEntity.ok(toResponse(updated));
+            // Update email, roles, and publicData
+            RUser updated = userService.update(username, request.email(), request.sectorRolesRaw(), request.publicData());
+
+            return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
             return bad(e.getMessage());
         }

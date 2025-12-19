@@ -1,35 +1,36 @@
 import { apiService } from '@/services/ApiService';
+import type { RUser } from '@nimbus/shared/generated/entities/RUser';
+import type { Settings } from '@nimbus/shared/generated/configs';
+import { SectorRoles } from '@nimbus/shared/generated/entities/SectorRoles';
+import type { RegionRoles } from '@nimbus/shared/generated/entities/RegionRoles';
 
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  enabled: boolean;
-  sectorRoles: string[];
-  userSettings: Record<string, any>;
-}
+export type { RUser, Settings, RegionRoles };
+export { SectorRoles };
 
 export interface UserRequest {
-  username: string;
   email: string;
   sectorRolesRaw: string;
+  publicData?: {
+    userId: string;
+    displayName: string;
+  };
 }
 
-export interface Settings {
-  [key: string]: any;
+export interface UpdatePublicDataRequest {
+  displayName: string;
 }
 
 class UserService {
-  async listUsers(): Promise<User[]> {
-    return apiService.get<User[]>('/control/users');
+  async listUsers(): Promise<RUser[]> {
+    return apiService.get<RUser[]>('/control/users');
   }
 
-  async getUser(username: string): Promise<User> {
-    return apiService.get<User>(`/control/users/${username}`);
+  async getUser(username: string): Promise<RUser> {
+    return apiService.get<RUser>(`/control/users/${username}`);
   }
 
-  async updateUser(username: string, request: UserRequest): Promise<User> {
-    return apiService.put<User>(`/control/users/${username}`, request);
+  async updateUser(username: string, request: UserRequest): Promise<RUser> {
+    return apiService.put<RUser>(`/control/users/${username}`, request);
   }
 
   async deleteUser(username: string): Promise<void> {
@@ -56,12 +57,12 @@ class UserService {
     return apiService.put<any>(`/control/users/${username}/settings`, settings);
   }
 
-  async addSectorRole(username: string, role: string): Promise<User> {
-    return apiService.post<User>(`/control/users/${username}/roles/${role}`);
+  async addSectorRole(username: string, role: string): Promise<RUser> {
+    return apiService.post<RUser>(`/control/users/${username}/roles/${role}`);
   }
 
-  async removeSectorRole(username: string, role: string): Promise<User> {
-    return apiService.delete<User>(`/control/users/${username}/roles/${role}`);
+  async removeSectorRole(username: string, role: string): Promise<RUser> {
+    return apiService.delete<RUser>(`/control/users/${username}/roles/${role}`);
   }
 }
 

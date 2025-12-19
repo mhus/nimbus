@@ -46,6 +46,22 @@
               />
             </div>
 
+            <!-- Display Name (from publicData) -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Display Name</span>
+              </label>
+              <input
+                v-model="formData.displayName"
+                type="text"
+                class="input input-bordered w-full"
+                placeholder="Enter display name..."
+              />
+              <label class="label">
+                <span class="label-text-alt">Public display name for this user</span>
+              </label>
+            </div>
+
             <!-- Email -->
             <div class="form-control">
               <label class="label">
@@ -79,7 +95,7 @@
             <!-- Current Roles Display -->
             <div v-if="user?.sectorRoles && user.sectorRoles.length > 0" class="form-control">
               <label class="label">
-                <span class="label-text font-medium">Current Roles</span>
+                <span class="label-text font-medium">Current Sector Roles</span>
               </label>
               <div class="flex flex-wrap gap-2">
                 <span
@@ -87,9 +103,38 @@
                   :key="role"
                   class="badge badge-lg badge-outline"
                 >
-                  {{ role }}
+                  {{ SectorRoles[role] }}
                 </span>
               </div>
+            </div>
+
+            <!-- Enabled Status -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Account Status</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  :checked="user?.enabled"
+                  class="checkbox"
+                  disabled
+                />
+                <span class="label-text">{{ user?.enabled ? 'Enabled' : 'Disabled' }}</span>
+              </div>
+            </div>
+
+            <!-- Created At -->
+            <div v-if="user?.createdAt" class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Created At</span>
+              </label>
+              <input
+                :value="formatDate(user.createdAt)"
+                type="text"
+                class="input input-bordered w-full"
+                disabled
+              />
             </div>
 
             <!-- Action Buttons -->
@@ -103,6 +148,62 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Region Roles Card -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h3 class="card-title">Region Roles</h3>
+
+          <div v-if="user?.regionRoles && Object.keys(user.regionRoles).length > 0" class="overflow-x-auto">
+            <table class="table table-zebra">
+              <thead>
+                <tr>
+                  <th>Region ID</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(role, regionId) in user.regionRoles" :key="regionId">
+                  <td class="font-mono">{{ regionId }}</td>
+                  <td><span class="badge badge-primary">{{ role }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div v-else class="text-center py-8">
+            <p class="text-base-content/70">No region roles configured</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Character Limits Card -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h3 class="card-title">Character Limits per Region</h3>
+
+          <div v-if="user?.characterLimits && Object.keys(user.characterLimits).length > 0" class="overflow-x-auto">
+            <table class="table table-zebra">
+              <thead>
+                <tr>
+                  <th>Region ID</th>
+                  <th>Max Characters</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(limit, regionId) in user.characterLimits" :key="regionId">
+                  <td class="font-mono">{{ regionId }}</td>
+                  <td><span class="badge badge-info">{{ limit }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div v-else class="text-center py-8">
+            <p class="text-base-content/70">No character limits configured</p>
+          </div>
         </div>
       </div>
 
@@ -205,7 +306,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { userService, type User, type Settings } from '../services/UserService';
+import { userService, type RUser, type Settings, SectorRoles } from '../services/UserService';
 
 const props = defineProps<{
   username: string;
@@ -216,13 +317,14 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-const user = ref<User | null>(null);
+const user = ref<RUser | null>(null);
 const loading = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 
 const formData = ref({
+  displayName: '',
   email: '',
   sectorRolesRaw: '',
 });
@@ -231,6 +333,11 @@ const newSettingClientType = ref('');
 const editingSettings = reactive<Record<string, boolean>>({});
 const settingsEditors = reactive<Record<string, string>>({});
 
+const formatDate = (date: Date | string): string => {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleString();
+};
+
 const loadUser = async () => {
   loading.value = true;
   error.value = null;
@@ -238,8 +345,9 @@ const loadUser = async () => {
   try {
     user.value = await userService.getUser(props.username);
     formData.value = {
+      displayName: user.value.publicData?.displayName || '',
       email: user.value.email,
-      sectorRolesRaw: user.value.sectorRoles.join(', '),
+      sectorRolesRaw: user.value.sectorRoles ? user.value.sectorRoles.map(r => SectorRoles[r]).join(', ') : '',
     };
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load user';
@@ -256,9 +364,12 @@ const handleSave = async () => {
 
   try {
     await userService.updateUser(props.username, {
-      username: props.username,
       email: formData.value.email,
       sectorRolesRaw: formData.value.sectorRolesRaw,
+      publicData: {
+        userId: props.username,
+        displayName: formData.value.displayName,
+      },
     });
     successMessage.value = 'User updated successfully';
     await loadUser();

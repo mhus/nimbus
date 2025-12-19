@@ -41,7 +41,7 @@ public class RUserService {
     public Optional<RUser> getByUsername(String username) { return repository.findByUsername(username); }
     public List<RUser> listAll() { return repository.findAll(); }
 
-    public RUser update(String username, String email, String sectorRolesRaw) {
+    public RUser update(String username, String email, String sectorRolesRaw, de.mhus.nimbus.shared.types.PlayerUser publicData) {
         RUser existing = repository.findByUsername(username)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         if (email != null && !email.equals(existing.getEmail())) {
@@ -51,7 +51,14 @@ public class RUserService {
         if (sectorRolesRaw != null) {
             existing.setSectorRolesRaw(sectorRolesRaw);
         }
+        if (publicData != null) {
+            existing.setPublicData(publicData);
+        }
         return repository.save(existing);
+    }
+
+    public RUser update(String username, String email, String sectorRolesRaw) {
+        return update(username, email, sectorRolesRaw, null);
     }
 
     // Globale Server-Rollen
