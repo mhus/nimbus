@@ -81,30 +81,34 @@
               <label class="label">
                 <span class="label-text font-medium">Sector Roles</span>
               </label>
-              <input
-                v-model="formData.sectorRolesRaw"
-                type="text"
-                placeholder="Enter roles separated by commas (e.g., PLAYER, ADMIN)"
-                class="input input-bordered w-full"
-              />
-              <label class="label">
-                <span class="label-text-alt">Comma-separated list of sector roles</span>
-              </label>
-            </div>
-
-            <!-- Current Roles Display -->
-            <div v-if="user?.sectorRoles && user.sectorRoles.length > 0" class="form-control">
-              <label class="label">
-                <span class="label-text font-medium">Current Sector Roles</span>
-              </label>
-              <div class="flex flex-wrap gap-2">
-                <span
-                  v-for="role in user.sectorRoles"
-                  :key="role"
-                  class="badge badge-lg badge-outline"
-                >
-                  {{ SectorRoles[role] }}
-                </span>
+              <div class="flex flex-wrap gap-4">
+                <label class="label cursor-pointer gap-2">
+                  <input
+                    type="checkbox"
+                    class="checkbox"
+                    :checked="user?.sectorRoles?.includes(SectorRoles.USER)"
+                    @change="handleSectorRoleChange(SectorRoles.USER, $event)"
+                  />
+                  <span class="label-text">USER</span>
+                </label>
+                <label class="label cursor-pointer gap-2">
+                  <input
+                    type="checkbox"
+                    class="checkbox"
+                    :checked="user?.sectorRoles?.includes(SectorRoles.ADMIN)"
+                    @change="handleSectorRoleChange(SectorRoles.ADMIN, $event)"
+                  />
+                  <span class="label-text">ADMIN</span>
+                </label>
+                <label class="label cursor-pointer gap-2">
+                  <input
+                    type="checkbox"
+                    class="checkbox"
+                    :checked="user?.sectorRoles?.includes(SectorRoles.PLAYER)"
+                    @change="handleSectorRoleChange(SectorRoles.PLAYER, $event)"
+                  />
+                  <span class="label-text">PLAYER</span>
+                </label>
               </div>
             </div>
 
@@ -156,18 +160,83 @@
         <div class="card-body">
           <h3 class="card-title">Region Roles</h3>
 
+          <!-- Add New Region -->
+          <div class="flex gap-2 mb-4">
+            <select
+              v-model="newRegionId"
+              class="select select-bordered flex-1"
+            >
+              <option value="">Select region to add...</option>
+              <option v-for="region in regions" :key="region.name" :value="region.name">
+                {{ region.title || region.name }}
+              </option>
+            </select>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="handleAddRegion"
+              :disabled="!newRegionId"
+            >
+              Add Region
+            </button>
+          </div>
+
           <div v-if="user?.regionRoles && Object.keys(user.regionRoles).length > 0" class="overflow-x-auto">
             <table class="table table-zebra">
               <thead>
                 <tr>
                   <th>Region ID</th>
-                  <th>Role</th>
+                  <th>PLAYER</th>
+                  <th>SUPPORT</th>
+                  <th>EDITOR</th>
+                  <th>ADMIN</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(role, regionId) in user.regionRoles" :key="regionId">
                   <td class="font-mono">{{ regionId }}</td>
-                  <td><span class="badge badge-primary">{{ role }}</span></td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="role === 'PLAYER'"
+                      @change="handleRoleChange(regionId, 'PLAYER', $event)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="role === 'SUPPORT'"
+                      @change="handleRoleChange(regionId, 'SUPPORT', $event)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="role === 'EDITOR'"
+                      @change="handleRoleChange(regionId, 'EDITOR', $event)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="role === 'ADMIN'"
+                      @change="handleRoleChange(regionId, 'ADMIN', $event)"
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-error"
+                      @click="handleRemoveRegionRole(regionId)"
+                    >
+                      Remove
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -175,6 +244,7 @@
 
           <div v-else class="text-center py-8">
             <p class="text-base-content/70">No region roles configured</p>
+            <p class="text-base-content/50 text-sm mt-2">Add a region above to configure roles</p>
           </div>
         </div>
       </div>
@@ -184,18 +254,64 @@
         <div class="card-body">
           <h3 class="card-title">Character Limits per Region</h3>
 
+          <!-- Add New Character Limit -->
+          <div class="flex gap-2 mb-4">
+            <select
+              v-model="newCharLimitRegionId"
+              class="select select-bordered flex-1"
+            >
+              <option value="">Select region...</option>
+              <option v-for="region in regions" :key="region.name" :value="region.name">
+                {{ region.title || region.name }}
+              </option>
+            </select>
+            <input
+              v-model.number="newCharLimit"
+              type="number"
+              min="0"
+              placeholder="Max characters"
+              class="input input-bordered w-32"
+            />
+            <button
+              type="button"
+              class="btn btn-secondary"
+              @click="handleAddCharacterLimit"
+              :disabled="!newCharLimitRegionId || newCharLimit === null"
+            >
+              Add Limit
+            </button>
+          </div>
+
           <div v-if="user?.characterLimits && Object.keys(user.characterLimits).length > 0" class="overflow-x-auto">
             <table class="table table-zebra">
               <thead>
                 <tr>
                   <th>Region ID</th>
                   <th>Max Characters</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(limit, regionId) in user.characterLimits" :key="regionId">
                   <td class="font-mono">{{ regionId }}</td>
-                  <td><span class="badge badge-info">{{ limit }}</span></td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      :value="limit"
+                      @input="handleCharLimitChange(regionId, $event)"
+                      class="input input-bordered input-sm w-24"
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-error"
+                      @click="handleRemoveCharacterLimit(regionId)"
+                    >
+                      Remove
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -203,6 +319,7 @@
 
           <div v-else class="text-center py-8">
             <p class="text-base-content/70">No character limits configured</p>
+            <p class="text-base-content/50 text-sm mt-2">Add a region above to configure limits</p>
           </div>
         </div>
       </div>
@@ -214,17 +331,21 @@
 
           <!-- Add New Setting -->
           <div class="flex gap-2 mb-4">
-            <input
+            <select
               v-model="newSettingClientType"
-              type="text"
-              placeholder="Client Type (e.g., web, mobile)"
-              class="input input-bordered flex-1"
-            />
+              class="select select-bordered flex-1"
+            >
+              <option value="">Select client type...</option>
+              <option :value="ClientType.WEB">Web</option>
+              <option :value="ClientType.XBOX">Xbox</option>
+              <option :value="ClientType.MOBILE">Mobile</option>
+              <option :value="ClientType.DESKTOP">Desktop</option>
+            </select>
             <button
               type="button"
               class="btn btn-secondary"
               @click="handleAddSetting"
-              :disabled="!newSettingClientType.trim()"
+              :disabled="!newSettingClientType"
             >
               Add Setting
             </button>
@@ -239,47 +360,97 @@
             >
               <div class="flex items-center justify-between mb-2">
                 <h4 class="font-bold">{{ clientType }}</h4>
-                <div class="flex gap-2">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-ghost"
-                    @click="toggleSettingEdit(clientType)"
-                  >
-                    {{ editingSettings[clientType] ? 'Cancel' : 'Edit' }}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-error"
-                    @click="handleDeleteSetting(clientType)"
-                  >
-                    Delete
-                  </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-error"
+                  @click="handleDeleteSetting(clientType)"
+                >
+                  Delete
+                </button>
+              </div>
+
+              <!-- Display/Edit Mode -->
+              <div class="space-y-3">
+                <!-- Name -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text-alt">Name</span>
+                  </label>
+                  <input
+                    :value="settings.name || ''"
+                    @input="handleSettingFieldChange(clientType, 'name', $event)"
+                    type="text"
+                    placeholder="Setting name"
+                    class="input input-bordered input-sm"
+                  />
                 </div>
-              </div>
 
-              <!-- Display Mode -->
-              <div v-if="!editingSettings[clientType]">
-                <pre class="bg-base-200 p-2 rounded text-sm overflow-x-auto">{{ JSON.stringify(settings, null, 2) }}</pre>
-              </div>
+                <!-- Input Controller -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text-alt">Input Controller</span>
+                  </label>
+                  <input
+                    :value="settings.inputController || ''"
+                    @input="handleSettingFieldChange(clientType, 'inputController', $event)"
+                    type="text"
+                    placeholder="Input controller"
+                    class="input input-bordered input-sm"
+                  />
+                </div>
 
-              <!-- Edit Mode -->
-              <div v-else>
-                <textarea
-                  v-model="settingsEditors[clientType]"
-                  class="textarea textarea-bordered w-full font-mono text-sm"
-                  rows="10"
-                  placeholder="Enter JSON settings"
-                ></textarea>
-                <div class="flex justify-end gap-2 mt-2">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-primary"
-                    @click="handleSaveSetting(clientType)"
-                    :disabled="saving"
-                  >
-                    <span v-if="saving" class="loading loading-spinner loading-xs"></span>
-                    <span v-else>Save</span>
-                  </button>
+                <!-- Input Mappings -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text-alt">Input Mappings</span>
+                  </label>
+
+                  <!-- Add new mapping -->
+                  <div class="flex gap-2 mb-2">
+                    <input
+                      v-model="newMappingKey[clientType]"
+                      type="text"
+                      placeholder="Key"
+                      class="input input-bordered input-sm flex-1"
+                    />
+                    <input
+                      v-model="newMappingValue[clientType]"
+                      type="text"
+                      placeholder="Value"
+                      class="input input-bordered input-sm flex-1"
+                    />
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-secondary"
+                      @click="handleAddMapping(clientType)"
+                      :disabled="!newMappingKey[clientType] || !newMappingValue[clientType]"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  <!-- Existing mappings -->
+                  <div v-if="settings.inputMappings && Object.keys(settings.inputMappings).length > 0" class="space-y-1">
+                    <div
+                      v-for="(value, key) in settings.inputMappings"
+                      :key="key"
+                      class="flex gap-2 items-center bg-base-200 p-2 rounded"
+                    >
+                      <span class="font-mono text-xs flex-1">{{ key }}</span>
+                      <span class="text-xs">→</span>
+                      <span class="font-mono text-xs flex-1">{{ value }}</span>
+                      <button
+                        type="button"
+                        class="btn btn-xs btn-error"
+                        @click="handleRemoveMapping(clientType, key)"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else class="text-xs text-base-content/60 text-center py-2">
+                    No input mappings
+                  </div>
                 </div>
               </div>
             </div>
@@ -307,6 +478,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { userService, type RUser, type Settings, SectorRoles } from '../services/UserService';
+import { useRegion } from '@/composables/useRegion';
+import { ClientType } from '@nimbus/shared/network/MessageTypes';
 
 const props = defineProps<{
   username: string;
@@ -317,6 +490,7 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
+const { regions, loadRegions } = useRegion();
 const user = ref<RUser | null>(null);
 const loading = ref(false);
 const saving = ref(false);
@@ -326,12 +500,15 @@ const successMessage = ref<string | null>(null);
 const formData = ref({
   displayName: '',
   email: '',
-  sectorRolesRaw: '',
 });
 
 const newSettingClientType = ref('');
-const editingSettings = reactive<Record<string, boolean>>({});
-const settingsEditors = reactive<Record<string, string>>({});
+const newMappingKey = reactive<Record<string, string>>({});
+const newMappingValue = reactive<Record<string, string>>({});
+
+const newRegionId = ref('');
+const newCharLimitRegionId = ref('');
+const newCharLimit = ref<number | null>(null);
 
 const formatDate = (date: Date | string): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
@@ -343,11 +520,24 @@ const loadUser = async () => {
   error.value = null;
 
   try {
-    user.value = await userService.getUser(props.username);
+    const loadedUser = await userService.getUser(props.username);
+
+    // Convert sectorRoles from string names to enum numbers
+    const sectorRoles = (loadedUser.sectorRoles as any || []).map((role: any) => {
+      if (typeof role === 'string') {
+        return SectorRoles[role as keyof typeof SectorRoles];
+      }
+      return role;
+    });
+
+    user.value = {
+      ...loadedUser,
+      sectorRoles,
+    };
+
     formData.value = {
       displayName: user.value.publicData?.displayName || '',
       email: user.value.email,
-      sectorRolesRaw: user.value.sectorRoles ? user.value.sectorRoles.map(r => SectorRoles[r]).join(', ') : '',
     };
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load user';
@@ -358,19 +548,30 @@ const loadUser = async () => {
 };
 
 const handleSave = async () => {
+  if (!user.value) return;
+
   saving.value = true;
   error.value = null;
   successMessage.value = null;
 
   try {
-    await userService.updateUser(props.username, {
+    // Create clean RUser object
+    const updatedUser: RUser = {
+      username: user.value.username,
       email: formData.value.email,
-      sectorRolesRaw: formData.value.sectorRolesRaw,
+      createdAt: user.value.createdAt,
       publicData: {
         userId: props.username,
         displayName: formData.value.displayName,
       },
-    });
+      enabled: user.value.enabled,
+      sectorRoles: user.value.sectorRoles || [],
+      regionRoles: user.value.regionRoles || {},
+      characterLimits: user.value.characterLimits || {},
+      userSettings: user.value.userSettings || {},
+    };
+
+    await userService.updateUser(props.username, updatedUser);
     successMessage.value = 'User updated successfully';
     await loadUser();
   } catch (e) {
@@ -381,75 +582,217 @@ const handleSave = async () => {
   }
 };
 
+const handleSectorRoleChange = (role: number, event: Event) => {
+  if (!user.value) return;
+
+  const target = event.target as HTMLInputElement;
+  const currentRoles = user.value.sectorRoles || [];
+
+  let updatedRoles: number[];
+  if (target.checked) {
+    updatedRoles = [...currentRoles, role];
+  } else {
+    updatedRoles = currentRoles.filter(r => r !== role);
+  }
+
+  // Directly modify the sectorRoles array
+  if (!user.value.sectorRoles) {
+    user.value.sectorRoles = [];
+  }
+  user.value.sectorRoles = updatedRoles;
+
+  console.log('Updated sectorRoles:', user.value.sectorRoles);
+};
+
 const handleAddSetting = () => {
-  if (!newSettingClientType.value.trim()) {
+  if (!user.value || !newSettingClientType.value) {
     return;
   }
 
-  const clientType = newSettingClientType.value.trim();
-  editingSettings[clientType] = true;
-  settingsEditors[clientType] = JSON.stringify({}, null, 2);
+  const clientType = newSettingClientType.value;
+
+  // Add empty settings to user object
+  user.value = {
+    ...user.value,
+    userSettings: {
+      ...user.value.userSettings,
+      [clientType]: {
+        name: '',
+        inputController: '',
+        inputMappings: {},
+      },
+    },
+  };
+
   newSettingClientType.value = '';
 };
 
-const toggleSettingEdit = (clientType: string) => {
-  if (editingSettings[clientType]) {
-    delete editingSettings[clientType];
-    delete settingsEditors[clientType];
-  } else {
-    editingSettings[clientType] = true;
-    const currentSettings = user.value?.userSettings?.[clientType] || {};
-    settingsEditors[clientType] = JSON.stringify(currentSettings, null, 2);
-  }
+const handleSettingFieldChange = (clientType: string, field: string, event: Event) => {
+  if (!user.value) return;
+
+  const target = event.target as HTMLInputElement;
+  const currentSettings = user.value.userSettings?.[clientType] || {};
+
+  user.value = {
+    ...user.value,
+    userSettings: {
+      ...user.value.userSettings,
+      [clientType]: {
+        ...currentSettings,
+        [field]: target.value,
+      },
+    },
+  };
 };
 
-const handleSaveSetting = async (clientType: string) => {
-  saving.value = true;
-  error.value = null;
-  successMessage.value = null;
-
-  try {
-    const settingsJson = settingsEditors[clientType];
-    const settings = JSON.parse(settingsJson);
-
-    await userService.updateSettingsForClientType(props.username, clientType, settings);
-    successMessage.value = `Settings for "${clientType}" updated successfully`;
-
-    delete editingSettings[clientType];
-    delete settingsEditors[clientType];
-
-    await loadUser();
-  } catch (e) {
-    if (e instanceof SyntaxError) {
-      error.value = 'Invalid JSON format';
-    } else {
-      error.value = e instanceof Error ? e.message : 'Failed to save settings';
-    }
-    console.error('Failed to save settings:', e);
-  } finally {
-    saving.value = false;
-  }
-};
-
-const handleDeleteSetting = async (clientType: string) => {
-  if (!confirm(`Are you sure you want to delete settings for "${clientType}"?`)) {
+const handleAddMapping = (clientType: string) => {
+  if (!user.value || !newMappingKey[clientType] || !newMappingValue[clientType]) {
     return;
   }
 
-  saving.value = true;
-  error.value = null;
-  successMessage.value = null;
+  const currentSettings = user.value.userSettings?.[clientType] || {};
+  const currentMappings = currentSettings.inputMappings || {};
 
-  try {
-    await userService.deleteSettingsForClientType(props.username, clientType);
-    successMessage.value = `Settings for "${clientType}" deleted successfully`;
-    await loadUser();
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Failed to delete settings';
-    console.error('Failed to delete settings:', e);
-  } finally {
-    saving.value = false;
+  user.value = {
+    ...user.value,
+    userSettings: {
+      ...user.value.userSettings,
+      [clientType]: {
+        ...currentSettings,
+        inputMappings: {
+          ...currentMappings,
+          [newMappingKey[clientType]]: newMappingValue[clientType],
+        },
+      },
+    },
+  };
+
+  delete newMappingKey[clientType];
+  delete newMappingValue[clientType];
+};
+
+const handleRemoveMapping = (clientType: string, key: string) => {
+  if (!user.value) return;
+
+  const currentSettings = user.value.userSettings?.[clientType] || {};
+  const { [key]: removed, ...remainingMappings } = currentSettings.inputMappings || {};
+
+  user.value = {
+    ...user.value,
+    userSettings: {
+      ...user.value.userSettings,
+      [clientType]: {
+        ...currentSettings,
+        inputMappings: remainingMappings,
+      },
+    },
+  };
+};
+
+const handleDeleteSetting = (clientType: string) => {
+  if (!user.value) return;
+
+  // Update local user object
+  const { [clientType]: removed, ...remainingSettings } = user.value.userSettings || {};
+  user.value = {
+    ...user.value,
+    userSettings: remainingSettings,
+  };
+};
+
+const handleAddRegion = () => {
+  if (!user.value || !newRegionId.value.trim()) {
+    return;
   }
+
+  // Update local user object (will be saved when Save button is clicked)
+  user.value = {
+    ...user.value,
+    regionRoles: {
+      ...user.value.regionRoles,
+      [newRegionId.value]: 'PLAYER' as any, // Default role
+    },
+  };
+
+  newRegionId.value = '';
+};
+
+const handleRoleChange = (regionId: string, newRole: string, event: Event) => {
+  if (!user.value) return;
+
+  const target = event.target as HTMLInputElement;
+  if (!target.checked) {
+    // If unchecking, don't do anything (must have one role selected)
+    target.checked = true;
+    return;
+  }
+
+  // Update local user object (will be saved when Save button is clicked)
+  user.value = {
+    ...user.value,
+    regionRoles: {
+      ...user.value.regionRoles,
+      [regionId]: newRole as any,
+    },
+  };
+};
+
+const handleRemoveRegionRole = (regionId: string) => {
+  if (!user.value) return;
+
+  // Update local user object (will be saved when Save button is clicked)
+  const { [regionId]: removed, ...remainingRoles } = user.value.regionRoles || {};
+  user.value = {
+    ...user.value,
+    regionRoles: remainingRoles,
+  };
+};
+
+const handleAddCharacterLimit = () => {
+  if (!user.value || !newCharLimitRegionId.value || newCharLimit.value === null) {
+    return;
+  }
+
+  // Update local user object
+  user.value = {
+    ...user.value,
+    characterLimits: {
+      ...user.value.characterLimits,
+      [newCharLimitRegionId.value]: newCharLimit.value,
+    },
+  };
+
+  newCharLimitRegionId.value = '';
+  newCharLimit.value = null;
+};
+
+const handleCharLimitChange = (regionId: string, event: Event) => {
+  if (!user.value) return;
+
+  const target = event.target as HTMLInputElement;
+  const newValue = parseInt(target.value);
+
+  if (isNaN(newValue) || newValue < 0) return;
+
+  // Update local user object
+  user.value = {
+    ...user.value,
+    characterLimits: {
+      ...user.value.characterLimits,
+      [regionId]: newValue,
+    },
+  };
+};
+
+const handleRemoveCharacterLimit = (regionId: string) => {
+  if (!user.value) return;
+
+  // Update local user object
+  const { [regionId]: removed, ...remainingLimits } = user.value.characterLimits || {};
+  user.value = {
+    ...user.value,
+    characterLimits: remainingLimits,
+  };
 };
 
 const handleBack = () => {
@@ -458,5 +801,6 @@ const handleBack = () => {
 
 onMounted(() => {
   loadUser();
+  loadRegions();
 });
 </script>

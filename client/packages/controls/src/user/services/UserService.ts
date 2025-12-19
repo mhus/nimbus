@@ -29,8 +29,8 @@ class UserService {
     return apiService.get<RUser>(`/control/users/${username}`);
   }
 
-  async updateUser(username: string, request: UserRequest): Promise<RUser> {
-    return apiService.put<RUser>(`/control/users/${username}`, request);
+  async updateUser(username: string, user: RUser): Promise<RUser> {
+    return apiService.put<RUser>(`/control/users/${username}`, user);
   }
 
   async deleteUser(username: string): Promise<void> {

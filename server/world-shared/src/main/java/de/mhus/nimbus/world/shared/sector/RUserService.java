@@ -41,24 +41,31 @@ public class RUserService {
     public Optional<RUser> getByUsername(String username) { return repository.findByUsername(username); }
     public List<RUser> listAll() { return repository.findAll(); }
 
-    public RUser update(String username, String email, String sectorRolesRaw, de.mhus.nimbus.shared.types.PlayerUser publicData) {
-        RUser existing = repository.findByUsername(username)
-            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
-        if (email != null && !email.equals(existing.getEmail())) {
-            if (repository.existsByEmail(email)) throw new IllegalArgumentException("Email already exists: " + email);
-            existing.setEmail(email);
+    public RUser save(RUser user) {
+        // Try to load existing user from DB
+        var optExisting = repository.findByUsername(user.getUsername());
+
+        if (optExisting.isPresent()) {
+            // Update existing user
+            RUser existing = optExisting.get();
+            existing.setEmail(user.getEmail());
+            existing.setPublicData(user.getPublicData());
+            existing.setSectorRoles(user.getSectorRoles());
+            existing.setRegionRoles(user.getRegionRoles());
+            existing.setCharacterLimits(user.getCharacterLimits());
+            existing.setUserSettings(user.getUserSettings());
+            return repository.save(existing);
+        } else {
+            // Create new user
+            return repository.save(user);
         }
-        if (sectorRolesRaw != null) {
-            existing.setSectorRolesRaw(sectorRolesRaw);
-        }
-        if (publicData != null) {
-            existing.setPublicData(publicData);
-        }
-        return repository.save(existing);
     }
 
-    public RUser update(String username, String email, String sectorRolesRaw) {
-        return update(username, email, sectorRolesRaw, null);
+    public void disableUser(String username) {
+        RUser existing = repository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        existing.disable();
+        repository.save(existing);
     }
 
     // Globale Server-Rollen
