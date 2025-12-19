@@ -67,6 +67,15 @@ public class TypeScriptGenerator {
                 for (JavaFieldModel f : jm.getFields()) {
                     if (f == null) continue;
                     if (f.isIgnored()) continue;
+                    // static final Felder → als TS-Konstanten exportieren (nicht im Interface)
+                    if (f.isStaticFinal()) {
+                        String tsType = resolveTsType(f);
+                        String value = f.getInitializer();
+                        de.mhus.nimbus.tools.generatej2ts.ts.TypeScriptConstant c =
+                                new de.mhus.nimbus.tools.generatej2ts.ts.TypeScriptConstant(f.getName(), tsType, value);
+                        tt.getConstants().add(c);
+                        continue;
+                    }
                     String tsType = resolveTsType(f);
                     boolean optional = f.isOptional();
                     TypeScriptField tf = new TypeScriptField(f.getName(), tsType, optional);

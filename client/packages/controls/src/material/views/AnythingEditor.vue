@@ -2,25 +2,8 @@
   <div class="space-y-4">
     <!-- Header with Selectors and Actions -->
     <div class="flex flex-col gap-4">
-      <!-- Region and World Selectors -->
+      <!-- Collection, World and Search -->
       <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-        <!-- Region Selector -->
-        <div class="flex-1">
-          <label class="label">
-            <span class="label-text">Region</span>
-          </label>
-          <select
-            v-model="selectedRegionId"
-            class="select select-bordered w-full"
-            @change="handleRegionChange"
-          >
-            <option value="">All Regions</option>
-            <option v-for="region in regions" :key="region.name" :value="region.name">
-              {{ region.title || region.name }}
-            </option>
-          </select>
-        </div>
-
         <!-- World Selector (Optional) -->
         <div class="flex-1">
           <label class="label">
@@ -37,22 +20,30 @@
             </option>
           </select>
         </div>
-      </div>
 
-      <!-- Collection and Search -->
-      <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
         <!-- Collection Input -->
         <div class="flex-1">
           <label class="label">
             <span class="label-text">Collection</span>
           </label>
-          <input
-            v-model="collection"
-            type="text"
-            placeholder="Enter collection name..."
-            class="input input-bordered w-full"
-            @keyup.enter="handleSearch"
-          />
+          <div class="join w-full">
+            <input
+              v-model="collection"
+              type="text"
+              placeholder="Enter collection name..."
+              class="input input-bordered join-item flex-1"
+              @keyup.enter="handleSearch"
+            />
+            <button
+              class="btn btn-square join-item"
+              @click="openCollectionSearchDialog"
+              title="Search collections"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <!-- Type Filter (Optional) -->
@@ -213,10 +204,17 @@
       v-if="isDialogOpen"
       :entity="selectedEntity"
       :collection="collection"
-      :region-id="selectedRegionId"
+      :region-id="currentRegionId"
       :world-id="selectedWorldId"
       @close="closeDialog"
       @saved="handleSaved"
+    />
+
+    <!-- Collection Search Dialog -->
+    <CollectionSearchDialog
+      v-if="isCollectionSearchOpen"
+      @close="closeCollectionSearchDialog"
+      @select="handleCollectionSelect"
     />
   </div>
 </template>
@@ -230,11 +228,11 @@ import { anythingService } from '@/services/AnythingService';
 import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import AnythingDialog from '@material/components/AnythingDialog.vue';
+import CollectionSearchDialog from '@material/components/CollectionSearchDialog.vue';
 
-const { currentRegionId, regions, loadRegions } = useRegion();
+const { currentRegionId, loadRegions } = useRegion();
 const { worlds, loadWorlds } = useWorld();
 
-const selectedRegionId = ref<string>('');
 const selectedWorldId = ref<string>('');
 const collection = ref<string>('');
 const typeFilter = ref<string>('');
@@ -254,6 +252,7 @@ const hasPreviousPage = computed(() => currentPage.value > 1);
 // Dialog state
 const isDialogOpen = ref(false);
 const selectedEntity = ref<WAnything | null>(null);
+const isCollectionSearchOpen = ref(false);
 
 /**
  * Format date for display
@@ -262,16 +261,6 @@ const formatDate = (date: Date | string | undefined): string => {
   if (!date) return '-';
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
-};
-
-/**
- * Handle region change
- */
-const handleRegionChange = () => {
-  currentPage.value = 1;
-  if (hasSearched.value) {
-    handleSearch();
-  }
 };
 
 /**
@@ -301,7 +290,7 @@ const handleSearch = async () => {
     const offset = (currentPage.value - 1) * pageSize.value;
     const result = await anythingService.list({
       collection: collection.value,
-      regionId: selectedRegionId.value || undefined,
+      regionId: currentRegionId.value || undefined,
       worldId: selectedWorldId.value || undefined,
       type: typeFilter.value || undefined,
       enabledOnly: true,
@@ -342,6 +331,27 @@ const handleEdit = (entity: WAnything) => {
 const closeDialog = () => {
   isDialogOpen.value = false;
   selectedEntity.value = null;
+};
+
+/**
+ * Open collection search dialog
+ */
+const openCollectionSearchDialog = () => {
+  isCollectionSearchOpen.value = true;
+};
+
+/**
+ * Close collection search dialog
+ */
+const closeCollectionSearchDialog = () => {
+  isCollectionSearchOpen.value = false;
+};
+
+/**
+ * Handle collection selection from dialog
+ */
+const handleCollectionSelect = (selectedCollection: string) => {
+  collection.value = selectedCollection;
 };
 
 /**
@@ -397,14 +407,17 @@ const handlePreviousPage = () => {
   }
 };
 
+// Watch for region changes from header
+watch(currentRegionId, () => {
+  currentPage.value = 1;
+  if (hasSearched.value) {
+    handleSearch();
+  }
+});
+
 onMounted(async () => {
   // Load regions and worlds
   await loadRegions();
   await loadWorlds('all');
-
-  // Set initial region from useRegion
-  if (currentRegionId.value) {
-    selectedRegionId.value = currentRegionId.value;
-  }
 });
 </script>

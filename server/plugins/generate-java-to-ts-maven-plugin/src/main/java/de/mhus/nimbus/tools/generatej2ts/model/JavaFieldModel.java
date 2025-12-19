@@ -10,6 +10,8 @@ public class JavaFieldModel {
     private boolean optional;
     private boolean ignored;
     private boolean follow;
+    private boolean staticFinal; // true, wenn Feld static final ist (Konstante)
+    private String initializer; // Rohwert der Initialisierung (z. B. "\"PLAYER\"" oder 123)
     // Import-Metadaten aus @TypeScript
     // import_/tsImport/importValue → Symbolname
     // importPath → Pfad
@@ -41,6 +43,12 @@ public class JavaFieldModel {
 
     public boolean isFollow() { return follow; }
     public void setFollow(boolean follow) { this.follow = follow; }
+
+    public boolean isStaticFinal() { return staticFinal; }
+    public void setStaticFinal(boolean staticFinal) { this.staticFinal = staticFinal; }
+
+    public String getInitializer() { return initializer; }
+    public void setInitializer(String initializer) { this.initializer = initializer; }
 
     public String getImportSymbol() { return importSymbol; }
     public void setImportSymbol(String importSymbol) { this.importSymbol = importSymbol; }

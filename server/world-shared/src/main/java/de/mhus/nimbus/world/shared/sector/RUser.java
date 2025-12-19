@@ -52,19 +52,23 @@ public class RUser {
     @CreatedDate
     private Instant createdAt;
 
+    @TypeScript(import_ = "PlayerUser", importPath = "./PlayerUser")
     private PlayerUser publicData;
 
     private Boolean enabled; // wenn null -> enabled
 
     // Globale Rollen für den Region-Server (nicht pro einzelne Region)
     @Field("roles") // liest alte Property 'roles' weiterhin ein
+    @TypeScript(import_ = "SectorRoles", importPath = "./SectorRoles")
     private Set<SectorRoles> sectorRoles; // null oder leer -> keine Rollen
+    @TypeScript(import_ = "RegionRoles", importPath = "./RegionRoles")
     private Map<String, RegionRoles> regionRoles; // regionId -> role
 
     // Charakter-Limits pro Region: regionId -> maxCount
     private Map<String,Integer> characterLimits;
 
     // User Settings per ClientType: clientType (as String) -> Settings
+    @TypeScript(import_ = "Settings", importPath = "../../configs")
     private Map<String, Settings> userSettings;
 
     public RUser() { this.enabled = true; }

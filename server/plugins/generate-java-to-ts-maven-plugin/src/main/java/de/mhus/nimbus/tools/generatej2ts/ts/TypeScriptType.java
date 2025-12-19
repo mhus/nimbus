@@ -16,6 +16,8 @@ public class TypeScriptType {
     private String fileName;  // optional target filename (e.g. "Custom.ts")
     // Nested enums that should be emitted into the same file (followed inner enums)
     private final List<TypeScriptNestedEnum> nestedEnums = new ArrayList<>();
+    // Top-Level Konstanten (aus static final Feldern)
+    private final List<TypeScriptConstant> constants = new ArrayList<>();
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -37,4 +39,6 @@ public class TypeScriptType {
     public void setFileName(String fileName) { this.fileName = fileName; }
 
     public List<TypeScriptNestedEnum> getNestedEnums() { return nestedEnums; }
+
+    public List<TypeScriptConstant> getConstants() { return constants; }
 }

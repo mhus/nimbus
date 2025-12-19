@@ -11,14 +11,14 @@
       <h1 class="text-xl font-bold px-4">{{ title }}</h1>
     </div>
     <div class="flex-none">
-      <!-- World Selector -->
-      <WorldSelector />
+      <!-- Region Selector -->
+      <RegionSelector />
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import WorldSelector from './WorldSelector.vue';
+import RegionSelector from '@/character/components/RegionSelector.vue';
 
 defineProps<{
   title?: string;

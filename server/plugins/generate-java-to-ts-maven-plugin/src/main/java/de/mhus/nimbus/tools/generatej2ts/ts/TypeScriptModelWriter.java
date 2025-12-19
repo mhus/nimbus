@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * Schreibt ein TypeScriptModel als einzelne .ts Dateien auf die Platte.
@@ -73,6 +74,12 @@ public class TypeScriptModelWriter {
                 w.write("\n");
             }
 
+            // Konstanten (aus static final Feldern)
+            if (type.getConstants() != null && !type.getConstants().isEmpty()) {
+                writeConstants(type.getConstants(), w);
+                w.write("\n");
+            }
+
             if (type.getKind() == TypeScriptKind.ENUM) {
                 writeEnum(type, w);
             } else {
@@ -129,5 +136,21 @@ public class TypeScriptModelWriter {
             w.write("\n");
         }
         w.write("}\n");
+    }
+
+    private void writeConstants(List<TypeScriptConstant> constants, Writer w) throws IOException {
+        for (TypeScriptConstant c : constants) {
+            if (c == null) continue;
+            String name = c.getName();
+            String value = c.getValue();
+            String type = c.getTsType();
+            if (value != null && !value.isBlank()) {
+                w.write("export const " + name + " = " + value + ";\n");
+            } else {
+                // Falls kein Wert vorhanden ist, mit Typ annotieren
+                String t = (type == null || type.isBlank()) ? "any" : type;
+                w.write("export const " + name + ": " + t + ";\n");
+            }
+        }
     }
 }

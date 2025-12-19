@@ -43,7 +43,30 @@ export interface UpdateAnythingRequest {
   enabled?: boolean;
 }
 
+export interface GetCollectionsResponse {
+  collections: string[];
+  count: number;
+}
+
 export class AnythingService extends ApiService {
+  /**
+   * Get distinct collection names with optional filtering
+   */
+  async getCollections(regionId?: string, worldId?: string): Promise<GetCollectionsResponse> {
+    logger.debug('Getting collections', { regionId, worldId });
+
+    const queryParams = new URLSearchParams();
+    if (regionId) queryParams.append('regionId', regionId);
+    if (worldId) queryParams.append('worldId', worldId);
+
+    const queryString = queryParams.toString();
+    const url = `/control/anything/collections${queryString ? '?' + queryString : ''}`;
+
+    const response = await this.get<GetCollectionsResponse>(url);
+    logger.debug('Got collections', { count: response.count });
+    return response;
+  }
+
   /**
    * List entities with flexible filtering
    */

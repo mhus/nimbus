@@ -106,6 +106,11 @@ public class JavaAstParser {
                     f.setName(v.getNameAsString());
                     Type t = v.getType();
                     f.setJavaType(t.asString());
+                    // Modifiers: static final → Konstante, nur public exportieren
+                    boolean isStatic = fd.isStatic();
+                    boolean isFinal = fd.isFinal();
+                    f.setStaticFinal(isStatic && isFinal);
+                    v.getInitializer().ifPresent(init -> f.setInitializer(init.toString()));
                     // analyze annotations on the field
                     for (AnnotationExpr an : fd.getAnnotations()) {
                         String n = simpleName(an.getNameAsString());

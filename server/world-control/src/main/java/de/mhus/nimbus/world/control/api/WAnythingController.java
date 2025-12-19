@@ -165,6 +165,31 @@ public class WAnythingController extends BaseEditorController {
     }
 
     /**
+     * Get distinct collection names with optional filtering.
+     * GET /control/anything/collections?regionId=...&worldId=...
+     */
+    @GetMapping("/collections")
+    @Operation(summary = "Get distinct collection names")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success")
+    })
+    public ResponseEntity<?> getCollections(
+            @Parameter(description = "Optional region identifier") @RequestParam(required = false) String regionId,
+            @Parameter(description = "Optional world identifier") @RequestParam(required = false) String worldId) {
+
+        log.debug("GET collections: regionId={}, worldId={}", regionId, worldId);
+
+        List<String> collections = anythingService.findDistinctCollections(regionId, worldId);
+
+        log.debug("Returning {} collections", collections.size());
+
+        return ResponseEntity.ok(Map.of(
+                "collections", collections,
+                "count", collections.size()
+        ));
+    }
+
+    /**
      * List all entities in a collection with optional filters.
      * GET /control/anything/list?collection=...&worldId=...&regionId=...&type=...&offset=0&limit=50
      */

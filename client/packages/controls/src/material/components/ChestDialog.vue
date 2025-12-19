@@ -135,7 +135,7 @@
                   >
                     <option value="">{{ loadingUsers ? 'Loading users...' : 'Select user...' }}</option>
                     <option v-for="user in users" :key="user.id" :value="user.id">
-                      {{ user.username }} ({{ user.email }})
+                      {{ user.publicData?.displayName || user.username }} ({{ user.username }})
                     </option>
                   </select>
                   <label class="label">
@@ -230,6 +230,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import type { WChest, ChestType } from '@shared/generated/entities/WChest';
+import type { RUser } from '@shared/generated/entities/RUser';
 import { chestService, type ChestRequest } from '@/services/ChestService';
 import { useWorld } from '@/composables/useWorld';
 import { apiService } from '@/services/ApiService';
@@ -267,7 +268,7 @@ const saving = ref(false);
 const { worlds, loadWorlds } = useWorld();
 
 // Load users
-const users = ref<Array<{ id: string, username: string, email: string }>>([]);
+const users = ref<RUser[]>([]);
 const loadingUsers = ref(false);
 
 /**
@@ -276,9 +277,7 @@ const loadingUsers = ref(false);
 const loadUsers = async () => {
   loadingUsers.value = true;
   try {
-    const response = await apiService.get<Array<{ id: string, username: string, email: string }>>(
-      `/control/users`
-    );
+    const response = await apiService.get<RUser[]>(`/control/users`);
     users.value = response;
     logger.info('Loaded users', { count: users.value.length });
   } catch (err) {

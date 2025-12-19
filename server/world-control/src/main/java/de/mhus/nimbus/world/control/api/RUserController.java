@@ -52,13 +52,11 @@ public class RUserController extends BaseEditorController {
 
     /**
      * List all users
-     * GET /control/user
+     * GET /control/users
      */
     @GetMapping
-    public ResponseEntity<List<UserResponse>> list() {
-        List<UserResponse> result = userService.listAll().stream()
-                .map(this::toResponse)
-                .toList();
+    public ResponseEntity<List<RUser>> list() {
+        List<RUser> result = userService.listAll();
         return ResponseEntity.ok(result);
     }
 

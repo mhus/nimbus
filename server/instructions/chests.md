@@ -47,3 +47,5 @@ Items weiden auf der einen Seite geladen und Chest auf der anderen Seite.
 Items koennen nun im chest referenziert werden (->) oder im chest wieder entfernt. bzw. anzahl bearbeitet werden.
 
 [?] Erstelle in HomeApp.vue einen Eintrag fuer den neuen chest-editor Editor
+
+[ ] wenn type world, dann existierende welten in dieser region auswahl, wenn type user, dann user auswahl

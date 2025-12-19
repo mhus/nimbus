@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.world;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class WAnythingService {
 
     private final WAnythingRepository repository;
+    private final MongoTemplate mongoTemplate;
 
     /**
      * Find entity by collection and name only.
@@ -392,5 +394,29 @@ public class WAnythingService {
         log.debug("WAnythingEntity created: regionId={}, worldId={}, collection={}, name={}, type={}",
                 regionId, worldId, collection, name, type);
         return entity;
+    }
+
+    /**
+     * Get distinct collection names, optionally filtered by regionId and/or worldId.
+     * Uses MongoDB distinct query for efficient retrieval.
+     */
+    @Transactional(readOnly = true)
+    public List<String> findDistinctCollections(String regionId, String worldId) {
+        var query = new org.springframework.data.mongodb.core.query.Query();
+
+        if (regionId != null && !regionId.isBlank()) {
+            query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("regionId").is(regionId));
+        }
+
+        if (worldId != null && !worldId.isBlank()) {
+            query.addCriteria(org.springframework.data.mongodb.core.query.Criteria.where("worldId").is(worldId));
+        }
+
+        List<String> collections = mongoTemplate.findDistinct(query, "collection", WAnything.class, String.class);
+        log.debug("Found {} distinct collections (regionId={}, worldId={})", collections.size(), regionId, worldId);
+
+        return collections.stream()
+                .sorted()
+                .toList();
     }
 }

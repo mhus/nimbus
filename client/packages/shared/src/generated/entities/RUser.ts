@@ -3,8 +3,14 @@
  Source: de.mhus.nimbus.world.shared.sector.RUser
 */
 
+import { SectorRoles } from './SectorRoles';
+import { Settings } from '../../configs';
+import { PlayerUser } from './PlayerUser';
+import { RegionRoles } from './RegionRoles';
+
+export const DEFAULT_REGION_ROLE = "PLAYER";
+
 export interface RUser {
-  DEFAULT_REGION_ROLE: string;
   username: string;
   email: string;
   createdAt: Date;
