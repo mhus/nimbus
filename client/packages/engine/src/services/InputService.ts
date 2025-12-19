@@ -33,6 +33,7 @@ import {
   EditorActivateHandler,
   BlockEditorActivateHandler,
   EditConfigActivateHandler,
+  PanelActivateHandler,
 } from '../input/handlers/EditorHandlers';
 
 const logger = getLogger('InputService');
@@ -126,6 +127,7 @@ export class InputService {
       this.handlerRegistry.set('editorActivate', new EditorActivateHandler(this.playerService, this.appContext));
       this.handlerRegistry.set('blockEditorActivate', new BlockEditorActivateHandler(this.playerService, this.appContext));
       this.handlerRegistry.set('editConfigActivate', new EditConfigActivateHandler(this.playerService, this.appContext));
+      this.handlerRegistry.set('panelActivate', new PanelActivateHandler(this.playerService, this.appContext));
     }
 
     logger.debug('Central handlers registered', {

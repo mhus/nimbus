@@ -1054,6 +1054,48 @@ export class ModalService {
   }
 
   /**
+   * Open panel navigation modal (full preset with all features)
+   *
+   * @returns Modal reference
+   */
+  openPanel(): ModalReference {
+    try {
+      // Exit pointer lock so user can interact with modal
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+        logger.debug('Exited pointer lock for panel navigation');
+      }
+
+      // Get component base URL from NetworkService
+      const componentBaseUrl = this.appContext?.services.network?.getComponentBaseUrl();
+
+      if (!componentBaseUrl) {
+        logger.warn('No component URL configured for this world');
+        throw new Error('Panel navigation is not available in this world');
+      }
+
+      // Build URL with path and parameters
+      const separator = componentBaseUrl.includes('?') ? '&' : '?';
+      const worldId = this.appContext.worldInfo?.worldId;
+      const sessionId = this.appContext.sessionId;
+
+      const panelUrl = `${componentBaseUrl}panels.html${separator}embedded=true&worldId=${worldId}&sessionId=${sessionId}`;
+
+      logger.debug('Opening panel navigation modal', { panelUrl });
+
+      return this.openModal(
+        'panel-navigation', // referenceKey - reuse same modal for panel
+        'Panels',
+        panelUrl,
+        ModalSizePreset.CENTER_LARGE, // Full preset - large centered modal
+        ModalFlags.CLOSEABLE | ModalFlags.MOVEABLE | ModalFlags.NO_BACKGROUND_LOCK | ModalFlags.RESIZEABLE | ModalFlags.BREAK_OUT | ModalFlags.MINIMIZABLE
+      );
+    } catch (error) {
+      throw ExceptionHandler.handleAndRethrow(error, 'ModalService.openPanel');
+    }
+  }
+
+  /**
    * Open a predefined component modal
    *
    * @param component Component name (e.g., 'block_editor', 'settings', 'inventory')
@@ -1084,6 +1126,11 @@ export class ModalService {
         case 'edit_config':
           // No attributes required
           return this.openEditConfiguration();
+
+        case 'panel':
+        case 'panels':
+          // No attributes required
+          return this.openPanel();
 
         // Future components can be added here:
         // case 'settings':

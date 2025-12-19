@@ -67,7 +67,10 @@ public class JavaCollector {
                     break;
                 }
             }
-            if (has) queue.add(f);
+            if (has) {
+                if (log != null) log.info("JavaCollector: enqueue " + f.getAbsolutePath());
+                queue.add(f);
+            }
         }
 
         while (!queue.isEmpty()) {
@@ -87,6 +90,7 @@ public class JavaCollector {
                 if (!JavaAstParser.hasGenerateTypeScriptAnnotation(td)) continue;
 
                 JavaClassModel model = JavaAstParser.toModel(cu, td);
+                if (log != null) log.info("JavaCollector: model parsed -> " + (model.getPackageName() == null ? model.getName() : (model.getPackageName() + "." + model.getName())));
                 result.add(model);
 
                 // follow: versuche referenzierte Typen von Feldern nachzuladen

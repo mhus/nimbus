@@ -22,7 +22,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${world.cors.allowed-origins:http://localhost:*}")
+    @Value("${world.cors.allowed-origins:}")
     private List<String> allowedOrigins;
 
     @Bean
@@ -35,7 +35,12 @@ public class CorsConfig {
         config.setAllowPrivateNetwork(true);
 
         // Allow origins (must be specific when using credentials)
-        allowedOrigins.forEach(config::addAllowedOriginPattern);
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            allowedOrigins.forEach(config::addAllowedOriginPattern);
+        } else {
+            // Default: allow all localhost ports using Spring's pattern syntax
+            config.addAllowedOriginPattern("http://localhost:[*]");
+        }
 
         // Allow all headers
         config.addAllowedHeader("*");

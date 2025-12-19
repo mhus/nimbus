@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,11 @@ import java.util.stream.Collectors;
 public class WAnythingController extends BaseEditorController {
 
     private final WAnythingService anythingService;
+
+    @PostConstruct
+    public void init() {
+        log.info("WAnythingController initialized");
+    }
 
     // DTOs
     public record AnythingDto(

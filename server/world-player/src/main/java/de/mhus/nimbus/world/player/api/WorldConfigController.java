@@ -3,8 +3,14 @@ package de.mhus.nimbus.world.player.api;
 import de.mhus.nimbus.generated.configs.EngineConfiguration;
 import de.mhus.nimbus.generated.configs.PlayerBackpack;
 import de.mhus.nimbus.generated.configs.Settings;
+import de.mhus.nimbus.generated.network.ClientType;
+import de.mhus.nimbus.generated.types.MovementStateDomensions;
+import de.mhus.nimbus.generated.types.MovementStateValues;
 import de.mhus.nimbus.generated.types.PlayerInfo;
 import de.mhus.nimbus.generated.types.WorldInfo;
+import de.mhus.nimbus.shared.types.PlayerData;
+import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.world.player.service.PlayerService;
 import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
@@ -32,6 +38,7 @@ import java.util.Optional;
 public class WorldConfigController {
 
     private final WWorldService worldService;
+    private final PlayerService playerService;
     private final AccessValidator accessUtil;
 
     @GetMapping("/config")
@@ -45,8 +52,12 @@ public class WorldConfigController {
                 () -> new IllegalStateException("World ID not found in request")
         );
 
-        String clientType = client != null ? client : "viewer";
-        log.info("Loading config for world: {}, client: {}", worldId, clientType);
+        var playerId = accessUtil.getPlayerId(request).orElseThrow(
+                () -> new IllegalStateException("Player ID not found in request")
+        );
+
+        String clientVariant = client != null ? client : "viewer";
+        log.info("Loading config for world: {}, player: {}, clientVariant: {}", worldId, playerId, clientVariant);
 
         // Load world from database
         Optional<WWorld> worldOpt = worldService.getByWorldId(worldId);
@@ -57,14 +68,21 @@ public class WorldConfigController {
         WWorld world = worldOpt.get();
         WorldInfo worldInfo = world.getPublicData();
 
-        // Create default player info
-        PlayerInfo playerInfo = createDefaultPlayerInfo();
+        // Load player data (always use WEB as ClientType for now)
+        Optional<PlayerData> playerDataOpt = playerService.getPlayer(playerId, ClientType.WEB, worldId.getRegionId());
+        if (playerDataOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "Player not found"));
+        }
 
-        // Create default player backpack
-        PlayerBackpack playerBackpack = createDefaultPlayerBackpack();
+        PlayerData playerData = playerDataOpt.get();
+        PlayerInfo playerInfo = playerData.character().getPublicData();
+        PlayerBackpack playerBackpack = playerData.character().getBackpack();
+        Settings settings = playerData.settings();
 
-        // Create default settings
-        Settings settings = createDefaultSettings(clientType);
+        // Ensure all required fields are set with defaults
+        setPlayerInfoDefaults(playerInfo);
+        setPlayerBackpackDefaults(playerBackpack);
+        setSettingsDefaults(settings);
 
         // Build complete configuration
         EngineConfiguration config = EngineConfiguration.builder()
@@ -99,12 +117,16 @@ public class WorldConfigController {
                 () -> new IllegalStateException("World ID not found in request")
         );
 
-        Optional<WWorld> worldOpt = worldService.getByWorldId(worldId);
-        if (worldOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("error", "World not found"));
+        var playerId = accessUtil.getPlayerId(request).orElseThrow(
+                () -> new IllegalStateException("Player ID not found in request")
+        );
+
+        Optional<PlayerData> playerDataOpt = playerService.getPlayer(playerId, ClientType.WEB, worldId.getRegionId());
+        if (playerDataOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "Player not found"));
         }
 
-        return ResponseEntity.ok(createDefaultPlayerInfo());
+        return ResponseEntity.ok(playerDataOpt.get().character().getPublicData());
     }
 
     @GetMapping("/config/playerbackpack")
@@ -114,12 +136,16 @@ public class WorldConfigController {
                 () -> new IllegalStateException("World ID not found in request")
         );
 
-        Optional<WWorld> worldOpt = worldService.getByWorldId(worldId);
-        if (worldOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("error", "World not found"));
+        var playerId = accessUtil.getPlayerId(request).orElseThrow(
+                () -> new IllegalStateException("Player ID not found in request")
+        );
+
+        Optional<PlayerData> playerDataOpt = playerService.getPlayer(playerId, ClientType.WEB, worldId.getRegionId());
+        if (playerDataOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "Player not found"));
         }
 
-        return ResponseEntity.ok(createDefaultPlayerBackpack());
+        return ResponseEntity.ok(playerDataOpt.get().character().getBackpack());
     }
 
     @GetMapping("/config/settings")
@@ -128,70 +154,161 @@ public class WorldConfigController {
             HttpServletRequest request,
             @RequestParam(required = false) String client) {
 
-        String clientType = client != null ? client : "viewer";
+        String clientVariant = client != null ? client : "viewer";
 
         var worldId = accessUtil.getWorldId(request).orElseThrow(
                 () -> new IllegalStateException("World ID not found in request")
         );
 
-        Optional<WWorld> worldOpt = worldService.getByWorldId(worldId);
-        if (worldOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("error", "World not found"));
+        var playerId = accessUtil.getPlayerId(request).orElseThrow(
+                () -> new IllegalStateException("Player ID not found in request")
+        );
+
+        // Always use WEB as ClientType for now
+        Optional<PlayerData> playerDataOpt = playerService.getPlayer(playerId, ClientType.WEB, worldId.getRegionId());
+        if (playerDataOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "Player not found"));
         }
 
-        return ResponseEntity.ok(createDefaultSettings(clientType));
+        return ResponseEntity.ok(playerDataOpt.get().settings());
     }
 
     /**
-     * Creates default PlayerInfo with reasonable defaults
+     * Set default values for PlayerInfo fields if they are null or missing.
      */
-    private PlayerInfo createDefaultPlayerInfo() {
-        return PlayerInfo.builder()
-                .playerId("default-player")
-                .displayName("Player")
-                .thirdPersonModelId("wizard1")
-                .baseWalkSpeed(5.0)
-                .baseRunSpeed(7.0)
-                .baseUnderwaterSpeed(3.0)
-                .baseCrawlSpeed(1.5)
-                .baseRidingSpeed(8.0)
-                .baseJumpSpeed(8.0)
-                .effectiveWalkSpeed(5.0)
-                .effectiveRunSpeed(7.0)
-                .effectiveUnderwaterSpeed(3.0)
-                .effectiveCrawlSpeed(1.5)
-                .effectiveRidingSpeed(8.0)
-                .effectiveJumpSpeed(8.0)
-                .eyeHeight(1.6)
-                .stealthRange(8.0)
-                .distanceNotifyReductionWalk(0.0)
-                .distanceNotifyReductionCrouch(0.5)
-                .selectionRadius(5.0)
-                .baseTurnSpeed(0.003)
-                .effectiveTurnSpeed(0.003)
-                .baseUnderwaterTurnSpeed(0.002)
-                .effectiveUnderwaterTurnSpeed(0.002)
-                .build();
+    private void setPlayerInfoDefaults(PlayerInfo playerInfo) {
+        if (playerInfo == null) return;
+
+        // Set basic fields
+        if (playerInfo.getPlayerId() == null) {
+            playerInfo.setPlayerId("default-player");
+        }
+        if (playerInfo.getDisplayName() == null) {
+            playerInfo.setDisplayName("Player");
+        }
+        if (playerInfo.getThirdPersonModelId() == null) {
+            playerInfo.setThirdPersonModelId("wizard1");
+        }
+
+        // Set movement speeds
+        if (playerInfo.getBaseWalkSpeed() == 0.0) playerInfo.setBaseWalkSpeed(5.0);
+        if (playerInfo.getBaseRunSpeed() == 0.0) playerInfo.setBaseRunSpeed(7.0);
+        if (playerInfo.getBaseUnderwaterSpeed() == 0.0) playerInfo.setBaseUnderwaterSpeed(3.0);
+        if (playerInfo.getBaseCrawlSpeed() == 0.0) playerInfo.setBaseCrawlSpeed(1.5);
+        if (playerInfo.getBaseRidingSpeed() == 0.0) playerInfo.setBaseRidingSpeed(8.0);
+        if (playerInfo.getBaseJumpSpeed() == 0.0) playerInfo.setBaseJumpSpeed(8.0);
+
+        if (playerInfo.getEffectiveWalkSpeed() == 0.0) playerInfo.setEffectiveWalkSpeed(5.0);
+        if (playerInfo.getEffectiveRunSpeed() == 0.0) playerInfo.setEffectiveRunSpeed(7.0);
+        if (playerInfo.getEffectiveUnderwaterSpeed() == 0.0) playerInfo.setEffectiveUnderwaterSpeed(3.0);
+        if (playerInfo.getEffectiveCrawlSpeed() == 0.0) playerInfo.setEffectiveCrawlSpeed(1.5);
+        if (playerInfo.getEffectiveRidingSpeed() == 0.0) playerInfo.setEffectiveRidingSpeed(8.0);
+        if (playerInfo.getEffectiveJumpSpeed() == 0.0) playerInfo.setEffectiveJumpSpeed(8.0);
+
+        // Set other properties
+        if (playerInfo.getEyeHeight() == 0.0) playerInfo.setEyeHeight(1.6);
+        if (playerInfo.getStealthRange() == 0.0) playerInfo.setStealthRange(8.0);
+        if (playerInfo.getSelectionRadius() == 0.0) playerInfo.setSelectionRadius(5.0);
+        if (playerInfo.getBaseTurnSpeed() == 0.0) playerInfo.setBaseTurnSpeed(0.003);
+        if (playerInfo.getEffectiveTurnSpeed() == 0.0) playerInfo.setEffectiveTurnSpeed(0.003);
+        if (playerInfo.getBaseUnderwaterTurnSpeed() == 0.0) playerInfo.setBaseUnderwaterTurnSpeed(0.002);
+        if (playerInfo.getEffectiveUnderwaterTurnSpeed() == 0.0) playerInfo.setEffectiveUnderwaterTurnSpeed(0.002);
+
+        // Ensure stateValues exists and has 'default' state as fallback
+        if (playerInfo.getStateValues() == null) {
+            playerInfo.setStateValues(new HashMap<>());
+        }
+
+        // Create default dimensions
+        MovementStateDomensions defaultDimensions = new MovementStateDomensions();
+        defaultDimensions.setHeight(2.0);
+        defaultDimensions.setWidth(0.6);
+        defaultDimensions.setFootprint(0.3);
+
+        // Ensure 'default' state exists
+        if (!playerInfo.getStateValues().containsKey("default")) {
+            MovementStateValues defaultState = new MovementStateValues();
+            defaultState.setDimensions(defaultDimensions);
+            defaultState.setBaseMoveSpeed(5.0);
+            defaultState.setEffectiveMoveSpeed(5.0);
+            defaultState.setBaseJumpSpeed(8.0);
+            defaultState.setEffectiveJumpSpeed(8.0);
+            defaultState.setEyeHeight(1.6);
+            defaultState.setBaseTurnSpeed(0.003);
+            defaultState.setEffectiveTurnSpeed(0.003);
+            defaultState.setSelectionRadius(5.0);
+            defaultState.setStealthRange(8.0);
+            defaultState.setDistanceNotifyReduction(0.0);
+
+            playerInfo.getStateValues().put("default", defaultState);
+        } else {
+            // Default state exists, but ensure dimensions are set
+            MovementStateValues defaultState = playerInfo.getStateValues().get("default");
+            if (defaultState.getDimensions() == null) {
+                defaultState.setDimensions(defaultDimensions);
+            }
+        }
+
+        // Ensure all states have complete values with defaults
+        for (Map.Entry<String, MovementStateValues> entry : playerInfo.getStateValues().entrySet()) {
+            String stateKey = entry.getKey();
+            MovementStateValues state = entry.getValue();
+
+            if (state == null) continue;
+
+            // Set dimensions if missing
+            if (state.getDimensions() == null) {
+                MovementStateDomensions dimensions = new MovementStateDomensions();
+                dimensions.setHeight(2.0);
+                dimensions.setWidth(0.6);
+                dimensions.setFootprint(0.3);
+                state.setDimensions(dimensions);
+            }
+
+            // Set movement speeds if missing
+            if (state.getBaseMoveSpeed() == 0.0) state.setBaseMoveSpeed(5.0);
+            if (state.getEffectiveMoveSpeed() == 0.0) state.setEffectiveMoveSpeed(5.0);
+            if (state.getBaseJumpSpeed() == 0.0) state.setBaseJumpSpeed(8.0);
+            if (state.getEffectiveJumpSpeed() == 0.0) state.setEffectiveJumpSpeed(8.0);
+
+            // Set other properties if missing
+            if (state.getEyeHeight() == 0.0) state.setEyeHeight(1.6);
+            if (state.getBaseTurnSpeed() == 0.0) state.setBaseTurnSpeed(0.003);
+            if (state.getEffectiveTurnSpeed() == 0.0) state.setEffectiveTurnSpeed(0.003);
+            if (state.getSelectionRadius() == 0.0) state.setSelectionRadius(5.0);
+            if (state.getStealthRange() == 0.0) state.setStealthRange(8.0);
+        }
     }
 
     /**
-     * Creates default PlayerBackpack (empty)
+     * Set default values for PlayerBackpack fields if they are null or missing.
      */
-    private PlayerBackpack createDefaultPlayerBackpack() {
-        return PlayerBackpack.builder()
-                .itemIds(new HashMap<>())
-                .wearingItemIds(new HashMap<>())
-                .build();
+    private void setPlayerBackpackDefaults(PlayerBackpack backpack) {
+        if (backpack == null) return;
+
+        if (backpack.getItemIds() == null) {
+            backpack.setItemIds(new java.util.HashMap<>());
+        }
+        if (backpack.getWearingItemIds() == null) {
+            backpack.setWearingItemIds(new java.util.HashMap<>());
+        }
     }
 
     /**
-     * Creates default Settings based on client type
+     * Set default values for Settings fields if they are null or missing.
      */
-    private Settings createDefaultSettings(String clientType) {
-        return Settings.builder()
-                .name("Player")
-                .inputController("keyboard")
-                .inputMappings(new HashMap<>())
-                .build();
+    private void setSettingsDefaults(Settings settings) {
+        if (settings == null) return;
+
+        if (settings.getName() == null) {
+            settings.setName("Player");
+        }
+        if (settings.getInputController() == null) {
+            settings.setInputController("keyboard");
+        }
+        if (settings.getInputMappings() == null) {
+            settings.setInputMappings(new java.util.HashMap<>());
+        }
     }
+
 }

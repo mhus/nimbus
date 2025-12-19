@@ -50,27 +50,15 @@ function isPlayerEntity(entity: PhysicsEntity): entity is PlayerEntity {
 function getStateValuesForEntity(entity: PhysicsEntity): MovementStateValues {
   if (isPlayerEntity(entity) && entity.playerInfo.stateValues) {
     const stateKey = movementModeToKey(entity.movementMode);
-    return entity.playerInfo.stateValues[stateKey] || entity.playerInfo.stateValues.walk;
+    // Try movement-specific key first, then 'default', then 'walk' as final fallback
+    return entity.playerInfo.stateValues[stateKey]
+      || entity.playerInfo.stateValues.default
+      || entity.playerInfo.stateValues.walk
+      || DEFAULT_STATE_VALUES.walk;
   }
 
   // Default values for non-player entities
   return DEFAULT_STATE_VALUES.walk;
-}
-
-/**
- * Get entity dimensions for current movement mode
- * @deprecated Use getStateValuesForEntity().dimensions instead
- */
-function getEntityDimensions(entity: PhysicsEntity): { height: number; width: number; footprint: number } {
-  return getStateValuesForEntity(entity).dimensions;
-}
-
-/**
- * Get entity eye height for current movement mode
- * @deprecated Use getStateValuesForEntity().eyeHeight instead
- */
-function getEntityEyeHeight(entity: PhysicsEntity): number {
-  return getStateValuesForEntity(entity).eyeHeight;
 }
 
 /**
@@ -461,8 +449,8 @@ export class PhysicsService {
    * Update a single entity - NEW MODULAR SYSTEM
    */
   private updateEntity(entity: PhysicsEntity, deltaTime: number): void {
-    // Get entity dimensions
-    const dimensions = getEntityDimensions(entity);
+    // Get entity dimensions from state values
+    const dimensions = getStateValuesForEntity(entity).dimensions;
 
     // Determine which controller to use based on movement mode
     const useWalkController =
@@ -588,7 +576,7 @@ export class PhysicsService {
     }
 
     // Get entity dimensions for accurate landing position
-    const dimensions = getEntityDimensions(entity);
+    const dimensions = getStateValuesForEntity(entity).dimensions;
 
     // Calculate landing block position (under player's feet)
     const landingBlockPos = new Vector3(

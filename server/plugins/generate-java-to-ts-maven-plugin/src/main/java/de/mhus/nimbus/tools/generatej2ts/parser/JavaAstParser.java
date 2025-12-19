@@ -1,5 +1,7 @@
 package de.mhus.nimbus.tools.generatej2ts.parser;
 
+import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.ParserConfiguration.LanguageLevel;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.NodeList;
@@ -9,6 +11,8 @@ import com.github.javaparser.ast.body.EnumConstantDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.body.RecordDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -29,6 +33,12 @@ import java.util.Optional;
 public class JavaAstParser {
 
     public static CompilationUnit parseCu(File file) throws IOException {
+        // Ensure language level supports records and recent Java features
+        ParserConfiguration cfg = StaticJavaParser.getConfiguration();
+        LanguageLevel wanted = LanguageLevel.BLEEDING_EDGE; // tolerant to newest syntax
+        if (cfg.getLanguageLevel() != wanted) {
+            cfg.setLanguageLevel(wanted);
+        }
         try (FileInputStream fis = new FileInputStream(file)) {
             return StaticJavaParser.parse(fis);
         }
@@ -149,6 +159,62 @@ public class JavaAstParser {
                     model.getInnerEnums().add(em);
                 }
             }
+        }
+
+        // Support for Java records (treated like classes with fields = record components)
+        if (typeDecl instanceof RecordDeclaration recordDecl) {
+            model.setKind(JavaKind.CLASS);
+
+            // @TypeScriptImport on record
+            extractTypeScriptImport(typeDecl).ifPresent(s -> {
+                for (String line : s.split("\n")) {
+                    model.getTypeScriptImports().add(line);
+                }
+            });
+
+            // Components as fields
+            NodeList<Parameter> params = recordDecl.getParameters();
+            if (params != null) {
+                for (Parameter p : params) {
+                    JavaFieldModel f = new JavaFieldModel();
+                    f.setName(p.getNameAsString());
+                    Type t = p.getType();
+                    f.setJavaType(t.asString());
+                    // analyze annotations on the component (same as field)
+                    for (AnnotationExpr an : p.getAnnotations()) {
+                        String n = simpleName(an.getNameAsString());
+                        if (n.equals("TypeScript")) {
+                            f.setFollow(getBooleanAttribute(an, "follow").orElse(false));
+                            getStringAttribute(an, "type").ifPresent(f::setTsTypeOverride);
+                            getStringAttribute(an, "importLine").ifPresent(f::setInlineImportLine);
+                            getStringAttribute(an, "tsImport").ifPresent(f::setImportSymbol);
+                            getStringAttribute(an, "import_").ifPresent(f::setImportSymbol);
+                            getStringAttribute(an, "importValue").ifPresent(f::setImportSymbol);
+                            getStringAttribute(an, "importPath").ifPresent(f::setImportPath);
+                            getStringAttribute(an, "importAs").ifPresent(f::setImportAs);
+                            f.setIgnored(getBooleanAttribute(an, "ignore").orElse(false));
+                            f.setOptional(getBooleanAttribute(an, "optional").orElse(false));
+                            getStringAttribute(an, "description").ifPresent(f::setDescription);
+                        }
+                    }
+                    TypeNameExtractor.extractReferencedSimpleTypes(f.getJavaType()).forEach(rt -> f.getReferencedTypes().add(rt));
+                    model.getFields().add(f);
+                }
+            }
+
+            // Collect inner enums in record body
+            for (BodyDeclaration<?> bd : recordDecl.getMembers()) {
+                if (bd instanceof EnumDeclaration innerEnum) {
+                    de.mhus.nimbus.tools.generatej2ts.model.JavaEnumModel em = new de.mhus.nimbus.tools.generatej2ts.model.JavaEnumModel();
+                    em.setName(innerEnum.getNameAsString());
+                    for (EnumConstantDeclaration c : innerEnum.getEntries()) {
+                        em.getConstants().add(c.getNameAsString());
+                    }
+                    model.getInnerEnums().add(em);
+                }
+            }
+
+            return model;
         }
 
         return model;

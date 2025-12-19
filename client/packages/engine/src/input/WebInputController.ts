@@ -39,6 +39,7 @@ interface KeyBinding {
  * - T: Toggle shortcuts display
  * - . (Period): Rotate selection mode (Editor only)
  * - / (Slash): Activate selected block editor (Editor only)
+ * - p: Open panel navigation (Editor only)
  * - F9: Open edit configuration (Editor only)
  * - F10: Open block editor for selected block (Editor only)
  * - Mouse: Look around (when pointer locked)
@@ -73,6 +74,7 @@ export class WebInputController implements InputController {
   private editorActivateHandler?: InputHandler;
   private blockEditorActivateHandler?: InputHandler;
   private editConfigActivateHandler?: InputHandler;
+  private panelActivateHandler?: InputHandler;
 
   // Pointer lock state
   private pointerLocked: boolean = false;
@@ -136,6 +138,10 @@ export class WebInputController implements InputController {
     if (this.editorActivateHandler) {
       this.keyBindings.set('/', this.editorActivateHandler);
     }
+    if (this.panelActivateHandler) {
+      this.keyBindings.set('p', this.panelActivateHandler);
+      this.keyBindings.set('P', this.panelActivateHandler);
+    }
     if (this.editConfigActivateHandler) {
       this.keyBindings.set('F9', this.editConfigActivateHandler);
     }
@@ -147,6 +153,7 @@ export class WebInputController implements InputController {
     // Shift: Move down in Fly mode (handled dynamically)
     // . : Rotate selection mode (Editor only)
     // / : Activate selected block editor (Editor only)
+    // p : Open panel navigation (Editor only)
     // F9: Open edit configuration (Editor only)
     // F10: Open block editor for selected block (Editor only)
   }
@@ -185,6 +192,7 @@ export class WebInputController implements InputController {
       this.editorActivateHandler = inputService.getHandler('editorActivate');
       this.blockEditorActivateHandler = inputService.getHandler('blockEditorActivate');
       this.editConfigActivateHandler = inputService.getHandler('editConfigActivate');
+      this.panelActivateHandler = inputService.getHandler('panelActivate');
     }
 
     // Build handlers array for update loop
@@ -217,6 +225,9 @@ export class WebInputController implements InputController {
     }
     if (this.editConfigActivateHandler) {
       handlerList.push(this.editConfigActivateHandler);
+    }
+    if (this.panelActivateHandler) {
+      handlerList.push(this.panelActivateHandler);
     }
 
     // Filter out undefined handlers and build final list

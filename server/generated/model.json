@@ -6292,9 +6292,42 @@
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/PlayerInfo.ts",
     "imports" : [ "./ShortcutDefinition" ],
     "interfaces" : [ {
+      "name" : "MovementStateDomensions",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "height",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Entity height in blocks (collision box)"
+      }, {
+        "name" : "width",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Entity width in blocks (collision box diameter)"
+      }, {
+        "name" : "footprint",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Footprint radius in blocks (for corner sampling)"
+      } ],
+      "methods" : [ ]
+    }, {
       "name" : "MovementStateValues",
       "extendsList" : [ ],
       "properties" : [ {
+        "name" : "dimensions",
+        "type" : "MovementStateDomensions",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
         "name" : "baseMoveSpeed",
         "type" : "number",
         "optional" : false,
@@ -6364,13 +6397,6 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : "// Stealth modifier (0.0 = normal, 1.0 = invisible)"
-      }, {
-        "name" : "dimensions",
-        "type" : "MovementStateValuesDimensionsDTO",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
       } ],
       "methods" : [ ]
     }, {
@@ -6569,32 +6595,6 @@
         "name" : "thirdPersonModelModifiers",
         "type" : "Map<string, string>",
         "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      } ],
-      "methods" : [ ]
-    }, {
-      "name" : "MovementStateValuesDimensionsDTO",
-      "extendsList" : [ ],
-      "properties" : [ {
-        "name" : "height",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "// Entity height in blocks (collision box)\n    width",
-        "type" : "number",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "// Entity width in blocks (collision box diameter)\n    footprint",
-        "type" : "number",
-        "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null

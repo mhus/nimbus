@@ -54,7 +54,10 @@ export class ApiService {
           }, error);
 
           // Check if it might be an authentication issue (CORS often fails when not authenticated)
-          if (error.message === 'Network Error' && method === 'GET') {
+          // Skip redirect if we're on dev-login.html page
+          const isDevLogin = window.location.pathname.includes('dev-login.html');
+
+          if (error.message === 'Network Error' && method === 'GET' && !isDevLogin) {
             logger.info('Network error on GET request - might be authentication issue, redirecting to login', {
               url: error.config?.url
             });
@@ -77,9 +80,12 @@ export class ApiService {
         }, error);
 
         // Handle 401 Unauthorized
+        // Skip redirect if we're on dev-login.html page
+        const isDevLogin = window.location.pathname.includes('dev-login.html');
+
         if (status === 401) {
-          if (method === 'GET') {
-            // For GET requests: show info and redirect to index.html
+          if (method === 'GET' && !isDevLogin) {
+            // For GET requests: show info and redirect to index.html (except on dev-login page)
             logger.info('Unauthorized GET request - redirecting to login', {
               url: error.config?.url
             });
@@ -92,7 +98,7 @@ export class ApiService {
               window.location.href = './index.html';
             }, 2000);
           } else {
-            // For other methods: show Access Denied
+            // For other methods or dev-login page: show Access Denied
             logger.warn('Access Denied', {
               url: error.config?.url,
               method: method

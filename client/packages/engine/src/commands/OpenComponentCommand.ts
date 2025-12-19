@@ -51,6 +51,10 @@ export class OpenComponentCommand extends CommandHandler {
       logger.error('    Usage: openComponent block_editor <x> <y> <z>');
       logger.error('    Example: openComponent block_editor 10 64 5');
       logger.error('');
+      logger.error('  panel - Opens panel navigation');
+      logger.error('    Usage: openComponent panel');
+      logger.error('    Example: openComponent panel');
+      logger.error('');
       logger.error('Future components:');
       logger.error('  settings, inventory, map, etc.');
       return { error: 'Invalid arguments' };

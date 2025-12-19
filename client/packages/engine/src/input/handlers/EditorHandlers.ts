@@ -283,3 +283,47 @@ export class EditConfigActivateHandler extends InputHandler {
     // Config activation doesn't need continuous updates
   }
 }
+
+/**
+ * PanelActivate Handler (Key: p)
+ *
+ * Opens panel navigation modal
+ */
+export class PanelActivateHandler extends InputHandler {
+  constructor(playerService: PlayerService, appContext: AppContext) {
+    super(playerService, appContext);
+  }
+
+  protected onActivate(value: number): void {
+    const modalService = this.appContext?.services.modal;
+
+    // Check service availability
+    if (!modalService) {
+      logger.warn('ModalService not available');
+      return;
+    }
+
+    // Open Panel modal
+    logger.debug('Opening panel navigation modal (triggered by p key)');
+
+    try {
+      modalService.openPanel();
+    } catch (error) {
+      logger.error('Failed to open panel modal', { error });
+
+      const notificationService = this.appContext?.services.notification;
+      if (notificationService) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        notificationService.newNotification(0, null, `Failed to open panel: ${errorMessage}`);
+      }
+    }
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Panel activation doesn't need continuous updates
+  }
+}

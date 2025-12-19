@@ -87,7 +87,17 @@ export class BlockContextAnalyzer {
     const yaw = entity.rotation.y;
 
     // Get footprint positions (4 corners based on footprint radius)
-    const footprintPositions = this.getFootprintPositions(pos, dimensions.footprint);
+    // Use default footprint of 0.3 if not provided
+    const footprint = dimensions.footprint ?? 0.3;
+
+    if (dimensions.footprint === null || dimensions.footprint === undefined) {
+      logger.warn('Footprint is null/undefined, using default 0.3', {
+        entityId: entity.entityId,
+        dimensions: dimensions
+      });
+    }
+
+    const footprintPositions = this.getFootprintPositions(pos, footprint);
 
     // Get front direction from yaw
     const frontDir = this.getFrontDirection(yaw);

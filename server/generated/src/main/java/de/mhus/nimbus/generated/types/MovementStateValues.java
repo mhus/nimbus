@@ -11,6 +11,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class MovementStateValues {
+    private MovementStateDomensions dimensions;
     @com.fasterxml.jackson.annotation.JsonProperty("baseMoveSpeed")
     private double baseMoveSpeed;
     @com.fasterxml.jackson.annotation.JsonProperty("effectiveMoveSpeed")
@@ -31,5 +32,4 @@ public class MovementStateValues {
     private double stealthRange;
     @com.fasterxml.jackson.annotation.JsonProperty("distanceNotifyReduction")
     private double distanceNotifyReduction;
-    private MovementStateValuesDimensionsDTO dimensions;
 }

@@ -20,6 +20,12 @@ import {ShortcutDefinition} from "./ShortcutDefinition";
  */
 export type MovementStateKey = 'default' | 'walk' | 'sprint' | 'crouch' | 'swim' | 'climb' | 'free_fly' | 'fly' | 'teleport' | 'riding';
 
+export interface MovementStateDomensions {
+  height: number;    // Entity height in blocks (collision box)
+  width: number;     // Entity width in blocks (collision box diameter)
+  footprint: number; // Footprint radius in blocks (for corner sampling)
+}
+
 /**
  * Movement state configuration
  * Contains all values that vary by movement state
@@ -29,11 +35,7 @@ export type MovementStateKey = 'default' | 'walk' | 'sprint' | 'crouch' | 'swim'
  */
 export interface MovementStateValues {
   // Physics dimensions
-  dimensions: {
-    height: number;    // Entity height in blocks (collision box)
-    width: number;     // Entity width in blocks (collision box diameter)
-    footprint: number; // Footprint radius in blocks (for corner sampling)
-  };
+  dimensions: MovementStateDomensions;
   // Movement speeds (blocks/second)
   baseMoveSpeed: number;      // Base horizontal movement speed
   effectiveMoveSpeed: number; // Base + modifiers
