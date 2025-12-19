@@ -44,7 +44,9 @@ public class TypeScriptModelWriter {
                     throw new IOException("Kann Subfolder nicht anlegen: " + dir.getAbsolutePath());
                 }
             }
-            File out = new File(dir, type.getName() + ".ts");
+            String fileName = type.getFileName();
+            if (fileName == null || fileName.isBlank()) fileName = type.getName() + ".ts";
+            File out = new File(dir, fileName);
             writeTypeFile(type, out);
             count++;
         }

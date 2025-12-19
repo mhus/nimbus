@@ -73,7 +73,7 @@ public class GenerateJavaToTsMojo extends AbstractMojo {
             getLog().info("JavaCollector: gefundene Klassen: " + (classes == null ? 0 : classes.size()));
 
             // TypeScriptModel erzeugen
-            TypeScriptGenerator generator = new TypeScriptGenerator(getLog());
+            TypeScriptGenerator generator = new TypeScriptGenerator(getLog(), configuration);
             TypeScriptModel tsModel = generator.generate(classes);
             getLog().info("TypeScriptModel: Typen erzeugt: " + (tsModel == null ? 0 : tsModel.getTypes().size()));
 

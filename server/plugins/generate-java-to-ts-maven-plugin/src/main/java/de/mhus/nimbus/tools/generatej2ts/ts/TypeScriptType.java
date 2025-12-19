@@ -13,6 +13,7 @@ public class TypeScriptType {
     private final Set<String> imports = new HashSet<>();
     private String subfolder; // from @GenerateTypeScript on Java side
     private String sourceFqn; // fully-qualified Java source class name (package + name)
+    private String fileName;  // optional target filename (e.g. "Custom.ts")
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -29,4 +30,7 @@ public class TypeScriptType {
 
     public String getSourceFqn() { return sourceFqn; }
     public void setSourceFqn(String sourceFqn) { this.sourceFqn = sourceFqn; }
+
+    public String getFileName() { return fileName; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
 }

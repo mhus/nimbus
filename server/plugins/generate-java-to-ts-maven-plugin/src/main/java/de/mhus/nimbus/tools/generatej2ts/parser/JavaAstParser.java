@@ -42,8 +42,34 @@ public class JavaAstParser {
         model.setPackageName(cu.getPackageDeclaration().map(pd -> pd.getName().toString()).orElse(null));
         model.setName(typeDecl.getNameAsString());
 
-        // @GenerateTypeScript("subfolder") or value="subfolder"
-        extractGenerateTypeScriptSubfolder(typeDecl).ifPresent(model::setGenerateSubfolder);
+        // @GenerateTypeScript("subfolder") or value may contain path and filename (ending with .ts)
+        extractGenerateTypeScriptSubfolder(typeDecl).ifPresent(val -> {
+            if (val != null) {
+                String v = val.trim();
+                if (v.endsWith(".ts")) {
+                    int idx = v.lastIndexOf('/')
+                            ;
+                    if (idx >= 0) {
+                        String folder = v.substring(0, idx);
+                        String file = v.substring(idx + 1);
+                        // normalize leading/trailing slashes
+                        if (folder.equals(".")) folder = "";
+                        if (folder.startsWith("/")) folder = folder.substring(1);
+                        if (folder.endsWith("/")) folder = folder.substring(0, folder.length() - 1);
+                        model.setGenerateSubfolder(folder);
+                        model.setGenerateFileName(file);
+                    } else {
+                        // no slash, only file name given
+                        model.setGenerateFileName(v);
+                    }
+                } else {
+                    model.setGenerateSubfolder(v);
+                }
+            }
+        });
+
+        // Optional: Interface-/Enum-Name Override aus @GenerateTypeScript(name="...")
+        extractGenerateTypeScriptName(typeDecl).ifPresent(model::setGenerateInterfaceName);
 
         if (typeDecl instanceof EnumDeclaration enumDecl) {
             model.setKind(JavaKind.ENUM);
@@ -131,6 +157,22 @@ public class JavaAstParser {
                         if (p.getNameAsString().equals("value")) {
                             return Optional.of(stripQuotes(p.getValue().toString()));
                         }
+                    }
+                }
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<String> extractGenerateTypeScriptName(TypeDeclaration<?> type) {
+        for (AnnotationExpr an : type.getAnnotations()) {
+            String n = simpleName(an.getNameAsString());
+            if (n.equals("GenerateTypeScript") && an instanceof NormalAnnotationExpr nn) {
+                for (MemberValuePair p : nn.getPairs()) {
+                    if (p.getNameAsString().equals("name")) {
+                        String s = stripQuotes(p.getValue().toString());
+                        if (s != null && !s.isBlank()) return Optional.of(s);
                     }
                 }
                 return Optional.empty();

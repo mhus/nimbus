@@ -37,8 +37,14 @@ public class GenerateJavaToTsMojoTest {
         GenerateJavaToTsMojo mojo = new GenerateJavaToTsMojo();
         setPrivateField(mojo, "inputDirectory", inputDir);
         setPrivateField(mojo, "outputDirectory", outDir.toFile());
-        // optional: Konfiguration ist nicht erforderlich; auf nicht existente Datei setzen
-        setPrivateField(mojo, "configFile", new File("target/java-to-ts-test.yaml"));
+        // Konfigurationsdatei mit defaultImports erstellen
+        Path cfg = Path.of("target", "java-to-ts-test.yaml").toAbsolutePath();
+        String yaml = "defaultImports:\n" +
+                "  - \"import { Util } from 'utils/Util';\"\n" +
+                "  - \"import something from '@scope/some';\"\n";
+        Files.createDirectories(cfg.getParent());
+        Files.writeString(cfg, yaml, StandardCharsets.UTF_8);
+        setPrivateField(mojo, "configFile", cfg.toFile());
 
         // execute
         mojo.execute();
@@ -46,10 +52,14 @@ public class GenerateJavaToTsMojoTest {
         // verify files
         Path personTs = outDir.resolve(Path.of("models", "Person.ts"));
         Path addressTs = outDir.resolve(Path.of("models", "Address.ts"));
+        Path humanTs = outDir.resolve(Path.of("models", "Human.ts"));
         Path statusTs = outDir.resolve(Path.of("enums", "Status.ts"));
+        Path customTs = outDir.resolve(Path.of("models", "named", "Custom.ts"));
         Assertions.assertTrue(Files.exists(personTs), "Person.ts wurde nicht erzeugt");
         Assertions.assertTrue(Files.exists(addressTs), "Address.ts wurde nicht erzeugt");
+        Assertions.assertTrue(Files.exists(humanTs), "Human.ts (Interface-Name aus Annotation) wurde nicht erzeugt");
         Assertions.assertTrue(Files.exists(statusTs), "Status.ts wurde nicht erzeugt");
+        Assertions.assertTrue(Files.exists(customTs), "Custom.ts (benannter Output) wurde nicht erzeugt");
 
         // content checks
         String person = Files.readString(personTs, StandardCharsets.UTF_8);
@@ -61,11 +71,32 @@ public class GenerateJavaToTsMojoTest {
         Assertions.assertTrue(person.contains("age?: number; /* age in years */"), "Beschreibungskommentar fehlt oder falsch");
         // Klassen-Import aus @TypeScriptImport
         Assertions.assertTrue(person.contains("import { ColorHex } from '../types/ColorHex';"), "Import wurde nicht übernommen");
+        // Default-Imports aus Konfiguration
+        // Subfolder ist "models" -> Tiefe 1, daher muss '../' vorangestellt werden bei relativem Pfad
+        Assertions.assertTrue(person.contains("import { Util } from '../utils/Util';"), "Default-Import wurde nicht relativ angepasst");
+        // Alias '@...' darf nicht angepasst werden
+        Assertions.assertTrue(person.contains("import something from '@scope/some';"), "Alias-Import '@' wurde fälschlich geändert");
 
         String status = Files.readString(statusTs, StandardCharsets.UTF_8);
         Assertions.assertTrue(status.contains("export enum Status"));
         Assertions.assertTrue(status.contains("ACTIVE"));
         Assertions.assertTrue(status.contains("INACTIVE"));
+
+        // Prüfe das Default-Type-Mapping: Instant -> Date
+        String address = Files.readString(addressTs, StandardCharsets.UTF_8);
+        Assertions.assertTrue(address.contains("createdAt: Date;"), "Mapping Instant->Date wurde nicht angewendet");
+
+        // Prüfe die benannte Datei: Dateiname aus Annotation, Interface-Name bleibt Class-Name
+        String custom = Files.readString(customTs, StandardCharsets.UTF_8);
+        Assertions.assertTrue(custom.contains("export interface CustomNamed"),
+                "Interface-Name sollte 'CustomNamed' sein, trotz Dateiname Custom.ts");
+
+        // Prüfe Interface-Umbenennung via @GenerateTypeScript(name="...")
+        String human = Files.readString(humanTs, StandardCharsets.UTF_8);
+        Assertions.assertTrue(human.contains("Source: de.example.models.Renamed"),
+                "Header sollte die ursprüngliche Java-Klasse enthalten");
+        Assertions.assertTrue(human.contains("export interface Human"),
+                "Interface-Name sollte 'Human' sein");
     }
 
     private static void setPrivateField(Object target, String fieldName, Object value) throws Exception {

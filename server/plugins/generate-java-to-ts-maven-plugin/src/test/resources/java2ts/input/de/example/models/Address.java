@@ -8,4 +8,7 @@ public class Address {
 
     @TypeScript(type="number")
     private Integer houseNumber;
+
+    // Prüfen des Default-Mappings: Instant -> Date
+    private java.time.Instant createdAt;
 }

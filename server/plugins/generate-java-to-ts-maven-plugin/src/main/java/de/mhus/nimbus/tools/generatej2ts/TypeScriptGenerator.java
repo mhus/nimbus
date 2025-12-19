@@ -21,9 +21,15 @@ import java.util.Objects;
 public class TypeScriptGenerator {
 
     private final Log log;
+    private final Configuration configuration;
 
     public TypeScriptGenerator(Log log) {
+        this(log, null);
+    }
+
+    public TypeScriptGenerator(Log log, Configuration configuration) {
         this.log = log;
+        this.configuration = configuration;
     }
 
     public TypeScriptModel generate(List<JavaClassModel> javaModels) {
@@ -33,8 +39,14 @@ public class TypeScriptGenerator {
         for (JavaClassModel jm : javaModels) {
             if (jm == null) continue;
             TypeScriptType tt = new TypeScriptType();
-            tt.setName(jm.getName());
+            String overrideName = jm.getGenerateInterfaceName();
+            if (overrideName != null && !overrideName.isBlank()) {
+                tt.setName(overrideName.trim());
+            } else {
+                tt.setName(jm.getName());
+            }
             tt.setSubfolder(jm.getGenerateSubfolder());
+            tt.setFileName(jm.getGenerateFileName());
             // vollqualifizierten Java-Quellklassennamen setzen (für Header-Kommentar)
             String pkg = jm.getPackageName();
             if (pkg != null && !pkg.isBlank()) {
@@ -59,6 +71,8 @@ public class TypeScriptGenerator {
                     tf.setDescription(f.getDescription());
                     tt.getFields().add(tf);
                 }
+                // Default-Imports aus Konfiguration hinzufügen (nur für Interfaces)
+                addDefaultImports(tt);
             }
 
             tsModel.getTypes().add(tt);
@@ -66,6 +80,61 @@ public class TypeScriptGenerator {
 
         if (log != null) log.info("TypeScriptGenerator: erzeugte Typen: " + tsModel.getTypes().size());
         return tsModel;
+    }
+
+    private void addDefaultImports(TypeScriptType tt) {
+        if (configuration == null) return;
+        List<String> defs;
+        try {
+            defs = configuration.getDefaultImports();
+        } catch (Exception e) {
+            return;
+        }
+        if (defs == null || defs.isEmpty()) return;
+
+        String sub = tt.getSubfolder();
+        for (String imp : defs) {
+            String adj = adjustImportForDepth(imp, sub);
+            if (adj != null && !adj.isBlank()) tt.getImports().add(adj);
+        }
+    }
+
+    /**
+     * Passt den in einem Import-Statement enthaltenen Pfad anhand der Subfolder-Tiefe an.
+     * Regel: Wenn der Pfad ein relativer Pfad ist (kein Alias mit '@' und nicht bereits mit '.' beginnend),
+     * wird '../' pro Verzeichnistiefe (Anzahl der Segmente in subfolder) vorangestellt.
+     */
+    private String adjustImportForDepth(String importLine, String subfolder) {
+        if (importLine == null || importLine.isBlank()) return importLine;
+        int depth = 0;
+        if (subfolder != null && !subfolder.isBlank()) {
+            // Anzahl Segmente zählen
+            String s = subfolder;
+            if (s.startsWith("/")) s = s.substring(1);
+            if (s.endsWith("/")) s = s.substring(0, s.length() - 1);
+            if (!s.isBlank()) depth = (int) s.chars().filter(ch -> ch == '/').count() + 1;
+        }
+        if (depth <= 0) return importLine;
+
+        // Nur den from-Teil ohne abschließendes Semikolon matchen, damit dieses erhalten bleibt
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("from\\s+(['\\\"])([^'\\\"]+)(['\\\"])\\s*");
+        java.util.regex.Matcher m = p.matcher(importLine);
+        if (!m.find()) return importLine; // kein Standard-Pattern -> nicht verändern
+
+        String quote1 = m.group(1);
+        String path = m.group(2);
+        String quote2 = m.group(3);
+
+        // Alias/absolute Pfade nicht verändern
+        if (path.startsWith("@") || path.startsWith("/")) return importLine;
+        // Bereits relativ mit '.' -> unverändert lassen
+        if (path.startsWith(".")) return importLine;
+
+        StringBuilder pref = new StringBuilder();
+        for (int i = 0; i < depth; i++) pref.append("../");
+        String newPath = pref + path;
+        String replacement = "from " + quote1 + newPath + quote2;
+        return m.replaceFirst(java.util.regex.Matcher.quoteReplacement(replacement));
     }
 
     private String resolveTsType(JavaFieldModel f) {
@@ -126,13 +195,22 @@ public class TypeScriptGenerator {
 
         // Entferne vollqualifizierte Namen → SimpleName
         int lastDot = t.lastIndexOf('.');
-        if (lastDot >= 0) t = t.substring(lastDot + 1);
+        String simple = (lastDot >= 0) ? t.substring(lastDot + 1) : t;
+
+        // Konfigurations-Mapping prüfen (exakter String und SimpleName)
+        String cfg = mapByConfiguration(javaTypeName, simple);
+        if (cfg != null) return cfg;
+
+        // Immer gültiges Default-Mapping, auch ohne Konfiguration
+        if ("Instant".equals(simple) || "java.time.Instant".equals(t)) {
+            return "Date";
+        }
 
         // Entferne generische Reste (Sicherheitsnetz)
-        int lt = t.indexOf('<');
-        if (lt >= 0) t = t.substring(0, lt).trim();
+        int lt = simple.indexOf('<');
+        if (lt >= 0) simple = simple.substring(0, lt).trim();
 
-        switch (t) {
+        switch (simple) {
             case "byte":
             case "short":
             case "int":
@@ -157,8 +235,25 @@ public class TypeScriptGenerator {
                 return "any";
             default:
                 // Unbekannter/benutzerdefinierter Typ → identisch übernehmen (wird als eigener TS‑Typ generiert)
-                return t;
+                return simple;
         }
+    }
+
+    private String mapByConfiguration(String original, String simple) {
+        if (configuration == null) return null;
+        try {
+            java.util.Map<String,String> mappings = configuration.getTypeMappings();
+            if (mappings == null || mappings.isEmpty()) return null;
+            if (original != null) {
+                String hit = mappings.get(original.trim());
+                if (hit != null && !hit.isBlank()) return hit;
+            }
+            String hit = mappings.get(simple);
+            if (hit != null && !hit.isBlank()) return hit;
+        } catch (Exception ignore) {
+            // Konfigurationsprobleme sollen die Generierung nicht abbrechen
+        }
+        return null;
     }
 
     private static String[] splitTopLevel(String s) {
