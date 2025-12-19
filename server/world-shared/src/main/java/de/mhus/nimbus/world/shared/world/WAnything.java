@@ -32,7 +32,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @GenerateTypeScript("entities")
-public class WAnythingEntity implements Identifiable {
+public class WAnything implements Identifiable {
 
     @Id
     @TypeScript(ignore = true)

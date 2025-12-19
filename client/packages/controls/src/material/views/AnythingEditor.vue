@@ -223,7 +223,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import type { WAnythingEntity } from '@shared/generated/entities/WAnythingEntity';
+import type { WAnything } from '@shared/generated/entities/WAnything';
 import { useRegion } from '@/composables/useRegion';
 import { useWorld } from '@/composables/useWorld';
 import { anythingService } from '@/services/AnythingService';
@@ -238,7 +238,7 @@ const selectedRegionId = ref<string>('');
 const selectedWorldId = ref<string>('');
 const collection = ref<string>('');
 const typeFilter = ref<string>('');
-const entities = ref<WAnythingEntity[]>([]);
+const entities = ref<WAnything[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const hasSearched = ref(false);
@@ -253,7 +253,7 @@ const hasPreviousPage = computed(() => currentPage.value > 1);
 
 // Dialog state
 const isDialogOpen = ref(false);
-const selectedEntity = ref<WAnythingEntity | null>(null);
+const selectedEntity = ref<WAnything | null>(null);
 
 /**
  * Format date for display
@@ -331,7 +331,7 @@ const openCreateDialog = () => {
 /**
  * Handle edit
  */
-const handleEdit = (entity: WAnythingEntity) => {
+const handleEdit = (entity: WAnything) => {
   selectedEntity.value = entity;
   isDialogOpen.value = true;
 };
@@ -355,7 +355,7 @@ const handleSaved = () => {
 /**
  * Handle delete
  */
-const handleDelete = async (entity: WAnythingEntity) => {
+const handleDelete = async (entity: WAnything) => {
   if (!confirm(`Are you sure you want to delete "${entity.name}"?`)) {
     return;
   }

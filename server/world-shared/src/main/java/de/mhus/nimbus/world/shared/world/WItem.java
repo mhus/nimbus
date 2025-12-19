@@ -1,6 +1,8 @@
 package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Item;
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
+import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
@@ -29,9 +31,11 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@GenerateTypeScript("entities")
 public class WItem implements Identifiable {
 
     @Id
+    @TypeScript(ignore = true)
     private String id;
 
     /**
@@ -49,6 +53,7 @@ public class WItem implements Identifiable {
      * Public data containing the Item DTO.
      * This includes itemType, name, description, modifier, and parameters.
      */
+    @TypeScript(import_ = "Item", importPath = "../../types")
     private Item publicData;
 
     private Instant createdAt;

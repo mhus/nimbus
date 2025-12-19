@@ -20,4 +20,7 @@
 - In diesem Fall soll oben rechts ein region-selector angezeigt werden. Die welt ist optional neben der collection suchbar.
 - Erweitere ggf den rest controller wegen der suche.
 
-[ ] Erstelle in HomeApp.vue einen Eintrag fuer den neuen Editor
+[?] Erstelle in HomeApp.vue einen Eintrag fuer den neuen Editor
+
+--> Umbenannt WAnythingEntity in WAnything
+

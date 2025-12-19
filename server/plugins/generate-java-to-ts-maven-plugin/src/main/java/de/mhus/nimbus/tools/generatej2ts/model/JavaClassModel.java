@@ -15,6 +15,8 @@ public class JavaClassModel {
     private final List<JavaFieldModel> fields = new ArrayList<>(); // for CLASS only
     private final List<String> enumConstants = new ArrayList<>(); // for ENUM only
     private final Set<String> typeScriptImports = new HashSet<>(); // from @TypeScriptImport
+    // Inner Enums declared inside a class
+    private final List<JavaEnumModel> innerEnums = new ArrayList<>();
 
     public String getPackageName() { return packageName; }
     public void setPackageName(String packageName) { this.packageName = packageName; }
@@ -37,4 +39,5 @@ public class JavaClassModel {
     public List<JavaFieldModel> getFields() { return fields; }
     public List<String> getEnumConstants() { return enumConstants; }
     public Set<String> getTypeScriptImports() { return typeScriptImports; }
+    public List<JavaEnumModel> getInnerEnums() { return innerEnums; }
 }

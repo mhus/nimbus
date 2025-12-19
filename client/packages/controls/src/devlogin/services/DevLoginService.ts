@@ -95,17 +95,34 @@ class DevLoginService {
   /**
    * Authorize with cookie URLs
    * Makes requests to each URL to set authentication cookies
+   * At least one URL must succeed for authorization to succeed
    */
   async authorize(accessUrls: string[], accessToken: string): Promise<void> {
-    const authPromises = accessUrls.map(url =>
-      fetch(`${url}?token=${accessToken}`, {
-        method: 'GET',
-        credentials: 'include', // Important: allows setting cookies cross-origin
-        mode: 'cors',
-      })
-    );
+    const authPromises = accessUrls.map(async (url) => {
+      try {
+        const response = await fetch(`${url}?token=${accessToken}`, {
+          method: 'GET',
+          credentials: 'include', // Important: allows setting cookies cross-origin
+          mode: 'cors',
+        });
+        return { url, success: response.ok, status: response.status };
+      } catch (error) {
+        console.warn(`[DevLogin] Failed to authorize with ${url}:`, error);
+        return { url, success: false, error };
+      }
+    });
 
-    await Promise.all(authPromises);
+    const results = await Promise.all(authPromises);
+
+    // Check if at least one URL succeeded
+    const successfulResults = results.filter(r => r.success);
+
+    if (successfulResults.length === 0) {
+      const failedUrls = results.map(r => `${r.url} (${r.status || 'error'})`).join(', ');
+      throw new Error(`Authorization failed: All URLs failed. Failed URLs: ${failedUrls}`);
+    }
+
+    console.log(`[DevLogin] Authorization successful: ${successfulResults.length}/${results.length} URLs succeeded`);
   }
 }
 

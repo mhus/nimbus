@@ -18,6 +18,7 @@ import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.type.Type;
 import de.mhus.nimbus.tools.generatej2ts.model.JavaClassModel;
 import de.mhus.nimbus.tools.generatej2ts.model.JavaFieldModel;
+import de.mhus.nimbus.tools.generatej2ts.model.JavaEnumModel;
 import de.mhus.nimbus.tools.generatej2ts.model.JavaKind;
 
 import java.io.File;
@@ -112,23 +113,15 @@ public class JavaAstParser {
                             // read attributes: follow, type, import, ignore, optional
                             f.setFollow(getBooleanAttribute(an, "follow").orElse(false));
                             getStringAttribute(an, "type").ifPresent(f::setTsTypeOverride);
+                            // Vollständige Importzeile bevorzugt direkt lesen
+                            getStringAttribute(an, "importLine").ifPresent(f::setInlineImportLine);
                             // "import" ist als Attributname in Java nicht zulässig. Prüfe alternative Namen.
-                            getStringAttribute(an, "import").ifPresent(f::setImportOverride);
-                            if (f.getImportOverride() == null || f.getImportOverride().isBlank()) {
-                                getStringAttribute(an, "tsImport").ifPresent(f::setImportOverride);
-                            }
-                            if (f.getImportOverride() == null || f.getImportOverride().isBlank()) {
-                                getStringAttribute(an, "import_").ifPresent(f::setImportOverride);
-                            }
-                            if (f.getImportOverride() == null || f.getImportOverride().isBlank()) {
-                                getStringAttribute(an, "importPath").ifPresent(f::setImportOverride);
-                            }
-                            if (f.getImportOverride() == null || f.getImportOverride().isBlank()) {
-                                getStringAttribute(an, "importValue").ifPresent(f::setImportOverride);
-                            }
-                            if (f.getImportOverride() == null || f.getImportOverride().isBlank()) {
-                                getStringAttribute(an, "importAs").ifPresent(f::setImportOverride);
-                            }
+                            // Zerlege in strukturierte Felder, falls vorhanden (für Konstruktion der Importzeile)
+                            getStringAttribute(an, "tsImport").ifPresent(f::setImportSymbol);
+                            getStringAttribute(an, "import_").ifPresent(f::setImportSymbol);
+                            getStringAttribute(an, "importValue").ifPresent(f::setImportSymbol);
+                            getStringAttribute(an, "importPath").ifPresent(f::setImportPath);
+                            getStringAttribute(an, "importAs").ifPresent(f::setImportAs);
                             f.setIgnored(getBooleanAttribute(an, "ignore").orElse(false));
                             f.setOptional(getBooleanAttribute(an, "optional").orElse(false));
                             getStringAttribute(an, "description").ifPresent(f::setDescription);
@@ -137,6 +130,18 @@ public class JavaAstParser {
                     // try to collect referenced types from the raw java type (for follow)
                     TypeNameExtractor.extractReferencedSimpleTypes(f.getJavaType()).forEach(rt -> f.getReferencedTypes().add(rt));
                     model.getFields().add(f);
+                }
+            }
+
+            // Collect inner enums for follow-support
+            for (BodyDeclaration<?> bd : clazz.getMembers()) {
+                if (bd instanceof EnumDeclaration innerEnum) {
+                    JavaEnumModel em = new JavaEnumModel();
+                    em.setName(innerEnum.getNameAsString());
+                    for (EnumConstantDeclaration c : innerEnum.getEntries()) {
+                        em.getConstants().add(c.getNameAsString());
+                    }
+                    model.getInnerEnums().add(em);
                 }
             }
         }

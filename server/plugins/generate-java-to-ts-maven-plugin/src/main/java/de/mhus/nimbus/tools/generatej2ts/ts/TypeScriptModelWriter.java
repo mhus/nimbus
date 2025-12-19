@@ -76,6 +76,13 @@ public class TypeScriptModelWriter {
             if (type.getKind() == TypeScriptKind.ENUM) {
                 writeEnum(type, w);
             } else {
+                // Write nested enums first (if any)
+                if (type.getNestedEnums() != null && !type.getNestedEnums().isEmpty()) {
+                    for (TypeScriptNestedEnum ne : type.getNestedEnums()) {
+                        writeNestedEnum(ne, w);
+                        w.write("\n");
+                    }
+                }
                 writeInterface(type, w);
             }
         }
@@ -108,6 +115,17 @@ public class TypeScriptModelWriter {
             String v = type.getEnumValues().get(i);
             w.write("  " + v);
             if (i < type.getEnumValues().size() - 1) w.write(",");
+            w.write("\n");
+        }
+        w.write("}\n");
+    }
+
+    private void writeNestedEnum(TypeScriptNestedEnum ne, Writer w) throws IOException {
+        w.write("export enum " + ne.getName() + " {\n");
+        for (int i = 0; i < ne.getValues().size(); i++) {
+            String v = ne.getValues().get(i);
+            w.write("  " + v);
+            if (i < ne.getValues().size() - 1) w.write(",");
             w.write("\n");
         }
         w.write("}\n");

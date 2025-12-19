@@ -1,10 +1,10 @@
 /**
  * Anything Service
- * Manages WAnythingEntity CRUD operations
+ * Manages WAnything CRUD operations
  */
 
 import { ApiService } from './ApiService';
-import type { WAnythingEntity } from '@shared/generated/entities/WAnythingEntity';
+import type { WAnything } from '@shared/generated/entities/WAnything';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('AnythingService');
@@ -20,7 +20,7 @@ export interface ListAnythingParams {
 }
 
 export interface ListAnythingResponse {
-  entities: WAnythingEntity[];
+  entities: WAnything[];
   count: number;
   limit: number;
   offset: number;
@@ -68,14 +68,14 @@ export class AnythingService extends ApiService {
   /**
    * Get entity by collection and name
    */
-  async getByCollection(collection: string, name: string): Promise<WAnythingEntity> {
+  async getByCollection(collection: string, name: string): Promise<WAnything> {
     logger.debug('Getting entity by collection', { collection, name });
 
     const queryParams = new URLSearchParams();
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    const response = await this.get<WAnythingEntity>(`/control/anything/by-collection?${queryParams.toString()}`);
+    const response = await this.get<WAnything>(`/control/anything/by-collection?${queryParams.toString()}`);
     logger.debug('Got entity', { id: response.id });
     return response;
   }
@@ -83,7 +83,7 @@ export class AnythingService extends ApiService {
   /**
    * Get entity by world, collection, and name
    */
-  async getByWorld(worldId: string, collection: string, name: string): Promise<WAnythingEntity> {
+  async getByWorld(worldId: string, collection: string, name: string): Promise<WAnything> {
     logger.debug('Getting entity by world', { worldId, collection, name });
 
     const queryParams = new URLSearchParams();
@@ -91,7 +91,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    const response = await this.get<WAnythingEntity>(`/control/anything/by-world?${queryParams.toString()}`);
+    const response = await this.get<WAnything>(`/control/anything/by-world?${queryParams.toString()}`);
     logger.debug('Got entity', { id: response.id });
     return response;
   }
@@ -99,7 +99,7 @@ export class AnythingService extends ApiService {
   /**
    * Get entity by region, collection, and name
    */
-  async getByRegion(regionId: string, collection: string, name: string): Promise<WAnythingEntity> {
+  async getByRegion(regionId: string, collection: string, name: string): Promise<WAnything> {
     logger.debug('Getting entity by region', { regionId, collection, name });
 
     const queryParams = new URLSearchParams();
@@ -107,7 +107,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    const response = await this.get<WAnythingEntity>(`/control/anything/by-region?${queryParams.toString()}`);
+    const response = await this.get<WAnything>(`/control/anything/by-region?${queryParams.toString()}`);
     logger.debug('Got entity', { id: response.id });
     return response;
   }
@@ -115,10 +115,10 @@ export class AnythingService extends ApiService {
   /**
    * Create new entity
    */
-  async create(request: CreateAnythingRequest): Promise<WAnythingEntity> {
+  async create(request: CreateAnythingRequest): Promise<WAnything> {
     logger.debug('Creating entity', { request });
 
-    const response = await this.post<WAnythingEntity>('/control/anything', request);
+    const response = await this.post<WAnything>('/control/anything', request);
     logger.info('Created entity', { id: response.id, collection: response.collection, name: response.name });
     return response;
   }
@@ -126,10 +126,10 @@ export class AnythingService extends ApiService {
   /**
    * Update entity by ID
    */
-  async update(id: string, request: UpdateAnythingRequest): Promise<WAnythingEntity> {
+  async update(id: string, request: UpdateAnythingRequest): Promise<WAnything> {
     logger.debug('Updating entity', { id, request });
 
-    const response = await this.put<WAnythingEntity>(`/control/anything/${id}`, request);
+    const response = await this.put<WAnything>(`/control/anything/${id}`, request);
     logger.info('Updated entity', { id: response.id });
     return response;
   }

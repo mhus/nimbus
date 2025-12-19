@@ -11,39 +11,39 @@ import java.util.Optional;
  * Provides query methods for flexible data retrieval by region, world, collection, and name.
  */
 @Repository
-public interface WAnythingRepository extends MongoRepository<WAnythingEntity, String> {
+public interface WAnythingRepository extends MongoRepository<WAnything, String> {
 
-    Optional<WAnythingEntity> findByCollectionAndName(String collection, String name);
+    Optional<WAnything> findByCollectionAndName(String collection, String name);
 
-    Optional<WAnythingEntity> findByWorldIdAndCollectionAndName(String worldId, String collection, String name);
+    Optional<WAnything> findByWorldIdAndCollectionAndName(String worldId, String collection, String name);
 
-    Optional<WAnythingEntity> findByRegionIdAndCollectionAndName(String regionId, String collection, String name);
+    Optional<WAnything> findByRegionIdAndCollectionAndName(String regionId, String collection, String name);
 
-    Optional<WAnythingEntity> findByRegionIdAndWorldIdAndCollectionAndName(String regionId, String worldId, String collection, String name);
+    Optional<WAnything> findByRegionIdAndWorldIdAndCollectionAndName(String regionId, String worldId, String collection, String name);
 
-    List<WAnythingEntity> findByCollection(String collection);
+    List<WAnything> findByCollection(String collection);
 
-    List<WAnythingEntity> findByWorldIdAndCollection(String worldId, String collection);
+    List<WAnything> findByWorldIdAndCollection(String worldId, String collection);
 
-    List<WAnythingEntity> findByRegionIdAndCollection(String regionId, String collection);
+    List<WAnything> findByRegionIdAndCollection(String regionId, String collection);
 
-    List<WAnythingEntity> findByRegionIdAndWorldIdAndCollection(String regionId, String worldId, String collection);
+    List<WAnything> findByRegionIdAndWorldIdAndCollection(String regionId, String worldId, String collection);
 
-    List<WAnythingEntity> findByCollectionAndEnabled(String collection, boolean enabled);
+    List<WAnything> findByCollectionAndEnabled(String collection, boolean enabled);
 
-    List<WAnythingEntity> findByWorldIdAndCollectionAndEnabled(String worldId, String collection, boolean enabled);
+    List<WAnything> findByWorldIdAndCollectionAndEnabled(String worldId, String collection, boolean enabled);
 
-    List<WAnythingEntity> findByRegionIdAndCollectionAndEnabled(String regionId, String collection, boolean enabled);
+    List<WAnything> findByRegionIdAndCollectionAndEnabled(String regionId, String collection, boolean enabled);
 
-    List<WAnythingEntity> findByRegionIdAndWorldIdAndCollectionAndEnabled(String regionId, String worldId, String collection, boolean enabled);
+    List<WAnything> findByRegionIdAndWorldIdAndCollectionAndEnabled(String regionId, String worldId, String collection, boolean enabled);
 
-    List<WAnythingEntity> findByCollectionAndType(String collection, String type);
+    List<WAnything> findByCollectionAndType(String collection, String type);
 
-    List<WAnythingEntity> findByWorldIdAndCollectionAndType(String worldId, String collection, String type);
+    List<WAnything> findByWorldIdAndCollectionAndType(String worldId, String collection, String type);
 
-    List<WAnythingEntity> findByRegionIdAndCollectionAndType(String regionId, String collection, String type);
+    List<WAnything> findByRegionIdAndCollectionAndType(String regionId, String collection, String type);
 
-    List<WAnythingEntity> findByRegionIdAndWorldIdAndCollectionAndType(String regionId, String worldId, String collection, String type);
+    List<WAnything> findByRegionIdAndWorldIdAndCollectionAndType(String regionId, String worldId, String collection, String type);
 
     boolean existsByCollectionAndName(String collection, String name);
 

@@ -10,6 +10,15 @@ public class JavaFieldModel {
     private boolean optional;
     private boolean ignored;
     private boolean follow;
+    // Import-Metadaten aus @TypeScript
+    // import_/tsImport/importValue → Symbolname
+    // importPath → Pfad
+    // importAs → Alias (optional)
+    private String inlineImportLine; // komplette Import-Zeile (bevorzugt)
+    private String importSymbol;
+    private String importPath;
+    private String importAs;
+    // Altes Ein-Feld-Override (Backward-Compat, falls zuvor gesetzt)
     private String importOverride; // from @TypeScript(import="...")
     private String description; // from @TypeScript(description="...")
 
@@ -32,6 +41,18 @@ public class JavaFieldModel {
 
     public boolean isFollow() { return follow; }
     public void setFollow(boolean follow) { this.follow = follow; }
+
+    public String getImportSymbol() { return importSymbol; }
+    public void setImportSymbol(String importSymbol) { this.importSymbol = importSymbol; }
+
+    public String getImportPath() { return importPath; }
+    public void setImportPath(String importPath) { this.importPath = importPath; }
+
+    public String getImportAs() { return importAs; }
+    public void setImportAs(String importAs) { this.importAs = importAs; }
+
+    public String getInlineImportLine() { return inlineImportLine; }
+    public void setInlineImportLine(String inlineImportLine) { this.inlineImportLine = inlineImportLine; }
 
     public String getImportOverride() { return importOverride; }
     public void setImportOverride(String importOverride) { this.importOverride = importOverride; }

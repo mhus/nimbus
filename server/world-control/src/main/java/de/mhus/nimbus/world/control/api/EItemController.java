@@ -129,8 +129,8 @@ public class EItemController extends BaseEditorController {
         }
 
         log.debug("Returning item: itemId={}", itemId);
-        // Return publicData only (match test_server format)
-        return ResponseEntity.ok(opt.get().getPublicData());
+        // Return full WItem entity with metadata
+        return ResponseEntity.ok(opt.get());
     }
 
     /**
@@ -188,8 +188,8 @@ public class EItemController extends BaseEditorController {
             WItem saved = itemService.save(wid, itemId, item);
             log.info("Created item: itemId={}", itemId);
 
-            // Return publicData (match test_server format)
-            return ResponseEntity.status(HttpStatus.CREATED).body(saved.getPublicData());
+            // Return full WItem entity with metadata
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (IllegalArgumentException e) {
             log.warn("Validation error creating item: {}", e.getMessage());
             return bad(e.getMessage());
@@ -249,8 +249,8 @@ public class EItemController extends BaseEditorController {
             }
 
             log.info("Updated item: itemId={}", itemId);
-            // Return publicData (match test_server format)
-            return ResponseEntity.ok(updated.get().getPublicData());
+            // Return full WItem entity with metadata
+            return ResponseEntity.ok(updated.get());
         } catch (IllegalArgumentException e) {
             log.warn("Validation error updating item: {}", e.getMessage());
             return bad(e.getMessage());

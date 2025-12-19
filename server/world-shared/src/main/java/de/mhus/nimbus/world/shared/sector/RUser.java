@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.mhus.nimbus.generated.configs.Settings;
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
+import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.PlayerUser;
 import de.mhus.nimbus.shared.types.WorldId;
@@ -32,11 +34,13 @@ import de.mhus.nimbus.shared.user.RegionRoles;
 @Data
 @Builder
 @AllArgsConstructor
+@GenerateTypeScript("entities")
 public class RUser {
 
     public static final String DEFAULT_REGION_ROLE = "PLAYER";
 
     @Id
+    @TypeScript(ignore = true)
     private String id;
 
     @Indexed(unique = true)

@@ -21,6 +21,11 @@ import java.lang.annotation.Target;
 public @interface TypeScript {
     boolean follow() default false;
     String type() default "";
+    /**
+     * Vollständige TypeScript-Importzeile für diesen Feldtyp (inline Import am Feld).
+     * Beispiel: "import { Item } from '../../types';"
+     */
+    String importLine() default "";
     // Da "import" ein Java-Schlüsselwort ist, kann das Element nicht exakt so heißen.
     // Der Parser unterstützt mehrere Alias-Namen (tsImport, import_, importPath, importValue, importAs),
     // um dennoch Import-Zeilen zu erfassen.

@@ -23,7 +23,7 @@ public class WAnythingService {
      * Find entity by collection and name only.
      */
     @Transactional(readOnly = true)
-    public Optional<WAnythingEntity> findByCollectionAndName(String collection, String name) {
+    public Optional<WAnything> findByCollectionAndName(String collection, String name) {
         return repository.findByCollectionAndName(collection, name);
     }
 
@@ -32,7 +32,7 @@ public class WAnythingService {
      * If multiple entities exist (data inconsistency), returns the newest one and logs a warning.
      */
     @Transactional(readOnly = true)
-    public Optional<WAnythingEntity> findByWorldIdAndCollectionAndName(String worldId, String collection, String name) {
+    public Optional<WAnything> findByWorldIdAndCollectionAndName(String worldId, String collection, String name) {
         var result = repository.findByWorldIdAndCollectionAndName(worldId, collection, name);
         if (result.isPresent()) {
             return result;
@@ -66,7 +66,7 @@ public class WAnythingService {
      * If multiple entities exist (data inconsistency), returns the newest one and logs a warning.
      */
     @Transactional(readOnly = true)
-    public Optional<WAnythingEntity> findByRegionIdAndCollectionAndName(String regionId, String collection, String name) {
+    public Optional<WAnything> findByRegionIdAndCollectionAndName(String regionId, String collection, String name) {
         var result = repository.findByRegionIdAndCollectionAndName(regionId, collection, name);
         if (result.isPresent()) {
             return result;
@@ -100,7 +100,7 @@ public class WAnythingService {
      * If multiple entities exist (data inconsistency), returns the newest one and logs a warning.
      */
     @Transactional(readOnly = true)
-    public Optional<WAnythingEntity> findByRegionIdAndWorldIdAndCollectionAndName(
+    public Optional<WAnything> findByRegionIdAndWorldIdAndCollectionAndName(
             String regionId, String worldId, String collection, String name) {
         var result = repository.findByRegionIdAndWorldIdAndCollectionAndName(regionId, worldId, collection, name);
         if (result.isPresent()) {
@@ -134,7 +134,7 @@ public class WAnythingService {
      * Find all entities in a collection.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByCollection(String collection) {
+    public List<WAnything> findByCollection(String collection) {
         return repository.findByCollection(collection);
     }
 
@@ -142,7 +142,7 @@ public class WAnythingService {
      * Find all entities in a collection scoped by world.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByWorldIdAndCollection(String worldId, String collection) {
+    public List<WAnything> findByWorldIdAndCollection(String worldId, String collection) {
         return repository.findByWorldIdAndCollection(worldId, collection);
     }
 
@@ -150,7 +150,7 @@ public class WAnythingService {
      * Find all entities in a collection scoped by region.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByRegionIdAndCollection(String regionId, String collection) {
+    public List<WAnything> findByRegionIdAndCollection(String regionId, String collection) {
         return repository.findByRegionIdAndCollection(regionId, collection);
     }
 
@@ -158,7 +158,7 @@ public class WAnythingService {
      * Find all entities in a collection scoped by region and world.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByRegionIdAndWorldIdAndCollection(
+    public List<WAnything> findByRegionIdAndWorldIdAndCollection(
             String regionId, String worldId, String collection) {
         return repository.findByRegionIdAndWorldIdAndCollection(regionId, worldId, collection);
     }
@@ -167,7 +167,7 @@ public class WAnythingService {
      * Find all enabled entities in a collection.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByCollectionAndEnabled(String collection, boolean enabled) {
+    public List<WAnything> findByCollectionAndEnabled(String collection, boolean enabled) {
         return repository.findByCollectionAndEnabled(collection, enabled);
     }
 
@@ -175,7 +175,7 @@ public class WAnythingService {
      * Find all enabled entities in a collection scoped by world.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByWorldIdAndCollectionAndEnabled(String worldId, String collection, boolean enabled) {
+    public List<WAnything> findByWorldIdAndCollectionAndEnabled(String worldId, String collection, boolean enabled) {
         return repository.findByWorldIdAndCollectionAndEnabled(worldId, collection, enabled);
     }
 
@@ -183,7 +183,7 @@ public class WAnythingService {
      * Find all enabled entities in a collection scoped by region.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByRegionIdAndCollectionAndEnabled(String regionId, String collection, boolean enabled) {
+    public List<WAnything> findByRegionIdAndCollectionAndEnabled(String regionId, String collection, boolean enabled) {
         return repository.findByRegionIdAndCollectionAndEnabled(regionId, collection, enabled);
     }
 
@@ -191,7 +191,7 @@ public class WAnythingService {
      * Find all enabled entities in a collection scoped by region and world.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByRegionIdAndWorldIdAndCollectionAndEnabled(
+    public List<WAnything> findByRegionIdAndWorldIdAndCollectionAndEnabled(
             String regionId, String worldId, String collection, boolean enabled) {
         return repository.findByRegionIdAndWorldIdAndCollectionAndEnabled(regionId, worldId, collection, enabled);
     }
@@ -200,7 +200,7 @@ public class WAnythingService {
      * Find all entities by collection and type.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByCollectionAndType(String collection, String type) {
+    public List<WAnything> findByCollectionAndType(String collection, String type) {
         return repository.findByCollectionAndType(collection, type);
     }
 
@@ -208,7 +208,7 @@ public class WAnythingService {
      * Find all entities by world, collection, and type.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByWorldIdAndCollectionAndType(String worldId, String collection, String type) {
+    public List<WAnything> findByWorldIdAndCollectionAndType(String worldId, String collection, String type) {
         return repository.findByWorldIdAndCollectionAndType(worldId, collection, type);
     }
 
@@ -216,7 +216,7 @@ public class WAnythingService {
      * Find all entities by region, collection, and type.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByRegionIdAndCollectionAndType(String regionId, String collection, String type) {
+    public List<WAnything> findByRegionIdAndCollectionAndType(String regionId, String collection, String type) {
         return repository.findByRegionIdAndCollectionAndType(regionId, collection, type);
     }
 
@@ -224,7 +224,7 @@ public class WAnythingService {
      * Find all entities by region, world, collection, and type.
      */
     @Transactional(readOnly = true)
-    public List<WAnythingEntity> findByRegionIdAndWorldIdAndCollectionAndType(
+    public List<WAnything> findByRegionIdAndWorldIdAndCollectionAndType(
             String regionId, String worldId, String collection, String type) {
         return repository.findByRegionIdAndWorldIdAndCollectionAndType(regionId, worldId, collection, type);
     }
@@ -233,7 +233,7 @@ public class WAnythingService {
      * Create a new entity with minimal scoping (collection and name only).
      */
     @Transactional
-    public WAnythingEntity create(String collection, String name, String description, String type, Object data) {
+    public WAnything create(String collection, String name, String description, String type, Object data) {
         if (repository.existsByCollectionAndName(collection, name)) {
             throw new IllegalStateException("Entity already exists: collection=" + collection + ", name=" + name);
         }
@@ -244,7 +244,7 @@ public class WAnythingService {
      * Create a new entity scoped by world.
      */
     @Transactional
-    public WAnythingEntity createWithWorldId(String worldId, String collection, String name, String description, String type, Object data) {
+    public WAnything createWithWorldId(String worldId, String collection, String name, String description, String type, Object data) {
         if (repository.existsByWorldIdAndCollectionAndName(worldId, collection, name)) {
             throw new IllegalStateException("Entity already exists: worldId=" + worldId +
                     ", collection=" + collection + ", name=" + name);
@@ -256,7 +256,7 @@ public class WAnythingService {
      * Create a new entity scoped by region.
      */
     @Transactional
-    public WAnythingEntity createWithRegionId(String regionId, String collection, String name, String description, String type, Object data) {
+    public WAnything createWithRegionId(String regionId, String collection, String name, String description, String type, Object data) {
         if (repository.existsByRegionIdAndCollectionAndName(regionId, collection, name)) {
             throw new IllegalStateException("Entity already exists: regionId=" + regionId +
                     ", collection=" + collection + ", name=" + name);
@@ -268,7 +268,7 @@ public class WAnythingService {
      * Create a new entity scoped by region and world.
      */
     @Transactional
-    public WAnythingEntity createWithRegionIdAndWorldId(
+    public WAnything createWithRegionIdAndWorldId(
             String regionId, String worldId, String collection, String name, String description, String type, Object data) {
         if (repository.existsByRegionIdAndWorldIdAndCollectionAndName(regionId, worldId, collection, name)) {
             throw new IllegalStateException("Entity already exists: regionId=" + regionId +
@@ -281,7 +281,7 @@ public class WAnythingService {
      * Update an existing entity by ID.
      */
     @Transactional
-    public Optional<WAnythingEntity> update(String id, java.util.function.Consumer<WAnythingEntity> updater) {
+    public Optional<WAnything> update(String id, java.util.function.Consumer<WAnything> updater) {
         return repository.findById(id).map(existing -> {
             updater.accept(existing);
             existing.touchUpdate();
@@ -296,9 +296,9 @@ public class WAnythingService {
      * Save an entity (update timestamp and persist).
      */
     @Transactional
-    public WAnythingEntity save(WAnythingEntity entity) {
+    public WAnything save(WAnything entity) {
         entity.touchUpdate();
-        WAnythingEntity saved = repository.save(entity);
+        WAnything saved = repository.save(entity);
         log.debug("WAnythingEntity saved: id={}, collection={}, name={}",
                 saved.getId(), saved.getCollection(), saved.getName());
         return saved;
@@ -377,8 +377,8 @@ public class WAnythingService {
     /**
      * Internal helper to create and save a new entity.
      */
-    private WAnythingEntity saveNew(String regionId, String worldId, String collection, String name, String description, String type, Object data) {
-        WAnythingEntity entity = WAnythingEntity.builder()
+    private WAnything saveNew(String regionId, String worldId, String collection, String name, String description, String type, Object data) {
+        WAnything entity = WAnything.builder()
                 .regionId(regionId)
                 .worldId(worldId)
                 .collection(collection)

@@ -234,6 +234,18 @@
           </svg>
         </EditorCard>
 
+        <!-- Chest Editor -->
+        <EditorCard
+          v-if="hasAccess('CHEST_EDITOR')"
+          title="Chest Editor"
+          description="Manage chests and item storage"
+          url="./chest-editor.html"
+        >
+          <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        </EditorCard>
+
         <!-- Scrawl Editor -->
         <EditorCard
           v-if="hasAccess('SCRAWL_EDITOR')"
@@ -321,6 +333,7 @@ const editorRoleMap: Record<string, string[]> = {
   'LAYER_EDITOR': ['SECTOR_ADMIN', 'LAYER_EDITOR', 'WORLD_EDITOR'],
   'ITEM_EDITOR': ['SECTOR_ADMIN', 'ITEM_EDITOR', 'WORLD_EDITOR'],
   'ITEMTYPE_EDITOR': ['SECTOR_ADMIN', 'ITEMTYPE_EDITOR', 'WORLD_EDITOR'],
+  'CHEST_EDITOR': ['SECTOR_ADMIN', 'CHEST_EDITOR', 'WORLD_EDITOR'],
   'SCRAWL_EDITOR': ['SECTOR_ADMIN', 'SCRAWL_EDITOR', 'WORLD_EDITOR'],
   'BLOCK_EDITOR': ['SECTOR_ADMIN', 'BLOCK_EDITOR', 'WORLD_EDITOR'],
   'HEXGRID_EDITOR': ['SECTOR_ADMIN', 'HEXGRID_EDITOR', 'WORLD_EDITOR'],

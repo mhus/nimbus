@@ -4,10 +4,11 @@
  */
 
 import type { Item } from '@nimbus/shared';
+import type { WItem } from '@shared/generated/entities/WItem';
 import { ApiService } from '../../services/ApiService';
 
-// Alias for backward compatibility
-type ItemData = Item;
+// Use WItem as primary type (includes metadata)
+type ItemData = WItem;
 
 export interface ItemSearchResult {
   itemId: string;

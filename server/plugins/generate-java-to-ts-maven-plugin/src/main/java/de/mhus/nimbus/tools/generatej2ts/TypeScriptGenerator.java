@@ -62,6 +62,8 @@ public class TypeScriptGenerator {
                 tt.getEnumValues().addAll(jm.getEnumConstants());
             } else {
                 tt.setKind(TypeScriptKind.INTERFACE);
+                // Build set of followed referenced type names (SimpleNames)
+                List<String> followed = new ArrayList<>();
                 for (JavaFieldModel f : jm.getFields()) {
                     if (f == null) continue;
                     if (f.isIgnored()) continue;
@@ -70,6 +72,33 @@ public class TypeScriptGenerator {
                     TypeScriptField tf = new TypeScriptField(f.getName(), tsType, optional);
                     tf.setDescription(f.getDescription());
                     tt.getFields().add(tf);
+
+                    if (f.isFollow()) {
+                        // füge alle referenzierten Simple-Type-Namen hinzu
+                        for (String r : f.getReferencedTypes()) {
+                            if (r != null && !r.isBlank() && !followed.contains(r)) followed.add(r);
+                        }
+                    }
+                }
+                // Feld-Imports einsammeln und in Header übernehmen
+                for (JavaFieldModel f : jm.getFields()) {
+                    if (f == null || f.isIgnored()) continue;
+                    String impLine = buildFieldImportLine(f);
+                    if (impLine != null && !impLine.isBlank()) {
+                        tt.getImports().add(ensureSemicolon(impLine.trim()));
+                    }
+                }
+                // Inner Enums aus dem Java-Modell übernehmen, wenn per follow referenziert
+                if (!followed.isEmpty() && jm.getInnerEnums() != null) {
+                    for (var em : jm.getInnerEnums()) {
+                        if (em == null) continue;
+                        if (followed.contains(em.getName())) {
+                            var ne = new de.mhus.nimbus.tools.generatej2ts.ts.TypeScriptNestedEnum();
+                            ne.setName(em.getName());
+                            ne.getValues().addAll(em.getConstants());
+                            tt.getNestedEnums().add(ne);
+                        }
+                    }
                 }
                 // Default-Imports aus Konfiguration hinzufügen (nur für Interfaces)
                 addDefaultImports(tt);
@@ -81,6 +110,39 @@ public class TypeScriptGenerator {
         if (log != null) log.info("TypeScriptGenerator: erzeugte Typen: " + tsModel.getTypes().size());
         return tsModel;
     }
+
+    private String ensureSemicolon(String s) {
+        if (s.endsWith(";")) return s;
+        return s + ";";
+    }
+
+    private String buildFieldImportLine(JavaFieldModel f) {
+        // 1) Vollständige Import-Zeile direkt verwenden, falls vorhanden
+        String line = f.getInlineImportLine();
+        if (line != null && !line.isBlank()) return line;
+        // 2) Aus strukturierter Angabe konstruieren
+        String symbol = safe(f.getImportSymbol());
+        String path = safe(f.getImportPath());
+        String alias = safe(f.getImportAs());
+        if (!symbol.isEmpty() && !path.isEmpty()) {
+            String spec = symbol + (alias.isEmpty() ? "" : (" as " + alias));
+            return "import { " + spec + " } from '" + path + "'";
+        }
+        // 3) Backward-Compat: importOverride könnte eine komplette Zeile sein
+        String legacy = f.getImportOverride();
+        if (legacy != null && !legacy.isBlank()) {
+            String trimmed = legacy.trim();
+            if (trimmed.startsWith("import ")) return trimmed;
+            // Falls nur Symbol angegeben wurde und Pfad separat existiert
+            if (!symbol.isEmpty() && !path.isEmpty()) {
+                String spec = symbol + (alias.isEmpty() ? "" : (" as " + alias));
+                return "import { " + spec + " } from '" + path + "'";
+            }
+        }
+        return null;
+    }
+
+    private String safe(String s) { return s == null ? "" : s.trim(); }
 
     private void addDefaultImports(TypeScriptType tt) {
         if (configuration == null) return;

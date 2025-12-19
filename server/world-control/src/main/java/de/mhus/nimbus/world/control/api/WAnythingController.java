@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
-import de.mhus.nimbus.world.shared.world.WAnythingEntity;
+import de.mhus.nimbus.world.shared.world.WAnything;
 import de.mhus.nimbus.world.shared.world.WAnythingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -90,7 +90,7 @@ public class WAnythingController extends BaseEditorController {
         if (blank(collection)) return bad("collection required");
         if (blank(name)) return bad("name required");
 
-        Optional<WAnythingEntity> opt = anythingService.findByCollectionAndName(collection, name);
+        Optional<WAnything> opt = anythingService.findByCollectionAndName(collection, name);
         if (opt.isEmpty()) {
             log.warn("Entity not found: collection={}, name={}", collection, name);
             return notFound("entity not found");
@@ -122,7 +122,7 @@ public class WAnythingController extends BaseEditorController {
         if (blank(collection)) return bad("collection required");
         if (blank(name)) return bad("name required");
 
-        Optional<WAnythingEntity> opt = anythingService.findByWorldIdAndCollectionAndName(worldId, collection, name);
+        Optional<WAnything> opt = anythingService.findByWorldIdAndCollectionAndName(worldId, collection, name);
         if (opt.isEmpty()) {
             log.warn("Entity not found: worldId={}, collection={}, name={}", worldId, collection, name);
             return notFound("entity not found");
@@ -154,7 +154,7 @@ public class WAnythingController extends BaseEditorController {
         if (blank(collection)) return bad("collection required");
         if (blank(name)) return bad("name required");
 
-        Optional<WAnythingEntity> opt = anythingService.findByRegionIdAndCollectionAndName(regionId, collection, name);
+        Optional<WAnything> opt = anythingService.findByRegionIdAndCollectionAndName(regionId, collection, name);
         if (opt.isEmpty()) {
             log.warn("Entity not found: regionId={}, collection={}, name={}", regionId, collection, name);
             return notFound("entity not found");
@@ -191,7 +191,7 @@ public class WAnythingController extends BaseEditorController {
         var validation = validatePagination(offset, limit);
         if (validation != null) return validation;
 
-        List<WAnythingEntity> all;
+        List<WAnything> all;
 
         // Find by scope and type
         if (type != null && !type.isBlank()) {
@@ -272,7 +272,7 @@ public class WAnythingController extends BaseEditorController {
         }
 
         try {
-            WAnythingEntity saved;
+            WAnything saved;
 
             // Create with appropriate scope
             if (request.regionId() != null && request.worldId() != null) {
@@ -330,7 +330,7 @@ public class WAnythingController extends BaseEditorController {
             return bad("at least one field required for update");
         }
 
-        Optional<WAnythingEntity> updated = anythingService.update(id, entity -> {
+        Optional<WAnything> updated = anythingService.update(id, entity -> {
             if (request.description() != null) {
                 entity.setDescription(request.description());
             }
@@ -432,7 +432,7 @@ public class WAnythingController extends BaseEditorController {
 
     // Helper methods
 
-    private AnythingDto toDto(WAnythingEntity entity) {
+    private AnythingDto toDto(WAnything entity) {
         return new AnythingDto(
                 entity.getId(),
                 entity.getRegionId(),

@@ -166,7 +166,7 @@
                             <!-- Achtung: Pfade bei Bedarf anpassen -->
                             <inputDirectory>${project.basedir}/src/main/java</inputDirectory>
                             <!-- Schreibe generierte TS-Dateien nach target/ts-generated -->
-                            <outputDirectory>${project.build.directory}/ts-generated</outputDirectory>
+                            <outputDirectory>${project.basedir}/../client_shared_src/generated</outputDirectory>
                             <!-- Optionale Konfigurationsdatei, falls vorhanden -->
                             <configFile>${project.basedir}/java-to-ts.yaml</configFile>
                         </configuration>

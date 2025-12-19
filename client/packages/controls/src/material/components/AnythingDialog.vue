@@ -163,14 +163,14 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue';
-import type { WAnythingEntity } from '@shared/generated/entities/WAnythingEntity';
+import type { WAnything } from '@shared/generated/entities/WAnything';
 import { anythingService } from '@/services/AnythingService';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('AnythingDialog');
 
 const props = defineProps<{
-  entity?: WAnythingEntity | null;
+  entity?: WAnything | null;
   collection: string;
   regionId?: string;
   worldId?: string;

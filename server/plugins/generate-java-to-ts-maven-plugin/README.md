@@ -10,7 +10,7 @@ Fokus: einfache, deklarative Nutzung über Annotationen in Java und optionale Ko
   - `@GenerateTypeScript(value="subfolder")` markiert Klasse/Enum zur Generierung
     - Wenn `value` mit `.ts` endet, wird dies als Dateiname verwendet (z. B. `models/Custom.ts`)
     - Optional: `name="Human"` überschreibt den TypeScript‑Typnamen (Dateiname bleibt entweder aus `value` oder `<name>.ts`)
-  - `@TypeScript(...)` für Felder: `follow`, `type`, `ignore`, `optional`, `description`, sowie Import‑Aliasfelder `tsImport`/`import_`/`importPath`/`importValue`/`importAs`
+  - `@TypeScript(...)` für Felder: `follow`, `type`, `ignore`, `optional`, `description`, sowie Import‑Angaben
   - `@TypeScriptImport({"import ...", ...})` auf Klassen/Enums für zusätzliche TS‑Importzeilen
 - Unterstützt Klassen (als `export interface`) und Enums (als `export enum`)
 - Nur Felder werden berücksichtigt (Methoden werden ignoriert)
@@ -94,7 +94,15 @@ Signatur (vereinfacht):
 - `ignore` (boolean): Feld ignorieren
 - `optional` (boolean): Optionales Feld → `?:` in TS
 - `description` (String): Kommentar am Feld `/* ... */`
-- Import‑Aliase: `tsImport`, `import_`, `importPath`, `importValue`, `importAs` (da `import` in Java reserviert ist)
+- Import‑Angaben:
+  - Einfachster Weg: `importLine` mit einer vollständigen TS‑Importzeile, z. B. `"import { Item } from '../../types';"`.
+  - Zusätzlich werden strukturierte Alias‑Felder unterstützt (für historische Kompatibilität), da `import` ein Java‑Schlüsselwort ist:
+    - `tsImport`/`import_`/`importValue`: Symbolname (z. B. `Item`)
+    - `importPath`: Pfad (z. B. `../../types`)
+    - `importAs`: Alias (optional), z. B. für `import { Item as ItemType } from '...';`
+  - Priorität: Wenn `importLine` gesetzt ist, wird diese 1:1 verwendet. Andernfalls wird aus den strukturierten Feldern eine Importzeile aufgebaut.
+
+Hinweis: In TypeScript sind Imports immer auf Dateiebene. Ein am Feld definierter Import ("inline") wird technisch in den Datei‑Header importiert. Der Use‑Case ist dennoch erfüllt: Sie können den benötigten Import direkt am Feld deklarieren; der Generator fügt ihn automatisch oben ein.
 
 ### TypeScriptImport (Klassen/Enum‑Annotation)
 
@@ -107,6 +115,10 @@ public @interface TypeScriptImport {
 ```
 
 Fügt Zeilen wie `import { X } from '...';` an den Anfang der TS‑Datei an.
+
+Use‑Cases für Imports zusammengefasst:
+- Klassen-/Enum‑Header‑Import: Verwenden Sie `@TypeScriptImport({"import { X } from '...';"})` für generelle Imports des Typs.
+- Feldbezogener Import: Verwenden Sie am Feld `@TypeScript(importLine="import { X } from '...';")` oder die strukturierten Felder, wenn Sie lieber Symbol/Path getrennt angeben.
 
 ## Konfiguration: java-to-ts.yaml
 

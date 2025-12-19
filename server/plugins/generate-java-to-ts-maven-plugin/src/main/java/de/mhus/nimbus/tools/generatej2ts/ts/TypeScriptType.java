@@ -14,6 +14,8 @@ public class TypeScriptType {
     private String subfolder; // from @GenerateTypeScript on Java side
     private String sourceFqn; // fully-qualified Java source class name (package + name)
     private String fileName;  // optional target filename (e.g. "Custom.ts")
+    // Nested enums that should be emitted into the same file (followed inner enums)
+    private final List<TypeScriptNestedEnum> nestedEnums = new ArrayList<>();
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -33,4 +35,6 @@ public class TypeScriptType {
 
     public String getFileName() { return fileName; }
     public void setFileName(String fileName) { this.fileName = fileName; }
+
+    public List<TypeScriptNestedEnum> getNestedEnums() { return nestedEnums; }
 }
