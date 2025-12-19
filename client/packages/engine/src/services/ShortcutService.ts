@@ -79,7 +79,7 @@ export class ShortcutService {
    * @param shortcutKey Shortcut key identifier
    */
   async fireShortcut(shortcutNr: number, shortcutKey: string): Promise<void> {
-    logger.info('Firing shortcut', { shortcutNr, shortcutKey });
+    logger.debug('Firing shortcut', { shortcutNr, shortcutKey });
     try {
       // Check if blocked
       if (this.isShortcutBlocked(shortcutNr)) {
@@ -318,7 +318,7 @@ export class ShortcutService {
   endShortcut(shortcutNr: number): ActiveShortcut | undefined {
     const shortcut = this.activeShortcuts.get(shortcutNr);
     if (!shortcut) {
-      logger.warn(`Cannot end inactive shortcut: ${shortcutNr}`);
+      logger.debug(`Cannot end inactive shortcut: ${shortcutNr}`);
       return undefined;
     }
 
