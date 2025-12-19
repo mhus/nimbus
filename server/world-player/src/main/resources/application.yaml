@@ -5,7 +5,9 @@ spring:
   data:
     mongodb:
       database: world
-      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      uri: ${MONGODB_URI:mongodb://root:example@localhost:27017/world?authSource=admin}
+  redis:
+    url: ${REDIS_URL:redis://localhost:6379}
 
 world:
   player:
@@ -16,12 +18,18 @@ world:
     entity-update-timeout-ms: 200  # Skip inactive entities after 200ms
     pathway-prediction-time-ms: 100  # Predict position 100ms ahead
   client:
-    player-base-url: http://localhost:9042
-    life-base-url: http://localhost:9044
-    control-base-url: http://localhost:9043
+    player-base-url: ${PLAYER_BASE_URL:http://localhost:9042}
+    life-base-url: ${LIFE_BASE_URL:http://localhost:9044}
+    control-base-url: ${CONTROL_BASE_URL:http://localhost:9043}
     command-timeout-ms: 5000
   development:
     enabled: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DATABASE:0}
+    password: ${REDIS_PASSWORD:}
+    ssl: ${REDIS_SSL:false}
 
 server:
   port: 9042
