@@ -282,12 +282,12 @@
           </svg>
         </EditorCard>
 
-        <!-- Job Controller -->
+        <!-- Job Editor -->
         <EditorCard
           v-if="hasAccess('JOB_CONTROLLER')"
-          title="Job Controller"
+          title="Job Editor"
           description="Manage and monitor background jobs"
-          url="./job-control.html"
+          url="./job-editor.html"
         >
           <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
