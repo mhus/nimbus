@@ -5,5 +5,5 @@
 
 export interface PlayerUser {
   userId: string;
-  displayName: string;
+  title: string;
 }

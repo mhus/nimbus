@@ -15,7 +15,7 @@ export interface WChest {
   regionId: string;
   worldId?: string;
   name: string;
-  displayName?: string;
+  title?: string;
   description?: string;
   userId?: string;
   type: ChestType;

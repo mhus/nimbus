@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <!-- Header with Search and Actions -->
+    <!-- Header with Search -->
     <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
       <div class="flex-1">
         <SearchInput
@@ -8,17 +8,6 @@
           placeholder="Search assets..."
           @search="handleSearch"
         />
-      </div>
-      <div class="flex gap-2">
-        <button
-          class="btn btn-primary"
-          @click="openUploadDialog"
-        >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          Upload Asset
-        </button>
       </div>
     </div>
 
@@ -77,14 +66,6 @@
       </div>
     </div>
 
-    <!-- Upload Dialog -->
-    <AssetUploadDialog
-      v-if="isUploadDialogOpen"
-      :world-id="currentWorldId!"
-      @close="closeUploadDialog"
-      @uploaded="handleUploaded"
-    />
-
     <!-- Asset Info Dialog -->
     <AssetInfoDialog
       v-if="isInfoDialogOpen && selectedAsset"
@@ -105,7 +86,6 @@ import SearchInput from '@components/SearchInput.vue';
 import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import AssetGrid from '@material/components/AssetGrid.vue';
-import AssetUploadDialog from '@material/components/AssetUploadDialog.vue';
 import AssetInfoDialog from '@material/components/AssetInfoDialog.vue';
 
 const { currentWorldId, loadWorlds } = useWorld();
@@ -131,13 +111,12 @@ const totalPages = computed(() => assetsComposable.value?.totalPages.value || 0)
 const hasNextPage = computed(() => assetsComposable.value?.hasNextPage.value || false);
 const hasPreviousPage = computed(() => assetsComposable.value?.hasPreviousPage.value || false);
 
-const isUploadDialogOpen = ref(false);
 const isInfoDialogOpen = ref(false);
 const selectedAsset = ref<Asset | null>(null);
 
-// Load assets when world changes
+// Load assets when world changes (but not for '?')
 watch(currentWorldId, () => {
-  if (currentWorldId.value) {
+  if (currentWorldId.value && currentWorldId.value !== '?') {
     assetsComposable.value?.loadAssets();
   }
 }, { immediate: true });
@@ -148,27 +127,6 @@ watch(currentWorldId, () => {
 const handleSearch = (query: string) => {
   if (!assetsComposable.value) return;
   assetsComposable.value.searchAssets(query);
-};
-
-/**
- * Open upload dialog
- */
-const openUploadDialog = () => {
-  isUploadDialogOpen.value = true;
-};
-
-/**
- * Close upload dialog
- */
-const closeUploadDialog = () => {
-  isUploadDialogOpen.value = false;
-};
-
-/**
- * Handle uploaded
- */
-const handleUploaded = () => {
-  closeUploadDialog();
 };
 
 /**
@@ -225,9 +183,11 @@ const handlePreviousPage = () => {
 
 onMounted(() => {
   // Load worlds with mainOnly filter for asset editor
+  // Assets are only stored in main worlds (no branches, instances, zones)
   loadWorlds('mainOnly');
 
-  if (currentWorldId.value && assetsComposable.value) {
+  // Load assets if valid worldId is set
+  if (currentWorldId.value && currentWorldId.value !== '?' && assetsComposable.value) {
     assetsComposable.value.loadAssets();
   }
 });

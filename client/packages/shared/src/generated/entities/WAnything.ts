@@ -8,6 +8,7 @@ export interface WAnything {
   worldId?: string;
   collection: string;
   name?: string;
+  title?: string;
   description: string;
   type?: string;
   data: any;

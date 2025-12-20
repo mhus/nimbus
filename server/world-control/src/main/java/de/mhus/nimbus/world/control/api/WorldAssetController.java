@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.SAssetService;
 import de.mhus.nimbus.world.shared.world.SAsset;
+import de.mhus.nimbus.world.shared.world.FolderInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -318,8 +319,8 @@ public class WorldAssetController extends BaseEditorController {
 
     /**
      * Duplicate Asset with a new path.
-     * PATCH /control/worlds/{worldId}/assets/duplicate/{*path}
-     * Body: { "newPath": "..." }
+     * PATCH /control/worlds/{worldId}/assets/duplicate
+     * Body: { "sourcePath": "...", "newPath": "..." }
      */
     @PatchMapping("/duplicate")
     @Operation(summary = "Asset duplizieren",
@@ -332,8 +333,8 @@ public class WorldAssetController extends BaseEditorController {
     })
     public ResponseEntity<?> duplicate(
                                        @Parameter(description = "World identifier") @PathVariable String worldId,
-                                       @PathVariable String sourcePath,
                                        @RequestBody Map<String, String> body) {
+        String sourcePath = normalizePath(body.get("sourcePath"));
         String newPath = normalizePath(body.get("newPath"));
 
         log.debug("DUPLICATE asset: worldId={}, sourcePath={}, newPath={}",
@@ -375,6 +376,146 @@ public class WorldAssetController extends BaseEditorController {
             log.error("Failed to duplicate asset", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to duplicate asset: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get virtual folder tree for a world.
+     * GET /control/worlds/{worldId}/assets/folders?parent=textures
+     *
+     * Returns folders derived from asset paths. Folders don't exist in the database as entities.
+     * Example: Asset "textures/block/stone.png" creates virtual folders "textures" and "textures/block".
+     */
+    @GetMapping("/folders")
+    @Operation(
+            summary = "Get folder tree for world",
+            description = "Returns virtual folders derived from asset paths. Folders are computed from asset paths and don't exist as database entities."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "400", description = "Invalid worldId"),
+            @ApiResponse(responseCode = "404", description = "World not found")
+    })
+    public ResponseEntity<?> getFolders(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Parent path filter (optional) - get only subfolders of this path")
+            @RequestParam(required = false) String parent) {
+
+        log.debug("GET folders: worldId={}, parent={}", worldId, parent);
+
+        try {
+            WorldId wid = WorldId.of(worldId).orElseThrow(
+                    () -> new IllegalArgumentException("Invalid worldId: " + worldId)
+            );
+
+            // Extract folders from asset paths
+            List<FolderInfo> folders = assetService.extractFolders(wid, parent);
+
+            log.debug("Returning {} folders", folders.size());
+
+            return ResponseEntity.ok(Map.of(
+                    "folders", folders,
+                    "count", folders.size(),
+                    "parent", parent != null ? parent : ""
+            ));
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid request: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to get folders for world {}", worldId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to get folders: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Move/rename a folder by updating all asset paths with the given prefix.
+     * PATCH /control/worlds/{worldId}/assets/folders/move
+     * Body: { "oldPath": "old_textures", "newPath": "textures" }
+     *
+     * WARNING: This is a dangerous operation that affects all assets in the folder.
+     * It validates for conflicts before proceeding.
+     */
+    @PatchMapping("/folders/move")
+    @Operation(
+            summary = "Move or rename a folder",
+            description = "Updates all asset paths with the old prefix to the new prefix. " +
+                    "This affects all assets in the folder and its subfolders. " +
+                    "Validates for conflicts before proceeding."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Folder moved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or validation error"),
+            @ApiResponse(responseCode = "409", description = "Conflict - target paths already exist"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> moveFolder(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Folder move request with oldPath and newPath",
+                    required = true
+            )
+            @RequestBody Map<String, String> body) {
+
+        log.debug("PATCH move folder: worldId={}, body={}", worldId, body);
+
+        try {
+            String oldPath = body.get("oldPath");
+            String newPath = body.get("newPath");
+
+            // Validation
+            if (oldPath == null || oldPath.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "oldPath is required"));
+            }
+
+            if (newPath == null || newPath.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "newPath is required"));
+            }
+
+            // Normalize paths
+            oldPath = normalizePath(oldPath);
+            newPath = normalizePath(newPath);
+
+            if (oldPath.equals(newPath)) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "oldPath and newPath must be different"));
+            }
+
+            WorldId wid = WorldId.of(worldId).orElseThrow(
+                    () -> new IllegalArgumentException("Invalid worldId: " + worldId)
+            );
+
+            // Perform bulk update
+            int updatedCount = assetService.updatePathPrefix(wid, oldPath, newPath);
+
+            log.info("Moved folder '{}' to '{}', updated {} assets", oldPath, newPath, updatedCount);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Folder moved successfully",
+                    "oldPath", oldPath,
+                    "newPath", newPath,
+                    "updatedAssets", updatedCount
+            ));
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid move folder request: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+
+        } catch (IllegalStateException e) {
+            // Conflict detected
+            log.warn("Conflict detected during folder move: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage()));
+
+        } catch (Exception e) {
+            log.error("Failed to move folder", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to move folder: " + e.getMessage()));
         }
     }
 

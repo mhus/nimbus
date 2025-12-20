@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <!-- Header -->
-    <AppHeader title="Nimbus Asset Editor" />
+    <!-- Header with World Selector (Main Worlds Only) -->
+    <AssetAppHeader title="Nimbus Asset Editor" />
 
     <!-- Main Content -->
     <main class="flex-1 container mx-auto px-4 py-6">
@@ -15,6 +15,6 @@
 </template>
 
 <script setup lang="ts">
-import AppHeader from '@material/components/AppHeader.vue';
+import AssetAppHeader from '@material/components/AssetAppHeader.vue';
 import AssetEditor from '@material/views/AssetEditor.vue';
 </script>

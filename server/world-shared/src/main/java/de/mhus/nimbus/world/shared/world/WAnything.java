@@ -67,6 +67,9 @@ public class WAnything implements Identifiable {
     @TypeScript(optional = true)
     private String name;
 
+    @TypeScript(optional = true)
+    private String title;
+
     /**
      * Human-readable description of the data.
      */

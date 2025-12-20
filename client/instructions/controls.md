@@ -32,4 +32,3 @@
 
 [ ] Im ScriptEditor soll der Tab zwischen Editor und Json SOurce raus, dafuer ein Button
 'Source' unten angezeigt werden der einen Dialog mit dem JSON oeffnet. So wie bei anderen Editoren auch.
-

@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Service zur Verwaltung von Assets (Inline oder extern gespeichert).
@@ -273,4 +273,241 @@ public class SAssetService {
             int offset,
             int limit
     ) {}
+
+    /**
+     * Extract unique folder paths from assets in a world.
+     * Folders are virtual - they are derived from asset paths and don't exist as entities in MongoDB.
+     * Example: Asset "textures/block/stone.png" creates folders "textures" and "textures/block".
+     *
+     * @param worldId The world identifier
+     * @param parentPath Optional parent path filter (e.g., "textures/" to get only subfolders of textures)
+     * @return List of folder metadata, sorted alphabetically by path
+     */
+    public List<FolderInfo> extractFolders(WorldId worldId, String parentPath) {
+        if (worldId == null) throw new IllegalArgumentException("worldId required");
+
+        // Normalize parent path (remove trailing slash)
+        String normalizedParent = parentPath != null && !parentPath.isEmpty()
+                ? parentPath.replaceAll("/+$", "")
+                : null;
+
+        // Load all assets for the world
+        WorldId lookupWorld = worldId.mainWorld();
+        List<SAsset> assets = repository.findByWorldId(lookupWorld.getId());
+
+        log.debug("Extracting folders from {} assets (worldId={}, parent={})",
+                assets.size(), lookupWorld.getId(), normalizedParent);
+
+        // Extract folder paths and count assets per folder
+        Map<String, FolderStats> folderMap = new HashMap<>();
+
+        for (SAsset asset : assets) {
+            Set<String> folders = extractFolderPathsFromAssetPath(asset.getPath());
+
+            for (String folder : folders) {
+                // Filter by parent path if specified
+                if (normalizedParent != null) {
+                    if (!folder.startsWith(normalizedParent + "/") && !folder.equals(normalizedParent)) {
+                        continue;
+                    }
+                }
+
+                // Track folder statistics
+                folderMap.computeIfAbsent(folder, k -> new FolderStats()).incrementAssetCount();
+            }
+        }
+
+        // Count subfolders for each folder
+        for (String folder : folderMap.keySet()) {
+            long subfoldersCount = folderMap.keySet().stream()
+                    .filter(f -> !f.equals(folder) && f.startsWith(folder + "/"))
+                    .filter(f -> f.substring(folder.length() + 1).indexOf('/') == -1) // Only direct children
+                    .count();
+            folderMap.get(folder).setSubfolderCount((int) subfoldersCount);
+        }
+
+        // Convert to FolderInfo DTOs and sort
+        List<FolderInfo> result = folderMap.entrySet().stream()
+                .map(entry -> buildFolderInfo(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(FolderInfo::path))
+                .collect(Collectors.toList());
+
+        log.debug("Extracted {} folders", result.size());
+        return result;
+    }
+
+    /**
+     * Extract all folder paths from a single asset path.
+     * Handles collection prefixes (w:, r:, p:, xyz:) - removes them before extracting folders.
+     * Examples:
+     *   "w:textures/block/stone.png" → ["textures", "textures/block"]
+     *   "textures/magic/book.png" → ["textures", "textures/magic"] (legacy)
+     */
+    private Set<String> extractFolderPathsFromAssetPath(String assetPath) {
+        if (assetPath == null || assetPath.isEmpty()) return Collections.emptySet();
+
+        // Remove collection prefix (w:, r:, p:, xyz:)
+        int colonPos = assetPath.indexOf(':');
+        if (colonPos > 0) {
+            assetPath = assetPath.substring(colonPos + 1);
+        }
+
+        Set<String> folders = new HashSet<>();
+        String[] parts = assetPath.split("/");
+
+        // Build incremental paths (exclude the last part which is the filename)
+        StringBuilder current = new StringBuilder();
+        for (int i = 0; i < parts.length - 1; i++) {
+            if (i > 0) current.append("/");
+            current.append(parts[i]);
+            folders.add(current.toString());
+        }
+
+        return folders;
+    }
+
+    /**
+     * Build FolderInfo DTO from folder path and statistics.
+     */
+    private FolderInfo buildFolderInfo(String path, FolderStats stats) {
+        String name = path.contains("/")
+                ? path.substring(path.lastIndexOf("/") + 1)
+                : path;
+
+        String parentPath = path.contains("/")
+                ? path.substring(0, path.lastIndexOf("/"))
+                : "";
+
+        return new FolderInfo(
+                path,
+                name,
+                stats.getAssetCount(),
+                stats.getTotalAssetCount(),
+                stats.getSubfolderCount(),
+                parentPath
+        );
+    }
+
+    /**
+     * Internal statistics holder for folder metadata calculation.
+     */
+    private static class FolderStats {
+        private int assetCount = 0;
+        private int totalAssetCount = 0;
+        private int subfolderCount = 0;
+
+        void incrementAssetCount() {
+            assetCount++;
+            totalAssetCount++;
+        }
+
+        int getAssetCount() { return assetCount; }
+        int getTotalAssetCount() { return totalAssetCount; }
+        int getSubfolderCount() { return subfolderCount; }
+        void setSubfolderCount(int count) { this.subfolderCount = count; }
+    }
+
+    /**
+     * Update all asset paths with a given prefix (folder rename/move).
+     * This is a bulk operation that affects all assets in a folder and its subfolders.
+     *
+     * WARNING: This is a potentially dangerous operation that can break references.
+     * Use with caution.
+     *
+     * @param worldId The world identifier
+     * @param oldPrefix The old folder path prefix (e.g., "old_textures/")
+     * @param newPrefix The new folder path prefix (e.g., "textures/")
+     * @return Number of assets updated
+     */
+    @Transactional
+    public int updatePathPrefix(WorldId worldId, String oldPrefix, String newPrefix) {
+        if (worldId == null) throw new IllegalArgumentException("worldId required");
+        if (oldPrefix == null || oldPrefix.isEmpty()) throw new IllegalArgumentException("oldPrefix required");
+        if (newPrefix == null || newPrefix.isEmpty()) throw new IllegalArgumentException("newPrefix required");
+        if (oldPrefix.equals(newPrefix)) throw new IllegalArgumentException("oldPrefix and newPrefix must be different");
+
+        // Normalize paths (remove trailing slashes) - make final for lambda
+        final String normalizedOldPrefix = oldPrefix.replaceAll("/+$", "");
+        final String normalizedNewPrefix = newPrefix.replaceAll("/+$", "");
+
+        WorldId lookupWorld = worldId.mainWorld();
+
+        log.debug("Updating path prefix: worldId={}, oldPrefix='{}', newPrefix='{}'",
+                lookupWorld.getId(), normalizedOldPrefix, normalizedNewPrefix);
+
+        // 1. Find all assets with path starting with oldPrefix
+        List<SAsset> assetsToUpdate = repository.findByWorldId(lookupWorld.getId())
+                .stream()
+                .filter(asset -> asset.getPath().startsWith(normalizedOldPrefix + "/") || asset.getPath().equals(normalizedOldPrefix))
+                .collect(Collectors.toList());
+
+        if (assetsToUpdate.isEmpty()) {
+            log.debug("No assets found with prefix '{}'", normalizedOldPrefix);
+            return 0;
+        }
+
+        log.info("Found {} assets to update for prefix change", assetsToUpdate.size());
+
+        // 2. Check for conflicts (newPath already exists)
+        List<String> conflicts = new ArrayList<>();
+        for (SAsset asset : assetsToUpdate) {
+            String newPath = generateNewPath(asset.getPath(), normalizedOldPrefix, normalizedNewPrefix);
+
+            // Check if target path already exists
+            Optional<SAsset> existingAsset = repository.findByWorldIdAndPath(
+                    lookupWorld.getId(),
+                    newPath
+            );
+
+            if (existingAsset.isPresent() && !existingAsset.get().getId().equals(asset.getId())) {
+                conflicts.add(asset.getPath() + " -> " + newPath);
+            }
+        }
+
+        if (!conflicts.isEmpty()) {
+            String conflictList = String.join(", ", conflicts.subList(0, Math.min(5, conflicts.size())));
+            throw new IllegalStateException(
+                    String.format("Path conflicts detected: %d conflicts. Examples: %s",
+                            conflicts.size(), conflictList)
+            );
+        }
+
+        // 3. Update all assets (path and name)
+        int updatedCount = 0;
+        for (SAsset asset : assetsToUpdate) {
+            String oldPath = asset.getPath();
+            String newPath = generateNewPath(oldPath, normalizedOldPrefix, normalizedNewPrefix);
+
+            asset.setPath(newPath);
+            asset.setName(extractName(newPath));
+
+            repository.save(asset);
+            updatedCount++;
+
+            log.debug("Updated asset path: '{}' -> '{}'", oldPath, newPath);
+        }
+
+        log.info("Successfully updated {} asset paths from '{}' to '{}'",
+                updatedCount, normalizedOldPrefix, normalizedNewPrefix);
+
+        return updatedCount;
+    }
+
+    /**
+     * Generate new path by replacing prefix.
+     * Example: generateNewPath("old/sub/file.png", "old", "new") => "new/sub/file.png"
+     */
+    private String generateNewPath(String originalPath, String oldPrefix, String newPrefix) {
+        if (originalPath.equals(oldPrefix)) {
+            return newPrefix;
+        }
+
+        // Replace prefix
+        if (originalPath.startsWith(oldPrefix + "/")) {
+            return newPrefix + originalPath.substring(oldPrefix.length());
+        }
+
+        // Should not happen (validated earlier)
+        throw new IllegalStateException("Path does not start with prefix: " + originalPath);
+    }
 }

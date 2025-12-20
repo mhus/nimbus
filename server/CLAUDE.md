@@ -26,3 +26,7 @@
   - name: ist ein technischer name, in Bereichen (z.b. World, region, global) Eindeutiger Name einer entity, wenn entities in der App (zusammen mit z.b. worldId) adressiert werden
   - title: display Name, nicht eindeutig, darstellung au UI
   - parameter die mit 'Id' am Ende (worldId, regionId, itemId) sind wie name eindeutig
+- UI controls html element namen convention (../client/packages/controls):
+  - *-editor.html: Elemente für Administratoren und Editoren, eher technisch organisiert, werden in HomeApp verlinkt
+  - *-panel.html: Elemente die vom Player genutzt werden, sollen stylisch angepasst werden, werden in der PanelApp verlinkt, immer vollbild.
+  - *-widget.html: Elemente die auch vom Player genutzt, sollen stylisch angepasst werden, werden separat geoffnet, meist nur ein teil des Bildschirms.

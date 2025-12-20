@@ -57,6 +57,22 @@
                   </label>
                 </div>
 
+                <!-- Title -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-semibold">Title</span>
+                  </label>
+                  <input
+                    v-model="formData.title"
+                    type="text"
+                    class="input input-bordered"
+                    placeholder="Enter title..."
+                  />
+                  <label class="label">
+                    <span class="label-text-alt text-base-content/60">Display title for this entity</span>
+                  </label>
+                </div>
+
                 <!-- Type -->
                 <div class="form-control">
                   <label class="label">
@@ -186,6 +202,7 @@ const isEditMode = computed(() => !!props.entity);
 // Form data
 const formData = ref({
   name: '',
+  title: '',
   type: '',
   description: '',
   enabled: true,
@@ -251,6 +268,7 @@ const handleSave = async () => {
     if (isEditMode.value && props.entity) {
       // Update existing entity
       await anythingService.update(props.entity.id, {
+        title: formData.value.title || undefined,
         description: formData.value.description || undefined,
         type: formData.value.type || undefined,
         data: data || undefined,
@@ -264,6 +282,7 @@ const handleSave = async () => {
         worldId: props.worldId,
         collection: props.collection,
         name: formData.value.name,
+        title: formData.value.title || undefined,
         description: formData.value.description || undefined,
         type: formData.value.type || undefined,
         data: data || undefined,
@@ -287,6 +306,7 @@ const initializeForm = () => {
   if (props.entity) {
     formData.value = {
       name: props.entity.name || '',
+      title: props.entity.title || '',
       type: props.entity.type || '',
       description: props.entity.description || '',
       enabled: props.entity.enabled ?? true,
@@ -306,6 +326,7 @@ const initializeForm = () => {
   } else {
     formData.value = {
       name: '',
+      title: '',
       type: '',
       description: '',
       enabled: true,

@@ -9,7 +9,12 @@ import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('useAssets');
 
-export function useAssets(worldId: string, extensions?: string[]) {
+export interface UseAssetsOptions {
+  extensions?: string[];
+  folderPath?: string;
+}
+
+export function useAssets(worldId: string, options?: UseAssetsOptions) {
   const assets = ref<Asset[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -17,12 +22,16 @@ export function useAssets(worldId: string, extensions?: string[]) {
   const uploadProgress = ref(0);
 
   // Filter by extensions (converted to comma-separated string)
-  const extensionsFilter = extensions ? extensions.join(',') : undefined;
+  const extensionsFilter = options?.extensions ? options.extensions.join(',') : undefined;
+
+  // Filter by folder path
+  const folderPath = options?.folderPath;
 
   // Paging state
   const totalCount = ref(0);
   const currentPage = ref(1);
-  const pageSize = ref(50);
+  // Use larger page size for folder filtering (client-side filtering needs all matching assets)
+  const pageSize = ref(folderPath !== undefined ? 500 : 50);
 
   // Computed
   const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value));
@@ -39,8 +48,22 @@ export function useAssets(worldId: string, extensions?: string[]) {
 
     try {
       const offset = (page - 1) * pageSize.value;
+
+      // Build query for folder filtering
+      let queryParam = searchQuery.value || undefined;
+
+      // Apply folder filtering via backend query
+      // Asset paths may have collection prefixes like "w:", "r:", "p:", "xyz:" or none (legacy)
+      // We search for the folder path (without prefix checking)
+      if (folderPath !== undefined && folderPath !== '') {
+        // Search for assets containing the folder path
+        // Backend will wrap in .*query.* so "textures/items" becomes ".*textures/items.*"
+        // This matches: "w:textures/items/file.png", "textures/items/file.png", etc.
+        queryParam = folderPath;
+      }
+
       const response = await assetService.getAssets(worldId, {
-        query: searchQuery.value || undefined,
+        query: queryParam,
         limit: pageSize.value,
         offset,
         ext: extensionsFilter,
@@ -54,6 +77,7 @@ export function useAssets(worldId: string, extensions?: string[]) {
         totalCount: totalCount.value,
         page,
         worldId,
+        folderPath,
       });
     } catch (err) {
       error.value = 'Failed to load assets';

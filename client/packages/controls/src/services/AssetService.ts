@@ -4,9 +4,11 @@
  */
 
 import { apiService } from './ApiService';
+import type { FolderInfo } from '@shared/generated/entities/FolderInfo';
 
 export interface Asset {
   path: string;
+  name?: string;
   size: number;
   mimeType: string;
   lastModified: string;
@@ -73,6 +75,16 @@ export class AssetService {
   }
 
   /**
+   * Duplicate asset to new path (copy)
+   */
+  async duplicateAsset(worldId: string, sourcePath: string, newPath: string): Promise<void> {
+    return apiService.patch(`/control/worlds/${worldId}/assets/duplicate`, {
+      sourcePath,
+      newPath,
+    });
+  }
+
+  /**
    * Get asset download URL
    */
   getAssetUrl(worldId: string, assetPath: string): string {
@@ -124,6 +136,40 @@ export class AssetService {
     // Default
     return '📦';
   }
+
+  /**
+   * Get folders for a world
+   * Returns virtual folders derived from asset paths
+   */
+  async getFolders(worldId: string, parent?: string): Promise<FolderListResponse> {
+    const params: Record<string, string> = {};
+    if (parent) {
+      params.parent = parent;
+    }
+
+    const response = await apiService.get<FolderListResponse>(
+      `/control/worlds/${worldId}/assets/folders`,
+      params
+    );
+    return response;
+  }
+
+  /**
+   * Move/rename a folder (bulk path update)
+   * Note: This endpoint may not be implemented yet (Phase 2 - optional)
+   */
+  async moveFolder(worldId: string, oldPath: string, newPath: string): Promise<void> {
+    return apiService.patch(`/control/worlds/${worldId}/assets/folders/move`, {
+      oldPath,
+      newPath,
+    });
+  }
+}
+
+export interface FolderListResponse {
+  folders: FolderInfo[];
+  count: number;
+  parent: string;
 }
 
 export const assetService = new AssetService();

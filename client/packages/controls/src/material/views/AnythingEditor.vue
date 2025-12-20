@@ -104,6 +104,7 @@
         <thead>
           <tr>
             <th>Name</th>
+            <th>Title</th>
             <th>Type</th>
             <th>Description</th>
             <th>Region</th>
@@ -116,6 +117,7 @@
         <tbody>
           <tr v-for="entity in entities" :key="entity.id" class="hover">
             <td class="font-medium">{{ entity.name || '-' }}</td>
+            <td>{{ entity.title || '-' }}</td>
             <td>
               <span v-if="entity.type" class="badge badge-primary">{{ entity.type }}</span>
               <span v-else class="text-base-content/50">-</span>
