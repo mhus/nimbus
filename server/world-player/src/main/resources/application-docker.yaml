@@ -1,22 +1,29 @@
 spring:
   application:
-    name: WorldEditor
+    name: WorldPlayer
     host: localhost
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://root:example@localhost:27017/world?authSource=admin}
       database: world
+      uri: ${MONGODB_URI:mongodb://root:example@localhost:27017/world?authSource=admin}
+  redis:
+    url: ${REDIS_URL:redis://localhost:6379}
 
 world:
+  player:
+    readiness:
+      max-active-sessions: 100
+    chunk-publish-interval-ms: 60000  # 1 minute - Periodic chunk list publish interval
+    pathway-broadcast-interval-ms: 100  # Broadcast pathways every 100ms
+    entity-update-timeout-ms: 200  # Skip inactive entities after 200ms
+    pathway-prediction-time-ms: 100  # Predict position 100ms ahead
   client:
     player-base-url: ${PLAYER_BASE_URL:http://localhost:9042}
     life-base-url: ${LIFE_BASE_URL:http://localhost:9044}
     control-base-url: ${CONTROL_BASE_URL:http://localhost:9043}
     command-timeout-ms: 5000
-  control:
-    chunk-update-interval-ms: 5000  # 5 seconds between chunk update runs
-    chunk-update-batch-size: 10     # Process 10 chunks per run
-    chunk-update-world-id: main     # Target world for chunk updates
+  development:
+    enabled: true
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
@@ -25,17 +32,12 @@ world:
     ssl: ${REDIS_SSL:false}
 
 server:
-  port: 9043
+  port: 9042
   error:
-    include-message: always
-    include-binding-errors: always
     include-exception: true
+    include-binding-errors: always
+    include-message: always
     include-stacktrace: always
-
-logging:
-  level:
-    root: INFO
-    de.mhus.nimbus: DEBUG
 
 management:
   endpoint:
@@ -46,3 +48,8 @@ management:
     web:
       exposure:
         include: health,info,readyness,readiness
+
+logging:
+  level:
+    root: INFO
+    de.mhus.nimbus: DEBUG

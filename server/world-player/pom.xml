@@ -60,18 +60,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>org.graalvm.buildtools</groupId>
-                <artifactId>native-maven-plugin</artifactId>
-                <version>0.10.4</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile-no-fork</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -82,6 +70,22 @@
                 <spring-boot.build-image.imageName>world-player-native</spring-boot.build-image.imageName>
                 <BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>0.10.4</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

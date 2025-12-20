@@ -4,7 +4,7 @@ spring:
     host: localhost
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://root:example@localhost:27017/world?authSource=admin}
+      uri: ${MONGODB_URI:mongodb://root:example@host.docker.internal:27017/world?authSource=admin}
       database: world
 
 world:
