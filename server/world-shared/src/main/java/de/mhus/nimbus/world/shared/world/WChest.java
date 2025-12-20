@@ -1,6 +1,5 @@
 package de.mhus.nimbus.world.shared.world;
 
-import de.mhus.nimbus.generated.types.Item;
 import de.mhus.nimbus.generated.types.ItemRef;
 import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
 import de.mhus.nimbus.shared.annotations.TypeScript;
@@ -65,7 +64,7 @@ public class WChest implements Identifiable {
      * Display name - optional.
      */
     @TypeScript(optional = true)
-    private String displayName;
+    private String title;
 
     /**
      * Description of the chest.

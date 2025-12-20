@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  * {
  *   "sessionId": "abc123",
  *   "userId": "user123",
- *   "displayName": "Player",
+ *   "title": "Player",
  *   "p": {"x": 100.5, "y": 65.0, "z": -200.5},
  *   "r": {"y": 90.0, "p": 0.0},
  *   "cx": 6,  // chunk x coordinate
@@ -107,7 +107,7 @@ public class UserMovementUpdateHandler implements MessageHandler {
             ObjectNode enriched = objectMapper.createObjectNode();
             enriched.put("sessionId", session.getSessionId());
             enriched.put("userId", session.getPlayer().user().getUserId());
-            enriched.put("displayName", session.getDisplayName());
+            enriched.put("title", session.getTitle());
 
             // Copy original data
             if (originalData.has("p")) {

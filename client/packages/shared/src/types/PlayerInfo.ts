@@ -62,8 +62,8 @@ export interface PlayerInfo {
   /** Player unique identifier */
   playerId: string;
 
-  /** Player display name (shown to other players) */
-  displayName: string;
+  /** Player title (shown to other players) */
+  title: string;
 
   /**
    * Shortcuts map

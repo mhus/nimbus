@@ -74,7 +74,7 @@ public class InteractionRequestHandler implements MessageHandler {
 
         // For now, just log the interaction
         log.info("Interaction request: pos=({}, {}, {}), groupId={}, user={}, session={}",
-                x, y, z, groupId, session.getDisplayName(), session.getSessionId());
+                x, y, z, groupId, session.getTitle(), session.getSessionId());
 
         // Example: Send success response (in future, based on actual interaction result)
         // sendSuccessResponse(session, requestId);

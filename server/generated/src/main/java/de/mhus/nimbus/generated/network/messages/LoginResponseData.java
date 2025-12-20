@@ -14,8 +14,7 @@ public class LoginResponseData {
     private boolean success;
     @com.fasterxml.jackson.annotation.JsonProperty("userId")
     private String userId;
-    @com.fasterxml.jackson.annotation.JsonProperty("displayName")
-    private String displayName;
+    private String title;
     @com.fasterxml.jackson.annotation.JsonProperty("sessionId")
     private String sessionId;
 }

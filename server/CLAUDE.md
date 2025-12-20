@@ -21,3 +21,8 @@
 - Spreche sonst Deutsch mit mir
 - Es müssen nicht immer alle Compile Fehler und Tests gefixt werden. Reporte Probleme
 - Konzentriere die auf die aktuelle Aufgabe und löse diese Schritt für Schritt
+- Entity Parameter
+  - id: Datenbank Id, sonst in der Anwendung keine Verwendung, nur wenn DB Dokumente in der DB z.b. adressiert werden
+  - name: ist ein technischer name, in Bereichen (z.b. World, region, global) Eindeutiger Name einer entity, wenn entities in der App (zusammen mit z.b. worldId) adressiert werden
+  - title: display Name, nicht eindeutig, darstellung au UI
+  - parameter die mit 'Id' am Ende (worldId, regionId, itemId) sind wie name eindeutig

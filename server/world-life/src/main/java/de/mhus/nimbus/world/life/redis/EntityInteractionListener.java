@@ -38,7 +38,7 @@ import java.util.Set;
  *   "params": {...},
  *   "userId": "user123",
  *   "sessionId": "session-abc",
- *   "displayName": "Player"
+ *   "title": "Player"
  * }
  */
 @Service
@@ -102,7 +102,7 @@ public class EntityInteractionListener {
             // Player/session context
             String userId = data.has("userId") ? data.get("userId").asText() : null;
             String sessionId = data.has("sessionId") ? data.get("sessionId").asText() : null;
-            String displayName = data.has("displayName") ? data.get("displayName").asText() : null;
+            String displayName = data.has("title") ? data.get("title").asText() : null;
 
             if (entityId == null || action == null) {
                 log.warn("Invalid entity interaction message for world {}: missing entityId or action", worldId);

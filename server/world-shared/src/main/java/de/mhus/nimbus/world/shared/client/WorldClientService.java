@@ -52,7 +52,7 @@ public class WorldClientService {
             String worldId,
             String sessionId,
             String userId,
-            String displayName,
+            String title,
             String originServer,
             Map<String, Object> metadata
     ) {}
@@ -169,7 +169,7 @@ public class WorldClientService {
                         worldId,
                         context != null ? context.getSessionId() : null,
                         context != null ? context.getUserId() : null,
-                        context != null ? context.getDisplayName() : null,
+                        context != null ? context.getTitle() : null,
                         context != null ? context.getOriginServer() : "unknown",
                         context != null ? context.getMetadata() : null
                 );

@@ -183,8 +183,8 @@ public class WorldConfigController {
         if (playerInfo.getPlayerId() == null) {
             playerInfo.setPlayerId("default-player");
         }
-        if (playerInfo.getDisplayName() == null) {
-            playerInfo.setDisplayName("Player");
+        if (playerInfo.getTitle() == null) {
+            playerInfo.setTitle("Player");
         }
         if (playerInfo.getThirdPersonModelId() == null) {
             playerInfo.setThirdPersonModelId("wizard1");

@@ -60,7 +60,7 @@ public class WChestController extends BaseEditorController {
                 chest.getRegionId(),
                 chest.getWorldId(),
                 chest.getName(),
-                chest.getDisplayName(),
+                chest.getTitle(),
                 chest.getDescription(),
                 chest.getUserId(),
                 chest.getType(),
@@ -294,7 +294,7 @@ public class WChestController extends BaseEditorController {
 
         try {
             chestService.updateChest(existing.getId(), chest -> {
-                if (request.displayName() != null) chest.setDisplayName(request.displayName());
+                if (request.displayName() != null) chest.setTitle(request.displayName());
                 if (request.description() != null) chest.setDescription(request.description());
                 if (request.worldId() != null) chest.setWorldId(request.worldId());
                 if (request.userId() != null) chest.setUserId(request.userId());

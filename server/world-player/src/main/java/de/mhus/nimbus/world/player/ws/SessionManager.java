@@ -6,18 +6,15 @@ import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.shared.utils.LocationService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.session.SessionClosedConsumer;
-import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -218,7 +215,7 @@ public class SessionManager {
             return;
         }
         session.setPlayer(playerData);
-        session.setDisplayName(playerData.character().getPublicData().getDisplayName());
+        session.setTitle(playerData.character().getPublicData().getTitle());
         session.setWorldId(worldId);
         session.setClientType(clientType);
         session.setStatus(PlayerSession.SessionStatus.AUTHENTICATED);

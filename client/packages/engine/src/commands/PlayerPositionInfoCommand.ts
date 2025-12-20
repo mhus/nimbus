@@ -105,7 +105,7 @@ export class PlayerPositionInfoCommand extends CommandHandler {
     if (playerInfo) {
       lines.push('Player Info:');
       lines.push(`  Player ID    : ${playerInfo.playerId}`);
-      lines.push(`  Display Name : ${playerInfo.displayName}`);
+      lines.push(`  Display Name : ${playerInfo.title}`);
       lines.push(`  Walk Speed   : ${playerInfo.effectiveWalkSpeed.toFixed(2)} (base: ${playerInfo.baseWalkSpeed})`);
       lines.push(`  Run Speed    : ${playerInfo.effectiveRunSpeed.toFixed(2)} (base: ${playerInfo.baseRunSpeed})`);
       lines.push(`  Jump Speed   : ${playerInfo.effectiveJumpSpeed.toFixed(2)} (base: ${playerInfo.baseJumpSpeed})`);

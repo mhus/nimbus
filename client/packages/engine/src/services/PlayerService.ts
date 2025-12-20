@@ -228,7 +228,7 @@ export class PlayerService {
     logger.debug('PlayerService initialized', {
       position: this.playerEntity.position,
       movementMode: this.playerEntity.movementMode,
-      displayName: this.playerEntity.playerInfo.displayName,
+      displayName: this.playerEntity.playerInfo.title,
     });
   }
 
@@ -1123,7 +1123,7 @@ export class PlayerService {
       // Create Entity for player avatar
       const playerAvatarEntity: any = {
         id: '@player_avatar', // Special ID for player avatar
-        name: this.playerEntity.playerInfo.displayName,
+        name: this.playerEntity.playerInfo.title,
         model: modelId,
         modelModifier: {},
         movementType: 'dynamic' as const,

@@ -90,7 +90,7 @@ public class PlayerService implements SessionPingConsumer {
 
         var result = Entity.builder()
                 .id(playerId.getId())
-                .name(player.character().getPublicData().getDisplayName())
+                .name(player.character().getPublicData().getTitle())
                 .controlledBy("player")
                 .model(player.character().getPublicData().getThirdPersonModelId())
                 .clientPhysics(false)

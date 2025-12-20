@@ -5125,7 +5125,7 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "displayName",
+        "name" : "title",
         "type" : "string",
         "optional" : false,
         "visibility" : null,
@@ -6410,7 +6410,7 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "displayName",
+        "name" : "title",
         "type" : "string",
         "optional" : false,
         "visibility" : null,
@@ -7823,7 +7823,7 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "displayName",
+        "name" : "title",
         "type" : "string",
         "optional" : false,
         "visibility" : null,

@@ -82,7 +82,7 @@ public class WorldCommandController {
                 .worldId(request.worldId())
                 .sessionId(request.sessionId())
                 .userId(request.userId())
-                .displayName(request.displayName())
+                .title(request.displayName())
                 .originServer(request.originServer())
                 .requestTime(Instant.now())
                 .metadata(request.metadata() != null ? request.metadata() : new HashMap<>())

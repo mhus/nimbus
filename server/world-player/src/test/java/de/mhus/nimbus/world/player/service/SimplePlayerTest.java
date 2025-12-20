@@ -36,7 +36,7 @@ public class SimplePlayerTest {
             {
               "user": {
                 "userId": "ecb",
-                "displayName": "Eric Cross Brooks"
+                "title": "Eric Cross Brooks"
               },
               "settings": {
                 "name": "test_settings"
@@ -47,7 +47,7 @@ public class SimplePlayerTest {
         try {
             var jsonNode = mapper.readTree(jsonString);
             assertThat(jsonNode.get("user").get("userId").asText()).isEqualTo("ecb");
-            assertThat(jsonNode.get("user").get("displayName").asText()).isEqualTo("Eric Cross Brooks");
+            assertThat(jsonNode.get("user").get("title").asText()).isEqualTo("Eric Cross Brooks");
 
             System.out.println("JSON parsing test successful");
         } catch (Exception e) {

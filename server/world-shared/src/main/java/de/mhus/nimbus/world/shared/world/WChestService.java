@@ -90,14 +90,14 @@ public class WChestService {
      * @param regionId Region identifier (required)
      * @param worldId World identifier (optional)
      * @param name Internal name/identifier
-     * @param displayName Display name (optional)
+     * @param title Display name (optional)
      * @param description Description
      * @param userId User identifier (optional, for user-specific chests)
      * @param type Chest type
      * @return Created chest entity
      */
     @Transactional
-    public WChest createChest(String regionId, String worldId, String name, String displayName,
+    public WChest createChest(String regionId, String worldId, String name, String title,
                               String description, String userId, WChest.ChestType type) {
         if (repository.findByRegionIdAndName(regionId, name).isPresent()) {
             throw new IllegalStateException("Chest with name already exists in region: " + name);
@@ -107,7 +107,7 @@ public class WChestService {
                 .regionId(regionId)
                 .worldId(worldId)
                 .name(name)
-                .displayName(displayName)
+                .title(title)
                 .description(description)
                 .userId(userId)
                 .type(type)

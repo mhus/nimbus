@@ -51,7 +51,7 @@ export class ReloadConfigCommand extends CommandHandler {
         seasonProgress: config.worldInfo?.seasonProgress,
       });
       logger.debug('PlayerInfo:', {
-        displayName: config.playerInfo?.displayName,
+        displayName: config.playerInfo?.title,
         baseWalkSpeed: config.playerInfo?.baseWalkSpeed,
       });
       logger.debug('Settings:', {

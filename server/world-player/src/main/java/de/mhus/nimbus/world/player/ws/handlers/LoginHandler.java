@@ -16,7 +16,6 @@ import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
@@ -114,7 +113,7 @@ public class LoginHandler implements MessageHandler {
 
         if (success) {
             data.put("userId", session.getPlayer().user().getUserId());
-            data.put("displayName", session.getDisplayName());
+            data.put("title", session.getTitle());
             data.put("sessionId", sessionId);
 
             // Use world data passed from caller

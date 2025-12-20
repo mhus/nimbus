@@ -37,7 +37,7 @@ public class CommandContext {
     /**
      * Display name (optional - for logging).
      */
-    private String displayName;
+    private String title;
 
     /**
      * Request ID for async tracking (optional).

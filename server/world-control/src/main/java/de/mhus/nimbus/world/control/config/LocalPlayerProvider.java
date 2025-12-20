@@ -55,7 +55,7 @@ public class LocalPlayerProvider {
                                 playerId.getUserId(),
                                 "earth616",
                                 playerId.getCharacterId(),
-                                player.character().getPublicData().getDisplayName()
+                                player.character().getPublicData().getTitle()
                         );
                         character.setBackpack(player.character().getBackpack());
                         character.setPublicData(player.character().getPublicData());

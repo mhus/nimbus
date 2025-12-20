@@ -98,7 +98,7 @@ export class WorldInfoCommand extends CommandHandler {
     if (worldInfo.owner) {
       lines.push('Owner Information:');
       lines.push(`  User            : ${worldInfo.owner.user}`);
-      lines.push(`  Display Name    : ${worldInfo.owner.displayName}`);
+      lines.push(`  Display Name    : ${worldInfo.owner.title}`);
       if (worldInfo.owner.email) {
         lines.push(`  Email           : ${worldInfo.owner.email}`);
       }

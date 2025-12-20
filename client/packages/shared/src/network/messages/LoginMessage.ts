@@ -26,7 +26,7 @@ export interface LoginRequestData {
 export interface LoginResponseData {
   success: true;
   userId: string;
-  displayName: string;
+  title: string;
   sessionId: string;
 }
 

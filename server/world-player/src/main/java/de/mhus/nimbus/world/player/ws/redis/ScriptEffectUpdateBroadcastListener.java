@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
  * {
  *   "sessionId": "abc123",
  *   "userId": "user123",
- *   "displayName": "Player",
+ *   "title": "Player",
  *   "effectId": "effect_123",
  *   "paramName": "targetPos",
  *   "value": {"x": -1.5, "y": 66.5, "z": 1.5},

@@ -24,7 +24,7 @@ public class PlayerSession {
 
     private String sessionId;
     private PlayerData player;
-    private String displayName;
+    private String title;
     private WorldId worldId;
     private ClientType clientType;
 

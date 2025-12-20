@@ -12,6 +12,7 @@ import java.util.Set;
 @Document(collection = "r_regions")
 @ActualSchemaVersion("1.0.0")
 @Data
+
 public class RRegion {
 
     @Id

@@ -7,5 +7,5 @@ import lombok.Data;
 @GenerateTypeScript("entities")
 public class PlayerUser {
     private String userId;
-    private String displayName;
+    private String title;
 }

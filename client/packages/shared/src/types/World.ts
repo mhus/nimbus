@@ -65,7 +65,7 @@ export interface WorldInfo {
   /** World owner information */
   owner: {
     user: string;
-    displayName: string;
+    title: string;
     email?: string;
   };
 

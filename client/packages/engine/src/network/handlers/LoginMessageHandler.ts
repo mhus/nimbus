@@ -53,17 +53,17 @@ export class LoginMessageHandler extends MessageHandler<LoginResponseData | Logi
         const username = successData.userId || 'player';
         const sessionId = successData.sessionId || 'unknown';
         this.appContext.playerInfo.playerId = `@${username}_${sessionId}`;
-        this.appContext.playerInfo.displayName = successData.displayName || username;
+        this.appContext.playerInfo.title = successData.title || username;
 
         logger.debug('Player ID generated', {
           playerId: this.appContext.playerInfo.playerId,
-          displayName: this.appContext.playerInfo.displayName,
+          displayName: this.appContext.playerInfo.title,
         });
       }
 
       logger.debug('Login successful', {
         userId: successData.userId,
-        displayName: successData.displayName,
+        displayName: successData.title,
         sessionId: successData.sessionId,
       });
 

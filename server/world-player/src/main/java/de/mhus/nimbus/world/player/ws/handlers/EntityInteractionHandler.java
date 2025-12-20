@@ -63,7 +63,7 @@ public class EntityInteractionHandler implements MessageHandler {
         }
 
         log.trace("Entity interaction received: entityId={}, action={}, user={}",
-                entityId, action, session.getDisplayName());
+                entityId, action, session.getTitle());
 
         if (entityId.startsWith("@")) {
             // this is a player d not send to life server, send to gameplay service
@@ -74,7 +74,7 @@ public class EntityInteractionHandler implements MessageHandler {
         publishEntityInteraction(session, entityId, action, timestamp, params);
 
         log.debug("Entity interaction forwarded to world-life: entityId={}, action={}, user={}",
-                entityId, action, session.getDisplayName());
+                entityId, action, session.getTitle());
     }
 
     /**
@@ -89,7 +89,7 @@ public class EntityInteractionHandler implements MessageHandler {
      *   "params": {...},
      *   "userId": "user123",
      *   "sessionId": "session-abc",
-     *   "displayName": "Player"
+     *   "title": "Player"
      * }
      *
      * @param session Player session
@@ -113,7 +113,7 @@ public class EntityInteractionHandler implements MessageHandler {
             // Add session/player context
             message.put("userId", session.getPlayer().user().getUserId());
             message.put("sessionId", session.getSessionId());
-            message.put("displayName", session.getDisplayName());
+            message.put("title", session.getTitle());
 
             String json = objectMapper.writeValueAsString(message);
             redisMessaging.publish(session.getWorldId().getId(), "e.int", json);

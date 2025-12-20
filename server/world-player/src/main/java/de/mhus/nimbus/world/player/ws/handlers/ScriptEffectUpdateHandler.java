@@ -80,7 +80,7 @@ public class ScriptEffectUpdateHandler implements MessageHandler {
             enriched.put("sessionId", session.getSessionId());
             enriched.put("worldId", session.getWorldId().getId());
             enriched.put("userId", session.getPlayer().user().getUserId());
-            enriched.put("displayName", session.getDisplayName());
+            enriched.put("title", session.getTitle());
 
             // Copy original data
             if (originalData.has("effectId")) enriched.put("effectId", originalData.get("effectId").asText());

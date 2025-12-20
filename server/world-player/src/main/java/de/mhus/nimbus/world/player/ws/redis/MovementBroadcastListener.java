@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
  * {
  *   "sessionId": "abc123",
  *   "userId": "user123",
- *   "displayName": "Player",
+ *   "title": "Player",
  *   "p": {"x": 100.5, "y": 65.0, "z": -200.5},
  *   "r": {"y": 90.0, "p": 0.0},
  *   "cx": 6,  // chunk x coordinate
@@ -75,7 +75,7 @@ public class MovementBroadcastListener {
             // Build client message (without internal metadata)
             ObjectNode clientData = objectMapper.createObjectNode();
             if (data.has("userId")) clientData.put("userId", data.get("userId").asText());
-            if (data.has("displayName")) clientData.put("displayName", data.get("displayName").asText());
+            if (data.has("title")) clientData.put("title", data.get("title").asText());
             if (data.has("p")) clientData.set("p", data.get("p"));
             if (data.has("r")) clientData.set("r", data.get("r"));
 

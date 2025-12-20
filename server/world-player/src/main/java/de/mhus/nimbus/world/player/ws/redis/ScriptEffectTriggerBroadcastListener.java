@@ -24,7 +24,7 @@ import java.util.Set;
  * {
  *   "sessionId": "abc123",
  *   "userId": "user123",
- *   "displayName": "Player",
+ *   "title": "Player",
  *   "entityId": "@player_1234",
  *   "effectId": "effect_123",
  *   "chunks": [{"x":1,"z":4}, {"x":2,"z":4}],

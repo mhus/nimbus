@@ -154,7 +154,7 @@ public class ClientCommandHandler implements MessageHandler {
                 .worldId(session.getWorldId().getId())
                 .sessionId(session.getSessionId())
                 .userId(session.getPlayer().user().getUserId())
-                .displayName(session.getDisplayName())
+                .title(session.getTitle())
                 .build();
 
         // Execute command
@@ -173,7 +173,7 @@ public class ClientCommandHandler implements MessageHandler {
         }
 
         log.debug("Local command executed: cmd={}, rc={}, user={}",
-                commandName, result.getReturnCode(), session.getDisplayName());
+                commandName, result.getReturnCode(), session.getTitle());
     }
 
     /**
@@ -195,11 +195,11 @@ public class ClientCommandHandler implements MessageHandler {
                 .worldId(session.getWorldId().getId())
                 .sessionId(session.getSessionId())
                 .userId(session.getPlayer().user().getUserId())
-                .displayName(session.getDisplayName())
+                .title(session.getTitle())
                 .build();
 
         log.debug("Routing command to {}: cmd={}, actualCmd={}, user={}",
-                targetServer, commandName, actualCommandName, session.getDisplayName());
+                targetServer, commandName, actualCommandName, session.getTitle());
 
         // Route to appropriate server
         java.util.concurrent.CompletableFuture<WorldClientService.CommandResponse> future;

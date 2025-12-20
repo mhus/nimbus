@@ -13,8 +13,7 @@ package de.mhus.nimbus.generated.types;
 public class PlayerInfo {
     @com.fasterxml.jackson.annotation.JsonProperty("playerId")
     private String playerId;
-    @com.fasterxml.jackson.annotation.JsonProperty("displayName")
-    private String displayName;
+    private String title;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.util.Map<String, ShortcutDefinition> shortcuts;
     @com.fasterxml.jackson.annotation.JsonProperty("editorShortcuts")
