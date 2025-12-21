@@ -130,6 +130,9 @@ public class EditorController extends BaseEditorController {
             if (request.selectedLayer != null) {
                 state.setSelectedLayer(request.selectedLayer);
             }
+            if (request.selectedModelId != null) {
+                state.setSelectedModelId(request.selectedModelId);
+            }
             if (request.mountX != null) {
                 state.setMountX(request.mountX);
             }
@@ -365,6 +368,7 @@ public class EditorController extends BaseEditorController {
         private Boolean editMode;
         private String editAction;
         private String selectedLayer;
+        private String selectedModelId;
         private Integer mountX;
         private Integer mountY;
         private Integer mountZ;

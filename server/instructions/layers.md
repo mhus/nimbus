@@ -161,10 +161,13 @@ und in world-control EditService im Backend.
 
 Die Funktionalität muss jetzt angepasst werden
 
-[ ] Wenn ein MODEL Layer ausgewaehlt wird, muss auch das Model ausgewaehlt werden, das editiert werden soll.
+[x] Wenn ein MODEL Layer ausgewaehlt wird, muss auch das Model ausgewaehlt werden, das editiert werden soll.
 - Das muss mit im redis gespeichert werden.
 - Beim schreiben/loschen von Blöcken muss das im EditService berücksichtigt werden.
 
+[ ] Im edit-config ist noch eine gruppe zur auswahl, die ist als integer wahlbar und nur noch in WLayerModel vorhanden.
+Dort ist sie ein mapping von Text in Integer. d.h. in der auswahl bitte den text anzeigen, aber den integer speichern.
+Der soll bei jedem block (LayerBlock) beim speichern automatisch gesetzt werden.
 
 
 

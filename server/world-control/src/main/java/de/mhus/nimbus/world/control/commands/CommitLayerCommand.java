@@ -368,18 +368,25 @@ public class CommitLayerCommand implements Command {
                 int worldY = (int) block.getPosition().getY();
                 int worldZ = (int) block.getPosition().getZ();
 
+                // Step 1: Translate to mount point
                 int relX = worldX - model.getMountX();
                 int relY = worldY - model.getMountY();
                 int relZ = worldZ - model.getMountZ();
 
-                String relPosKey = positionKey(relX, relY, relZ);
+                // Step 2: Apply rotation (if any)
+                int[] rotated = applyRotation(relX, relZ, model.getRotation());
+                int finalX = rotated[0];
+                int finalZ = rotated[1];
+                int finalY = relY; // Y doesn't change with rotation
 
-                // Update block position to relative
+                String relPosKey = positionKey(finalX, finalY, finalZ);
+
+                // Update block position to relative (with rotation applied)
                 Block relBlock = BlockUtil.cloneBlock(block);
                 relBlock.setPosition(de.mhus.nimbus.generated.types.Vector3.builder()
-                        .x((double) relX)
-                        .y((double) relY)
-                        .z((double) relZ)
+                        .x((double) finalX)
+                        .y((double) finalY)
+                        .z((double) finalZ)
                         .build());
 
                 if (BlockUtil.isAirType(block.getBlockTypeId())) {
@@ -430,6 +437,32 @@ public class CommitLayerCommand implements Command {
         } catch (Exception e) {
             log.error("Model commit failed for session {}: {}", sessionId, e.getMessage(), e);
             return CommandResult.error(-4, "Model commit failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Apply rotation to X,Z coordinates.
+     * Rotation is in 90-degree steps: 0=0°, 1=90°, 2=180°, 3=270°
+     *
+     * @param x X coordinate (relative)
+     * @param z Z coordinate (relative)
+     * @param rotation Rotation steps (0-3)
+     * @return [newX, newZ]
+     */
+    private int[] applyRotation(int x, int z, int rotation) {
+        int steps = rotation % 4; // Normalize to 0-3
+
+        switch (steps) {
+            case 0: // 0° - no rotation
+                return new int[]{x, z};
+            case 1: // 90° clockwise: (x,z) → (-z,x)
+                return new int[]{-z, x};
+            case 2: // 180°: (x,z) → (-x,-z)
+                return new int[]{-x, -z};
+            case 3: // 270° clockwise (= 90° counter-clockwise): (x,z) → (z,-x)
+                return new int[]{z, -x};
+            default:
+                return new int[]{x, z};
         }
     }
 
