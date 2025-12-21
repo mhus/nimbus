@@ -212,7 +212,7 @@ public class EditorController extends BaseEditorController {
         // Create new layer
         de.mhus.nimbus.world.shared.layer.LayerType layerType = request.layerType != null
             ? request.layerType
-            : de.mhus.nimbus.world.shared.layer.LayerType.TERRAIN;
+            : de.mhus.nimbus.world.shared.layer.LayerType.GROUND;
         int order = request.order != null ? request.order : 10;
         boolean allChunks = request.allChunks != null ? request.allChunks : false;
 

@@ -8,14 +8,15 @@ package de.mhus.nimbus.world.shared.layer;
  */
 public enum LayerType {
     /**
-     * Terrain layer - chunk-oriented with external storage.
+     * Terrain only layer - chunk-oriented with external storage.
      * Data stored per chunk in w_layer_terrain collection.
      */
-    TERRAIN,
+    GROUND,
 
     /**
-     * Model layer - entity-oriented with blocks in document.
-     * Data stored in w_layer_model collection with relative positions.
+     * Model based terrain layer - one chunk orriented w_layer_terrain
+     * and many w_layer_model documents. The model layres will be mergerd into the terrain layer in the first step
+     * and the terrain layer will be merged into the block chunks in the second step.
      */
     MODEL
 }

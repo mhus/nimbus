@@ -76,7 +76,7 @@ public class WLayerOverlayService {
             }
 
             try {
-                if (layer.getLayerType() == LayerType.TERRAIN) {
+                if (layer.getLayerType() == LayerType.GROUND) {
                     overlayTerrainLayer(layer, chunkKey, blockMap);
                 } else if (layer.getLayerType() == LayerType.MODEL) {
                     overlayModelLayer(layer, cx, cz, blockMap);

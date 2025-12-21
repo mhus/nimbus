@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.shared.layer;
 
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
+import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +34,11 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@GenerateTypeScript("entities")
 public class WLayer {
 
     @Id
+    @TypeScript(ignore = true)
     private String id;
 
     @Indexed
@@ -42,33 +46,16 @@ public class WLayer {
 
     private String name;
 
+    @TypeScript(optional = true)
+    private String title;
+
+    @TypeScript(follow = true)
     private LayerType layerType;
 
     /**
      * Reference to LayerTerrain or LayerModel collection.
      */
     private String layerDataId;
-
-    /**
-     * For ModelLayer: mount point X coordinate.
-     */
-    private Integer mountX;
-
-    /**
-     * For ModelLayer: mount point Y coordinate.
-     */
-    private Integer mountY;
-
-    /**
-     * For ModelLayer: mount point Z coordinate.
-     */
-    private Integer mountZ;
-
-    /**
-     * If true, this layer defines ground level (affects terrain generation).
-     * This will affect the ground calculation. Makes only sense for terrain layers but not reduced to them.
-     */
-    private boolean ground;
 
     /**
      * If true, this layer affects all chunks in the world.
@@ -88,20 +75,14 @@ public class WLayer {
      * Layer overlay order.
      * Lower values are rendered first (bottom), higher values on top.
      */
-    private int order;
+    @Builder.Default
+    private int order = 100;
 
     /**
      * Layer enabled flag (soft delete).
      */
     @Builder.Default
     private boolean enabled = true;
-
-    /**
-     * List of group names defined in this layer.
-     * Blocks can be assigned to groups for organized management.
-     */
-    @Builder.Default
-    private Map<Integer,String> groups = new HashMap<>();
 
     private Instant createdAt;
     private Instant updatedAt;

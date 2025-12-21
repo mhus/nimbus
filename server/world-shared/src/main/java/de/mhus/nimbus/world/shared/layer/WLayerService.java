@@ -149,7 +149,7 @@ public class WLayerService {
         markAffectedChunksDirty(layer, "layer_deleted");
 
         // Delete associated data
-        if (layer.getLayerType() == LayerType.TERRAIN) {
+        if (layer.getLayerType() == LayerType.GROUND) {
             deleteTerrainData(layer.getLayerDataId());
         } else if (layer.getLayerType() == LayerType.MODEL) {
             modelRepository.deleteByLayerDataId(layer.getLayerDataId());
@@ -258,7 +258,7 @@ public class WLayerService {
             markAffectedChunksDirty(layer, "layer_deleted");
 
             // Delete associated data
-            if (layer.getLayerType() == LayerType.TERRAIN) {
+            if (layer.getLayerType() == LayerType.GROUND) {
                 deleteTerrainData(layer.getLayerDataId());
             } else if (layer.getLayerType() == LayerType.MODEL) {
                 modelRepository.deleteByLayerDataId(layer.getLayerDataId());

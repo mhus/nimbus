@@ -186,7 +186,7 @@ public class BlockInfoService {
 
             // 2. Load block based on layer type
             switch (layer.getLayerType()) {
-                case TERRAIN:
+                case GROUND:
                     return loadBlockFromTerrainLayer(worldId, layerDataId, x, y, z);
 
                 case MODEL:
