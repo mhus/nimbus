@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.shared.layer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.storage.StorageService;
 import de.mhus.nimbus.shared.types.SchemaVersion;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class WLayerService {
     private final WDirtyChunkService dirtyChunkService;
     private final StorageService storageService;
     private final ObjectMapper objectMapper;
+    private final WWorldService worldService;
 
     // ==================== LAYER CRUD ====================
 
@@ -455,8 +457,8 @@ public class WLayerService {
      */
     @Transactional
     public int recreateModelBasedLayer(String layerDataId, boolean markChunksDirty) {
-        // Get the layer
-        Optional<WLayer> layerOpt = layerRepository.findById(layerDataId);
+        // Get the layer by layerDataId
+        Optional<WLayer> layerOpt = layerRepository.findByLayerDataId(layerDataId);
         if (layerOpt.isEmpty()) {
             log.warn("Layer not found for recreation: layerDataId={}", layerDataId);
             return -1;
@@ -520,7 +522,7 @@ public class WLayerService {
         int chunksProcessed = 0;
         for (String chunkKey : allAffectedChunks) {
             try {
-                recreateTerrainChunk(models, layerDataId, chunkKey);
+                recreateTerrainChunk(layer.getWorldId(), models, layerDataId, chunkKey);
                 chunksProcessed++;
             } catch (Exception e) {
                 log.error("Failed to recreate terrain chunk: layerDataId={} chunkKey={}", layerDataId, chunkKey, e);
@@ -542,17 +544,20 @@ public class WLayerService {
      * Recreate a single terrain chunk from all models.
      * Models are already sorted by order.
      */
-    private void recreateTerrainChunk(List<WLayerModel> models, String layerDataId, String chunkKey) {
+    private void recreateTerrainChunk(String worldId, List<WLayerModel> models, String layerDataId, String chunkKey) {
         // Parse chunk coordinates
         String[] parts = chunkKey.split(":");
         if (parts.length != 2) {
             log.warn("Invalid chunk key format: {}", chunkKey);
             return;
         }
+        var world = worldService.getByWorldId(worldId).orElseThrow(
+                () -> new IllegalArgumentException("World not found: " + worldId)
+        );
+        var chunkSize = (byte) world.getPublicData().getChunkSize();
 
         int cx = Integer.parseInt(parts[0]);
         int cz = Integer.parseInt(parts[1]);
-        int chunkSize = 16; // TODO: Get from config
 
         // Calculate chunk bounds
         int chunkMinX = cx * chunkSize;
@@ -621,8 +626,6 @@ public class WLayerService {
                     .blocks(new ArrayList<>(blockMap.values()))
                     .build();
 
-            // Get worldId from first model (all models should have same worldId)
-            String worldId = models.isEmpty() ? null : models.get(0).getWorldId();
             if (worldId != null) {
                 saveTerrainChunk(worldId, layerDataId, chunkKey, chunkData);
             }
@@ -704,7 +707,10 @@ public class WLayerService {
             return chunks;
         }
 
-        int chunkSize = 16; // TODO: Get from config
+        var world = worldService.getByWorldId(model.getWorldId()).orElseThrow(
+                () -> new IllegalArgumentException("World not found: " + model.getWorldId())
+        );
+        var chunkSize = (byte) world.getPublicData().getChunkSize();
         int mountX = model.getMountX();
         int mountZ = model.getMountZ();
 
@@ -760,9 +766,13 @@ public class WLayerService {
             return;
         }
 
+        var world = worldService.getByWorldId(model.getWorldId()).orElseThrow(
+                () -> new IllegalArgumentException("World not found: " + model.getWorldId())
+        );
+        var chunkSize = (byte) world.getPublicData().getChunkSize();
+
         int cx = Integer.parseInt(parts[0]);
         int cz = Integer.parseInt(parts[1]);
-        int chunkSize = 16; // TODO: Get from config
 
         // Calculate chunk bounds
         int chunkMinX = cx * chunkSize;

@@ -5,6 +5,7 @@ import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.storage.StorageService;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,9 +29,7 @@ public class WLayerOverlayService {
     private final WLayerModelRepository modelRepository;
     private final StorageService storageService;
     private final ObjectMapper objectMapper;
-
-    @Value("${nimbus.chunk.size:16}")
-    private int chunkSize;
+    private final WWorldService worldService;
 
     /**
      * Generate final chunk by overlaying all enabled layers.
@@ -46,6 +45,12 @@ public class WLayerOverlayService {
      */
     @Transactional(readOnly = true)
     public Optional<ChunkData> generateChunk(String worldId, String chunkKey) {
+
+        var world = worldService.getByWorldId(worldId).orElseThrow(
+                () -> new IllegalArgumentException("World not found: " + worldId)
+        );
+        var chunkSize = (byte) world.getPublicData().getChunkSize();
+
         // Parse chunk coordinates
         String[] parts = chunkKey.split(":");
         if (parts.length != 2) {
@@ -90,11 +95,12 @@ public class WLayerOverlayService {
             }
         }
 
+
         // Convert map to ChunkData
         ChunkData result = new ChunkData();
         result.setCx(cx);
         result.setCz(cz);
-        result.setSize((byte) chunkSize);
+        result.setSize(chunkSize);
         result.setBlocks(new ArrayList<>(blockMap.values()));
 
         log.debug("Generated chunk {} from {} layers, {} blocks",
@@ -186,6 +192,13 @@ public class WLayerOverlayService {
             log.trace("No model data for layer {}", layer.getName());
             return;
         }
+
+        var worldId = layer.getWorldId();
+        var world = worldService.getByWorldId(worldId).orElseThrow(
+                () -> new IllegalArgumentException("World not found: " + worldId)
+        );
+        var chunkSize = (byte) world.getPublicData().getChunkSize();
+
 
         // Calculate chunk bounds
         int chunkMinX = cx * chunkSize;

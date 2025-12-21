@@ -230,6 +230,7 @@ import ModelList from '@layer/components/ModelList.vue';
 import ModelEditorPanel from '@layer/components/ModelEditorPanel.vue';
 import { useLayers } from '@/composables/useLayers';
 import { layerModelService } from '@/services/LayerModelService';
+import { layerService } from '@/services/LayerService';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('LayerEditorPanel');

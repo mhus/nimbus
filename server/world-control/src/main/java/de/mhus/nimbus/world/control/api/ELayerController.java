@@ -290,7 +290,7 @@ public class ELayerController extends BaseEditorController {
 
         log.debug("REGENERATE layer: worldId={}, id={}", worldId, id);
 
-        WorldId.of(worldId).orElseThrow(
+        var wid = WorldId.of(worldId).orElseThrow(
                 () -> new IllegalStateException("Invalid worldId: " + worldId)
         );
         var validation = validateId(id, "id");
@@ -303,8 +303,11 @@ public class ELayerController extends BaseEditorController {
         }
 
         WLayer layer = opt.get();
-        if (!layer.getWorldId().equals(worldId)) {
-            log.warn("Layer worldId mismatch: expected={}, actual={}", worldId, layer.getWorldId());
+
+        // IMPORTANT: Filter out instances - layers are per world only
+        String lookupWorldId = wid.withoutInstance().getId();
+        if (!layer.getWorldId().equals(lookupWorldId)) {
+            log.warn("Layer worldId mismatch: expected={}, actual={}", lookupWorldId, layer.getWorldId());
             return notFound("layer not found");
         }
 
@@ -312,7 +315,7 @@ public class ELayerController extends BaseEditorController {
             if (layer.getLayerType() == de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
                 // For MODEL layers: Create job
                 de.mhus.nimbus.world.shared.job.WJob job = jobService.createJob(
-                        worldId,
+                        lookupWorldId,
                         "recreate-model-based-layer",
                         "layer-regeneration",
                         Map.of(
@@ -343,7 +346,7 @@ public class ELayerController extends BaseEditorController {
                     return bad("Cannot regenerate layer with allChunks=true. Please specify affected chunks.");
                 }
 
-                dirtyChunkService.markChunksDirty(worldId, affectedChunks, "layer_regeneration");
+                dirtyChunkService.markChunksDirty(lookupWorldId, affectedChunks, "layer_regeneration");
 
                 log.info("Marked {} chunks dirty for GROUND layer: layerId={}", affectedChunks.size(), id);
 

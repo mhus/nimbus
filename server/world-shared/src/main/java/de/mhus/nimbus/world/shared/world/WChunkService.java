@@ -290,7 +290,7 @@ public class WChunkService {
 
             List<Block> blocks = new ArrayList<>();
 
-            // Generate blocks for the chunk (16x16 xz area)
+            // Generate blocks for the chunk (32x32 xz area)
             for (int localX = 0; localX < chunkSize; localX++) {
                 for (int localZ = 0; localZ < chunkSize; localZ++) {
                     int worldX = cx * chunkSize + localX;
