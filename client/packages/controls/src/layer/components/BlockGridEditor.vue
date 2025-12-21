@@ -16,39 +16,71 @@
       <!-- Content -->
       <div class="flex-1 overflow-hidden flex">
         <!-- Main Grid View -->
-        <div class="flex-1 overflow-auto p-4 bg-base-200">
-          <div v-if="loading" class="flex items-center justify-center h-full">
+        <div class="flex-1 overflow-hidden bg-base-200 flex items-center justify-center">
+          <div v-if="loading" class="flex items-center justify-center">
             <span class="loading loading-spinner loading-lg"></span>
           </div>
 
-          <div v-else-if="error" class="alert alert-error">
+          <div v-else-if="error" class="alert alert-error m-4">
             <span>{{ error }}</span>
           </div>
 
-          <div v-else class="flex flex-col items-center gap-4">
+          <div v-else class="w-full h-full flex items-center justify-center">
             <!-- Isometric Grid Canvas -->
             <canvas
               ref="canvasRef"
               :width="canvasWidth"
               :height="canvasHeight"
-              class="border border-base-300 bg-white cursor-crosshair"
+              class="bg-white cursor-crosshair"
+              style="max-width: 100%; max-height: 100%;"
               @click="handleCanvasClick"
               @mousemove="handleCanvasHover"
-            />
-
-            <!-- Navigation Component -->
-            <NavigateSelectedBlockComponent
-              :selected-block="selectedBlock"
-              :step="1"
-              :size="200"
-              :show-execute-button="false"
-              @navigate="handleNavigate"
             />
           </div>
         </div>
 
-        <!-- Sidebar: Block Details -->
-        <div class="w-96 border-l border-base-300 p-4 overflow-auto">
+        <!-- Sidebar: Navigation and Block Details -->
+        <div class="w-96 border-l border-base-300 p-4 overflow-auto flex flex-col gap-4">
+          <!-- Block Limit Selection -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">View Area Size</span>
+            </label>
+            <select v-model.number="blockLimit" class="select select-bordered select-sm" @change="handleBlockLimitChange">
+              <option :value="16">16 blocks area</option>
+              <option :value="32">32 blocks area</option>
+              <option :value="64">64 blocks area</option>
+              <option :value="128">128 blocks area</option>
+              <option :value="256">256 blocks area</option>
+              <option :value="512">512 blocks area</option>
+            </select>
+            <label class="label">
+              <span class="label-text-alt">
+                {{ sourceType === 'terrain' ? 'Lazy loading chunks on demand' : `Showing ${blockCoordinates.length} of ${allBlockCoordinates.length} blocks` }}
+              </span>
+            </label>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Navigation Component -->
+          <div class="flex flex-col items-center">
+            <h3 class="font-bold text-lg mb-2">Pan View</h3>
+            <NavigateSelectedBlockComponent
+              :selected-block="viewCenter"
+              :step="Math.max(1, Math.ceil(Math.cbrt(blockLimit) / 4))"
+              :size="200"
+              :show-execute-button="false"
+              @navigate="handlePanView"
+            />
+            <div class="text-xs text-base-content/70 mt-2">
+              Step: {{ Math.max(1, Math.ceil(Math.cbrt(blockLimit) / 4)) }} blocks
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Block Details -->
           <div v-if="selectedBlock">
             <h3 class="font-bold text-lg mb-4">Block Details</h3>
 
@@ -152,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
 
 interface Props {
@@ -172,22 +204,63 @@ const emit = defineEmits<{
 // State
 const loading = ref(true);
 const error = ref<string | null>(null);
+const allBlockCoordinates = ref<Array<{ x: number; y: number; z: number; color?: string }>>([]);
 const blockCoordinates = ref<Array<{ x: number; y: number; z: number; color?: string }>>([]);
 const selectedBlock = ref<{ x: number; y: number; z: number } | null>(null);
 const loadingBlockDetails = ref(false);
 const blockDetails = ref<any>(null);
+const blockLimit = ref(128);  // Default: 128 blocks
+
+// View center position (for panning the visible grid area)
+// Start with a reasonable default that will be updated after first load
+const viewCenter = ref<{ x: number; y: number; z: number }>({ x: 0, y: 64, z: 0 });
 
 // Canvas
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvasWidth = ref(1200);
 const canvasHeight = ref(900);
 
-// Isometric projection settings
-// Smaller tiles for 32x32x32 grid
-const tileWidth = 16;  // Reduced from 64 to 16
-const tileHeight = 8;  // Reduced from 32 to 8
-const offsetX = canvasWidth.value / 2;
-const offsetY = 150;  // Increased top padding
+// Isometric projection settings - dynamically calculated based on blockLimit
+const tileWidth = computed(() => {
+  // Calculate how many blocks fit in the view area (cubic root of blockLimit)
+  const cubeSize = Math.ceil(Math.cbrt(blockLimit.value));
+  // Use 70% of canvas width for the grid
+  const availableWidth = canvasWidth.value * 0.7;
+  // In isometric view, width spans roughly cubeSize * 2 (X + Z dimensions)
+  return Math.max(8, Math.floor(availableWidth / (cubeSize * 2)));
+});
+
+const tileHeight = computed(() => tileWidth.value / 2);
+
+// Dynamic offsets based on canvas size
+const offsetX = computed(() => canvasWidth.value / 2);
+const offsetY = computed(() => canvasHeight.value / 2);  // Center vertically
+
+// Update canvas size to match container
+function updateCanvasSize() {
+  const canvas = canvasRef.value;
+  if (!canvas) {
+    console.log('[updateCanvasSize] No canvas ref');
+    return;
+  }
+
+  const parent = canvas.parentElement;
+  if (!parent) {
+    console.log('[updateCanvasSize] No parent element');
+    return;
+  }
+
+  const rect = parent.getBoundingClientRect();
+  console.log('[updateCanvasSize] Parent rect:', rect.width, 'x', rect.height);
+
+  canvasWidth.value = rect.width;
+  canvasHeight.value = rect.height;
+
+  console.log('[updateCanvasSize] Setting canvas to:', canvasWidth.value, 'x', canvasHeight.value);
+
+  // Redraw after resize
+  nextTick(() => drawGrid());
+}
 
 // Grid bounds (dynamically calculated from blocks)
 const gridBounds = computed(() => {
@@ -207,8 +280,13 @@ const gridBounds = computed(() => {
 
 // Convert 3D world coordinates to 2D isometric screen coordinates
 function worldToScreen(x: number, y: number, z: number): { x: number; y: number } {
-  const isoX = (x - z) * (tileWidth / 2) + offsetX;
-  const isoY = (x + z) * (tileHeight / 2) - y * tileHeight + offsetY;
+  // Subtract viewCenter to make blocks relative to view
+  const relX = x - viewCenter.value.x;
+  const relY = y - viewCenter.value.y;
+  const relZ = z - viewCenter.value.z;
+
+  const isoX = (relX - relZ) * (tileWidth.value / 2) + offsetX.value;
+  const isoY = (relX + relZ) * (tileHeight.value / 2) - relY * tileHeight.value + offsetY.value;
   return { x: isoX, y: isoY };
 }
 
@@ -216,11 +294,11 @@ function worldToScreen(x: number, y: number, z: number): { x: number; y: number 
 // This is an approximation - for accurate picking, we need ray casting
 function screenToWorld(screenX: number, screenY: number, y: number = 0): { x: number; y: number; z: number } {
   // Inverse isometric projection
-  const relX = screenX - offsetX;
-  const relY = screenY - offsetY + y * tileHeight;
+  const relX = screenX - offsetX.value;
+  const relY = screenY - offsetY.value + y * tileHeight.value;
 
-  const x = (relX / (tileWidth / 2) + relY / (tileHeight / 2)) / 2;
-  const z = (relY / (tileHeight / 2) - relX / (tileWidth / 2)) / 2;
+  const x = (relX / (tileWidth.value / 2) + relY / (tileHeight.value / 2)) / 2;
+  const z = (relY / (tileHeight.value / 2) - relX / (tileWidth.value / 2)) / 2;
 
   return { x: Math.round(x), y, z: Math.round(z) };
 }
@@ -228,13 +306,52 @@ function screenToWorld(screenX: number, screenY: number, y: number = 0): { x: nu
 // Draw the isometric grid
 function drawGrid() {
   const canvas = canvasRef.value;
-  if (!canvas) return;
+  if (!canvas) {
+    console.log('[BlockGridEditor] drawGrid: no canvas');
+    return;
+  }
 
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) {
+    console.log('[BlockGridEditor] drawGrid: no context');
+    return;
+  }
+
+  console.log('[BlockGridEditor] drawGrid: rendering', blockCoordinates.value.length, 'blocks',
+    'canvas:', canvasWidth.value, 'x', canvasHeight.value,
+    'first block:', blockCoordinates.value[0]);
 
   // Clear canvas
   ctx.clearRect(0, 0, canvasWidth.value, canvasHeight.value);
+
+  // Draw debug info
+  ctx.fillStyle = '#000000';
+  ctx.font = '14px monospace';
+  ctx.fillText(`Blocks: ${blockCoordinates.value.length}`, 10, 20);
+  ctx.fillText(`Canvas: ${canvasWidth.value}x${canvasHeight.value}`, 10, 40);
+  ctx.fillText(`View Center: (${viewCenter.value.x}, ${viewCenter.value.y}, ${viewCenter.value.z})`, 10, 60);
+
+  // Draw simple numbers at block positions
+  for (let i = 0; i < Math.min(blockCoordinates.value.length, 10); i++) {
+    const block = blockCoordinates.value[i];
+    const pos = worldToScreen(block.x, block.y, block.z);
+
+    console.log(`Block ${i+1}: world=(${block.x},${block.y},${block.z}) screen=(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) offset=(${offsetX.value},${offsetY.value})`);
+
+    ctx.fillStyle = '#ff0000';
+    ctx.font = '20px bold monospace';
+    ctx.fillText((i + 1).toString(), pos.x, pos.y);
+
+    ctx.fillStyle = '#0000ff';
+    ctx.font = '10px monospace';
+    ctx.fillText(`(${block.x},${block.y},${block.z})`, pos.x, pos.y + 15);
+
+    // Draw a circle to make it more visible
+    ctx.fillStyle = '#ff00ff';
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, 5, 0, 2 * Math.PI);
+    ctx.fill();
+  }
 
   // Sort blocks by depth for proper rendering (back to front)
   const sortedBlocks = [...blockCoordinates.value].sort((a, b) => {
@@ -261,48 +378,75 @@ function drawGrid() {
       worldToScreen(x, y + 1, z + 1), // Top-back-left
     ];
 
-    // Draw wireframe edges
-    ctx.strokeStyle = isSelected ? '#ff0000' : color;
-    ctx.lineWidth = isSelected ? 2 : 1;  // Thinner lines for smaller blocks
-    ctx.globalAlpha = 0.7;
+    // Selection outline
+    if (isSelected) {
+      ctx.strokeStyle = '#ff0000';
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 1.0;
 
-    // Bottom face
-    ctx.beginPath();
-    ctx.moveTo(corners[0].x, corners[0].y);
-    ctx.lineTo(corners[1].x, corners[1].y);
-    ctx.lineTo(corners[2].x, corners[2].y);
-    ctx.lineTo(corners[3].x, corners[3].y);
-    ctx.closePath();
-    ctx.stroke();
+      // Draw selection outline around all visible edges
+      ctx.beginPath();
+      // Top face
+      ctx.moveTo(corners[4].x, corners[4].y);
+      ctx.lineTo(corners[5].x, corners[5].y);
+      ctx.lineTo(corners[6].x, corners[6].y);
+      ctx.lineTo(corners[7].x, corners[7].y);
+      ctx.closePath();
+      // Left face
+      ctx.moveTo(corners[4].x, corners[4].y);
+      ctx.lineTo(corners[7].x, corners[7].y);
+      ctx.lineTo(corners[3].x, corners[3].y);
+      ctx.lineTo(corners[0].x, corners[0].y);
+      ctx.closePath();
+      // Right face
+      ctx.moveTo(corners[5].x, corners[5].y);
+      ctx.lineTo(corners[6].x, corners[6].y);
+      ctx.lineTo(corners[2].x, corners[2].y);
+      ctx.lineTo(corners[1].x, corners[1].y);
+      ctx.closePath();
+      ctx.stroke();
+    }
 
-    // Top face
+    // Draw filled faces
+    ctx.globalAlpha = 0.8;
+
+    // Top face (green)
+    ctx.fillStyle = isSelected ? '#4ade80' : '#22c55e';
     ctx.beginPath();
     ctx.moveTo(corners[4].x, corners[4].y);
     ctx.lineTo(corners[5].x, corners[5].y);
     ctx.lineTo(corners[6].x, corners[6].y);
     ctx.lineTo(corners[7].x, corners[7].y);
     ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#166534';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Vertical edges
+    // Left face (blue)
+    ctx.fillStyle = isSelected ? '#60a5fa' : '#3b82f6';
     ctx.beginPath();
-    ctx.moveTo(corners[0].x, corners[0].y);
-    ctx.lineTo(corners[4].x, corners[4].y);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(corners[1].x, corners[1].y);
-    ctx.lineTo(corners[5].x, corners[5].y);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(corners[2].x, corners[2].y);
-    ctx.lineTo(corners[6].x, corners[6].y);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(corners[3].x, corners[3].y);
+    ctx.moveTo(corners[4].x, corners[4].y);
     ctx.lineTo(corners[7].x, corners[7].y);
+    ctx.lineTo(corners[3].x, corners[3].y);
+    ctx.lineTo(corners[0].x, corners[0].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#1e40af';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Right face (red)
+    ctx.fillStyle = isSelected ? '#f87171' : '#ef4444';
+    ctx.beginPath();
+    ctx.moveTo(corners[5].x, corners[5].y);
+    ctx.lineTo(corners[6].x, corners[6].y);
+    ctx.lineTo(corners[2].x, corners[2].y);
+    ctx.lineTo(corners[1].x, corners[1].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#991b1b';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
     ctx.globalAlpha = 1.0;
@@ -319,9 +463,23 @@ async function loadBlockCoordinates() {
     let url: string;
 
     if (props.sourceType === 'terrain') {
-      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/terrain/blocks`;
+      // For terrain: send center and radius to load only relevant chunks
+      // Use larger radius to ensure we load enough blocks
+      const cubeSize = Math.ceil(Math.cbrt(blockLimit.value));
+      const radiusXZ = cubeSize * 2;  // Double the cube size for X/Z
+      const radiusY = cubeSize * 4;   // Quadruple for Y (more vertical range)
+      console.log('[loadBlockCoordinates] Terrain: blockLimit=', blockLimit.value, 'cubeSize=', cubeSize, 'radiusXZ=', radiusXZ, 'radiusY=', radiusY);
+      const params = new URLSearchParams({
+        centerX: viewCenter.value.x.toString(),
+        centerY: viewCenter.value.y.toString(),
+        centerZ: viewCenter.value.z.toString(),
+        radiusXZ: radiusXZ.toString(),
+        radiusY: radiusY.toString()
+      });
+      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/grid/terrain/blocks?${params}`;
     } else {
-      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/models/${props.modelId}/blocks`;
+      // For model: load all blocks at once
+      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/grid/models/${props.modelId}/blocks`;
     }
 
     const response = await fetch(url, {
@@ -336,7 +494,50 @@ async function loadBlockCoordinates() {
     }
 
     const data = await response.json();
-    blockCoordinates.value = data.blocks || [];
+    console.log('[BlockGridEditor] Loaded blocks:', {
+      sourceType: props.sourceType,
+      count: data.count,
+      blocks: data.blocks?.length,
+      viewCenter: viewCenter.value,
+      blockLimit: blockLimit.value,
+      chunksChecked: data.chunksChecked,
+      chunksFound: data.chunksFound,
+      hint: data.hint
+    });
+
+    if (props.sourceType === 'terrain') {
+      // For terrain: blocks are already filtered by backend
+      blockCoordinates.value = data.blocks || [];
+      console.log('[BlockGridEditor] Terrain blocks:', blockCoordinates.value.length);
+
+      // Show hint if provided
+      if (data.hint && blockCoordinates.value.length === 0) {
+        error.value = data.hint;
+      }
+    } else {
+      // For model: store all blocks and apply client-side filter
+      allBlockCoordinates.value = data.blocks || [];
+
+      // Initialize view center for model
+      if (allBlockCoordinates.value.length > 0 && viewCenter.value.x === 0 && viewCenter.value.y === 0 && viewCenter.value.z === 0) {
+        const bounds = {
+          minX: Math.min(...allBlockCoordinates.value.map(b => b.x)),
+          maxX: Math.max(...allBlockCoordinates.value.map(b => b.x)),
+          minY: Math.min(...allBlockCoordinates.value.map(b => b.y)),
+          maxY: Math.max(...allBlockCoordinates.value.map(b => b.y)),
+          minZ: Math.min(...allBlockCoordinates.value.map(b => b.z)),
+          maxZ: Math.max(...allBlockCoordinates.value.map(b => b.z)),
+        };
+
+        viewCenter.value = {
+          x: Math.floor((bounds.minX + bounds.maxX) / 2),
+          y: Math.floor((bounds.minY + bounds.maxY) / 2),
+          z: Math.floor((bounds.minZ + bounds.maxZ) / 2),
+        };
+      }
+
+      applyBlockLimit();
+    }
 
     // Redraw grid after loading
     setTimeout(() => drawGrid(), 50);
@@ -345,6 +546,56 @@ async function loadBlockCoordinates() {
     console.error('Failed to load block coordinates:', err);
   } finally {
     loading.value = false;
+  }
+}
+
+// Apply block limit to displayed blocks (only for MODEL layers)
+// Shows blocks within a cubic area around viewCenter
+function applyBlockLimit() {
+  if (props.sourceType === 'terrain') {
+    // For terrain, blocks are already filtered by backend
+    return;
+  }
+
+  if (blockLimit.value === 0) {
+    blockCoordinates.value = allBlockCoordinates.value;
+  } else {
+    // Calculate cubic root to get radius for each axis
+    const cubeSize = Math.ceil(Math.cbrt(blockLimit.value));
+    const radius = Math.floor(cubeSize / 2);
+
+    // Filter blocks within the cubic area around viewCenter
+    blockCoordinates.value = allBlockCoordinates.value.filter(block => {
+      const dx = Math.abs(block.x - viewCenter.value.x);
+      const dy = Math.abs(block.y - viewCenter.value.y);
+      const dz = Math.abs(block.z - viewCenter.value.z);
+      return dx <= radius && dy <= radius && dz <= radius;
+    });
+
+    // If we have more blocks than the limit, take the closest ones
+    if (blockCoordinates.value.length > blockLimit.value) {
+      blockCoordinates.value = blockCoordinates.value
+        .sort((a, b) => {
+          const distA = Math.abs(a.x - viewCenter.value.x) + Math.abs(a.y - viewCenter.value.y) + Math.abs(a.z - viewCenter.value.z);
+          const distB = Math.abs(b.x - viewCenter.value.x) + Math.abs(b.y - viewCenter.value.y) + Math.abs(b.z - viewCenter.value.z);
+          return distA - distB;
+        })
+        .slice(0, blockLimit.value);
+    }
+  }
+
+  // Redraw after applying limit
+  setTimeout(() => drawGrid(), 50);
+}
+
+// Handle block limit change
+async function handleBlockLimitChange() {
+  if (props.sourceType === 'terrain') {
+    // Reload with new radius
+    await loadBlockCoordinates();
+  } else {
+    // Reapply filter
+    applyBlockLimit();
   }
 }
 
@@ -358,9 +609,9 @@ async function loadBlockDetails(x: number, y: number, z: number) {
     let url: string;
 
     if (props.sourceType === 'terrain') {
-      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/terrain/block/${x}/${y}/${z}`;
+      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/grid/terrain/block/${x}/${y}/${z}`;
     } else {
-      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/models/${props.modelId}/block/${x}/${y}/${z}`;
+      url = `${apiUrl}/control/worlds/${props.worldId}/layers/${props.layerId}/grid/models/${props.modelId}/block/${x}/${y}/${z}`;
     }
 
     const response = await fetch(url, {
@@ -437,22 +688,20 @@ function handleCanvasHover(event: MouseEvent) {
   // Could implement hover highlighting here
 }
 
-// Handle navigation from NavigateSelectedBlockComponent
-function handleNavigate(position: { x: number; y: number; z: number }) {
-  selectedBlock.value = position;
+// Handle pan view navigation (moves the visible area)
+async function handlePanView(position: { x: number; y: number; z: number }) {
+  console.log('[handlePanView] Moving view center from', viewCenter.value, 'to', position);
+  viewCenter.value = position;
 
-  // Check if block exists at this position
-  const blockExists = blockCoordinates.value.some(
-    b => b.x === position.x && b.y === position.y && b.z === position.z
-  );
-
-  if (blockExists) {
-    loadBlockDetails(position.x, position.y, position.z);
+  if (props.sourceType === 'terrain') {
+    // For terrain: reload blocks from backend with new center
+    console.log('[handlePanView] Reloading terrain blocks with new center');
+    await loadBlockCoordinates();
   } else {
-    blockDetails.value = null;
+    // For model: reapply client-side filter
+    console.log('[handlePanView] Reapplying model filter');
+    applyBlockLimit();
   }
-
-  drawGrid();
 }
 
 // Handle close
@@ -467,11 +716,27 @@ watch([canvasWidth, canvasHeight], () => {
 
 // Watch for block coordinates changes
 watch(blockCoordinates, () => {
-  drawGrid();
+  // Only draw if canvas is initialized
+  if (canvasRef.value && canvasWidth.value > 0 && canvasHeight.value > 0) {
+    drawGrid();
+  }
 });
 
 // Lifecycle
 onMounted(async () => {
+  // Initialize canvas size FIRST
+  await nextTick();
+  updateCanvasSize();
+
+  // Then load blocks
   await loadBlockCoordinates();
+
+  // Add resize listener
+  window.addEventListener('resize', updateCanvasSize);
+});
+
+// Cleanup
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateCanvasSize);
 });
 </script>

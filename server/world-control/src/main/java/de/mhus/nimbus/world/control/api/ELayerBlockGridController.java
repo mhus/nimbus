@@ -18,7 +18,7 @@ import java.util.*;
  * Provides endpoints to load block coordinates for BlockGridEditor.
  */
 @RestController
-@RequestMapping("/control/worlds/{worldId}/layers")
+@RequestMapping("/control/worlds/{worldId}/layers/{layerId}/grid")
 @RequiredArgsConstructor
 @Slf4j
 public class ELayerBlockGridController {
@@ -32,19 +32,29 @@ public class ELayerBlockGridController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * Get all block coordinates from WLayerTerrain chunks.
-     * Returns only coordinates and optional color for each block.
+     * Get block coordinates from WLayerTerrain chunks within a specific area.
+     * Loads only chunks that intersect with the requested cubic area.
      *
      * @param worldId World ID
      * @param layerId Layer ID
+     * @param centerX Center X coordinate
+     * @param centerY Center Y coordinate
+     * @param centerZ Center Z coordinate
+     * @param radius Radius in blocks (half-size of the cubic area)
      * @return List of block coordinates with optional color
      */
-    @GetMapping("/{layerId}/terrain/blocks")
+    @GetMapping("/terrain/blocks")
     public ResponseEntity<?> getTerrainBlocks(
             @PathVariable String worldId,
-            @PathVariable String layerId
+            @PathVariable String layerId,
+            @RequestParam(required = false, defaultValue = "0") int centerX,
+            @RequestParam(required = false, defaultValue = "0") int centerY,
+            @RequestParam(required = false, defaultValue = "0") int centerZ,
+            @RequestParam(required = false, defaultValue = "16") int radiusXZ,
+            @RequestParam(required = false, defaultValue = "32") int radiusY
     ) {
-        log.debug("Loading terrain blocks for worldId={}, layerId={}", worldId, layerId);
+        log.debug("Loading terrain blocks for worldId={}, layerId={}, center=({},{},{}), radiusXZ={}, radiusY={}",
+                worldId, layerId, centerX, centerY, centerZ, radiusXZ, radiusY);
 
         // Load layer
         Optional<WLayer> layerOpt = layerRepository.findById(layerId);
@@ -64,83 +74,120 @@ public class ELayerBlockGridController {
         }
         int chunkSize = worldOpt.get().getPublicData().getChunkSize();
 
-        // Load all terrain chunks for this layer
-        List<WLayerTerrain> terrainChunks = terrainRepository.findByLayerDataId(layer.getLayerDataId());
-        log.debug("Found {} terrain chunks for layerDataId={}", terrainChunks.size(), layer.getLayerDataId());
+        // Calculate which chunks intersect with the requested area
+        int minX = centerX - radiusXZ;
+        int maxX = centerX + radiusXZ;
+        int minZ = centerZ - radiusXZ;
+        int maxZ = centerZ + radiusXZ;
 
-        // Collect all block coordinates
+        int minChunkX = Math.floorDiv(minX, chunkSize);
+        int maxChunkX = Math.floorDiv(maxX, chunkSize);
+        int minChunkZ = Math.floorDiv(minZ, chunkSize);
+        int maxChunkZ = Math.floorDiv(maxZ, chunkSize);
+
+        log.debug("Loading chunks from ({},{}) to ({},{})", minChunkX, minChunkZ, maxChunkX, maxChunkZ);
+
+        // Collect block coordinates from relevant chunks only
         List<Map<String, Object>> blockCoordinates = new ArrayList<>();
+        int chunksChecked = 0;
+        int chunksFound = 0;
 
-        for (WLayerTerrain terrain : terrainChunks) {
-            if (terrain.getStorageId() == null) {
-                continue;
-            }
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                chunksChecked++;
+                String chunkKey = chunkX + ":" + chunkZ;
 
-            try {
-                // Load chunk data from storage
-                InputStream stream = storageService.load(terrain.getStorageId());
-                if (stream == null) {
-                    log.warn("Chunk data not found for storageId={}", terrain.getStorageId());
+                // Load this specific chunk
+                Optional<WLayerTerrain> terrainOpt = terrainRepository.findByLayerDataIdAndChunkKey(
+                        layer.getLayerDataId(), chunkKey);
+
+                if (terrainOpt.isEmpty()) {
+                    log.trace("Chunk {} not found for layerDataId={}", chunkKey, layer.getLayerDataId());
                     continue;
                 }
 
-                LayerChunkData chunkData = objectMapper.readValue(stream, LayerChunkData.class);
+                chunksFound++;
 
-                // Parse chunk key to get chunk coordinates
-                String[] parts = terrain.getChunkKey().split(":");
-                if (parts.length != 2) {
-                    log.warn("Invalid chunk key format: {}", terrain.getChunkKey());
+                WLayerTerrain terrain = terrainOpt.get();
+                if (terrain.getStorageId() == null) {
                     continue;
                 }
 
-                int chunkX = Integer.parseInt(parts[0]);
-                int chunkZ = Integer.parseInt(parts[1]);
-
-                // Calculate world offset for this chunk
-                int offsetX = chunkX * chunkSize;
-                int offsetZ = chunkZ * chunkSize;
-
-                // Extract blocks from chunk data
-                if (chunkData.getBlocks() != null) {
-                    for (LayerBlock layerBlock : chunkData.getBlocks()) {
-                        if (layerBlock.getBlock() == null) {
-                            continue;
-                        }
-
-                        var position = layerBlock.getBlock().getPosition();
-                        if (position == null) {
-                            continue;
-                        }
-
-                        // Convert relative position to world position
-                        int worldX = offsetX + (int) position.getX();
-                        int worldY = (int) position.getY();
-                        int worldZ = offsetZ + (int) position.getZ();
-
-                        Map<String, Object> coord = new HashMap<>();
-                        coord.put("x", worldX);
-                        coord.put("y", worldY);
-                        coord.put("z", worldZ);
-
-                        // Optional: Add color based on group
-                        if (layerBlock.getGroup() > 0) {
-                            coord.put("color", getGroupColor(layerBlock.getGroup()));
-                        }
-
-                        blockCoordinates.add(coord);
+                try {
+                    // Load chunk data from storage
+                    InputStream stream = storageService.load(terrain.getStorageId());
+                    if (stream == null) {
+                        log.warn("Chunk data not found for storageId={}", terrain.getStorageId());
+                        continue;
                     }
+
+                    LayerChunkData chunkData = objectMapper.readValue(stream, LayerChunkData.class);
+
+                    // Calculate world offset for this chunk (use loop variables)
+                    int offsetX = chunkX * chunkSize;
+                    int offsetZ = chunkZ * chunkSize;
+
+                    // Extract blocks from chunk data
+                    if (chunkData.getBlocks() != null) {
+                        for (LayerBlock layerBlock : chunkData.getBlocks()) {
+                            if (layerBlock.getBlock() == null) {
+                                continue;
+                            }
+
+                            var position = layerBlock.getBlock().getPosition();
+                            if (position == null) {
+                                continue;
+                            }
+
+                            // Convert relative position to world position
+                            int worldX = offsetX + (int) position.getX();
+                            int worldY = (int) position.getY();
+                            int worldZ = offsetZ + (int) position.getZ();
+
+                            // Add all blocks from loaded chunks (no additional filtering)
+                            Map<String, Object> coord = new HashMap<>();
+                            coord.put("x", worldX);
+                            coord.put("y", worldY);
+                            coord.put("z", worldZ);
+
+                            // Optional: Add color based on group
+                            if (layerBlock.getGroup() > 0) {
+                                coord.put("color", getGroupColor(layerBlock.getGroup()));
+                            }
+
+                            blockCoordinates.add(coord);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to load chunk data for storageId={}", terrain.getStorageId(), e);
                 }
-            } catch (Exception e) {
-                log.error("Failed to load chunk data for storageId={}", terrain.getStorageId(), e);
             }
         }
 
-        log.debug("Returning {} block coordinates", blockCoordinates.size());
+        log.info("Terrain blocks: checked {} chunks, found {} chunks, returning {} block coordinates (center={},{},{}, radiusXZ={}, radiusY={})",
+                chunksChecked, chunksFound, blockCoordinates.size(), centerX, centerY, centerZ, radiusXZ, radiusY);
 
-        return ResponseEntity.ok(Map.of(
-                "blocks", blockCoordinates,
-                "count", blockCoordinates.size()
-        ));
+        // If no blocks found and center is at origin, try to find any chunk as a hint
+        String hint = null;
+        if (blockCoordinates.isEmpty() && centerX == 0 && centerY == 64 && centerZ == 0) {
+            List<WLayerTerrain> anyChunks = terrainRepository.findByLayerDataId(layer.getLayerDataId());
+            if (!anyChunks.isEmpty()) {
+                hint = "No blocks at default center (0,64,0). Found " + anyChunks.size() + " chunks total. Try navigating to find blocks.";
+            } else {
+                hint = "No terrain chunks found for this layer.";
+            }
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("blocks", blockCoordinates);
+        response.put("count", blockCoordinates.size());
+        response.put("chunksChecked", chunksChecked);
+        response.put("chunksFound", chunksFound);
+        if (hint != null) {
+            response.put("hint", hint);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -153,7 +200,7 @@ public class ELayerBlockGridController {
      * @param z Block Z coordinate
      * @return Block details including LayerBlock wrapper
      */
-    @GetMapping("/{layerId}/terrain/block/{x}/{y}/{z}")
+    @GetMapping("/terrain/block/{x}/{y}/{z}")
     public ResponseEntity<?> getTerrainBlockDetails(
             @PathVariable String worldId,
             @PathVariable String layerId,
@@ -247,7 +294,7 @@ public class ELayerBlockGridController {
      * @param modelId Model ID
      * @return List of block coordinates with optional color
      */
-    @GetMapping("/{layerId}/models/{modelId}/blocks")
+    @GetMapping("/models/{modelId}/blocks")
     public ResponseEntity<?> getModelBlocks(
             @PathVariable String worldId,
             @PathVariable String layerId,
@@ -325,7 +372,7 @@ public class ELayerBlockGridController {
      * @param z Block Z coordinate (relative to mount point)
      * @return Block details including LayerBlock wrapper
      */
-    @GetMapping("/{layerId}/models/{modelId}/block/{x}/{y}/{z}")
+    @GetMapping("/models/{modelId}/block/{x}/{y}/{z}")
     public ResponseEntity<?> getModelBlockDetails(
             @PathVariable String worldId,
             @PathVariable String layerId,
