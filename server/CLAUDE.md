@@ -28,5 +28,9 @@
   - parameter die mit 'Id' am Ende (worldId, regionId, itemId) sind wie name eindeutig
 - UI controls html element namen convention (../client/packages/controls):
   - *-editor.html: Elemente für Administratoren und Editoren, eher technisch organisiert, werden in HomeApp verlinkt
+    - Greife auf REST Controller unter /control/ zu, nicht auf /control/player/ - diese sind PLAYER vorbehalten.
   - *-panel.html: Elemente die vom Player genutzt werden, sollen stylisch angepasst werden, werden in der PanelApp verlinkt, immer vollbild.
+    - greifen nur auf REST Controller unter /control/player/ zu. Hier eigene Controller implementieren, nicht die von editor nutzen, diese sind für player gesperrt.
   - *-widget.html: Elemente die auch vom Player genutzt, sollen stylisch angepasst werden, werden separat geoffnet, meist nur ein teil des Bildschirms.
+      - wie panel: greifen nur auf REST Controller unter /control/player/ zu. Hier eigene Controller implementieren, nicht die von editor nutzen, diese sind für player gesperrt.
+- Ich erwarte keine TODOs im code sondern implementierte funktionalität

@@ -1,6 +1,9 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.dto.CreateLayerRequest;
+import de.mhus.nimbus.world.shared.dto.LayerDto;
+import de.mhus.nimbus.world.shared.dto.UpdateLayerRequest;
 import de.mhus.nimbus.world.shared.layer.LayerType;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
@@ -37,55 +40,7 @@ public class ELayerController extends BaseEditorController {
 
     private final WLayerService layerService;
 
-    // DTOs
-    public record LayerDto(
-            String id,
-            String worldId,
-            String name,
-            LayerType layerType,
-            String layerDataId,
-            Integer mountX,
-            Integer mountY,
-            Integer mountZ,
-            boolean ground,
-            boolean allChunks,
-            List<String> affectedChunks,
-            int order,
-            boolean enabled,
-            Map<Integer, String> groups,
-            Instant createdAt,
-            Instant updatedAt
-    ) {
-    }
-
-    public record CreateLayerRequest(
-            String name,
-            LayerType layerType,
-            Integer mountX,
-            Integer mountY,
-            Integer mountZ,
-            Boolean ground,
-            Boolean allChunks,
-            List<String> affectedChunks,
-            Integer order,
-            Boolean enabled,
-            Map<Integer, String> groups
-    ) {
-    }
-
-    public record UpdateLayerRequest(
-            String name,
-            Integer mountX,
-            Integer mountY,
-            Integer mountZ,
-            Boolean ground,
-            Boolean allChunks,
-            List<String> affectedChunks,
-            Integer order,
-            Boolean enabled,
-            Map<Integer, String> groups
-    ) {
-    }
+    // DTOs moved to de.mhus.nimbus.world.shared.dto package for TypeScript generation
 
     /**
      * Get single Layer by ID.
@@ -212,27 +167,25 @@ public class ELayerController extends BaseEditorController {
         }
 
         try {
-            WLayer layer = WLayer.builder()
-                    .worldId(lookupWorldId)
-                    .name(request.name())
-                    .layerType(request.layerType())
-                    .mountX(request.mountX())
-                    .mountY(request.mountY())
-                    .mountZ(request.mountZ())
-                    .ground(request.ground() != null ? request.ground() : false)
-                    .allChunks(request.allChunks() != null ? request.allChunks() : true)
-                    .affectedChunks(request.affectedChunks() != null ? request.affectedChunks() : List.of())
-                    .order(request.order() != null ? request.order() : 0)
-                    .enabled(request.enabled() != null ? request.enabled() : true)
-                    .groups(request.groups() != null ? request.groups() : Map.of())
-                    .build();
+            // Use service method which generates layerDataId automatically
+            WLayer layer = layerService.createLayer(
+                    lookupWorldId,
+                    request.name(),
+                    request.layerType(),
+                    request.order() != null ? request.order() : 0,
+                    request.allChunks() != null ? request.allChunks() : true,
+                    request.affectedChunks()
+            );
 
-            layer.touchCreate();
+            // Set enabled flag if provided
+            if (request.enabled() != null) {
+                layer.setEnabled(request.enabled());
+                layer = layerService.save(layer);
+            }
 
-            WLayer saved = layerService.save(layer);
-
-            log.info("Created layer: id={}, name={}, type={}", saved.getId(), saved.getName(), saved.getLayerType());
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", saved.getId()));
+            log.info("Created layer: id={}, name={}, type={}, layerDataId={}",
+                    layer.getId(), layer.getName(), layer.getLayerType(), layer.getLayerDataId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", layer.getId()));
         } catch (IllegalArgumentException e) {
             log.warn("Validation error creating layer: {}", e.getMessage());
             return bad(e.getMessage());
@@ -285,22 +238,8 @@ public class ELayerController extends BaseEditorController {
             layer.setName(request.name());
             changed = true;
         }
-        if (request.mountX() != null) {
-            layer.setMountX(request.mountX());
-            changed = true;
-        }
-        if (request.mountY() != null) {
-            layer.setMountY(request.mountY());
-            changed = true;
-        }
-        if (request.mountZ() != null) {
-            layer.setMountZ(request.mountZ());
-            changed = true;
-        }
-        if (request.ground() != null) {
-            layer.setGround(request.ground().booleanValue());
-            changed = true;
-        }
+        // Note: mountX/Y/Z, ground, and groups are now in WLayerModel, not WLayer
+        // These fields should be ignored or handled via WLayerModel endpoints
         if (request.allChunks() != null) {
             layer.setAllChunks(request.allChunks());
             changed = true;
@@ -315,10 +254,6 @@ public class ELayerController extends BaseEditorController {
         }
         if (request.enabled() != null) {
             layer.setEnabled(request.enabled());
-            changed = true;
-        }
-        if (request.groups() != null) {
-            layer.setGroups(request.groups());
             changed = true;
         }
 
@@ -383,15 +318,10 @@ public class ELayerController extends BaseEditorController {
                 layer.getName(),
                 layer.getLayerType(),
                 layer.getLayerDataId(),
-                layer.getMountX(),
-                layer.getMountY(),
-                layer.getMountZ(),
-                layer.isGround(),
                 layer.isAllChunks(),
                 layer.getAffectedChunks(),
                 layer.getOrder(),
                 layer.isEnabled(),
-                layer.getGroups(),
                 layer.getCreatedAt(),
                 layer.getUpdatedAt()
         );

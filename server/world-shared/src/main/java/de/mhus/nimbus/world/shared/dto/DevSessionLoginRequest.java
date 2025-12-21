@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.dto;
 
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
 import de.mhus.nimbus.shared.user.ActorRoles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,7 @@ import jakarta.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@GenerateTypeScript("dto")
 public class DevSessionLoginRequest {
 
     @NotBlank(message = "worldId is required")

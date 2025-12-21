@@ -50,6 +50,8 @@ public class JavaCollector {
         List<JavaClassModel> result = new ArrayList<>();
         Set<String> visited = new HashSet<>();
         Queue<File> queue = new ArrayDeque<>();
+        // Dateien, die aufgrund von follow=true geladen wurden und ggf. ohne Annotation mitgenommen werden
+        Set<String> forceInclude = new HashSet<>();
 
         // Start: nur Dateien, die @GenerateTypeScript enthalten
         for (File f : javaFiles) {
@@ -68,7 +70,6 @@ public class JavaCollector {
                 }
             }
             if (has) {
-                if (log != null) log.info("JavaCollector: enqueue " + f.getAbsolutePath());
                 queue.add(f);
             }
         }
@@ -86,8 +87,17 @@ public class JavaCollector {
                 continue;
             }
 
+            boolean isForcedFile = forceInclude.contains(f.getAbsolutePath());
             for (TypeDeclaration<?> td : cu.getTypes()) {
-                if (!JavaAstParser.hasGenerateTypeScriptAnnotation(td)) continue;
+                boolean annotated = JavaAstParser.hasGenerateTypeScriptAnnotation(td);
+                // Wenn per follow geladen: nimm zumindest Enums auch ohne Annotation mit
+                boolean allowedByForce = false;
+                if (isForcedFile) {
+                    if (td.isEnumDeclaration()) {
+                        allowedByForce = true;
+                    }
+                }
+                if (!annotated && !allowedByForce) continue;
 
                 JavaClassModel model = JavaAstParser.toModel(cu, td);
                 if (log != null) log.info("JavaCollector: model parsed -> " + (model.getPackageName() == null ? model.getName() : (model.getPackageName() + "." + model.getName())));
@@ -100,7 +110,8 @@ public class JavaCollector {
                             for (String ref : fld.getReferencedTypes()) {
                                 File refFile = simpleNameToFile.get(ref);
                                 if (refFile != null && !visited.contains(refFile.getAbsolutePath())) {
-                                    // Nur hinzufügen, wenn der referenzierte Typ auch @GenerateTypeScript hat
+                                    // Prüfen, ob der referenzierte Typ annotiert ist – wenn ja, normal hinzufügen;
+                                    // wenn nein, bei follow trotzdem hinzufügen und als "forceInclude" markieren
                                     try {
                                         CompilationUnit refCu = JavaAstParser.parseCu(refFile);
                                         boolean has = false;
@@ -109,7 +120,12 @@ public class JavaCollector {
                                                 has = true; break;
                                             }
                                         }
-                                        if (has) queue.add(refFile);
+                                        if (has) {
+                                            queue.add(refFile);
+                                        } else {
+                                            queue.add(refFile);
+                                            forceInclude.add(refFile.getAbsolutePath());
+                                        }
                                     } catch (Exception e) {
                                         if (log != null) log.warn("Follow-Parsefehler bei " + refFile + ": " + e.getMessage());
                                     }

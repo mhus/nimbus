@@ -10,10 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -438,24 +435,526 @@ public class WLayerService {
         log.debug("Deleted terrain data: layerDataId={} count={}", layerDataId, terrains.size());
     }
 
+    // ==================== TERRAIN GENERATION FROM MODEL ====================
+
+    /**
+     * Recreate a complete MODEL-based layer from all WLayerModel documents.
+     * This method:
+     * 1. Deletes all existing WLayerTerrain chunks for this layer
+     * 2. Recalculates affected chunks from all WLayerModel documents
+     * 3. Regenerates WLayerTerrain for each affected chunk
+     * 4. Updates WLayer.affectedChunks completely
+     * 5. Optionally marks chunks as dirty
+     *
+     * IMPORTANT: This does NOT happen automatically during DirtyChunk processing.
+     * This must be called manually when a model-based layer needs complete regeneration.
+     *
+     * @param layerDataId       Layer data ID to recreate
+     * @param markChunksDirty   If true, marks affected chunks as dirty after recreation
+     * @return Number of chunks recreated, or -1 if layer not found
+     */
+    @Transactional
+    public int recreateModelBasedLayer(String layerDataId, boolean markChunksDirty) {
+        // Get the layer
+        Optional<WLayer> layerOpt = layerRepository.findById(layerDataId);
+        if (layerOpt.isEmpty()) {
+            log.warn("Layer not found for recreation: layerDataId={}", layerDataId);
+            return -1;
+        }
+
+        WLayer layer = layerOpt.get();
+
+        // Verify it's a MODEL layer
+        if (layer.getLayerType() != LayerType.MODEL) {
+            log.warn("Cannot recreate non-MODEL layer: layerDataId={} type={}", layerDataId, layer.getLayerType());
+            return -1;
+        }
+
+        log.info("Starting recreation of MODEL-based layer: layerDataId={} name={}", layerDataId, layer.getName());
+
+        // Step 1: Delete all existing WLayerTerrain chunks for this layer
+        deleteTerrainData(layerDataId);
+        log.debug("Deleted existing terrain data for layer: layerDataId={}", layerDataId);
+
+        // Step 2: Load all WLayerModel for this layer (sorted by order)
+        List<WLayerModel> models = modelRepository.findByLayerDataIdOrderByOrder(layerDataId);
+
+        if (models.isEmpty()) {
+            log.info("No models found for layer recreation: layerDataId={}", layerDataId);
+            // Clear affected chunks since there are no models
+            layer.setAffectedChunks(new ArrayList<>());
+            layer.touchUpdate();
+            layerRepository.save(layer);
+            return 0;
+        }
+
+        log.debug("Found {} models for layer recreation: layerDataId={}", models.size(), layerDataId);
+
+        // Step 3: Calculate all affected chunks from all models
+        Set<String> allAffectedChunks = new HashSet<>();
+
+        for (WLayerModel model : models) {
+            Set<String> modelChunks = calculateAffectedChunks(model);
+            allAffectedChunks.addAll(modelChunks);
+            log.trace("Model {} affects {} chunks", model.getName(), modelChunks.size());
+        }
+
+        if (allAffectedChunks.isEmpty()) {
+            log.info("No affected chunks calculated for layer: layerDataId={}", layerDataId);
+            // Clear affected chunks
+            layer.setAffectedChunks(new ArrayList<>());
+            layer.touchUpdate();
+            layerRepository.save(layer);
+            return 0;
+        }
+
+        log.debug("Total affected chunks: {}", allAffectedChunks.size());
+
+        // Step 4: Update WLayer.affectedChunks completely (replace, not merge)
+        layer.setAffectedChunks(new ArrayList<>(allAffectedChunks));
+        layer.touchUpdate();
+        layerRepository.save(layer);
+        log.debug("Updated layer affected chunks: layer={} count={}", layer.getName(), allAffectedChunks.size());
+
+        // Step 5: Recreate terrain for each affected chunk
+        int chunksProcessed = 0;
+        for (String chunkKey : allAffectedChunks) {
+            try {
+                recreateTerrainChunk(models, layerDataId, chunkKey);
+                chunksProcessed++;
+            } catch (Exception e) {
+                log.error("Failed to recreate terrain chunk: layerDataId={} chunkKey={}", layerDataId, chunkKey, e);
+            }
+        }
+
+        log.info("Recreated MODEL-based layer: layerDataId={} name={} chunks={} models={}",
+                layerDataId, layer.getName(), chunksProcessed, models.size());
+
+        // Step 6: Mark chunks as dirty if requested
+        if (markChunksDirty && chunksProcessed > 0) {
+            dirtyChunkService.markChunksDirty(layer.getWorldId(), new ArrayList<>(allAffectedChunks), "model_layer_recreated");
+        }
+
+        return chunksProcessed;
+    }
+
+    /**
+     * Recreate a single terrain chunk from all models.
+     * Models are already sorted by order.
+     */
+    private void recreateTerrainChunk(List<WLayerModel> models, String layerDataId, String chunkKey) {
+        // Parse chunk coordinates
+        String[] parts = chunkKey.split(":");
+        if (parts.length != 2) {
+            log.warn("Invalid chunk key format: {}", chunkKey);
+            return;
+        }
+
+        int cx = Integer.parseInt(parts[0]);
+        int cz = Integer.parseInt(parts[1]);
+        int chunkSize = 16; // TODO: Get from config
+
+        // Calculate chunk bounds
+        int chunkMinX = cx * chunkSize;
+        int chunkMaxX = chunkMinX + chunkSize - 1;
+        int chunkMinZ = cz * chunkSize;
+        int chunkMaxZ = chunkMinZ + chunkSize - 1;
+
+        // Build block map from all models (sorted by order)
+        Map<String, LayerBlock> blockMap = new HashMap<>();
+
+        for (WLayerModel model : models) {
+            if (model.getContent() == null || model.getContent().isEmpty()) {
+                continue;
+            }
+
+            int mountX = model.getMountX();
+            int mountY = model.getMountY();
+            int mountZ = model.getMountZ();
+
+            // Add/overlay model blocks that fall within chunk bounds
+            for (LayerBlock layerBlock : model.getContent()) {
+                if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
+                    continue;
+                }
+
+                de.mhus.nimbus.generated.types.Block relativeBlock = layerBlock.getBlock();
+
+                // Calculate world position
+                int worldX = mountX + (int) relativeBlock.getPosition().getX();
+                int worldY = mountY + (int) relativeBlock.getPosition().getY();
+                int worldZ = mountZ + (int) relativeBlock.getPosition().getZ();
+
+                // Check if within chunk bounds
+                if (worldX >= chunkMinX && worldX <= chunkMaxX &&
+                        worldZ >= chunkMinZ && worldZ <= chunkMaxZ) {
+
+                    de.mhus.nimbus.generated.types.Vector3 worldPos = new de.mhus.nimbus.generated.types.Vector3();
+                    worldPos.setX(worldX);
+                    worldPos.setY(worldY);
+                    worldPos.setZ(worldZ);
+                    String key = blockKey(worldPos);
+
+                    // Check override flag
+                    if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
+                        // Skip if block exists and override is false
+                        continue;
+                    }
+
+                    // Create new LayerBlock with world coordinates
+                    LayerBlock newLayerBlock = LayerBlock.builder()
+                            .block(cloneBlockWithPosition(relativeBlock, worldPos))
+                            .override(layerBlock.isOverride())
+                            .group(layerBlock.getGroup())
+                            .weight(layerBlock.getWeight())
+                            .metadata(layerBlock.getMetadata())
+                            .build();
+
+                    blockMap.put(key, newLayerBlock);
+                }
+            }
+        }
+
+        // Save terrain chunk (only if there are blocks)
+        if (!blockMap.isEmpty()) {
+            LayerChunkData chunkData = LayerChunkData.builder()
+                    .blocks(new ArrayList<>(blockMap.values()))
+                    .build();
+
+            // Get worldId from first model (all models should have same worldId)
+            String worldId = models.isEmpty() ? null : models.get(0).getWorldId();
+            if (worldId != null) {
+                saveTerrainChunk(worldId, layerDataId, chunkKey, chunkData);
+            }
+        }
+    }
+
+    /**
+     * Transfer a single WLayerModel into WLayerTerrain storage.
+     * This method calculates affected chunks, generates terrain data for each chunk,
+     * and optionally marks chunks as dirty.
+     *
+     * IMPORTANT: This does NOT happen automatically during DirtyChunk processing.
+     * This must be called manually when a model is created or updated.
+     *
+     * @param modelId           Model document ID to transfer
+     * @param markChunksDirty   If true, marks affected chunks as dirty after transfer
+     * @return Number of chunks affected, or -1 if model not found
+     */
+    @Transactional
+    public int transferModelToTerrain(String modelId, boolean markChunksDirty) {
+        // Load model
+        Optional<WLayerModel> modelOpt = modelRepository.findById(modelId);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for transfer: id={}", modelId);
+            return -1;
+        }
+
+        WLayerModel model = modelOpt.get();
+
+        // Get the layer
+        Optional<WLayer> layerOpt = layerRepository.findById(model.getLayerDataId());
+        if (layerOpt.isEmpty()) {
+            log.warn("Layer not found for model transfer: layerDataId={}", model.getLayerDataId());
+            return -1;
+        }
+
+        WLayer layer = layerOpt.get();
+
+        // Calculate affected chunks from model content
+        Set<String> affectedChunks = calculateAffectedChunks(model);
+
+        if (affectedChunks.isEmpty()) {
+            log.debug("Model has no content or no affected chunks: modelId={}", modelId);
+            return 0;
+        }
+
+        // Update WLayer.affectedChunks if needed
+        updateLayerAffectedChunks(layer, affectedChunks);
+
+        // Transfer model blocks to terrain for each affected chunk
+        int chunksProcessed = 0;
+        for (String chunkKey : affectedChunks) {
+            try {
+                transferModelToTerrainChunk(model, layer.getLayerDataId(), chunkKey);
+                chunksProcessed++;
+            } catch (Exception e) {
+                log.error("Failed to transfer model to terrain chunk: modelId={} chunkKey={}", modelId, chunkKey, e);
+            }
+        }
+
+        log.info("Transferred model to terrain: modelId={} name={} chunks={}",
+                modelId, model.getName(), chunksProcessed);
+
+        // Mark chunks as dirty if requested
+        if (markChunksDirty && chunksProcessed > 0) {
+            dirtyChunkService.markChunksDirty(model.getWorldId(), new ArrayList<>(affectedChunks), "model_transferred");
+        }
+
+        return chunksProcessed;
+    }
+
+    /**
+     * Calculate affected chunks from model content.
+     */
+    private Set<String> calculateAffectedChunks(WLayerModel model) {
+        Set<String> chunks = new HashSet<>();
+
+        if (model.getContent() == null || model.getContent().isEmpty()) {
+            return chunks;
+        }
+
+        int chunkSize = 16; // TODO: Get from config
+        int mountX = model.getMountX();
+        int mountZ = model.getMountZ();
+
+        for (LayerBlock layerBlock : model.getContent()) {
+            if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
+                continue;
+            }
+
+            // Calculate world position
+            int worldX = mountX + (int) layerBlock.getBlock().getPosition().getX();
+            int worldZ = mountZ + (int) layerBlock.getBlock().getPosition().getZ();
+
+            // Calculate chunk coordinates
+            int cx = Math.floorDiv(worldX, chunkSize);
+            int cz = Math.floorDiv(worldZ, chunkSize);
+
+            chunks.add(cx + ":" + cz);
+        }
+
+        return chunks;
+    }
+
+    /**
+     * Update WLayer.affectedChunks if new chunks are affected.
+     */
+    private void updateLayerAffectedChunks(WLayer layer, Set<String> newChunks) {
+        if (layer.isAllChunks()) {
+            // Layer affects all chunks, no need to update
+            return;
+        }
+
+        Set<String> existingChunks = new HashSet<>(layer.getAffectedChunks());
+        Set<String> updatedChunks = new HashSet<>(existingChunks);
+        updatedChunks.addAll(newChunks);
+
+        if (updatedChunks.size() > existingChunks.size()) {
+            layer.setAffectedChunks(new ArrayList<>(updatedChunks));
+            layer.touchUpdate();
+            layerRepository.save(layer);
+            log.debug("Updated layer affected chunks: layer={} oldCount={} newCount={}",
+                    layer.getName(), existingChunks.size(), updatedChunks.size());
+        }
+    }
+
+    /**
+     * Transfer a single model's blocks to a specific terrain chunk.
+     */
+    private void transferModelToTerrainChunk(WLayerModel model, String layerDataId, String chunkKey) {
+        // Parse chunk coordinates
+        String[] parts = chunkKey.split(":");
+        if (parts.length != 2) {
+            log.warn("Invalid chunk key format: {}", chunkKey);
+            return;
+        }
+
+        int cx = Integer.parseInt(parts[0]);
+        int cz = Integer.parseInt(parts[1]);
+        int chunkSize = 16; // TODO: Get from config
+
+        // Calculate chunk bounds
+        int chunkMinX = cx * chunkSize;
+        int chunkMaxX = chunkMinX + chunkSize - 1;
+        int chunkMinZ = cz * chunkSize;
+        int chunkMaxZ = chunkMinZ + chunkSize - 1;
+
+        // Load existing terrain chunk or create new one
+        Optional<LayerChunkData> existingDataOpt = loadTerrainChunk(layerDataId, chunkKey);
+        Map<String, LayerBlock> blockMap = new HashMap<>();
+
+        // Add existing blocks to map
+        if (existingDataOpt.isPresent()) {
+            LayerChunkData existingData = existingDataOpt.get();
+            if (existingData.getBlocks() != null) {
+                for (LayerBlock block : existingData.getBlocks()) {
+                    if (block.getBlock() != null && block.getBlock().getPosition() != null) {
+                        String key = blockKey(block.getBlock().getPosition());
+                        blockMap.put(key, block);
+                    }
+                }
+            }
+        }
+
+        // Add/overlay model blocks that fall within chunk bounds
+        int mountX = model.getMountX();
+        int mountY = model.getMountY();
+        int mountZ = model.getMountZ();
+
+        for (LayerBlock layerBlock : model.getContent()) {
+            if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
+                continue;
+            }
+
+            de.mhus.nimbus.generated.types.Block relativeBlock = layerBlock.getBlock();
+
+            // Calculate world position
+            int worldX = mountX + (int) relativeBlock.getPosition().getX();
+            int worldY = mountY + (int) relativeBlock.getPosition().getY();
+            int worldZ = mountZ + (int) relativeBlock.getPosition().getZ();
+
+            // Check if within chunk bounds
+            if (worldX >= chunkMinX && worldX <= chunkMaxX &&
+                    worldZ >= chunkMinZ && worldZ <= chunkMaxZ) {
+
+                de.mhus.nimbus.generated.types.Vector3 worldPos = new de.mhus.nimbus.generated.types.Vector3();
+                worldPos.setX(worldX);
+                worldPos.setY(worldY);
+                worldPos.setZ(worldZ);
+                String key = blockKey(worldPos);
+
+                // Check override flag
+                if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
+                    // Skip if block exists and override is false
+                    continue;
+                }
+
+                // Create new LayerBlock with world coordinates
+                LayerBlock newLayerBlock = LayerBlock.builder()
+                        .block(cloneBlockWithPosition(relativeBlock, worldPos))
+                        .override(layerBlock.isOverride())
+                        .group(layerBlock.getGroup())
+                        .weight(layerBlock.getWeight())
+                        .metadata(layerBlock.getMetadata())
+                        .build();
+
+                blockMap.put(key, newLayerBlock);
+            }
+        }
+
+        // Save terrain chunk
+        LayerChunkData chunkData = LayerChunkData.builder()
+                .blocks(new ArrayList<>(blockMap.values()))
+                .build();
+
+        saveTerrainChunk(model.getWorldId(), layerDataId, chunkKey, chunkData);
+    }
+
+    /**
+     * Generate block key from position.
+     */
+    private String blockKey(de.mhus.nimbus.generated.types.Vector3 pos) {
+        return (int) pos.getX() + ":" + (int) pos.getY() + ":" + (int) pos.getZ();
+    }
+
+    /**
+     * Clone block with new position.
+     */
+    private de.mhus.nimbus.generated.types.Block cloneBlockWithPosition(
+            de.mhus.nimbus.generated.types.Block source,
+            de.mhus.nimbus.generated.types.Vector3 newPosition) {
+        try {
+            String json = objectMapper.writeValueAsString(source);
+            de.mhus.nimbus.generated.types.Block cloned = objectMapper.readValue(json, de.mhus.nimbus.generated.types.Block.class);
+            cloned.setPosition(newPosition);
+            return cloned;
+        } catch (Exception e) {
+            log.error("Failed to clone block", e);
+            // Fallback: modify original (not ideal but safe)
+            source.setPosition(newPosition);
+            return source;
+        }
+    }
+
     // ==================== MODEL LAYER OPERATIONS ====================
 
     /**
-     * Save model layer content.
+     * Create a new model layer document.
+     *
+     * NEW CONCEPT:
+     * - Multiple WLayerModel documents can share the same layerDataId
+     * - Each model has its own mount point and content
+     * - Models are merged during chunk generation
      *
      * @param worldId     World identifier
      * @param layerDataId Layer data ID
+     * @param name        Model name (optional)
+     * @param title       Model title (optional)
+     * @param mountX      Mount point X coordinate
+     * @param mountY      Mount point Y coordinate
+     * @param mountZ      Mount point Z coordinate
+     * @param rotation    Rotation in 90 degree steps
+     * @param order       Overlay order for this model
      * @param content     List of layer blocks with relative positions
-     * @return Saved model entity
+     * @return Created model entity
      */
+    @Transactional
+    public WLayerModel createModel(String worldId, String layerDataId, String name, String title,
+                                    int mountX, int mountY, int mountZ, int rotation,
+                                    int order, List<LayerBlock> content) {
+        if (content == null) {
+            throw new IllegalArgumentException("Content is required");
+        }
+
+        WLayerModel newModel = WLayerModel.builder()
+                .worldId(worldId)
+                .layerDataId(layerDataId)
+                .name(name)
+                .title(title)
+                .mountX(mountX)
+                .mountY(mountY)
+                .mountZ(mountZ)
+                .rotation(rotation)
+                .order(order)
+                .content(content)
+                .build();
+        newModel.touchCreate();
+
+        WLayerModel saved = modelRepository.save(newModel);
+        log.info("Created model: id={} layerDataId={} name={} blocks={}", saved.getId(), layerDataId, name, content.size());
+
+        return saved;
+    }
+
+    /**
+     * Update an existing model layer document.
+     *
+     * @param modelId Model document ID
+     * @param updater Consumer to modify the model
+     * @return Updated model
+     */
+    @Transactional
+    public Optional<WLayerModel> updateModel(String modelId, Consumer<WLayerModel> updater) {
+        Optional<WLayerModel> modelOpt = modelRepository.findById(modelId);
+        if (modelOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        WLayerModel model = modelOpt.get();
+        updater.accept(model);
+        model.touchUpdate();
+
+        WLayerModel saved = modelRepository.save(model);
+        log.info("Updated model: id={} name={}", modelId, model.getName());
+
+        return Optional.of(saved);
+    }
+
+    /**
+     * Save model layer content (deprecated - use createModel or updateModel).
+     *
+     * @deprecated This method assumes 1:1 relationship. Use createModel for new concept.
+     */
+    @Deprecated
     @Transactional
     public WLayerModel saveModel(String worldId, String layerDataId, List<LayerBlock> content) {
         if (content == null) {
             throw new IllegalArgumentException("Content is required");
         }
 
-        // Find or create entity
-        WLayerModel entity = modelRepository.findByLayerDataId(layerDataId)
+        // Find or create entity (old behavior - only one model per layerDataId)
+        WLayerModel entity = modelRepository.findFirstByLayerDataId(layerDataId)
                 .orElseGet(() -> {
                     WLayerModel newEntity = WLayerModel.builder()
                             .worldId(worldId)
@@ -471,32 +970,78 @@ public class WLayerService {
         WLayerModel saved = modelRepository.save(entity);
         log.info("Saved model: layerDataId={} blocks={}", layerDataId, content.size());
 
-        // TODO: Calculate affected chunks from mount point + content bounds
-        // For now, rely on WLayer.affectedChunks
-
         return saved;
     }
 
     /**
-     * Load model layer content.
+     * Get model IDs for a layerDataId.
+     *
+     * NEW CONCEPT: Returns only IDs to avoid heavy memory load.
+     * Load full models step by step using loadModelById.
      */
     @Transactional(readOnly = true)
-    public Optional<WLayerModel> loadModel(String layerDataId) {
-        return modelRepository.findByLayerDataId(layerDataId);
+    public List<String> getModelIds(String layerDataId) {
+        return modelRepository.findByLayerDataIdOrderByOrder(layerDataId).stream()
+                .map(WLayerModel::getId)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     /**
-     * Delete model layer.
+     * Count models for a layerDataId.
+     */
+    @Transactional(readOnly = true)
+    public long countModels(String layerDataId) {
+        return modelRepository.countByLayerDataId(layerDataId);
+    }
+
+    /**
+     * Load single model layer content (deprecated).
+     *
+     * @deprecated Returns only the first model. Use getModelIds + loadModelById for new concept.
+     */
+    @Deprecated
+    @Transactional(readOnly = true)
+    public Optional<WLayerModel> loadModel(String layerDataId) {
+        return modelRepository.findFirstByLayerDataId(layerDataId);
+    }
+
+    /**
+     * Load a specific model by its document ID.
+     */
+    @Transactional(readOnly = true)
+    public Optional<WLayerModel> loadModelById(String modelId) {
+        return modelRepository.findById(modelId);
+    }
+
+    /**
+     * Delete a specific model document.
+     *
+     * @param modelId Model document ID
+     * @return True if deleted
+     */
+    @Transactional
+    public boolean deleteModelById(String modelId) {
+        if (!modelRepository.existsById(modelId)) {
+            return false;
+        }
+
+        modelRepository.deleteById(modelId);
+        log.debug("Deleted model: id={}", modelId);
+        return true;
+    }
+
+    /**
+     * Delete all model documents for a layerDataId.
      */
     @Transactional
     public boolean deleteModel(String layerDataId) {
-        Optional<WLayerModel> modelOpt = modelRepository.findByLayerDataId(layerDataId);
-        if (modelOpt.isEmpty()) {
+        long count = modelRepository.countByLayerDataId(layerDataId);
+        if (count == 0) {
             return false;
         }
 
         modelRepository.deleteByLayerDataId(layerDataId);
-        log.debug("Deleted model: layerDataId={}", layerDataId);
+        log.debug("Deleted {} models: layerDataId={}", count, layerDataId);
         return true;
     }
 

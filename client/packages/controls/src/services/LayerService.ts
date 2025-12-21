@@ -3,11 +3,11 @@
  * Manages layer CRUD operations
  */
 
-import type { WLayer } from '@nimbus/shared';
+import type { WLayer, CreateLayerRequest, UpdateLayerRequest, LayerDto } from '@nimbus/shared';
 import { apiService } from './ApiService';
 
 export interface LayerListResponse {
-  layers: WLayer[];
+  layers: LayerDto[];
   count: number;
   limit: number;
   offset: number;
@@ -51,14 +51,14 @@ export class LayerService {
   /**
    * Get single layer by ID
    */
-  async getLayer(worldId: string, id: string): Promise<WLayer> {
-    return apiService.get<WLayer>(`/control/worlds/${worldId}/layers/${id}`);
+  async getLayer(worldId: string, id: string): Promise<LayerDto> {
+    return apiService.get<LayerDto>(`/control/worlds/${worldId}/layers/${id}`);
   }
 
   /**
    * Create new layer
    */
-  async createLayer(worldId: string, layer: Partial<WLayer>): Promise<string> {
+  async createLayer(worldId: string, layer: CreateLayerRequest): Promise<string> {
     const response = await apiService.post<LayerCreateResponse>(
       `/control/worlds/${worldId}/layers`,
       layer
@@ -69,8 +69,8 @@ export class LayerService {
   /**
    * Update existing layer
    */
-  async updateLayer(worldId: string, id: string, layer: Partial<WLayer>): Promise<WLayer> {
-    return apiService.put<WLayer>(
+  async updateLayer(worldId: string, id: string, layer: UpdateLayerRequest): Promise<LayerDto> {
+    return apiService.put<LayerDto>(
       `/control/worlds/${worldId}/layers/${id}`,
       layer
     );

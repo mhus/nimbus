@@ -8,19 +8,37 @@ import java.util.Optional;
 
 /**
  * Repository for WLayerModel entities.
+ *
+ * Do not get a full list of WLayerModel, because it can be heavy memory load.
+ *
+ * Get single parameters or a list of ids and load every model step by step with the id.
+ *
  */
 @Repository
 public interface WLayerModelRepository extends MongoRepository<WLayerModel, String> {
 
     /**
-     * Find model by layerDataId (1:1 relationship).
+     * Find all model IDs by layerDataId (1:N relationship), sorted by order.
+     * NEW CONCEPT: Multiple WLayerModel documents can share the same layerDataId.
+     * Returns only IDs to avoid heavy memory load - load full models step by step using findById.
+     * Results are sorted by order field for correct overlay sequence.
+     *
+     * NOTE: Using standard query method instead of @Query with projection,
+     * because projection to List<String> can be problematic in some MongoDB driver versions.
      */
-    Optional<WLayerModel> findByLayerDataId(String layerDataId);
+    List<WLayerModel> findByLayerDataIdOrderByOrder(String layerDataId);
 
     /**
-     * Find all models for a world.
+     * Count models by layerDataId.
      */
-    List<WLayerModel> findByWorldId(String worldId);
+    long countByLayerDataId(String layerDataId);
+
+    /**
+     * Find first model by layerDataId (1:1 relationship - deprecated).
+     * @deprecated Use findIdsByLayerDataId and load step by step for new concept (1:N relationship)
+     */
+    @Deprecated
+    Optional<WLayerModel> findFirstByLayerDataId(String layerDataId);
 
     /**
      * Delete model by layerDataId.

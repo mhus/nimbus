@@ -300,31 +300,26 @@
                 </select>
               </div>
 
-              <!-- Mount Point for MODEL layers -->
+              <!-- Model Selection for MODEL layers -->
               <div v-if="selectedLayerInfo?.layerType === 'MODEL'" class="mt-2">
                 <label class="label py-1">
-                  <span class="label-text-alt text-xs">Mount Point</span>
+                  <span class="label-text-alt text-xs">Select Model</span>
                 </label>
-                <div class="grid grid-cols-3 gap-1">
-                  <input
-                    v-model.number="editState.mountX"
-                    type="number"
-                    placeholder="X"
-                    class="input input-bordered input-sm text-xs"
-                  />
-                  <input
-                    v-model.number="editState.mountY"
-                    type="number"
-                    placeholder="Y"
-                    class="input input-bordered input-sm text-xs"
-                  />
-                  <input
-                    v-model.number="editState.mountZ"
-                    type="number"
-                    placeholder="Z"
-                    class="input input-bordered input-sm text-xs"
-                  />
-                </div>
+                <select
+                  v-model="editState.selectedModelId"
+                  class="select select-bordered select-sm w-full text-xs"
+                  :disabled="saving || editState.editMode || loadingModels"
+                >
+                  <option :value="null">-- Select a model --</option>
+                  <option v-for="model in availableModels" :key="model.id" :value="model.id">
+                    {{ model.title || model.name || 'Unnamed' }} - Mount: ({{ model.mountX }}, {{ model.mountY }}, {{ model.mountZ }})
+                  </option>
+                </select>
+                <label v-if="loadingModels" class="label py-1">
+                  <span class="label-text-alt text-xs">
+                    <span class="loading loading-spinner loading-xs"></span> Loading models...
+                  </span>
+                </label>
               </div>
 
               <!-- Group Selection -->
@@ -457,6 +452,7 @@ const editState = ref({
   editMode: false,
   editAction: EditAction.OPEN_CONFIG_DIALOG,
   selectedLayer: null as string | null,
+  selectedModelId: null as string | null,
   mountX: 0,
   mountY: 0,
   mountZ: 0,
@@ -473,6 +469,19 @@ const availableLayers = ref<Array<{
   mountY: number;
   mountZ: number;
   groups: string[];
+  id: string;
+  layerDataId: string;
+}>>([]);
+
+// Available models for selected layer
+const availableModels = ref<Array<{
+  id: string;
+  name: string;
+  title: string;
+  mountX: number;
+  mountY: number;
+  mountZ: number;
+  order: number;
 }>>([]);
 
 // Legacy state refs
@@ -489,6 +498,7 @@ const discardModal = ref<HTMLDialogElement | null>(null);
 // Edit mode control state
 const activating = ref(false);
 const discarding = ref(false);
+const loadingModels = ref(false);
 
 // Block Palette state
 const palette = ref<PaletteBlockDefinition[]>([]);
@@ -553,6 +563,49 @@ async function fetchLayers() {
   }
 }
 
+// Fetch available models for selected layer
+async function fetchModels() {
+  const layerInfo = selectedLayerInfo.value;
+  console.log('[Models] fetchModels called', {
+    hasLayerInfo: !!layerInfo,
+    layerType: layerInfo?.layerType,
+    layerId: layerInfo?.id,
+    layerName: layerInfo?.name
+  });
+
+  if (!layerInfo || layerInfo.layerType !== 'MODEL' || !layerInfo.id) {
+    console.log('[Models] Not fetching - layer not MODEL type or missing id');
+    availableModels.value = [];
+    return;
+  }
+
+  loadingModels.value = true;
+  try {
+    const url = `${apiUrl.value}/control/worlds/${worldId.value}/layers/${layerInfo.id}/models`;
+    console.log('[Models] Fetching from:', url);
+
+    const response = await fetch(url, { credentials: 'include' });
+
+    console.log('[Models] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Models] Error response:', errorText);
+      throw new Error(`Failed to fetch models: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('[Models] Response data:', data);
+    availableModels.value = data.models || [];
+    console.log('[Models] Loaded', availableModels.value.length, 'models for layer', layerInfo.name);
+  } catch (err) {
+    console.error('[Models] Failed to fetch models:', err);
+    availableModels.value = [];
+  } finally {
+    loadingModels.value = false;
+  }
+}
+
 // Helper function to check if two values are deeply equal
 function isEqual(a: any, b: any): boolean {
   if (a === b) return true;
@@ -593,6 +646,7 @@ async function fetchEditState() {
       editMode: data.editMode || false,
       editAction: (data.editAction as EditAction) || EditAction.OPEN_CONFIG_DIALOG,
       selectedLayer: data.selectedLayer || null,
+      selectedModelId: data.selectedModelId || null,
       mountX: data.mountX || 0,
       mountY: data.mountY || 0,
       mountZ: data.mountZ || 0,
@@ -703,6 +757,18 @@ watch(currentEditAction, (newAction) => {
   editState.value.editAction = newAction;
 });
 
+// Watch selectedLayer and load models for MODEL layers
+watch(() => editState.value.selectedLayer, async (newLayer) => {
+  // Clear model selection when layer changes
+  editState.value.selectedModelId = null;
+
+  if (newLayer) {
+    await fetchModels();
+  } else {
+    availableModels.value = [];
+  }
+});
+
 // Lifecycle hooks
 onMounted(async () => {
   if (!sessionId.value) {
@@ -713,6 +779,11 @@ onMounted(async () => {
   await fetchLayers();
   await fetchEditState();
   await loadEditSettings();
+
+  // Load models if a MODEL layer is already selected
+  if (editState.value.selectedLayer) {
+    await fetchModels();
+  }
 
   // Start marked block content polling
   startMarkedBlockPolling();

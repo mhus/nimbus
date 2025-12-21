@@ -66,6 +66,7 @@ public class EditService {
         String editModeStr = redisService.getValue(worldId, key + "editMode").orElse(null);
         String editActionStr = redisService.getValue(worldId, key + "editAction").orElse(null);
         String selectedLayer = redisService.getValue(worldId, key + "selectedLayer").orElse(null);
+        String selectedModelId = redisService.getValue(worldId, key + "selectedModelId").orElse(null);
         String mountXStr = redisService.getValue(worldId, key + "mountX").orElse(null);
         String mountYStr = redisService.getValue(worldId, key + "mountY").orElse(null);
         String mountZStr = redisService.getValue(worldId, key + "mountZ").orElse(null);
@@ -80,6 +81,7 @@ public class EditService {
                 .editMode(parseBoolean(editModeStr, false))
                 .editAction(parseEditAction(editActionStr))
                 .selectedLayer(selectedLayer)
+                .selectedModelId(selectedModelId)
                 .mountX(parseInt(mountXStr))
                 .mountY(parseInt(mountYStr))
                 .mountZ(parseInt(mountZStr))
@@ -484,6 +486,12 @@ public class EditService {
             redisService.putValue(worldId, key + "selectedLayer", state.getSelectedLayer(), EDIT_STATE_TTL);
         } else {
             redisService.deleteValue(worldId, key + "selectedLayer");
+        }
+
+        if (state.getSelectedModelId() != null) {
+            redisService.putValue(worldId, key + "selectedModelId", state.getSelectedModelId(), EDIT_STATE_TTL);
+        } else {
+            redisService.deleteValue(worldId, key + "selectedModelId");
         }
 
         if (state.getMountX() != null) {

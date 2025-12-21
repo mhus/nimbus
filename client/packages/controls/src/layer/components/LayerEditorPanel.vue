@@ -1,6 +1,6 @@
 <template>
-  <div class="modal modal-open">
-    <div class="modal-box max-w-4xl">
+  <div class="modal modal-open" @click.self="emit('close')">
+    <div class="modal-box max-w-4xl" @click.stop>
       <h3 class="font-bold text-lg mb-4">
         {{ isEditMode ? 'Edit Layer' : 'Create Layer' }}
       </h3>
@@ -43,42 +43,6 @@
           </label>
         </div>
 
-        <!-- Mount Point (only for MODEL layers) -->
-        <div v-if="formData.layerType === 'MODEL'" class="grid grid-cols-3 gap-4">
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Mount X</span>
-            </label>
-            <input
-              v-model.number="formData.mountX"
-              type="number"
-              class="input input-bordered"
-              placeholder="X"
-            />
-          </div>
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Mount Y</span>
-            </label>
-            <input
-              v-model.number="formData.mountY"
-              type="number"
-              class="input input-bordered"
-              placeholder="Y"
-            />
-          </div>
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Mount Z</span>
-            </label>
-            <input
-              v-model.number="formData.mountZ"
-              type="number"
-              class="input input-bordered"
-              placeholder="Z"
-            />
-          </div>
-        </div>
 
         <!-- Order -->
         <div class="form-control">
@@ -97,20 +61,6 @@
           </label>
         </div>
 
-        <!-- Ground Level -->
-        <div class="form-control">
-          <label class="label cursor-pointer">
-            <span class="label-text">Ground Level</span>
-            <input
-              v-model="formData.ground"
-              type="checkbox"
-              class="checkbox checkbox-primary"
-            />
-          </label>
-          <label class="label">
-            <span class="label-text-alt">If true, this layer defines ground level (affects terrain generation)</span>
-          </label>
-        </div>
 
         <!-- Enabled -->
         <div class="form-control">
@@ -158,51 +108,32 @@
           </label>
         </div>
 
-        <!-- Groups -->
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Groups</span>
-          </label>
-          <div class="space-y-2">
-            <div v-for="(groupName, groupId) in formData.groups" :key="groupId" class="flex gap-2">
-              <input
-                :value="groupId"
-                type="number"
-                class="input input-bordered w-24"
-                placeholder="ID"
-                disabled
-              />
-              <input
-                :value="groupName"
-                type="text"
-                class="input input-bordered flex-1"
-                placeholder="Group name"
-                @input="updateGroupName(parseInt(groupId as string), ($event.target as HTMLInputElement).value)"
-              />
-              <button
-                type="button"
-                class="btn btn-ghost btn-square"
-                @click="removeGroup(parseInt(groupId as string))"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+
+        <!-- Model Management (only for MODEL layers and edit mode) -->
+        <div v-if="isEditMode && formData.layerType === 'MODEL'" class="divider">Layer Models</div>
+
+        <div v-if="isEditMode && formData.layerType === 'MODEL'" class="space-y-4">
+          <div class="flex justify-between items-center">
+            <h4 class="font-semibold">Models in this Layer</h4>
             <button
               type="button"
-              class="btn btn-sm btn-outline"
-              @click="addGroup"
+              class="btn btn-sm btn-primary"
+              @click="openCreateModelDialog"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
-              Add Group
+              New Model
             </button>
           </div>
-          <label class="label">
-            <span class="label-text-alt">Group names defined in this layer for organized block management</span>
-          </label>
+
+          <LoadingSpinner v-if="loadingModels" />
+          <ModelList
+            v-else
+            :models="models"
+            @edit="openEditModelDialog"
+            @delete="handleDeleteModel"
+          />
         </div>
 
         <!-- Action Buttons -->
@@ -224,14 +155,23 @@
           </button>
         </div>
       </form>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import type { WLayer } from '@nimbus/shared';
+import { ref, computed, watch, onMounted } from 'vue';
+import type { WLayer, LayerModelDto, CreateLayerRequest, UpdateLayerRequest } from '@nimbus/shared';
 import ErrorAlert from '@components/ErrorAlert.vue';
+import LoadingSpinner from '@components/LoadingSpinner.vue';
+import ModelList from '@layer/components/ModelList.vue';
+import ModelEditorPanel from '@layer/components/ModelEditorPanel.vue';
+import { useLayers } from '@/composables/useLayers';
+import { layerModelService } from '@/services/LayerModelService';
+import { getLogger } from '@nimbus/shared';
+
+const logger = getLogger('LayerEditorPanel');
 
 interface Props {
   layer: WLayer | null;
@@ -243,34 +183,34 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'saved', layer: WLayer): void;
+  (e: 'openModelEditor', layerId: string, layerDataId: string, model: LayerModelDto | null): void;
 }>();
 
 const isEditMode = computed(() => !!props.layer);
 
+// Use layers composable for API calls
+const { createLayer, updateLayer } = useLayers(computed(() => props.worldId).value);
+
 const formData = ref<Partial<WLayer>>({
   name: '',
   layerType: undefined,
-  mountX: undefined,
-  mountY: undefined,
-  mountZ: undefined,
   order: 0,
-  ground: false,
   enabled: true,
   allChunks: true,
-  affectedChunks: [],
-  groups: {}
+  affectedChunks: []
 });
 
 const affectedChunksText = ref('');
 const errorMessage = ref('');
 const saving = ref(false);
 
+// Model management
+const models = ref<LayerModelDto[]>([]);
+const loadingModels = ref(false);
+
 // Initialize form data
 if (props.layer) {
-  formData.value = {
-    ...props.layer,
-    groups: { ...props.layer.groups }
-  };
+  formData.value = { ...props.layer };
   affectedChunksText.value = (props.layer.affectedChunks || []).join('\n');
 }
 
@@ -283,36 +223,74 @@ watch(affectedChunksText, (newValue) => {
 });
 
 /**
- * Add a new group
+ * Load models for this layer
  */
-const addGroup = () => {
-  const groups = formData.value.groups || {};
-  const maxId = Math.max(0, ...Object.keys(groups).map(k => parseInt(k)));
-  const newId = maxId + 1;
-  formData.value.groups = {
-    ...groups,
-    [newId]: `Group ${newId}`
-  };
+const loadModels = async () => {
+  if (!props.layer?.id || !props.worldId) return;
+
+  loadingModels.value = true;
+  try {
+    const response = await layerModelService.getModels(props.worldId, props.layer.id);
+    models.value = response.models;
+    logger.info('Loaded models', {
+      count: models.value.length,
+      layerId: props.layer.id
+    });
+  } catch (error: any) {
+    logger.error('Failed to load models', { layerId: props.layer.id }, error);
+    errorMessage.value = `Failed to load models: ${error.message}`;
+  } finally {
+    loadingModels.value = false;
+  }
 };
 
 /**
- * Remove a group
+ * Open create model dialog
  */
-const removeGroup = (groupId: number) => {
-  const groups = { ...formData.value.groups };
-  delete groups[groupId];
-  formData.value.groups = groups;
+const openCreateModelDialog = () => {
+  if (!props.layer?.id || !props.layer?.layerDataId) return;
+  emit('openModelEditor', props.layer.id, props.layer.layerDataId, null);
 };
 
 /**
- * Update group name
+ * Open edit model dialog
  */
-const updateGroupName = (groupId: number, newName: string) => {
-  formData.value.groups = {
-    ...formData.value.groups,
-    [groupId]: newName
-  };
+const openEditModelDialog = (model: LayerModelDto) => {
+  if (!props.layer?.id || !props.layer?.layerDataId) return;
+  emit('openModelEditor', props.layer.id, props.layer.layerDataId, model);
 };
+
+/**
+ * Handle delete model
+ */
+const handleDeleteModel = async (model: LayerModelDto) => {
+  if (!confirm(`Are you sure you want to delete model "${model.title || model.name || 'Unnamed'}"?`)) {
+    return;
+  }
+
+  if (!props.layer?.id || !model.id) return;
+
+  try {
+    await layerModelService.deleteModel(props.worldId, props.layer.id, model.id);
+    logger.info('Deleted model', { modelId: model.id });
+    await loadModels();
+  } catch (error: any) {
+    logger.error('Failed to delete model', { modelId: model.id }, error);
+    errorMessage.value = `Failed to delete model: ${error.message}`;
+  }
+};
+
+// Load models when layer is MODEL type
+onMounted(() => {
+  if (isEditMode.value && props.layer?.layerType === 'MODEL' && props.layer?.layerDataId) {
+    loadModels();
+  }
+});
+
+// Expose loadModels for parent component
+defineExpose({
+  loadModels
+});
 
 /**
  * Handle save
@@ -333,18 +311,36 @@ const handleSave = async () => {
       throw new Error('Order is required');
     }
 
-    // Prepare data
-    const layerData: Partial<WLayer> = {
-      ...formData.value,
-      worldId: props.worldId,
-      name: formData.value.name.trim()
-    };
+    if (isEditMode.value && props.layer?.id) {
+      // Update existing layer
+      const updateData: UpdateLayerRequest = {
+        name: formData.value.name.trim(),
+        allChunks: formData.value.allChunks,
+        affectedChunks: formData.value.affectedChunks,
+        order: formData.value.order,
+        enabled: formData.value.enabled
+      };
+      const success = await updateLayer(props.layer.id, updateData);
+      if (!success) {
+        throw new Error('Failed to update layer');
+      }
+    } else {
+      // Create new layer
+      const createData: CreateLayerRequest = {
+        name: formData.value.name.trim(),
+        layerType: formData.value.layerType,
+        allChunks: formData.value.allChunks,
+        affectedChunks: formData.value.affectedChunks,
+        order: formData.value.order,
+        enabled: formData.value.enabled
+      };
+      const id = await createLayer(createData);
+      if (!id) {
+        throw new Error('Failed to create layer');
+      }
+    }
 
-    // TODO: Call API to save layer
-    // For now, just emit the saved event
-    console.log('Saving layer:', layerData);
-
-    emit('saved', layerData as WLayer);
+    emit('saved', formData.value as WLayer);
   } catch (error: any) {
     errorMessage.value = error.message || 'Failed to save layer';
   } finally {

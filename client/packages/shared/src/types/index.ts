@@ -32,6 +32,14 @@ export * from './World';
 // Layer types
 export * from './WLayer';
 
+// Generated DTOs
+export * from '../generated/dto/LayerDto';
+export * from '../generated/dto/CreateLayerRequest';
+export * from '../generated/dto/UpdateLayerRequest';
+export * from '../generated/dto/LayerModelDto';
+export * from '../generated/dto/CreateLayerModelRequest';
+export * from '../generated/dto/UpdateLayerModelRequest';
+
 // Animation and effects
 export * from './AnimationData';
 export * from './AreaData';

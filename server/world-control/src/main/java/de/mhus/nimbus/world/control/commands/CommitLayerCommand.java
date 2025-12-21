@@ -28,6 +28,7 @@ public class CommitLayerCommand implements Command {
 
     private final EditService editService;
     private final WLayerService layerService;
+    private final WLayerModelRepository modelRepository;
     private final WorldRedisService redisService;
     private final ChunkUpdateService chunkUpdateService;
     private final ObjectMapper objectMapper;
@@ -82,6 +83,38 @@ public class CommitLayerCommand implements Command {
 
             WLayer layer = layerOpt.get();
             String layerDataId = layer.getLayerDataId();
+
+            // 3a. For MODEL layers: validate model selection
+            if (layer.getLayerType() == LayerType.MODEL) {
+                log.info("Layer is MODEL type, checking model selection...");
+
+                if (state.getSelectedModelId() == null) {
+                    log.warn("No model selected for MODEL layer");
+                    return CommandResult.error(-1, "No model selected. MODEL layers require a model selection.");
+                }
+
+                log.info("Selected model ID: {}", state.getSelectedModelId());
+
+                // Validate model exists
+                Optional<WLayerModel> modelOpt = modelRepository.findById(state.getSelectedModelId());
+                if (modelOpt.isEmpty()) {
+                    log.warn("Model not found: {}", state.getSelectedModelId());
+                    return CommandResult.error(-1, "Selected model not found: " + state.getSelectedModelId());
+                }
+
+                WLayerModel model = modelOpt.get();
+                log.info("Found model: id={}, layerDataId={}, mountPoint=({},{},{})",
+                        model.getId(), model.getLayerDataId(), model.getMountX(), model.getMountY(), model.getMountZ());
+
+                if (!model.getLayerDataId().equals(layerDataId)) {
+                    log.warn("Model layerDataId mismatch: expected={}, actual={}", layerDataId, model.getLayerDataId());
+                    return CommandResult.error(-1, "Model does not belong to selected layer");
+                }
+
+                log.info("Calling commitToModel with {} overlay keys", overlayKeys.size());
+                // Commit to WLayerModel instead of WLayerTerrain
+                return commitToModel(worldId, sessionId, model, overlayKeys, state.getSelectedGroup());
+            }
 
             // 4. For each chunk: load, merge, save, mark dirty
             int committedChunks = 0;
@@ -255,6 +288,149 @@ public class CommitLayerCommand implements Command {
         chunkData.setBlocks(new ArrayList<>(blockIndex.values()));
 
         return mergedCount;
+    }
+
+    /**
+     * Commit overlays to WLayerModel (for MODEL type layers).
+     * Merges overlay blocks into model.content as relative positions from mount point.
+     */
+    private CommandResult commitToModel(
+            String worldId,
+            String sessionId,
+            WLayerModel model,
+            Set<String> overlayKeys,
+            int group
+    ) {
+        try {
+            log.info("Committing overlays to MODEL layer model: modelId={}, mountPoint=({},{},{})",
+                    model.getId(), model.getMountX(), model.getMountY(), model.getMountZ());
+
+            // Get all overlay blocks (from all chunks)
+            Map<String, Block> allOverlays = new HashMap<>();
+
+            for (String overlayKey : overlayKeys) {
+                // Extract cx and cz from key: world:{worldId}:overlay:{sessionId}:{cx}:{cz}
+                String prefix = "world:" + worldId + ":overlay:";
+                if (!overlayKey.startsWith(prefix)) continue;
+
+                String suffix = overlayKey.substring(prefix.length());
+                String[] parts = suffix.split(":");
+                if (parts.length < 3) continue;
+
+                int cx = Integer.parseInt(parts[1]);
+                int cz = Integer.parseInt(parts[2]);
+
+                // Get overlay blocks for this chunk
+                Map<Object, Object> chunkOverlays = redisService.getOverlayBlocks(worldId, sessionId, cx, cz);
+                if (chunkOverlays == null) continue;
+
+                for (Map.Entry<Object, Object> entry : chunkOverlays.entrySet()) {
+                    String posKey = (String) entry.getKey();
+                    String blockJson = (String) entry.getValue();
+
+                    try {
+                        Block block = objectMapper.readValue(blockJson, Block.class);
+                        allOverlays.put(posKey, block);
+                    } catch (Exception e) {
+                        log.warn("Failed to parse overlay block: {}", e.getMessage());
+                    }
+                }
+            }
+
+            log.info("Collected {} overlay blocks from Redis", allOverlays.size());
+
+            // Build position index from existing model content
+            List<LayerBlock> content = model.getContent() != null
+                    ? new ArrayList<>(model.getContent())
+                    : new ArrayList<>();
+
+            Map<String, LayerBlock> contentIndex = new HashMap<>();
+            for (LayerBlock lb : content) {
+                if (lb.getBlock() != null && lb.getBlock().getPosition() != null) {
+                    String key = positionKey(
+                            (int) lb.getBlock().getPosition().getX(),
+                            (int) lb.getBlock().getPosition().getY(),
+                            (int) lb.getBlock().getPosition().getZ()
+                    );
+                    contentIndex.put(key, lb);
+                }
+            }
+
+            int mergedCount = 0;
+
+            // Apply overlays - convert world coordinates to relative positions
+            for (Map.Entry<String, Block> entry : allOverlays.entrySet()) {
+                String posKey = entry.getKey();
+                Block block = entry.getValue();
+
+                // Convert world position to relative position (from mount point)
+                int worldX = (int) block.getPosition().getX();
+                int worldY = (int) block.getPosition().getY();
+                int worldZ = (int) block.getPosition().getZ();
+
+                int relX = worldX - model.getMountX();
+                int relY = worldY - model.getMountY();
+                int relZ = worldZ - model.getMountZ();
+
+                String relPosKey = positionKey(relX, relY, relZ);
+
+                // Update block position to relative
+                Block relBlock = BlockUtil.cloneBlock(block);
+                relBlock.setPosition(de.mhus.nimbus.generated.types.Vector3.builder()
+                        .x((double) relX)
+                        .y((double) relY)
+                        .z((double) relZ)
+                        .build());
+
+                if (BlockUtil.isAirType(block.getBlockTypeId())) {
+                    // AIR = remove block
+                    if (contentIndex.remove(relPosKey) != null) {
+                        mergedCount++;
+                        log.trace("Removed block at relative position {}", relPosKey);
+                    }
+                } else {
+                    // Add/replace block
+                    LayerBlock layerBlock = LayerBlock.builder()
+                            .block(relBlock)
+                            .group(group)
+                            .weight(0)
+                            .override(true)
+                            .build();
+
+                    contentIndex.put(relPosKey, layerBlock);
+                    mergedCount++;
+                    log.trace("Added/replaced block at relative position {} with type {}", relPosKey, block.getBlockTypeId());
+                }
+            }
+
+            // Update model content
+            List<LayerBlock> newContent = new ArrayList<>(contentIndex.values());
+            log.info("Updating model content: oldSize={}, newSize={}",
+                    model.getContent() != null ? model.getContent().size() : 0,
+                    newContent.size());
+
+            model.setContent(newContent);
+            model.touchUpdate();
+            WLayerModel savedModel = modelRepository.save(model);
+
+            log.info("Model saved: id={}, contentSize={}", savedModel.getId(),
+                    savedModel.getContent() != null ? savedModel.getContent().size() : 0);
+
+            // Delete overlays from Redis
+            long deleted = redisService.deleteAllOverlays(worldId, sessionId);
+
+            log.info("Model commit completed: modelId={}, mergedBlocks={}, deletedKeys={}, finalContentSize={}",
+                    model.getId(), mergedCount, deleted, newContent.size());
+
+            String message = String.format("Committed %d blocks to model, deleted %d overlay keys",
+                    mergedCount, deleted);
+
+            return CommandResult.success(message);
+
+        } catch (Exception e) {
+            log.error("Model commit failed for session {}: {}", sessionId, e.getMessage(), e);
+            return CommandResult.error(-4, "Model commit failed: " + e.getMessage());
+        }
     }
 
     private String positionKey(int x, int y, int z) {

@@ -78,6 +78,7 @@ public class EditorController extends BaseEditorController {
         response.put("editMode", state.isEditMode());
         response.put("editAction", state.getEditAction() != null ? state.getEditAction().name() : "OPEN_CONFIG_DIALOG");
         response.put("selectedLayer", state.getSelectedLayer());
+        response.put("selectedModelId", state.getSelectedModelId());
         response.put("mountX", state.getMountX() != null ? state.getMountX() : 0);
         response.put("mountY", state.getMountY() != null ? state.getMountY() : 0);
         response.put("mountZ", state.getMountZ() != null ? state.getMountZ() : 0);
@@ -147,6 +148,7 @@ public class EditorController extends BaseEditorController {
         response.put("editMode", updated.isEditMode());
         response.put("editAction", updated.getEditAction() != null ? updated.getEditAction().name() : "OPEN_CONFIG_DIALOG");
         response.put("selectedLayer", updated.getSelectedLayer());
+        response.put("selectedModelId", updated.getSelectedModelId());
         response.put("mountX", updated.getMountX() != null ? updated.getMountX() : 0);
         response.put("mountY", updated.getMountY() != null ? updated.getMountY() : 0);
         response.put("mountZ", updated.getMountZ() != null ? updated.getMountZ() : 0);
@@ -173,14 +175,13 @@ public class EditorController extends BaseEditorController {
         List<Map<String, Object>> dtos = layers.stream()
                 .map(layer -> {
                     Map<String, Object> dto = new HashMap<>();
+                    dto.put("id", layer.getId());
                     dto.put("name", layer.getName());
                     dto.put("layerType", layer.getLayerType().name());
                     dto.put("enabled", layer.isEnabled());
                     dto.put("order", layer.getOrder());
-                    dto.put("mountX", layer.getMountX() != null ? layer.getMountX() : 0);
-                    dto.put("mountY", layer.getMountY() != null ? layer.getMountY() : 0);
-                    dto.put("mountZ", layer.getMountZ() != null ? layer.getMountZ() : 0);
-                    dto.put("groups", layer.getGroups());
+                    dto.put("layerDataId", layer.getLayerDataId());
+                    // Note: mountX/Y/Z and groups are now in WLayerModel, not WLayer
                     return dto;
                 })
                 .toList();
@@ -218,16 +219,8 @@ public class EditorController extends BaseEditorController {
 
         WLayer saved = layerService.createLayer(worldId, request.name, layerType, order, allChunks, List.of());
 
-        // Set mount points if MODEL layer
-        if (layerType == de.mhus.nimbus.world.shared.layer.LayerType.MODEL &&
-            (request.mountX != null || request.mountY != null || request.mountZ != null)) {
-
-            layerService.updateLayer(worldId, request.name, layer -> {
-                if (request.mountX != null) layer.setMountX(request.mountX);
-                if (request.mountY != null) layer.setMountY(request.mountY);
-                if (request.mountZ != null) layer.setMountZ(request.mountZ);
-            });
-        }
+        // Note: mountX/Y/Z are now in WLayerModel, not WLayer
+        // Models should be created separately via model creation endpoint
 
         Map<String, Object> response = new HashMap<>();
         response.put("name", saved.getName());

@@ -35,6 +35,11 @@ public class WLayerOverlayService {
     /**
      * Generate final chunk by overlaying all enabled layers.
      *
+     * NEW CONCEPT:
+     * - All layers now have a WLayerTerrain
+     * - GROUND layers: Direct terrain data, can be edited
+     * - MODEL layers: Terrain data is generated from multiple WLayerModel documents
+     *
      * @param worldId  World identifier
      * @param chunkKey Chunk key (format: "cx:cz")
      * @return Merged ChunkData or empty Optional if no layers
@@ -70,17 +75,15 @@ public class WLayerOverlayService {
         Map<String, Block> blockMap = new HashMap<>();
 
         // Overlay each layer (bottom to top)
+        // All layers are now terrain-based
         for (WLayer layer : layers) {
             if (!layer.isEnabled()) {
                 continue;
             }
 
             try {
-                if (layer.getLayerType() == LayerType.GROUND) {
-                    overlayTerrainLayer(layer, chunkKey, blockMap);
-                } else if (layer.getLayerType() == LayerType.MODEL) {
-                    overlayModelLayer(layer, cx, cz, blockMap);
-                }
+                // All layers are now processed as terrain layers
+                overlayTerrainLayer(layer, chunkKey, cx, cz, blockMap);
             } catch (Exception e) {
                 log.error("Failed to overlay layer {} on chunk {}", layer.getName(), chunkKey, e);
                 // Continue with other layers
@@ -102,14 +105,24 @@ public class WLayerOverlayService {
 
     /**
      * Overlay terrain layer onto block map.
+     *
+     * NEW CONCEPT:
+     * - For GROUND layers: Load directly from WLayerTerrain storage
+     * - For MODEL layers: First merge all WLayerModel documents into terrain data,
+     *   then overlay the merged terrain data
      */
-    private void overlayTerrainLayer(WLayer layer, String chunkKey, Map<String, Block> blockMap) {
+    private void overlayTerrainLayer(WLayer layer, String chunkKey, int cx, int cz, Map<String, Block> blockMap) {
         // Load terrain chunk from storage
         Optional<WLayerTerrain> terrainOpt = terrainRepository
                 .findByLayerDataIdAndChunkKey(layer.getLayerDataId(), chunkKey);
 
         if (terrainOpt.isEmpty()) {
-            log.trace("No terrain data for layer {} chunk {}", layer.getName(), chunkKey);
+            // For MODEL layers, terrain might not exist yet - need to generate from models
+            if (layer.getLayerType() == LayerType.MODEL) {
+                overlayModelLayersToTerrain(layer, chunkKey, cx, cz, blockMap);
+            } else {
+                log.trace("No terrain data for layer {} chunk {}", layer.getName(), chunkKey);
+            }
             return;
         }
 
@@ -158,27 +171,21 @@ public class WLayerOverlayService {
     }
 
     /**
-     * Overlay model layer onto block map.
+     * Overlay all model layers (WLayerModel documents) into terrain for a chunk.
+     *
+     * NEW CONCEPT:
+     * - All WLayerModel documents with the same layerDataId are merged
+     * - Each WLayerModel has its own mount point
+     * - Result is overlaid onto the blockMap
      */
-    private void overlayModelLayer(WLayer layer, int cx, int cz, Map<String, Block> blockMap) {
-        // Load model
-        Optional<WLayerModel> modelOpt = modelRepository
-                .findByLayerDataId(layer.getLayerDataId());
+    private void overlayModelLayersToTerrain(WLayer layer, String chunkKey, int cx, int cz, Map<String, Block> blockMap) {
+        // Load all models for this layerDataId (already sorted by order)
+        List<WLayerModel> models = modelRepository.findByLayerDataIdOrderByOrder(layer.getLayerDataId());
 
-        if (modelOpt.isEmpty()) {
+        if (models.isEmpty()) {
             log.trace("No model data for layer {}", layer.getName());
             return;
         }
-
-        WLayerModel model = modelOpt.get();
-        if (model.getContent() == null || model.getContent().isEmpty()) {
-            return;
-        }
-
-        // Get mount point
-        int mountX = layer.getMountX() != null ? layer.getMountX() : 0;
-        int mountY = layer.getMountY() != null ? layer.getMountY() : 0;
-        int mountZ = layer.getMountZ() != null ? layer.getMountZ() : 0;
 
         // Calculate chunk bounds
         int chunkMinX = cx * chunkSize;
@@ -186,44 +193,63 @@ public class WLayerOverlayService {
         int chunkMinZ = cz * chunkSize;
         int chunkMaxZ = chunkMinZ + chunkSize - 1;
 
-        // Overlay blocks that fall within chunk bounds
-        int overlaidCount = 0;
-        for (LayerBlock layerBlock : model.getContent()) {
-            if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
+        int totalOverlaidCount = 0;
+
+        // Process each model (already sorted by order)
+        for (WLayerModel model : models) {
+            if (model.getContent() == null || model.getContent().isEmpty()) {
                 continue;
             }
 
-            Block relativeBlock = layerBlock.getBlock();
+            // Get mount point from model
+            int mountX = model.getMountX();
+            int mountY = model.getMountY();
+            int mountZ = model.getMountZ();
 
-            // Calculate world position
-            int worldX = mountX + (int) relativeBlock.getPosition().getX();
-            int worldY = mountY + (int) relativeBlock.getPosition().getY();
-            int worldZ = mountZ + (int) relativeBlock.getPosition().getZ();
-
-            // Check if within chunk bounds
-            if (worldX >= chunkMinX && worldX <= chunkMaxX &&
-                    worldZ >= chunkMinZ && worldZ <= chunkMaxZ) {
-
-                String key = blockKey(relativeBlock.getPosition());
-
-                // Check override flag
-                if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
-                    // Skip if block exists and override is false
+            // Overlay blocks that fall within chunk bounds
+            int overlaidCount = 0;
+            for (LayerBlock layerBlock : model.getContent()) {
+                if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
                     continue;
                 }
 
-                // Create block with world coordinates
-                Block worldBlock = cloneBlock(relativeBlock);
-                worldBlock.getPosition().setX(worldX);
-                worldBlock.getPosition().setY(worldY);
-                worldBlock.getPosition().setZ(worldZ);
+                Block relativeBlock = layerBlock.getBlock();
 
-                blockMap.put(key, worldBlock);
-                overlaidCount++;
+                // Calculate world position
+                int worldX = mountX + (int) relativeBlock.getPosition().getX();
+                int worldY = mountY + (int) relativeBlock.getPosition().getY();
+                int worldZ = mountZ + (int) relativeBlock.getPosition().getZ();
+
+                // Check if within chunk bounds
+                if (worldX >= chunkMinX && worldX <= chunkMaxX &&
+                        worldZ >= chunkMinZ && worldZ <= chunkMaxZ) {
+
+                    Vector3 worldPos = new Vector3();
+                    worldPos.setX(worldX);
+                    worldPos.setY(worldY);
+                    worldPos.setZ(worldZ);
+                    String key = blockKey(worldPos);
+
+                    // Check override flag
+                    if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
+                        // Skip if block exists and override is false
+                        continue;
+                    }
+
+                    // Create block with world coordinates
+                    Block worldBlock = cloneBlock(relativeBlock);
+                    worldBlock.setPosition(worldPos);
+
+                    blockMap.put(key, worldBlock);
+                    overlaidCount++;
+                }
             }
+
+            totalOverlaidCount += overlaidCount;
+            log.trace("Overlaid model {} (order={}): {} blocks", model.getName(), model.getOrder(), overlaidCount);
         }
 
-        log.trace("Overlaid model layer {}: {} blocks", layer.getName(), overlaidCount);
+        log.trace("Overlaid {} model layers for layer {}: {} total blocks", models.size(), layer.getName(), totalOverlaidCount);
     }
 
     /**

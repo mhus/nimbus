@@ -91,18 +91,34 @@
       <!-- Editor Dialog -->
       <LayerEditorPanel
         v-if="isEditorOpen"
+        ref="layerEditorRef"
         :layer="selectedLayer"
         :world-id="currentWorldId!"
         @close="closeEditor"
         @saved="handleSaved"
+        @open-model-editor="handleOpenModelEditor"
       />
+
     </template>
   </div>
+
+  <!-- Model Editor Dialog (using Teleport to separate from Layer Editor) -->
+  <Teleport to="body">
+    <ModelEditorPanel
+      v-if="isModelEditorOpen && modelEditorLayerId && modelEditorLayerDataId"
+      :model="selectedModel"
+      :layer-id="modelEditorLayerId"
+      :layer-data-id="modelEditorLayerDataId"
+      :world-id="currentWorldId!"
+      @close="closeModelEditor"
+      @saved="handleModelSaved"
+    />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import type { WLayer } from '@nimbus/shared';
+import type { WLayer, LayerModelDto } from '@nimbus/shared';
 import { useWorld } from '@/composables/useWorld';
 import { useLayers } from '@/composables/useLayers';
 import WorldSelector from '@material/components/WorldSelector.vue';
@@ -111,6 +127,7 @@ import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import LayerList from '@layer/components/LayerList.vue';
 import LayerEditorPanel from '@layer/components/LayerEditorPanel.vue';
+import ModelEditorPanel from '@layer/components/ModelEditorPanel.vue';
 
 const { currentWorldId, loadWorlds } = useWorld();
 
@@ -134,6 +151,13 @@ const hasPreviousPage = computed(() => layersComposable.value?.hasPreviousPage.v
 
 const isEditorOpen = ref(false);
 const selectedLayer = ref<WLayer | null>(null);
+const layerEditorRef = ref<InstanceType<typeof LayerEditorPanel> | null>(null);
+
+// Model editor state
+const isModelEditorOpen = ref(false);
+const selectedModel = ref<LayerModelDto | null>(null);
+const modelEditorLayerId = ref<string | null>(null);
+const modelEditorLayerDataId = ref<string | null>(null);
 
 // Load layers when world changes
 watch(currentWorldId, () => {
@@ -182,8 +206,12 @@ const closeEditor = () => {
 /**
  * Handle saved
  */
-const handleSaved = () => {
+const handleSaved = async () => {
   closeEditor();
+  // Reload layers list to show new/updated layer
+  if (layersComposable.value) {
+    await layersComposable.value.loadLayers();
+  }
 };
 
 /**
@@ -213,5 +241,36 @@ const handleNextPage = () => {
 const handlePreviousPage = () => {
   if (!layersComposable.value) return;
   layersComposable.value.previousPage();
+};
+
+/**
+ * Handle open model editor
+ */
+const handleOpenModelEditor = (layerId: string, layerDataId: string, model: LayerModelDto | null) => {
+  modelEditorLayerId.value = layerId;
+  modelEditorLayerDataId.value = layerDataId;
+  selectedModel.value = model;
+  isModelEditorOpen.value = true;
+};
+
+/**
+ * Close model editor
+ */
+const closeModelEditor = () => {
+  isModelEditorOpen.value = false;
+  selectedModel.value = null;
+  modelEditorLayerId.value = null;
+  modelEditorLayerDataId.value = null;
+};
+
+/**
+ * Handle model saved
+ */
+const handleModelSaved = async () => {
+  closeModelEditor();
+  // Reload models in layer editor
+  if (layerEditorRef.value) {
+    await layerEditorRef.value.loadModels();
+  }
 };
 </script>

@@ -35,18 +35,30 @@ public class EditState {
     private String selectedLayer;
 
     /**
-     * Mount point X coordinate (for ModelLayer editing).
+     * Selected model ID for editing (only for MODEL type layers).
+     * When a MODEL layer is selected, this specifies which WLayerModel to edit.
      */
+    private String selectedModelId;
+
+    /**
+     * Mount point X coordinate (for ModelLayer editing).
+     * @deprecated Use selectedModelId instead - mount points are now in WLayerModel
+     */
+    @Deprecated
     private Integer mountX;
 
     /**
      * Mount point Y coordinate (for ModelLayer editing).
+     * @deprecated Use selectedModelId instead - mount points are now in WLayerModel
      */
+    @Deprecated
     private Integer mountY;
 
     /**
      * Mount point Z coordinate (for ModelLayer editing).
+     * @deprecated Use selectedModelId instead - mount points are now in WLayerModel
      */
+    @Deprecated
     private Integer mountZ;
 
     /**

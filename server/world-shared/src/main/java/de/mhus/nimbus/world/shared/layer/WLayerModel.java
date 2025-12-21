@@ -106,6 +106,7 @@ public class WLayerModel {
      * Position (-1,2,3) = 1 left, 2 up, 3 forward from mount point.
      */
     @Builder.Default
+    @TypeScript(type = "any[]") // for now use any
     private List<LayerBlock> content = new ArrayList<>();
 
     /**

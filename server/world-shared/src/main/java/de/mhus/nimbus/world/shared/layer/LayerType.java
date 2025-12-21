@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.shared.layer;
 
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
+
 /**
  * Layer type enumeration.
  *

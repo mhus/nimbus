@@ -36,6 +36,14 @@ public class TypeScriptGenerator {
         TypeScriptModel tsModel = new TypeScriptModel();
         if (javaModels == null) return tsModel;
 
+        // Index für Follow-Imports: SimpleName -> JavaClassModel
+        java.util.Map<String, JavaClassModel> bySimpleName = new java.util.HashMap<>();
+        for (JavaClassModel jm : javaModels) {
+            if (jm != null && jm.getName() != null) {
+                bySimpleName.putIfAbsent(jm.getName(), jm);
+            }
+        }
+
         for (JavaClassModel jm : javaModels) {
             if (jm == null) continue;
             TypeScriptType tt = new TypeScriptType();
@@ -111,6 +119,20 @@ public class TypeScriptGenerator {
                 }
                 // Default-Imports aus Konfiguration hinzufügen (nur für Interfaces)
                 addDefaultImports(tt);
+
+                // Auto-Importe für gefolgte Enums (Top-Level) hinzufügen
+                if (!followed.isEmpty()) {
+                    for (String name : followed) {
+                        JavaClassModel target = bySimpleName.get(name);
+                        if (target == null) continue;
+                        if (target.getKind() != JavaKind.ENUM) continue; // nur Enums automatisch importieren
+                        String importSymbol = resolveTargetTsName(target);
+                        String relPath = buildRelativeImportPath(tt.getSubfolder(), target.getGenerateSubfolder(),
+                                resolveTargetBaseFileName(target, importSymbol));
+                        String line = "import { " + importSymbol + " } from '" + relPath + "'";
+                        tt.getImports().add(ensureSemicolon(line));
+                    }
+                }
             }
 
             tsModel.getTypes().add(tt);
@@ -118,6 +140,49 @@ public class TypeScriptGenerator {
 
         if (log != null) log.info("TypeScriptGenerator: erzeugte Typen: " + tsModel.getTypes().size());
         return tsModel;
+    }
+
+    private String resolveTargetTsName(JavaClassModel jm) {
+        String overrideName = jm.getGenerateInterfaceName();
+        if (overrideName != null && !overrideName.isBlank()) return overrideName.trim();
+        return jm.getName();
+    }
+
+    private String resolveTargetBaseFileName(JavaClassModel jm, String tsName) {
+        String file = jm.getGenerateFileName();
+        if (file != null && !file.isBlank()) {
+            if (file.endsWith(".ts")) return file.substring(0, file.length() - 3);
+            return file;
+        }
+        return tsName;
+    }
+
+    private String buildRelativeImportPath(String fromSub, String toSub, String baseName) {
+        // Normalisiere
+        String from = (fromSub == null || fromSub.isBlank()) ? "" : fromSub;
+        String to = (toSub == null || toSub.isBlank()) ? "" : toSub;
+        if (from.equals(to)) {
+            return (from.isEmpty() ? "" : "./") + baseName;
+        }
+        if (from.isEmpty()) {
+            // von Root zu Unterordner
+            return (to.isEmpty() ? "" : to + "/") + baseName;
+        }
+        // von Unterordner zu Root oder anderem Unterordner
+        String[] fromParts = from.split("/");
+        String[] toParts = to.isEmpty() ? new String[0] : to.split("/");
+        // Finde gemeinsamen Präfix
+        int i = 0;
+        while (i < fromParts.length && i < toParts.length && fromParts[i].equals(toParts[i])) i++;
+        StringBuilder sb = new StringBuilder();
+        for (int j = i; j < fromParts.length; j++) sb.append("../");
+        for (int j = i; j < toParts.length; j++) {
+            if (sb.length() > 0 && sb.charAt(sb.length()-1) != '/') sb.append('/');
+            sb.append(toParts[j]);
+        }
+        if (sb.length() > 0 && sb.charAt(sb.length()-1) != '/') sb.append('/');
+        sb.append(baseName);
+        return sb.toString();
     }
 
     private String ensureSemicolon(String s) {

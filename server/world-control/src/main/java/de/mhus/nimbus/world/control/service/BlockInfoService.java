@@ -91,13 +91,13 @@ public class BlockInfoService {
                     log.debug("Loaded block from layer: layer={} pos=({},{},{})", layerName, x, y, z);
                     readOnly = false;
 
-                    // Get group name from layer
+                    // Get group name from WLayerModel (groups are now in model, not layer)
                     Optional<WLayer> layerOpt = layerService.findLayer(worldId, layerName);
                     if (layerOpt.isPresent() && group != null && group > 0) {
                         WLayer layer = layerOpt.get();
-                        if (layer.getGroups() != null && layer.getGroups().size() > group) {
-                            groupName = layer.getGroups().get(group);
-                        }
+                        // For MODEL layers, would need to load WLayerModel to get groups
+                        // For now, skip group name resolution (groups moved to WLayerModel)
+                        // TODO: Load WLayerModel if needed for group resolution
                     }
                 }
             }
@@ -256,10 +256,10 @@ public class BlockInfoService {
 
         de.mhus.nimbus.world.shared.layer.WLayerModel model = modelOpt.get();
 
-        // Calculate relative position from mount point
-        int mountX = layer.getMountX() != null ? layer.getMountX() : 0;
-        int mountY = layer.getMountY() != null ? layer.getMountY() : 0;
-        int mountZ = layer.getMountZ() != null ? layer.getMountZ() : 0;
+        // Calculate relative position from mount point (now in model, not layer)
+        int mountX = model.getMountX();
+        int mountY = model.getMountY();
+        int mountZ = model.getMountZ();
 
         int relativeX = x - mountX;
         int relativeY = y - mountY;

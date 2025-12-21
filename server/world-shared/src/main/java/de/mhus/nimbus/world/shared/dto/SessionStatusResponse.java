@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.dto;
 
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
 import lombok.Builder;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
  * Returns current session information and logout URLs.
  */
 @Builder
+@GenerateTypeScript("dto")
 public record SessionStatusResponse(
         boolean authenticated,
         boolean agent,

@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.generator.api;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.dto.CreateLayerRequest;
 import de.mhus.nimbus.world.shared.layer.*;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.session.WSession;
@@ -212,34 +213,8 @@ public class McpController extends BaseEditorController {
                                 "description", "Whether the layer is enabled",
                                 "required", false,
                                 "default", true
-                        ),
-                        "groups", Map.of(
-                                "type", "object",
-                                "description", "Layer groups mapping (groupId -> groupName)",
-                                "required", false
                         )
-                )
-        ));
-
-        tools.add(createToolDescriptor(
-                "update_layer_groups",
-                "Update the groups of a layer",
-                Map.of(
-                        "worldId", Map.of(
-                                "type", "string",
-                                "description", "World ID",
-                                "required", true
-                        ),
-                        "layerId", Map.of(
-                                "type", "string",
-                                "description", "Layer ID",
-                                "required", true
-                        ),
-                        "groups", Map.of(
-                                "type", "object",
-                                "description", "Groups mapping (groupId -> groupName)",
-                                "required", true
-                        )
+                        // Note: mountX/Y/Z, ground, and groups removed - use WLayerModel API
                 )
         ));
 
@@ -309,9 +284,9 @@ public class McpController extends BaseEditorController {
         endpoints.put("GET /control/mcp/worlds/{worldId}/layers", "List layers");
         endpoints.put("GET /control/mcp/worlds/{worldId}/layers/{layerId}", "Get layer");
         endpoints.put("POST /control/mcp/worlds/{worldId}/layers", "Create layer");
-        endpoints.put("PUT /control/mcp/worlds/{worldId}/layers/{layerId}/groups", "Update layer groups");
         endpoints.put("GET /control/mcp/worlds/{worldId}/layers/{layerId}/blocks", "Get layer blocks");
         endpoints.put("POST /control/mcp/worlds/{worldId}/layers/{layerId}/blocks", "Add layer blocks");
+        // Note: groups endpoint removed - use WLayerModel API
         response.put("endpoints", endpoints);
 
         return ResponseEntity.ok(response);
@@ -555,19 +530,16 @@ public class McpController extends BaseEditorController {
         }
 
         try {
+            // Note: mountX/Y/Z, ground, and groups are now in WLayerModel, not WLayer
+            // These fields are ignored here - use WLayerModel API for MODEL layers
             WLayer layer = WLayer.builder()
                     .worldId(worldId)
                     .name(request.name())
                     .layerType(request.layerType())
-                    .mountX(request.mountX())
-                    .mountY(request.mountY())
-                    .mountZ(request.mountZ())
-                    .ground(request.ground() != null ? request.ground() : false)
                     .allChunks(request.allChunks() != null ? request.allChunks() : true)
                     .affectedChunks(request.affectedChunks() != null ? request.affectedChunks() : List.of())
                     .order(request.order() != null ? request.order() : 0)
                     .enabled(request.enabled() != null ? request.enabled() : true)
-                    .groups(request.groups() != null ? request.groups() : new HashMap<>())
                     .build();
 
             layer.touchCreate();
@@ -582,45 +554,7 @@ public class McpController extends BaseEditorController {
         }
     }
 
-    /**
-     * Update layer groups.
-     * PUT /control/mcp/worlds/{worldId}/layers/{layerId}/groups
-     */
-    @PutMapping("/worlds/{worldId}/layers/{layerId}/groups")
-    @Operation(summary = "Update layer groups")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Groups updated"),
-            @ApiResponse(responseCode = "400", description = "Invalid request"),
-            @ApiResponse(responseCode = "404", description = "Layer not found")
-    })
-    public ResponseEntity<?> updateLayerGroups(
-            @Parameter(description = "World ID") @PathVariable String worldId,
-            @Parameter(description = "Layer ID") @PathVariable String layerId,
-            @RequestBody Map<Integer, String> groups) {
-
-        log.debug("MCP: Update layer groups: worldId={}, layerId={}", worldId, layerId);
-
-        var wid = WorldId.of(worldId).orElseThrow(
-                () -> new IllegalStateException("Invalid worldId: " + worldId)
-        );
-
-        var validation = validateId(layerId, "layerId");
-        if (validation != null) return validation;
-
-        Optional<WLayer> layerOpt = layerService.findById(layerId);
-        if (layerOpt.isEmpty() || !layerOpt.get().getWorldId().equals(worldId)) {
-            return notFound("layer not found");
-        }
-
-        WLayer layer = layerOpt.get();
-        layer.setGroups(groups != null ? groups : new HashMap<>());
-        layer.touchUpdate();
-
-        WLayer updated = layerService.save(layer);
-
-        log.info("MCP: Updated layer groups: id={}, groups={}", layerId, groups.size());
-        return ResponseEntity.ok(toLayerDto(updated));
-    }
+    // Note: updateLayerGroups endpoint removed - groups are now in WLayerModel, not WLayer
 
     // ==================== LAYER BLOCK OPERATIONS ====================
 
@@ -662,7 +596,7 @@ public class McpController extends BaseEditorController {
             return ResponseEntity.ok(Map.of("blocks", List.of(), "count", 0));
         }
 
-        Optional<WLayerModel> modelOpt = modelRepository.findByLayerDataId(layer.getLayerDataId());
+        Optional<WLayerModel> modelOpt = modelRepository.findFirstByLayerDataId(layer.getLayerDataId());
         if (modelOpt.isEmpty()) {
             return ResponseEntity.ok(Map.of("blocks", List.of(), "count", 0));
         }
@@ -726,7 +660,7 @@ public class McpController extends BaseEditorController {
             }
 
             // Load or create model
-            WLayerModel model = modelRepository.findByLayerDataId(layer.getLayerDataId())
+            WLayerModel model = modelRepository.findFirstByLayerDataId(layer.getLayerDataId())
                     .orElseGet(() -> {
                         WLayerModel newModel = WLayerModel.builder()
                                 .worldId(worldId)
@@ -837,15 +771,11 @@ public class McpController extends BaseEditorController {
         dto.put("name", layer.getName());
         dto.put("layerType", layer.getLayerType().name());
         dto.put("layerDataId", layer.getLayerDataId());
-        dto.put("mountX", layer.getMountX());
-        dto.put("mountY", layer.getMountY());
-        dto.put("mountZ", layer.getMountZ());
-        dto.put("ground", layer.isGround());
+        // Note: mountX/Y/Z, ground, and groups removed - these are now in WLayerModel
         dto.put("allChunks", layer.isAllChunks());
         dto.put("affectedChunks", layer.getAffectedChunks());
         dto.put("order", layer.getOrder());
         dto.put("enabled", layer.isEnabled());
-        dto.put("groups", layer.getGroups());
         dto.put("createdAt", layer.getCreatedAt());
         dto.put("updatedAt", layer.getUpdatedAt());
         return dto;
@@ -880,20 +810,7 @@ public class McpController extends BaseEditorController {
     }
 
     // Request DTOs
-    public record CreateLayerRequest(
-            String name,
-            LayerType layerType,
-            Integer mountX,
-            Integer mountY,
-            Integer mountZ,
-            Boolean ground,
-            Boolean allChunks,
-            List<String> affectedChunks,
-            Integer order,
-            Boolean enabled,
-            Map<Integer, String> groups
-    ) {
-    }
+    // CreateLayerRequest moved to de.mhus.nimbus.world.shared.dto package
 
     public record AddBlocksRequest(List<BlockRequest> blocks) {
     }

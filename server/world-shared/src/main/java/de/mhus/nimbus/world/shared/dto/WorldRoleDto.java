@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.shared.dto;
 
+import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
+import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.user.WorldRoles;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,9 +17,11 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@GenerateTypeScript("dto")
 public class WorldRoleDto {
 
     private String characterId;
     private String worldId;
+    @TypeScript(type = "string[]")
     private List<WorldRoles> roles;
 }
