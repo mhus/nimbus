@@ -41,114 +41,6 @@ public class AssetController {
     private final SAssetRepository assetRepository;
 
     /**
-     * List assets with optional filtering and pagination.
-     * GET /player/worlds/{worldId}/assets?query=sword&ext=png&limit=100&offset=0
-     */
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "List assets", description = "List and search assets with pagination")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "List of assets"),
-            @ApiResponse(responseCode = "404", description = "World not found")
-    })
-    public ResponseEntity<?> listAssets(
-            @PathVariable String worldId,
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) String ext,
-            @RequestParam(defaultValue = "200") int limit,
-            @RequestParam(defaultValue = "0") int offset) {
-
-        // Cap limit at 200
-        limit = Math.min(limit, 200);
-
-        // Query assets from database
-        List<SAsset> allAssets;
-
-        if (query != null && !query.isBlank()) {
-            // Search by path pattern
-            allAssets = assetRepository.findAll().stream()
-                    .filter(a -> a.getPath().toLowerCase().contains(query.toLowerCase()))
-                    .filter(SAsset::isEnabled)
-                    .toList();
-        } else {
-            // Get all enabled assets
-            allAssets = assetRepository.findAll().stream()
-                    .filter(SAsset::isEnabled)
-                    .toList();
-        }
-
-        // Filter by extension if provided
-        if (ext != null && !ext.isBlank()) {
-            String[] extensions = ext.split(",");
-            allAssets = allAssets.stream()
-                    .filter(a -> {
-                        for (String extension : extensions) {
-                            if (a.getPath().toLowerCase().endsWith("." + extension.trim().toLowerCase())) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    .toList();
-        }
-
-        // Apply pagination
-        int totalCount = allAssets.size();
-        List<AssetDto> assets = allAssets.stream()
-                .skip(offset)
-                .limit(limit)
-                .map(this::toDto)
-                .toList();
-
-        return ResponseEntity.ok(Map.of(
-                "assets", assets,
-                "count", totalCount,
-                "limit", limit,
-                "offset", offset
-        ));
-    }
-
-    /**
-     * Serve asset metadata (.info file).
-     * GET /player/worlds/{worldId}/assets/textures/items/sword.png.info
-     */
-    @GetMapping(value = "/**", produces = MediaType.APPLICATION_JSON_VALUE, params = "info")
-    @Operation(summary = "Get asset metadata", description = "Returns asset metadata from publicData")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Asset metadata"),
-            @ApiResponse(responseCode = "404", description = "Asset not found")
-    })
-    public ResponseEntity<?> getAssetInfo(
-            @PathVariable String worldId,
-            @RequestParam String info) {
-
-        // Extract path from request and remove leading slash if present
-        String assetPath = info;
-        if (assetPath != null && assetPath.startsWith("/")) {
-            assetPath = assetPath.substring(1);
-        }
-        final String finalAssetPath = assetPath; // Make final for lambda
-
-        // Find asset
-        // Try with worldId as regionId first (for main worlds), then fallback to null regionId
-        SAsset asset = assetService.findByPath(WorldId.of(worldId).orElse(null), finalAssetPath)
-                .orElse(null);
-
-        if (asset == null) {
-            // Return empty description if asset not found (like test_server)
-            log.debug("Asset not found for info request: {}", finalAssetPath);
-            return ResponseEntity.ok(Map.of("description", ""));
-        }
-
-        // Return publicData or empty if not available
-        AssetMetadata metadata = asset.getPublicData();
-        if (metadata == null) {
-            return ResponseEntity.ok(Map.of("description", ""));
-        }
-
-        return ResponseEntity.ok(metadata);
-    }
-
-    /**
      * Serve binary asset file (alternative with explicit path).
      * This works better with Spring's path matching.
      */
@@ -222,20 +114,6 @@ public class AssetController {
     }
 
     /**
-     * Convert SAsset to DTO for listing.
-     */
-    private AssetDto toDto(SAsset asset) {
-        return new AssetDto(
-                asset.getPath(),
-                asset.getName(),
-                asset.getSize(),
-                asset.getPublicData() != null ? asset.getPublicData().getMimeType() : null,
-                asset.getPublicData() != null ? asset.getPublicData().getCategory() : null,
-                asset.getPublicData() != null ? asset.getPublicData().getExtension() : null
-        );
-    }
-
-    /**
      * Determine content type from asset metadata or file extension.
      */
     private String determineContentType(SAsset asset) {
@@ -264,15 +142,4 @@ public class AssetController {
         return MediaType.APPLICATION_OCTET_STREAM_VALUE;
     }
 
-    /**
-     * DTO for asset listing.
-     */
-    public record AssetDto(
-            String path,
-            String name,
-            long size,
-            String mimeType,
-            String category,
-            String extension
-    ) {}
 }

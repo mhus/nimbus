@@ -11,14 +11,25 @@ public record WorldCollection(TYPE type, WorldId worldId, String path) {
     }
 
     public static WorldCollection of(WorldId worldId, String path) {
+        if (worldId.isCollection()) {
+            var type = switch(worldId.getRegionId()) {
+                case WorldId.COLLECTION_REGION -> TYPE.REGION;
+                case WorldId.COLLECTION_PUBLIC -> TYPE.PUBLIC;
+                default -> TYPE.SHARED;
+            };
+            int pos = path.indexOf(':');
+            if (pos >= 0) path = path.substring(pos + 1);
+            return new WorldCollection(type, worldId, path);
+        }
         int pos = path.indexOf(':');
         if (pos < 0) {
             if (path.startsWith("w/")) { // legacy support
                 path = path.substring(2);
             }
-            return new WorldCollection(TYPE.WORLD, worldId, "w:" + path);
+            return new WorldCollection(TYPE.WORLD, worldId, path);
         }
         var group = path.substring(0, pos).toLowerCase();
+        path = path.substring(pos + 1);
 
         switch (group) {
             case "w":

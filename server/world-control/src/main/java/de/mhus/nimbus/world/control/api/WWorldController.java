@@ -66,11 +66,17 @@ public class WWorldController extends BaseEditorController {
     ) {}
 
     private WorldResponse toResponse(WWorld world) {
+        // Build display name: "worldId Title" (title is optional)
+        String displayName = world.getWorldId();
+        if (world.getName() != null && !world.getName().isBlank()) {
+            displayName = world.getWorldId() + " " + world.getName();
+        }
+
         return new WorldResponse(
                 world.getId(),
                 world.getWorldId(),
                 world.getRegionId(),
-                world.getName(),
+                displayName,
                 world.getDescription(),
                 world.getPublicData(),
                 world.getCreatedAt(),
@@ -89,6 +95,37 @@ public class WWorldController extends BaseEditorController {
         );
     }
 
+    private WorldResponse toResponseFromWorldId(WorldId worldId) {
+        // Try to get title from WorldCollectionDto
+        String title = worldService.getWorldCollectionTitle(worldId);
+        String displayName = worldId.getId();
+        if (title != null && !title.isBlank()) {
+            displayName = worldId.getId() + " " + title;
+        }
+
+        return new WorldResponse(
+                null,  // no database id for collections
+                worldId.getId(),
+                worldId.getRegionId(),
+                displayName,
+                "World Collection: " + worldId.getId(),  // generated description
+                null,  // no publicData for collections
+                null,  // no createdAt
+                null,  // no updatedAt
+                true,  // collections are always enabled
+                null,  // no parent
+                null,  // no branch
+                0,     // default groundLevel
+                null,  // no waterLevel
+                null,  // no groundBlockType
+                null,  // no waterBlockType
+                Set.of(),  // empty owner set
+                Set.of(),  // empty editor set
+                Set.of(),  // empty player set
+                false  // not public
+        );
+    }
+
     /**
      * List all worlds in a region with optional filtering
      * GET /control/regions/{regionId}/worlds
@@ -101,6 +138,7 @@ public class WWorldController extends BaseEditorController {
      *   - "allWithoutInstances": Worlds + zones + branches (no instances, no collections)
      *   - "regionCollections": Only @region + shared collections
      *   - "regionOnly": Only @region collection
+     *   - "withCollections": Include main worlds + world collections
      */
     @GetMapping
     public ResponseEntity<?> list(
@@ -110,10 +148,31 @@ public class WWorldController extends BaseEditorController {
         if (error != null) return error;
 
         try {
-            List<WorldResponse> result = worldService.findByRegionId(regionId).stream()
-                    .filter(world -> matchesFilter(world, filter))
-                    .map(this::toResponse)
-                    .toList();
+            List<WorldResponse> result;
+
+            if ("withCollections".equals(filter)) {
+                // Get main worlds
+                List<WorldResponse> worlds = worldService.findByRegionId(regionId).stream()
+                        .filter(world -> matchesFilter(world, "mainOnly"))
+                        .map(this::toResponse)
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Get world collections
+                List<WorldResponse> collections = worldService.findWorldCollections().stream()
+                        .filter(worldId -> regionId.equals(worldId.getRegionId()))
+                        .map(this::toResponseFromWorldId)
+                        .toList();
+
+                // Combine both lists
+                worlds.addAll(collections);
+                result = worlds;
+            } else {
+                result = worldService.findByRegionId(regionId).stream()
+                        .filter(world -> matchesFilter(world, filter))
+                        .map(this::toResponse)
+                        .toList();
+            }
+
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return bad(e.getMessage());

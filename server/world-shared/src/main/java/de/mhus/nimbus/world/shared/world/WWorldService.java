@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ import java.util.Optional;
 public class WWorldService {
 
     private final WWorldRepository repository;
+    private final WAnythingService anythingService;
 
     @Transactional(readOnly = true)
     public Optional<WWorld> getByWorldId(WorldId worldId) {
@@ -140,6 +142,94 @@ public class WWorldService {
             log.debug("WWorld geloescht: {}", worldId);
             return true;
         }).orElse(false);
+    }
+
+    /**
+     * Find all world collections from WAnything entries with collection="worldCollection".
+     * World collections are identified by WorldId entries starting with '@'.
+     * Note: Region field in WAnything is ignored for world collections, as they are global.
+     *
+     * @return List of distinct WorldIds representing collections
+     */
+    @Transactional(readOnly = true)
+    public List<WorldId> findWorldCollections() {
+        // Use findByCollection without region filter, as world collections are not region-specific
+        List<WAnything> entries = anythingService.findByCollection("worldCollection");
+        return entries.stream()
+                .map(WAnything::getName)
+                .filter(name -> name != null && name.startsWith("@"))
+                .distinct()
+                .map(WorldId::unchecked)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Find a specific world collection by WorldId.
+     * Checks if the given WorldId is a collection and if corresponding WAnything entries exist.
+     * Note: Region field in WAnything is ignored for world collections, as they are global.
+     *
+     * @param worldId The WorldId to search for (must be a collection starting with '@')
+     * @return Optional containing the WorldId if found, empty otherwise
+     */
+    @Transactional(readOnly = true)
+    public Optional<WorldId> findWorldCollection(WorldId worldId) {
+        if (!worldId.isCollection()) {
+            log.debug("WorldId is not a collection: {}", worldId);
+            return Optional.empty();
+        }
+
+        // Use findByCollection without region filter, then filter by worldId
+        // This ignores the regionId field in WAnything, which may be incorrectly set for collections
+        boolean exists = anythingService.findByCollection("worldCollection")
+                .stream()
+                .anyMatch(e -> worldId.getId().equals(e.getWorldId()));
+
+        return exists ? Optional.of(worldId) : Optional.empty();
+    }
+
+    /**
+     * Check if a world collection exists.
+     * Verifies that the WorldId is a collection and that corresponding WAnything entries exist.
+     * Note: Region field in WAnything is ignored for world collections, as they are global.
+     *
+     * @param worldId The WorldId to check (must be a collection starting with '@')
+     * @return true if the collection exists, false otherwise
+     */
+    @Transactional(readOnly = true)
+    public boolean existsWorldCollection(WorldId worldId) {
+        if (!worldId.isCollection()) {
+            return false;
+        }
+
+        // Use findByCollection without region filter, then filter by worldId
+        // This ignores the regionId field in WAnything, which may be incorrectly set for collections
+        return anythingService.findByCollection("worldCollection")
+                .stream()
+                .anyMatch(e -> worldId.getId().equals(e.getWorldId()));
+    }
+
+    /**
+     * Get the title for a world collection from its WAnything data.
+     * Returns the title from WorldCollectionDto if available, otherwise null.
+     *
+     * @param worldId The WorldId of the collection
+     * @return The title if found and valid, null otherwise
+     */
+    @Transactional(readOnly = true)
+    public String getWorldCollectionTitle(WorldId worldId) {
+        if (!worldId.isCollection()) {
+            return null;
+        }
+
+        // Find the WAnything entry for this collection
+        return anythingService.findByCollection("worldCollection")
+                .stream()
+                .filter(e -> worldId.getId().equals(e.getName()))
+                .findFirst()
+                .flatMap(e -> e.getDataAs(WorldCollectionDto.class))
+                .map(WorldCollectionDto::getTitle)
+                .orElse(null);
     }
 
     /**

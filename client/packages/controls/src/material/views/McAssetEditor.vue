@@ -58,9 +58,9 @@ const rightSelectedFiles = ref<Asset[]>([]);
 const leftTrigger = ref(0);
 const rightTrigger = ref(0);
 
-// Load main worlds and initialize both panels with first world
+// Load main worlds and collections, initialize both panels with first world
 onMounted(async () => {
-  await loadWorlds('mainOnly');
+  await loadWorlds('withCollections');
 
   // Initialize both panels with first available world
   if (worlds.value.length > 0) {

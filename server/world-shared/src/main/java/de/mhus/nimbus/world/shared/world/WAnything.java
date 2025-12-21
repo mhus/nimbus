@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.world;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
 import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
@@ -8,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -15,6 +17,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Optional;
 
 /**
  * MongoDB Entity for storing arbitrary data objects.
@@ -32,7 +35,10 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @GenerateTypeScript("entities")
+@Slf4j
 public class WAnything implements Identifiable {
+
+    private static volatile ObjectMapper objectMapper;
 
     @Id
     @TypeScript(ignore = true)
@@ -113,5 +119,42 @@ public class WAnything implements Identifiable {
      */
     public void touchUpdate() {
         updatedAt = Instant.now();
+    }
+
+    /**
+     * Try to convert the data object to the specified DTO type.
+     * Returns empty Optional if conversion fails or data is null.
+     *
+     * @param dtoClass The target DTO class
+     * @param <T> The DTO type
+     * @return Optional containing the converted DTO, or empty if conversion fails
+     */
+    public <T> Optional<T> getDataAs(Class<T> dtoClass) {
+        if (data == null) {
+            return Optional.empty();
+        }
+
+        try {
+            // If data is already the correct type, return it directly
+            if (dtoClass.isInstance(data)) {
+                return Optional.of(dtoClass.cast(data));
+            }
+
+            // Lazy initialize ObjectMapper when needed
+            if (objectMapper == null) {
+                synchronized (WAnything.class) {
+                    if (objectMapper == null) {
+                        objectMapper = new ObjectMapper();
+                    }
+                }
+            }
+
+            // Try to convert via ObjectMapper (handles LinkedHashMap, etc.)
+            T converted = objectMapper.convertValue(data, dtoClass);
+            return Optional.of(converted);
+        } catch (Exception e) {
+            log.debug("Failed to convert data to {}: {}", dtoClass.getSimpleName(), e.getMessage());
+            return Optional.empty();
+        }
     }
 }

@@ -59,25 +59,65 @@ public class WorldController extends BaseEditorController {
     }
 
     /**
-     * List all worlds.
+     * List all worlds with optional filtering.
      * GET /control/worlds
+     *
+     * Query parameters:
+     * - filter: Filter type for world selection
+     *   - "mainOnly": Only main worlds (no branches, zones, instances, collections)
+     *   - "mainAndBranches": Main worlds + branches (no zones, instances, collections)
+     *   - "mainWorldsAndInstances": Main worlds + instances + branches (no zones, no collections)
+     *   - "allWithoutInstances": Worlds + zones + branches (no instances, no collections)
+     *   - "regionCollections": Only @region + shared collections
+     *   - "regionOnly": Only @region collection
+     *   - "withCollections": Include main worlds + world collections
      */
     @GetMapping
     @Operation(summary = "List all worlds")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Success")
     })
-    public ResponseEntity<?> list() {
-        log.debug("LIST worlds");
+    public ResponseEntity<?> list(
+            @Parameter(description = "Filter type for world selection") @RequestParam(required = false) String filter) {
+        log.debug("LIST worlds with filter: {}", filter);
 
-        List<WWorld> all = worldService.findAll();
+        try {
+            List<WorldListDto> dtos;
 
-        List<WorldListDto> dtos = all.stream()
-                .map(this::toListDto)
-                .collect(Collectors.toList());
+            if ("withCollections".equals(filter)) {
+                // Get main worlds
+                List<WorldListDto> worlds = worldService.findAll().stream()
+                        .filter(world -> matchesFilter(world, "mainOnly"))
+                        .map(this::toListDto)
+                        .collect(Collectors.toList());
 
-        log.debug("Returning {} worlds", dtos.size());
-        return ResponseEntity.ok(dtos);
+                // Get world collections
+                List<WorldListDto> collections = worldService.findWorldCollections().stream()
+                        .map(this::toListDtoFromWorldId)
+                        .toList();
+
+                // Combine both lists
+                worlds.addAll(collections);
+                dtos = worlds;
+            } else if (filter != null && !filter.isBlank()) {
+                // Apply filter to regular worlds
+                dtos = worldService.findAll().stream()
+                        .filter(world -> matchesFilter(world, filter))
+                        .map(this::toListDto)
+                        .collect(Collectors.toList());
+            } else {
+                // No filter
+                dtos = worldService.findAll().stream()
+                        .map(this::toListDto)
+                        .collect(Collectors.toList());
+            }
+
+            log.debug("Returning {} worlds", dtos.size());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            log.error("Failed to list worlds", e);
+            return ResponseEntity.badRequest().body("Failed to list worlds: " + e.getMessage());
+        }
     }
 
     /**
@@ -153,9 +193,15 @@ public class WorldController extends BaseEditorController {
     // Helper methods
 
     private WorldListDto toListDto(WWorld world) {
+        // Build display name: "worldId Title" (title is optional)
+        String displayName = world.getWorldId();
+        if (world.getPublicData() != null && world.getPublicData().getName() != null) {
+            displayName = world.getWorldId() + " " + world.getPublicData().getName();
+        }
+
         return new WorldListDto(
                 world.getWorldId(),
-                world.getPublicData() != null ? world.getPublicData().getName() : null,
+                displayName,
                 world.getPublicData() != null ? world.getPublicData().getDescription() : null,
                 16, // Default chunk size
                 world.isEnabled() ? "active" : "inactive"
@@ -175,5 +221,63 @@ public class WorldController extends BaseEditorController {
                 world.getEditor(),
                 world.getPlayer()
         );
+    }
+
+    private WorldListDto toListDtoFromWorldId(de.mhus.nimbus.shared.types.WorldId worldId) {
+        // Try to get title from WorldCollectionDto
+        String title = worldService.getWorldCollectionTitle(worldId);
+        String displayName = worldId.getId();
+        if (title != null && !title.isBlank()) {
+            displayName = worldId.getId() + " " + title;
+        }
+
+        return new WorldListDto(
+                worldId.getId(),
+                displayName,
+                "World Collection: " + worldId.getId(),
+                16, // Default chunk size
+                "active"
+        );
+    }
+
+    /**
+     * Check if a world matches the given filter criteria.
+     */
+    private boolean matchesFilter(WWorld world, String filter) {
+        if (filter == null || filter.isBlank()) {
+            return true; // No filter = show all
+        }
+
+        de.mhus.nimbus.shared.types.WorldId worldId = de.mhus.nimbus.shared.types.WorldId.unchecked(world.getWorldId());
+
+        return switch (filter) {
+            case "mainOnly" ->
+                // Only main worlds (no branches, zones, instances, collections)
+                worldId.isMain() && !worldId.isCollection();
+
+            case "mainAndBranches" ->
+                // Main worlds + branches (no zones, instances, collections)
+                !worldId.isCollection() && !worldId.isZone() && !worldId.isInstance();
+
+            case "mainWorldsAndInstances" ->
+                // Main worlds + instances + branches (no zones, no collections)
+                !worldId.isCollection() && !worldId.isZone();
+
+            case "allWithoutInstances" ->
+                // Worlds + zones + branches (no instances, no collections)
+                !worldId.isCollection() && !worldId.isInstance();
+
+            case "regionCollections" ->
+                // Only @region + shared collections
+                worldId.isCollection() &&
+                (world.getWorldId().startsWith(de.mhus.nimbus.shared.types.WorldId.COLLECTION_REGION) ||
+                 world.getWorldId().startsWith(de.mhus.nimbus.shared.types.WorldId.COLLECTION_SHARED));
+
+            case "regionOnly" ->
+                // Only @region collection
+                worldId.isCollection() && world.getWorldId().startsWith(de.mhus.nimbus.shared.types.WorldId.COLLECTION_REGION);
+
+            default -> true; // Unknown filter = show all
+        };
     }
 }

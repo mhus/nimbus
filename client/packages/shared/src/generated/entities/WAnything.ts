@@ -4,6 +4,7 @@
 */
 
 export interface WAnything {
+  objectMapper: ObjectMapper;
   regionId?: string;
   worldId?: string;
   collection: string;
