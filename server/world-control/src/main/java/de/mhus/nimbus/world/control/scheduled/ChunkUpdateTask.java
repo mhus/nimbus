@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.scheduled;
 
 import de.mhus.nimbus.world.control.service.ChunkUpdateService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,11 +21,13 @@ public class ChunkUpdateTask {
 
     private final ChunkUpdateService chunkUpdateService;
 
-    @Value("${world.control.chunk-update-world-id:main}")
-    private String worldId;
-
     @Value("${world.control.chunk-update-batch-size:10}")
     private int batchSize;
+
+    @PostConstruct
+    public void init() {
+        log.info("Chunk update task initialized");
+    }
 
     /**
      * Scheduled task to process dirty chunks.
@@ -33,7 +36,7 @@ public class ChunkUpdateTask {
     @Scheduled(fixedDelayString = "#{${world.control.chunk-update-interval-ms:5000}}")
     public void processChunkUpdates() {
         try {
-            int processed = chunkUpdateService.processDirtyChunks(worldId, batchSize);
+            int processed = chunkUpdateService.processDirtyChunks(batchSize);
 
             if (processed > 0) {
                 log.info("Chunk update task: processed {} dirty chunks", processed);

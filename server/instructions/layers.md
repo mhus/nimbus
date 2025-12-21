@@ -171,8 +171,22 @@ Die Funktionalität muss jetzt angepasst werden
 Dort ist sie ein mapping von Text in Integer. d.h. in der auswahl bitte den text anzeigen, aber den integer speichern.
 Der soll bei jedem block (LayerBlock) beim speichern automatisch gesetzt werden.
 
+[?] Wenn im edit-config dialog das editieren gestartet wird (sollte im EditService passieren) und es ist ein Layer vom 
+Typ Model, dann soll das model im client angezeigt werden.
+- Dazu im WLayerModel eine Funktion getBlockPositions() die gibt nur die Positionen der Blöcke zurück, ffg als stream
+  der direkt aus den Block-Daten heraus streamt.
+- Wie schon im EditService soll richtung Player ein Commando zum Client gesendet werden (player local url muss genuzt 
+  werden, wie in blockUpdateService.sendBlockUpdate()). 
+- Command: modelselector,'enable','#00ff00',true,true,<liste von positionen>
+  liste von positionen: x,y,z,....
 
+[?] Wenn im edit-config dialog das editieren beendet wurde und es ist ein Layer vom Typ Model, dann soll das model im client 
+entfernt werden.
+- Command: modelselector,'disable'
 
+[?] Ich brauche im layer-editor.html noch einen knopf am "Edit Layer Model" mit dem ich dieses eine model via WLayerOverlayService sofort in den Terrain Layer pushen kann und dann auch in den chunk damit ich die inhalte im client sehen
+kann. Manchmal klappt das nicht.
 
-
-
+[?] Ich brauche im layer-editor.html noch einen knopf am "Layer" mit dem ich dieses eine model via Job komplett neu pushen lassen kann.
+- Dazu muss für MODEL Layer via JobService ein neuer job mit executor "recreate-model-based-layer", siehe RecreateModelBasedLayerJobExecutor.
+- Bei GROUND Layer muss fuer jeden Chunk ein DirtyChunk via WDirtyChunkService erstellt werden.

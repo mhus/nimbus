@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.layer;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -36,4 +37,10 @@ public interface WDirtyChunkRepository extends MongoRepository<WDirtyChunk, Stri
      * Count dirty chunks for a world (monitoring).
      */
     long countByWorldId(String worldId);
+
+    /**
+     * Find all distinct world IDs that have dirty chunks.
+     */
+    @Query(value = "{}", fields = "{ 'worldId' : 1 }")
+    List<WDirtyChunk> findAllBy();
 }

@@ -6,6 +6,7 @@ import de.mhus.nimbus.generated.types.EditAction;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
+import de.mhus.nimbus.world.shared.layer.LayerType;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,26 +95,52 @@ public class EditService {
 
     /**
      * Update edit state using Consumer pattern.
+     * If layer changes and edit mode is active, updates model display accordingly.
      */
     @Transactional
     public EditState updateEditState(String worldId, String sessionId, Consumer<EditState> updater) {
+        EditState oldState = getEditState(worldId, sessionId);
+        String oldLayer = oldState.getSelectedLayer();
+
         EditState state = getEditState(worldId, sessionId);
         state.setWorldId(worldId);
         updater.accept(state);
         state.setLastUpdated(Instant.now());
 
         saveEditState(worldId, sessionId, state);
+
+        // Update model display if edit mode is active and layer changed
+        if (state.isEditMode() && !java.util.Objects.equals(oldLayer, state.getSelectedLayer())) {
+            updateModelDisplay(worldId, sessionId, state);
+        }
+
         return state;
     }
 
     /**
      * Enable/disable edit mode.
+     * When enabled and a MODEL layer is selected, displays the model blocks in the client.
      */
     @Transactional
     public void setEditMode(String worldId, String sessionId, boolean enabled) {
         String key = editStateKey(sessionId);
         redisService.putValue(worldId, key + "editMode", String.valueOf(enabled), EDIT_STATE_TTL);
         log.debug("Edit mode {}: session={}", enabled ? "enabled" : "disabled", sessionId);
+
+        if (enabled) {
+            // Get current edit state to check selected layer
+            EditState state = getEditState(worldId, sessionId);
+            if (state.getSelectedLayer() != null) {
+                Optional<WLayer> layerOpt = layerService.findLayer(worldId, state.getSelectedLayer());
+                if (layerOpt.isPresent() && layerOpt.get().getLayerType() == LayerType.MODEL) {
+                    // Display model blocks in client
+                    displayModelInClient(worldId, sessionId, layerOpt.get());
+                }
+            }
+        } else {
+            // Clear model display when edit mode is disabled
+            clearModelDisplay(worldId, sessionId);
+        }
     }
 
     /**
@@ -766,6 +794,126 @@ public class EditService {
         }
 
         return true;
+    }
+
+    /**
+     * Update model display based on current edit state.
+     * Clears old display and shows new model if applicable.
+     *
+     * @param worldId   World identifier
+     * @param sessionId Session identifier
+     * @param state     Current edit state
+     */
+    private void updateModelDisplay(String worldId, String sessionId, EditState state) {
+        // Always clear first
+        clearModelDisplay(worldId, sessionId);
+
+        // Show new model if MODEL layer is selected
+        if (state.getSelectedLayer() != null) {
+            Optional<WLayer> layerOpt = layerService.findLayer(worldId, state.getSelectedLayer());
+            if (layerOpt.isPresent() && layerOpt.get().getLayerType() == LayerType.MODEL) {
+                displayModelInClient(worldId, sessionId, layerOpt.get());
+            }
+        }
+    }
+
+    /**
+     * Display model blocks in client using modelselector command.
+     * Sends all block positions from all models in the layer.
+     *
+     * @param worldId   World identifier
+     * @param sessionId Session identifier
+     * @param layer     Layer with MODEL type
+     */
+    private void displayModelInClient(String worldId, String sessionId, WLayer layer) {
+        // Get playerUrl from WSession
+        Optional<WSession> wSession = wSessionService.getWithPlayerUrl(sessionId);
+        if (wSession.isEmpty() || Strings.isBlank(wSession.get().getPlayerUrl())) {
+            log.warn("No player URL available for session {}, cannot display model", sessionId);
+            return;
+        }
+
+        String playerUrl = wSession.get().getPlayerUrl();
+
+        // Get all block positions from all models via WLayerService
+        List<int[]> positions = layerService.getModelBlockPositions(layer.getLayerDataId());
+        if (positions.isEmpty()) {
+            log.debug("No blocks found in models for layer {}", layer.getName());
+            return;
+        }
+
+        // Convert positions to string list
+        List<String> positionsList = new ArrayList<>();
+        for (int[] pos : positions) {
+            positionsList.add(String.valueOf(pos[0]));
+            positionsList.add(String.valueOf(pos[1]));
+            positionsList.add(String.valueOf(pos[2]));
+        }
+
+        // Build command context
+        CommandContext ctx = CommandContext.builder()
+                .worldId(worldId)
+                .sessionId(sessionId)
+                .originServer("world-control")
+                .build();
+
+        // Build command arguments: modelselector, 'enable', '#00ff00', true, true, <positions>
+        List<String> args = new ArrayList<>();
+        args.add("modelselector");
+        args.add("enable");
+        args.add("#00ff00");
+        args.add("true");
+        args.add("true");
+        args.addAll(positionsList);
+
+        // Send command to client
+        worldClient.sendPlayerCommand(
+                worldId,
+                sessionId,
+                playerUrl,
+                "client",
+                args,
+                ctx
+        );
+
+        log.info("Displayed model in client: layer={} session={} blocks={}",
+                layer.getName(), sessionId, positions.size());
+    }
+
+    /**
+     * Clear model display in client.
+     *
+     * @param worldId   World identifier
+     * @param sessionId Session identifier
+     */
+    private void clearModelDisplay(String worldId, String sessionId) {
+        // Get playerUrl from WSession
+        Optional<WSession> wSession = wSessionService.getWithPlayerUrl(sessionId);
+        if (wSession.isEmpty() || Strings.isBlank(wSession.get().getPlayerUrl())) {
+            log.warn("No player URL available for session {}, cannot clear model display", sessionId);
+            return;
+        }
+
+        String playerUrl = wSession.get().getPlayerUrl();
+
+        // Build command context
+        CommandContext ctx = CommandContext.builder()
+                .worldId(worldId)
+                .sessionId(sessionId)
+                .originServer("world-control")
+                .build();
+
+        // Send disable command to client: modelselector, 'disable'
+        worldClient.sendPlayerCommand(
+                worldId,
+                sessionId,
+                playerUrl,
+                "client",
+                List.of("modelselector", "disable"),
+                ctx
+        );
+
+        log.info("Cleared model display: session={}", sessionId);
     }
 
     /**

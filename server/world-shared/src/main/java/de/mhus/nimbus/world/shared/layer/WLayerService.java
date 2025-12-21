@@ -652,8 +652,8 @@ public class WLayerService {
 
         WLayerModel model = modelOpt.get();
 
-        // Get the layer
-        Optional<WLayer> layerOpt = layerRepository.findById(model.getLayerDataId());
+        // Get the layer by layerDataId
+        Optional<WLayer> layerOpt = layerRepository.findByLayerDataId(model.getLayerDataId());
         if (layerOpt.isEmpty()) {
             log.warn("Layer not found for model transfer: layerDataId={}", model.getLayerDataId());
             return -1;
@@ -1043,6 +1043,28 @@ public class WLayerService {
         modelRepository.deleteByLayerDataId(layerDataId);
         log.debug("Deleted {} models: layerDataId={}", count, layerDataId);
         return true;
+    }
+
+    /**
+     * Get all block positions from all models in a layer.
+     * Returns world coordinates (mount point + relative position).
+     *
+     * @param layerDataId Layer data ID
+     * @return List of block positions as int arrays [x, y, z]
+     */
+    @Transactional(readOnly = true)
+    public List<int[]> getModelBlockPositions(String layerDataId) {
+        List<WLayerModel> models = modelRepository.findByLayerDataIdOrderByOrder(layerDataId);
+        if (models.isEmpty()) {
+            return List.of();
+        }
+
+        List<int[]> positions = new ArrayList<>();
+        for (WLayerModel model : models) {
+            model.getBlockPositions().forEach(positions::add);
+        }
+
+        return positions;
     }
 
     // ==================== HELPER METHODS ====================

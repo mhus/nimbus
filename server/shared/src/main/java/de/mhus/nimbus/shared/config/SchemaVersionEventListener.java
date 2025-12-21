@@ -136,8 +136,8 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
         if (entity instanceof Identifiable identifiable) {
             entityType += " (ID: " + identifiable.getId() + ")";
         }
-
-        log.warn("Schema version mismatch for entity {}: document has schema '{}', expected '{}'",
+        // TODO may write in a queue ?
+        log.debug("Schema version mismatch for entity {}: document has schema '{}', expected '{}'",
                  entityType,
                  currentVersion,
                  expectedSchema);

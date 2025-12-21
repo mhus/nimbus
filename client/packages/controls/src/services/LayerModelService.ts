@@ -75,6 +75,17 @@ export class LayerModelService {
       `/control/worlds/${worldId}/layers/${layerId}/models/${id}`
     );
   }
+
+  /**
+   * Sync model to terrain
+   * Manually triggers transfer of model data to terrain layer and marks chunks as dirty
+   */
+  async syncToTerrain(worldId: string, layerId: string, id: string): Promise<void> {
+    return apiService.post<void>(
+      `/control/worlds/${worldId}/layers/${layerId}/models/${id}/sync`,
+      {}
+    );
+  }
 }
 
 export const layerModelService = new LayerModelService();

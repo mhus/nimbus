@@ -117,6 +117,19 @@ public class WDirtyChunkService {
     }
 
     /**
+     * Get all distinct world IDs that have dirty chunks.
+     *
+     * @return List of world IDs with dirty chunks
+     */
+    @Transactional(readOnly = true)
+    public List<String> getWorldIdsWithDirtyChunks() {
+        return dirtyChunkRepository.findAllBy().stream()
+                .map(WDirtyChunk::getWorldId)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Count dirty chunks for a world (monitoring).
      *
      * @param worldId World identifier

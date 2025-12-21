@@ -85,7 +85,40 @@ public class ChunkUpdateService {
     }
 
     /**
-     * Process batch of dirty chunks (oldest first).
+     * Process dirty chunks for all worlds.
+     * Loads all worldIds that have dirty chunks and processes each.
+     *
+     * @param maxChunks Maximum chunks to process per world
+     * @return Total number of chunks successfully regenerated across all worlds
+     */
+    @Transactional
+    public int processDirtyChunks(int maxChunks) {
+        // Get all worldIds that have dirty chunks
+        List<String> worldIds = dirtyChunkService.getWorldIdsWithDirtyChunks();
+
+        if (worldIds.isEmpty()) {
+            log.trace("No dirty chunks to process in any world");
+            return 0;
+        }
+
+        log.debug("Processing dirty chunks for {} worlds", worldIds.size());
+
+        int totalProcessed = 0;
+        for (String worldId : worldIds) {
+            int processed = processDirtyChunks(worldId, maxChunks);
+            totalProcessed += processed;
+        }
+
+        if (totalProcessed > 0) {
+            log.info("Processed dirty chunks across all worlds: total={} worlds={}",
+                    totalProcessed, worldIds.size());
+        }
+
+        return totalProcessed;
+    }
+
+    /**
+     * Process batch of dirty chunks for a specific world (oldest first).
      * Acquires a distributed lock to prevent concurrent processing.
      *
      * @param worldId   World identifier

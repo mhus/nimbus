@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Model layer entity - entity-oriented storage.
@@ -134,5 +135,30 @@ public class WLayerModel {
      */
     public void touchUpdate() {
         updatedAt = Instant.now();
+    }
+
+    /**
+     * Get block positions as a stream.
+     * Returns world coordinates (mount point + relative position).
+     * Streams directly from block data without creating intermediate collections.
+     *
+     * @return Stream of block positions as int arrays [x, y, z]
+     */
+    public Stream<int[]> getBlockPositions() {
+        if (content == null || content.isEmpty()) {
+            return Stream.empty();
+        }
+
+        return content.stream()
+                .filter(layerBlock -> layerBlock.getBlock() != null)
+                .filter(layerBlock -> layerBlock.getBlock().getPosition() != null)
+                .map(layerBlock -> {
+                    de.mhus.nimbus.generated.types.Vector3 relativePos = layerBlock.getBlock().getPosition();
+                    return new int[]{
+                            mountX + (int) relativePos.getX(),
+                            mountY + (int) relativePos.getY(),
+                            mountZ + (int) relativePos.getZ()
+                    };
+                });
     }
 }

@@ -19,6 +19,11 @@ public interface WLayerRepository extends MongoRepository<WLayer, String> {
     Optional<WLayer> findByWorldIdAndName(String worldId, String name);
 
     /**
+     * Find layer by layer data ID.
+     */
+    Optional<WLayer> findByLayerDataId(String layerDataId);
+
+    /**
      * Find all layers for a world, sorted by order ascending.
      */
     List<WLayer> findByWorldIdOrderByOrderAsc(String worldId);

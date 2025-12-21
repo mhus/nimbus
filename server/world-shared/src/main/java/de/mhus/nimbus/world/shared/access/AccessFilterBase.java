@@ -73,7 +73,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
                                      HttpServletResponse response,
                                      FilterChain filterChain) throws ServletException, IOException {
 
-        log.info("AccessFilter processing request: {} {} from host: {}, origin: {}",
+        log.debug("AccessFilter processing request: {} {} from host: {}, origin: {}",
                 request.getMethod(), request.getRequestURI(),
                 request.getHeader("Host"), request.getHeader("Origin"));
 
@@ -143,7 +143,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
                                 request.setAttribute(ATTR_SESSION_ID, claims.sessionId());
                                 request.setAttribute(ATTR_CHARACTER_ID, claims.characterId());
 
-                                log.info("Access validated - userId={}, worldId={}, agent={}, sessionId={}",
+                                log.debug("Access validated - userId={}, worldId={}, agent={}, sessionId={}",
                                         claims.userId(), claims.worldId(), claims.agent(), claims.sessionId());
                             }
                         }
@@ -242,7 +242,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
                         cookie.getValue() != null ? cookie.getValue().substring(0, Math.min(20, cookie.getValue().length())) : "null");
 
                 if ("sessionToken".equals(cookie.getName())) {
-                    log.info("sessionToken cookie found via getCookies()!");
+                    log.debug("sessionToken cookie found via getCookies()!");
                     return cookie.getValue();
                 }
             }

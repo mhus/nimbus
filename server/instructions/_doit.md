@@ -168,3 +168,6 @@ at _boundRenderFunction (http://localhost:3001/node_modules/.vite/deps/chunk-N75
 - wenn dirty, dann ggf alle branches rendern
 - session status beim close speichern
 - terrain layer mit branch: COW
+- durchsuche alles nach 'main' das wurde dauernd als default oder hard coded eingebaut, muss aber dynamisch sein. Gibt es aber nicht mehr.
+- Suche mal nach 16, das wurde auch manchmal hard coded eingebaut.
+- WordInfo.name muss eigentlich 'title' sein.

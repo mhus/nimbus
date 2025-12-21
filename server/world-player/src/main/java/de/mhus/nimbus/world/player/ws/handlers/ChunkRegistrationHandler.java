@@ -36,6 +36,7 @@ public class ChunkRegistrationHandler implements MessageHandler {
     private final PathwayBroadcastService pathwayBroadcastService;
     private final ObjectMapper objectMapper;
     private final de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService redisMessaging;
+    private final de.mhus.nimbus.world.player.ws.redis.ChunkUpdateBroadcastListener chunkUpdateListener;
 
     @Override
     public String getMessageType() {
@@ -78,6 +79,9 @@ public class ChunkRegistrationHandler implements MessageHandler {
         log.debug("Chunk registration: session={}, total={}, new={}, worldId={}",
                 session.getWebSocketSession().getId(), requestedChunks.size(),
                 newChunks.size(), session.getWorldId());
+
+        // Ensure world is subscribed to chunk updates
+        chunkUpdateListener.subscribeToWorld(session.getWorldId().getId());
 
         // Publish chunk registration to Redis for world-life
         if (!newChunks.isEmpty()) {

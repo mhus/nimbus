@@ -194,6 +194,19 @@
             Cancel
           </button>
           <button
+            v-if="isEditMode"
+            type="button"
+            class="btn btn-warning"
+            :disabled="regenerating"
+            @click="handleRegenerate"
+          >
+            <span v-if="regenerating" class="loading loading-spinner"></span>
+            <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {{ regenerating ? 'Regenerating...' : 'Regenerate Layer' }}
+          </button>
+          <button
             type="submit"
             class="btn btn-primary"
             :disabled="saving"
@@ -258,6 +271,7 @@ const formData = ref<Partial<WLayer>>({
 const affectedChunksText = ref('');
 const errorMessage = ref('');
 const saving = ref(false);
+const regenerating = ref(false);
 
 // Model management
 const models = ref<LayerModelDto[]>([]);
@@ -439,6 +453,38 @@ const handleSave = async () => {
     errorMessage.value = error.message || 'Failed to save layer';
   } finally {
     saving.value = false;
+  }
+};
+
+/**
+ * Handle layer regeneration
+ */
+const handleRegenerate = async () => {
+  if (!props.layer?.id) return;
+
+  const confirmed = confirm(
+    'This will completely regenerate the layer.\n\n' +
+    '- For MODEL layers: Creates a job to recreate terrain from all models.\n' +
+    '- For GROUND layers: Marks all affected chunks as dirty.\n\n' +
+    'Continue?'
+  );
+
+  if (!confirmed) return;
+
+  errorMessage.value = '';
+  regenerating.value = true;
+
+  try {
+    await layerService.regenerate(props.worldId, props.layer.id);
+    logger.info('Layer regeneration triggered', { layerId: props.layer.id });
+
+    alert('Layer regeneration triggered successfully!');
+    emit('saved', formData.value as WLayer);
+  } catch (error: any) {
+    logger.error('Failed to trigger regeneration', {}, error);
+    errorMessage.value = error.message || 'Failed to trigger layer regeneration';
+  } finally {
+    regenerating.value = false;
   }
 };
 </script>

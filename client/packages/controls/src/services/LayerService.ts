@@ -82,6 +82,17 @@ export class LayerService {
   async deleteLayer(worldId: string, id: string): Promise<void> {
     return apiService.delete<void>(`/control/worlds/${worldId}/layers/${id}`);
   }
+
+  /**
+   * Regenerate layer
+   * Triggers complete regeneration of layer data
+   */
+  async regenerate(worldId: string, id: string): Promise<void> {
+    return apiService.post<void>(
+      `/control/worlds/${worldId}/layers/${id}/regenerate`,
+      {}
+    );
+  }
 }
 
 export const layerService = new LayerService();

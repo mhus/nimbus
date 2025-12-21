@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
 public class ELayerController extends BaseEditorController {
 
     private final WLayerService layerService;
+    private final de.mhus.nimbus.world.shared.job.WJobService jobService;
+    private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
 
     // DTOs moved to de.mhus.nimbus.world.shared.dto package for TypeScript generation
 
@@ -266,6 +268,98 @@ public class ELayerController extends BaseEditorController {
 
         log.info("Updated layer: id={}, name={}", id, updated.getName());
         return ResponseEntity.ok(toDto(updated));
+    }
+
+    /**
+     * Regenerate Layer.
+     * Triggers complete regeneration of layer data.
+     * - For MODEL layers: Creates job with executor "recreate-model-based-layer"
+     * - For GROUND layers: Marks all affected chunks as dirty
+     * POST /control/worlds/{worldId}/layers/{id}/regenerate
+     */
+    @PostMapping("/{id}/regenerate")
+    @Operation(summary = "Regenerate Layer")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Layer regeneration triggered"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Layer not found")
+    })
+    public ResponseEntity<?> regenerate(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Layer identifier") @PathVariable String id) {
+
+        log.debug("REGENERATE layer: worldId={}, id={}", worldId, id);
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(id, "id");
+        if (validation != null) return validation;
+
+        Optional<WLayer> opt = layerService.findById(id);
+        if (opt.isEmpty()) {
+            log.warn("Layer not found for regeneration: id={}", id);
+            return notFound("layer not found");
+        }
+
+        WLayer layer = opt.get();
+        if (!layer.getWorldId().equals(worldId)) {
+            log.warn("Layer worldId mismatch: expected={}, actual={}", worldId, layer.getWorldId());
+            return notFound("layer not found");
+        }
+
+        try {
+            if (layer.getLayerType() == de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+                // For MODEL layers: Create job
+                de.mhus.nimbus.world.shared.job.WJob job = jobService.createJob(
+                        worldId,
+                        "recreate-model-based-layer",
+                        "layer-regeneration",
+                        Map.of(
+                                "layerDataId", layer.getLayerDataId(),
+                                "markChunksDirty", "true"
+                        ),
+                        8, // High priority
+                        3  // Max retries
+                );
+
+                log.info("Created regeneration job for MODEL layer: layerId={} jobId={}", id, job.getId());
+
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "layerType", "MODEL",
+                        "jobId", job.getId(),
+                        "message", "Regeneration job created successfully"
+                ));
+
+            } else {
+                // For GROUND layers: Mark all affected chunks as dirty
+                List<String> affectedChunks = layer.isAllChunks()
+                        ? List.of() // TODO: Handle allChunks case - would need to get all existing chunks
+                        : layer.getAffectedChunks();
+
+                if (affectedChunks.isEmpty() && layer.isAllChunks()) {
+                    log.warn("Cannot regenerate GROUND layer with allChunks=true: layerId={}", id);
+                    return bad("Cannot regenerate layer with allChunks=true. Please specify affected chunks.");
+                }
+
+                dirtyChunkService.markChunksDirty(worldId, affectedChunks, "layer_regeneration");
+
+                log.info("Marked {} chunks dirty for GROUND layer: layerId={}", affectedChunks.size(), id);
+
+                return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "layerType", "GROUND",
+                        "chunksMarked", affectedChunks.size(),
+                        "message", "Chunks marked for regeneration successfully"
+                ));
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to trigger layer regeneration: layerId={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to trigger regeneration: " + e.getMessage()));
+        }
     }
 
     /**

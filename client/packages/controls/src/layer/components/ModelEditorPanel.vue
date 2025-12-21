@@ -189,6 +189,19 @@
             Cancel
           </button>
           <button
+            v-if="isEditMode"
+            type="button"
+            class="btn btn-secondary"
+            :disabled="syncing"
+            @click="handleSync"
+          >
+            <span v-if="syncing" class="loading loading-spinner"></span>
+            <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {{ syncing ? 'Syncing...' : 'Sync to Terrain' }}
+          </button>
+          <button
             type="submit"
             class="btn btn-primary"
             :disabled="saving"
@@ -241,6 +254,7 @@ const formData = ref<Partial<LayerModelDto>>({
 
 const errorMessage = ref('');
 const saving = ref(false);
+const syncing = ref(false);
 
 // Initialize form data
 if (props.model) {
@@ -352,6 +366,29 @@ const handleSave = async () => {
     errorMessage.value = error.message || 'Failed to save model';
   } finally {
     saving.value = false;
+  }
+};
+
+/**
+ * Handle manual sync to terrain
+ */
+const handleSync = async () => {
+  if (!props.model?.id) return;
+
+  errorMessage.value = '';
+  syncing.value = true;
+
+  try {
+    await layerModelService.syncToTerrain(props.worldId, props.layerId, props.model.id);
+    logger.info('Synced model to terrain', { modelId: props.model.id });
+
+    // Show success message (optional)
+    alert('Model synced to terrain successfully!');
+  } catch (error: any) {
+    logger.error('Failed to sync model', {}, error);
+    errorMessage.value = error.message || 'Failed to sync model to terrain';
+  } finally {
+    syncing.value = false;
   }
 };
 </script>

@@ -345,6 +345,83 @@ public class ELayerModelController extends BaseEditorController {
     }
 
     /**
+     * Sync Layer Model to Terrain.
+     * Manually triggers transfer of model data to terrain layer and marks chunks as dirty.
+     * POST /control/worlds/{worldId}/layers/{layerId}/models/{id}/sync
+     */
+    @PostMapping("/{id}/sync")
+    @Operation(summary = "Sync Layer Model to Terrain")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Model synced successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Model not found")
+    })
+    public ResponseEntity<?> syncToTerrain(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Layer identifier") @PathVariable String layerId,
+            @Parameter(description = "Model identifier") @PathVariable String id) {
+
+        log.debug("SYNC layer model to terrain: worldId={}, layerId={}, id={}", worldId, layerId, id);
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(layerId, "layerId");
+        if (validation != null) return validation;
+        validation = validateId(id, "id");
+        if (validation != null) return validation;
+
+        // Verify layer exists and belongs to world
+        Optional<WLayer> layerOpt = layerService.findById(layerId);
+        if (layerOpt.isEmpty()) {
+            log.warn("Layer not found: layerId={}", layerId);
+            return notFound("layer not found");
+        }
+
+        WLayer layer = layerOpt.get();
+        String lookupWorldId = WorldId.of(worldId).orElseThrow().withoutInstance().getId();
+        if (!layer.getWorldId().equals(lookupWorldId)) {
+            log.warn("Layer worldId mismatch: expected={}, actual={}", lookupWorldId, layer.getWorldId());
+            return notFound("layer not found");
+        }
+
+        // Verify model exists
+        Optional<WLayerModel> modelOpt = modelRepository.findById(id);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for sync: id={}", id);
+            return notFound("model not found");
+        }
+
+        WLayerModel model = modelOpt.get();
+        if (!model.getWorldId().equals(lookupWorldId)) {
+            log.warn("Model worldId mismatch: expected={}, actual={}", lookupWorldId, model.getWorldId());
+            return notFound("model not found");
+        }
+
+        // Verify layer type is MODEL
+        if (layer.getLayerType() != de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+            log.warn("Layer is not MODEL type: layerId={} type={}", layerId, layer.getLayerType());
+            return bad("layer is not MODEL type");
+        }
+
+        try {
+            // Transfer model to terrain with dirty chunk marking
+            int chunksAffected = layerService.transferModelToTerrain(id, true);
+            log.info("Manually synced model to terrain: modelId={}, chunks={}", id, chunksAffected);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "chunksAffected", chunksAffected,
+                    "message", "Model synced to terrain successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to sync model to terrain: modelId={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to sync model: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Delete Layer Model.
      * DELETE /control/worlds/{worldId}/layers/{layerId}/models/{id}
      */

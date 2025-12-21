@@ -45,24 +45,48 @@ public class ChunkUpdateBroadcastListener {
     private final WChunkService chunkService;
     private final ObjectMapper objectMapper;
 
+    // Track which worlds are already subscribed
+    private final java.util.Set<String> subscribedWorlds = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     /**
      * Subscribe to all active worlds on startup.
-     * TODO: Dynamically subscribe when new worlds become active
+     * Dynamically subscribes when sessions connect to new worlds.
      */
     @PostConstruct
     public void subscribeToWorlds() {
-        // Subscribe to "main" world for now
-        subscribeToWorld("main");
+        // Initial subscriptions will happen when sessions connect
+        log.info("ChunkUpdateBroadcastListener initialized - will subscribe to worlds dynamically");
     }
 
     /**
      * Subscribe to chunk update events for a specific world.
+     * Automatically called when handling chunk updates for a new world.
+     * Thread-safe - can be called from multiple threads.
      */
     public void subscribeToWorld(String worldId) {
-        redisMessaging.subscribe(worldId, "c.update", (topic, message) -> {
-            handleChunkUpdate(worldId, message);
-        });
-        log.info("Subscribed to chunk update events for world: {}", worldId);
+        // Extract base worldId without instance
+        String baseWorldId = de.mhus.nimbus.shared.types.WorldId.unchecked(worldId).withoutInstance().getId();
+
+        // Check if already subscribed
+        if (subscribedWorlds.contains(baseWorldId)) {
+            log.trace("Already subscribed to chunk updates for world: {}", baseWorldId);
+            return;
+        }
+
+        // Use synchronized to prevent race condition
+        synchronized (subscribedWorlds) {
+            // Double-check after acquiring lock
+            if (subscribedWorlds.contains(baseWorldId)) {
+                return;
+            }
+
+            redisMessaging.subscribe(baseWorldId, "c.update", (topic, message) -> {
+                handleChunkUpdate(baseWorldId, message);
+            });
+
+            subscribedWorlds.add(baseWorldId);
+            log.info("Subscribed to chunk update events for world: {}", baseWorldId);
+        }
     }
 
     /**
