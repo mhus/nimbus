@@ -5,7 +5,7 @@
  * Coordinates all rendering-related sub-services.
  */
 
-import { Engine, Scene, RenderingManager } from '@babylonjs/core';
+import { Engine, Scene, RenderingManager, Vector3 } from '@babylonjs/core';
 import { getLogger, ExceptionHandler } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import { TextureAtlas } from '../rendering/TextureAtlas';
@@ -311,6 +311,21 @@ export class EngineService {
         if (__EDITOR__) {
           this.selectService.autoSelectMode = SelectMode.BLOCK;
           logger.debug('Auto-select mode set to BLOCK (Editor build)');
+
+          // Listen for new blocks from network (for model selector watchBlocks mode)
+          const networkService = this.appContext.services.network;
+          if (networkService) {
+            networkService.on('newBlocks', (blocks: import('@nimbus/shared').Block[]) => {
+              if (this.selectService) {
+                // Convert Block positions to Vector3
+                const coordinates = blocks.map(b =>
+                  new Vector3(b.position.x, b.position.y, b.position.z)
+                );
+                this.selectService.onNewBlocks(coordinates);
+              }
+            });
+            logger.debug('SelectService: listening for newBlocks events');
+          }
         } else if (__VIEWER__) {
           this.selectService.autoSelectMode = SelectMode.INTERACTIVE;
           logger.debug('Auto-select mode set to INTERACTIVE (Viewer build)');

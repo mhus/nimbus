@@ -287,7 +287,7 @@ async function initializeCoreServices(appContext: AppContext): Promise<void> {
     networkService.registerHandler(chunkHandler);
 
     // Register BlockUpdateHandler
-    const blockUpdateHandler = new BlockUpdateHandler(chunkService);
+    const blockUpdateHandler = new BlockUpdateHandler(chunkService, networkService);
     networkService.registerHandler(blockUpdateHandler);
     logger.debug('🔵 BlockUpdateHandler registered for message type: b.u');
 

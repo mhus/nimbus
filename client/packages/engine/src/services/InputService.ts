@@ -26,6 +26,7 @@ import {
   ToggleShortcutsHandler,
   ToggleFullscreenHandler,
   ToggleVisibilityStateHandler,
+  ToggleModelSelectorHandler,
 } from '../input/handlers/ActionHandlers';
 import { RotateHandler } from '../input/handlers/RotationHandlers';
 import {
@@ -128,6 +129,7 @@ export class InputService {
       this.handlerRegistry.set('blockEditorActivate', new BlockEditorActivateHandler(this.playerService, this.appContext));
       this.handlerRegistry.set('editConfigActivate', new EditConfigActivateHandler(this.playerService, this.appContext));
       this.handlerRegistry.set('panelActivate', new PanelActivateHandler(this.playerService, this.appContext));
+      this.handlerRegistry.set('toggleModelSelector', new ToggleModelSelectorHandler(this.playerService, this.appContext));
     }
 
     logger.debug('Central handlers registered', {

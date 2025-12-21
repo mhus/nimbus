@@ -142,6 +142,7 @@ import {WorldTimeInfoCommand} from "./WorldTimeInfoCommand";
 import {getLogger} from "@nimbus/shared";
 import {ClearBlockTypeCacheCommand} from "./ClearBlockTypeCacheCommand";
 import {SetAutoSelectCommand} from "./SetAutoSelectCommand";
+import {ModelSelectorCommand} from "./ModelSelectorCommand";
 
 // Initialize logger (basic setup before ClientService)
 const logger = getLogger('CommandsFactory');
@@ -334,6 +335,9 @@ export class CommandsFactory {
 
         // Register auto-select mode command
         commandService.registerHandler(new SetAutoSelectCommand(appContext));
+
+        // Register model selector command
+        commandService.registerHandler(new ModelSelectorCommand(appContext));
 
         logger.debug('CommandService initialized with commands');
 

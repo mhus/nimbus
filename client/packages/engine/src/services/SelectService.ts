@@ -88,6 +88,15 @@ export class SelectService {
   private editHighlightMesh?: Mesh;
   private editHighlightMaterial?: StandardMaterial;
 
+  // Model selector (multi-block selection with custom color)
+  private modelSelectorEnabled: boolean = false;
+  private modelSelectorVisible: boolean = false;
+  private modelSelectorWatchBlocks: boolean = false;
+  private modelSelectorColor: Color3 = new Color3(1, 1, 0); // Default yellow
+  private modelSelectorCoordinates: Vector3[] = [];
+  private modelSelectorMeshes: Mesh[] = [];
+  private modelSelectorMaterial?: StandardMaterial;
+
   // Cached player properties (updated via event)
   private playerEyeHeight: number = 1.6; // Default value
   private playerSelectionRadius: number = 5.0; // Default value (fallback)
@@ -1014,8 +1023,343 @@ export class SelectService {
   }
 
   /**
-   * Dispose service
+   * Enable model selector
+   *
+   * Shows multiple blocks as selected with custom color.
+   * If already enabled, automatically disables and re-enables with new parameters.
+   *
+   * @param color Highlight color (hex string or Color3)
+   * @param watchBlocks Automatically add new blocks from network
+   * @param show Make visible immediately
+   * @param selected Initial list of coordinates to select
    */
+  enableModelSelector(
+    color: string | Color3,
+    watchBlocks: boolean,
+    show: boolean,
+    selected: Vector3[]
+  ): void {
+    try {
+      // If already enabled, disable first
+      if (this.modelSelectorEnabled) {
+        this.disableModelSelector();
+      }
+
+      // Parse color
+      if (typeof color === 'string') {
+        this.modelSelectorColor = Color3.FromHexString(color);
+      } else {
+        this.modelSelectorColor = color;
+      }
+
+      // Set state
+      this.modelSelectorEnabled = true;
+      this.modelSelectorWatchBlocks = watchBlocks;
+      this.modelSelectorVisible = show;
+
+      // Initialize coordinates
+      this.modelSelectorCoordinates = [...selected];
+
+      // Create material if not exists
+      if (!this.scene) {
+        logger.warn('Cannot initialize model selector: scene not available');
+        return;
+      }
+
+      if (!this.modelSelectorMaterial) {
+        this.modelSelectorMaterial = new StandardMaterial('modelSelectorMaterial', this.scene);
+        this.modelSelectorMaterial.wireframe = false;
+        this.modelSelectorMaterial.disableDepthWrite = true;
+        this.modelSelectorMaterial.alpha = 0.3;
+      }
+
+      // Update material color
+      this.modelSelectorMaterial.diffuseColor = this.modelSelectorColor;
+      this.modelSelectorMaterial.emissiveColor = this.modelSelectorColor.scale(0.5);
+
+      // Create meshes for all coordinates
+      this.updateModelSelectorMeshes();
+
+      logger.info('Model selector enabled', {
+        color: color,
+        watchBlocks,
+        show,
+        blockCount: selected.length,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.enableModelSelector');
+    }
+  }
+
+  /**
+   * Disable model selector
+   *
+   * Clears all meshes and coordinates.
+   */
+  disableModelSelector(): void {
+    try {
+      this.modelSelectorEnabled = false;
+      this.modelSelectorVisible = false;
+      this.modelSelectorWatchBlocks = false;
+      this.modelSelectorCoordinates = [];
+
+      // Dispose all meshes
+      this.modelSelectorMeshes.forEach(mesh => mesh.dispose());
+      this.modelSelectorMeshes = [];
+
+      logger.info('Model selector disabled');
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.disableModelSelector');
+    }
+  }
+
+  /**
+   * Show or hide model selector
+   *
+   * @param visible Visibility state
+   */
+  showModelSelector(visible: boolean): void {
+    try {
+      if (!this.modelSelectorEnabled) {
+        logger.warn('Cannot show model selector: not enabled');
+        return;
+      }
+
+      this.modelSelectorVisible = visible;
+
+      // Update mesh visibility
+      this.modelSelectorMeshes.forEach(mesh => {
+        mesh.setEnabled(visible);
+      });
+
+      logger.info('Model selector visibility changed', { visible });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.showModelSelector');
+    }
+  }
+
+  /**
+   * Add coordinates to model selector
+   *
+   * @param selected List of coordinates to add
+   */
+  addToModelSelector(selected: Vector3[]): void {
+    try {
+      if (!this.modelSelectorEnabled) {
+        logger.warn('Cannot add to model selector: not enabled');
+        return;
+      }
+
+      // Add new coordinates (avoid duplicates)
+      for (const coord of selected) {
+        const exists = this.modelSelectorCoordinates.some(
+          c => c.x === coord.x && c.y === coord.y && c.z === coord.z
+        );
+        if (!exists) {
+          this.modelSelectorCoordinates.push(coord.clone());
+        }
+      }
+
+      // Update meshes
+      this.updateModelSelectorMeshes();
+
+      logger.info('Added coordinates to model selector', {
+        addedCount: selected.length,
+        totalCount: this.modelSelectorCoordinates.length,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.addToModelSelector');
+    }
+  }
+
+  /**
+   * Remove coordinates from model selector
+   *
+   * @param selected List of coordinates to remove
+   */
+  removeFromModelSelector(selected: Vector3[]): void {
+    try {
+      if (!this.modelSelectorEnabled) {
+        logger.warn('Cannot remove from model selector: not enabled');
+        return;
+      }
+
+      // Remove coordinates
+      this.modelSelectorCoordinates = this.modelSelectorCoordinates.filter(coord => {
+        return !selected.some(
+          s => s.x === coord.x && s.y === coord.y && s.z === coord.z
+        );
+      });
+
+      // Update meshes
+      this.updateModelSelectorMeshes();
+
+      logger.info('Removed coordinates from model selector', {
+        removedCount: selected.length,
+        totalCount: this.modelSelectorCoordinates.length,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.removeFromModelSelector');
+    }
+  }
+
+  /**
+   * Get all coordinates in model selector
+   *
+   * @returns List of Vector3 coordinates
+   */
+  getModelSelectorCoordinates(): Vector3[] {
+    return [...this.modelSelectorCoordinates];
+  }
+
+  /**
+   * Check if model selector is enabled
+   *
+   * @returns True if model selector is enabled
+   */
+  isModelSelectorEnabled(): boolean {
+    return this.modelSelectorEnabled;
+  }
+
+  /**
+   * Check if model selector is visible
+   *
+   * @returns True if model selector is visible
+   */
+  isModelSelectorVisible(): boolean {
+    return this.modelSelectorVisible;
+  }
+
+  /**
+   * Toggle model selector visibility
+   *
+   * Convenience method to toggle visibility state.
+   */
+  toggleModelSelectorVisibility(): void {
+    if (!this.modelSelectorEnabled) {
+      logger.warn('Cannot toggle model selector visibility: not enabled');
+      return;
+    }
+
+    this.showModelSelector(!this.modelSelectorVisible);
+    logger.info('Model selector visibility toggled', {
+      visible: this.modelSelectorVisible,
+    });
+  }
+
+  /**
+   * Move all model selector blocks by an offset
+   *
+   * Moves all coordinates and updates meshes accordingly.
+   *
+   * @param offset Vector3 offset to move blocks by
+   */
+  moveModelSelector(offset: Vector3): void {
+    try {
+      if (!this.modelSelectorEnabled) {
+        logger.warn('Cannot move model selector: not enabled');
+        return;
+      }
+
+      if (this.modelSelectorCoordinates.length === 0) {
+        logger.warn('Cannot move model selector: no coordinates');
+        return;
+      }
+
+      // Move all coordinates by offset
+      this.modelSelectorCoordinates = this.modelSelectorCoordinates.map(coord => {
+        return new Vector3(
+          coord.x + offset.x,
+          coord.y + offset.y,
+          coord.z + offset.z
+        );
+      });
+
+      // Update meshes with new coordinates
+      this.updateModelSelectorMeshes();
+
+      logger.info('Model selector moved', {
+        offset: { x: offset.x, y: offset.y, z: offset.z },
+        blockCount: this.modelSelectorCoordinates.length,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.moveModelSelector');
+    }
+  }
+
+  /**
+   * Update model selector meshes based on current coordinates
+   *
+   * Creates or disposes meshes to match coordinate list.
+   */
+  private updateModelSelectorMeshes(): void {
+    if (!this.scene || !this.modelSelectorMaterial) {
+      return;
+    }
+
+    // Dispose all existing meshes
+    this.modelSelectorMeshes.forEach(mesh => mesh.dispose());
+    this.modelSelectorMeshes = [];
+
+    // Create mesh for each coordinate
+    for (const coord of this.modelSelectorCoordinates) {
+      const mesh = MeshBuilder.CreateBox(
+        `modelSelector_${coord.x}_${coord.y}_${coord.z}`,
+        { size: 1.0 },
+        this.scene
+      );
+
+      mesh.material = this.modelSelectorMaterial;
+      mesh.isPickable = false;
+      mesh.renderingGroupId = RENDERING_GROUPS.SELECTION_OVERLAY;
+
+      // Position at block center
+      mesh.position.set(coord.x + 0.5, coord.y + 0.5, coord.z + 0.5);
+
+      // Scale slightly larger
+      const scale = 1.02;
+      mesh.scaling.set(scale, scale, scale);
+
+      // Enable edge rendering
+      mesh.enableEdgesRendering();
+      mesh.edgesWidth = 3.0;
+      mesh.edgesColor = this.modelSelectorColor.toColor4(1.0);
+
+      // Set visibility
+      mesh.setEnabled(this.modelSelectorVisible);
+
+      this.modelSelectorMeshes.push(mesh);
+    }
+
+    logger.debug('Model selector meshes updated', {
+      meshCount: this.modelSelectorMeshes.length,
+    });
+  }
+
+  /**
+   * Handle new block from network (for watchBlocks mode)
+   *
+   * Called by NetworkService when new blocks are received in EDITOR mode.
+   *
+   * @param blocks List of new blocks
+   */
+  onNewBlocks(blocks: Vector3[]): void {
+    try {
+      if (!this.modelSelectorEnabled || !this.modelSelectorWatchBlocks) {
+        return;
+      }
+
+      // Add new blocks to model selector
+      this.addToModelSelector(blocks);
+
+      logger.debug('New blocks added to model selector', {
+        blockCount: blocks.length,
+      });
+    } catch (error) {
+      ExceptionHandler.handle(error, 'SelectService.onNewBlocks');
+    }
+  }
+
   /**
    * Fire shortcut (triggered by number keys 1-9, 0)
    *
@@ -1224,6 +1568,11 @@ export class SelectService {
     this.highlightMaterial?.dispose();
     this.editHighlightMesh?.dispose();
     this.editHighlightMaterial?.dispose();
+
+    // Dispose model selector resources
+    this.modelSelectorMeshes.forEach(mesh => mesh.dispose());
+    this.modelSelectorMeshes = [];
+    this.modelSelectorMaterial?.dispose();
 
     this.currentSelectedBlock = null;
     this.selectedEditBlock = null;

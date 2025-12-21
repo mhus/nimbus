@@ -36,6 +36,7 @@ interface KeyBinding {
  * - F2: Toggle visibility state (NONE_VISIBLE → ONLY_VITALS → ONLY_SHORTCUTS → ALL_VISIBLE)
  * - F5: Toggle Ego/Third-Person view
  * - F6: Toggle fullscreen
+ * - F8: Toggle model selector visibility (Editor only)
  * - T: Toggle shortcuts display
  * - . (Period): Rotate selection mode (Editor only)
  * - / (Slash): Activate selected block editor (Editor only)
@@ -75,6 +76,7 @@ export class WebInputController implements InputController {
   private blockEditorActivateHandler?: InputHandler;
   private editConfigActivateHandler?: InputHandler;
   private panelActivateHandler?: InputHandler;
+  private toggleModelSelectorHandler?: InputHandler;
 
   // Pointer lock state
   private pointerLocked: boolean = false;
@@ -148,6 +150,9 @@ export class WebInputController implements InputController {
     if (this.blockEditorActivateHandler) {
       this.keyBindings.set('F10', this.blockEditorActivateHandler);
     }
+    if (this.toggleModelSelectorHandler) {
+      this.keyBindings.set('F8', this.toggleModelSelectorHandler);
+    }
 
     // Space: Jump in Walk mode, Move up in Fly mode (handled dynamically)
     // Shift: Move down in Fly mode (handled dynamically)
@@ -193,6 +198,7 @@ export class WebInputController implements InputController {
       this.blockEditorActivateHandler = inputService.getHandler('blockEditorActivate');
       this.editConfigActivateHandler = inputService.getHandler('editConfigActivate');
       this.panelActivateHandler = inputService.getHandler('panelActivate');
+      this.toggleModelSelectorHandler = inputService.getHandler('toggleModelSelector');
     }
 
     // Build handlers array for update loop

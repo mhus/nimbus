@@ -186,3 +186,43 @@ export class ToggleVisibilityStateHandler extends InputHandler {
     // Toggle doesn't need continuous updates
   }
 }
+
+/**
+ * Toggle Model Selector Handler (F8 key)
+ * Toggles model selector visibility when enabled (Editor only)
+ */
+export class ToggleModelSelectorHandler extends InputHandler {
+  protected onActivate(value: number): void {
+    // Only available in editor mode
+    if (!__EDITOR__) {
+      return;
+    }
+
+    const selectService = this.appContext?.services.select;
+    if (!selectService) {
+      logger.warn('SelectService not available');
+      return;
+    }
+
+    // Check if model selector is enabled
+    if (!selectService.isModelSelectorEnabled()) {
+      logger.info('Model selector not enabled');
+      return;
+    }
+
+    // Toggle visibility
+    selectService.toggleModelSelectorVisibility();
+
+    logger.info('Model selector visibility toggled', {
+      visible: selectService.isModelSelectorVisible(),
+    });
+  }
+
+  protected onDeactivate(): void {
+    // No action needed on deactivation
+  }
+
+  protected onUpdate(deltaTime: number, value: number): void {
+    // Toggle doesn't need continuous updates
+  }
+}

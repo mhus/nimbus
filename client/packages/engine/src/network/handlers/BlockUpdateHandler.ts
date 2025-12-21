@@ -18,6 +18,7 @@ import {
 } from '@nimbus/shared';
 import { MessageHandler } from '../MessageHandler';
 import type { ChunkService } from '../../services/ChunkService';
+import type { NetworkService } from '../../services/NetworkService';
 
 const logger = getLogger('BlockUpdateHandler');
 
@@ -27,7 +28,10 @@ const logger = getLogger('BlockUpdateHandler');
 export class BlockUpdateHandler extends MessageHandler<Block[]> {
   readonly messageType = MessageType.BLOCK_UPDATE;
 
-  constructor(private chunkService: ChunkService) {
+  constructor(
+    private chunkService: ChunkService,
+    private networkService: NetworkService
+  ) {
     super();
   }
 
@@ -62,5 +66,12 @@ export class BlockUpdateHandler extends MessageHandler<Block[]> {
 
       logger.debug('Block updates forwarded to ChunkService');
 
+      // Emit event for new blocks if in EDITOR mode
+      // Filter out deleted blocks (blockTypeId === '0')
+      const newBlocks = blocks.filter(b => b.blockTypeId !== '0');
+      if (newBlocks.length > 0) {
+        this.networkService.emit('newBlocks', newBlocks);
+        logger.debug('New blocks event emitted', { blockCount: newBlocks.length });
+      }
   }
 }
