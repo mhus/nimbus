@@ -97,6 +97,7 @@
         @close="closeEditor"
         @saved="handleSaved"
         @open-model-editor="handleOpenModelEditor"
+        @open-grid-editor="handleOpenGridEditor"
       />
 
     </template>
@@ -114,6 +115,20 @@
       @saved="handleModelSaved"
     />
   </Teleport>
+
+  <!-- Block Grid Editor (using Teleport) -->
+  <Teleport to="body">
+    <BlockGridEditor
+      v-if="isGridEditorOpen"
+      :world-id="currentWorldId!"
+      :layer-id="gridEditorParams.layerId!"
+      :layer-name="gridEditorParams.layerName || ''"
+      :source-type="gridEditorParams.sourceType"
+      :model-id="gridEditorParams.modelId"
+      :model-name="gridEditorParams.modelName"
+      @close="closeGridEditor"
+    />
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -128,6 +143,7 @@ import ErrorAlert from '@components/ErrorAlert.vue';
 import LayerList from '@layer/components/LayerList.vue';
 import LayerEditorPanel from '@layer/components/LayerEditorPanel.vue';
 import ModelEditorPanel from '@layer/components/ModelEditorPanel.vue';
+import BlockGridEditor from '@layer/components/BlockGridEditor.vue';
 
 const { currentWorldId, loadWorlds } = useWorld();
 
@@ -158,6 +174,18 @@ const isModelEditorOpen = ref(false);
 const selectedModel = ref<LayerModelDto | null>(null);
 const modelEditorLayerId = ref<string | null>(null);
 const modelEditorLayerDataId = ref<string | null>(null);
+
+// Grid editor state
+const isGridEditorOpen = ref(false);
+const gridEditorParams = ref<{
+  sourceType: 'terrain' | 'model';
+  layerId?: string;
+  layerName?: string;
+  modelId?: string;
+  modelName?: string;
+}>({
+  sourceType: 'terrain'
+});
 
 // Load layers when world changes
 watch(currentWorldId, () => {
@@ -272,5 +300,29 @@ const handleModelSaved = async () => {
   if (layerEditorRef.value) {
     await layerEditorRef.value.loadModels();
   }
+};
+
+/**
+ * Handle open grid editor
+ */
+const handleOpenGridEditor = (params: {
+  sourceType: 'terrain' | 'model';
+  layerId?: string;
+  layerName?: string;
+  modelId?: string;
+  modelName?: string;
+}) => {
+  gridEditorParams.value = params;
+  isGridEditorOpen.value = true;
+};
+
+/**
+ * Close grid editor
+ */
+const closeGridEditor = () => {
+  isGridEditorOpen.value = false;
+  gridEditorParams.value = {
+    sourceType: 'terrain'
+  };
 };
 </script>

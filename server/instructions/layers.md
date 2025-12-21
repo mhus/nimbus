@@ -141,18 +141,20 @@ oder ein LayerModel, der alle Blocks mit einem mal gespeichert hat.
 - Benutze das bestehende Navigation Component (wird auch im Block Editor genutzt) um durch das Drahtgitter zu navigieren.
 
 
-[ ] Erstelle diese Componente in ../client/packages/controls
+[?] Erstelle diese Componente in ../client/packages/controls
 
-[ ] In layer-editor.html soll für jeden Layer der GridEditor geöffnet werden können.
+[?] In layer-editor.html soll für jeden Layer der GridEditor geöffnet werden können.
 Es werden dann immer die Daten des WLayerTerrain angezeigt.
 - Erstelle dazu einen neuen REST Endpunkt der die Chunks zurückgibt, aber nur die Coordinaten für jeden Block in einer Liste. 
 - Bei Select eines Blocks werden die Daten des Blocks durch einen zweiten REST Endpunkt abgerufen und angezeigt.
 
-[ ] In layer-editor.html soll für jeden Model Layer der GridEditor geöffnet werden können.
+[?] In layer-editor.html soll für jeden Model Layer der GridEditor geöffnet werden können.
 Es werden dann immer die Daten des WLayerModel angezeigt.
 - Erstelle dazu einen neuen REST Endpunkt der die coordinaten der Blocks des WLayerModel zurückgibt, in einer Liste.
 - Bei Select eines Blocks werden die Daten des Blocks durch einen zweiten REST Endpunkt abgerufen und angezeigt.
   (Das kann der gleiche endpunkt sein, aber auf einem anderen Layer Model + ModelId)
+
+-- Wichtig fuer WLayerTerrain: Die daten muessen in chunks geladen werden. Aktuell ist ein chunk 32 Blocks. Du kannst das aus der WorldInfo laden
 
 ## Editing Layers
 
@@ -165,7 +167,7 @@ Die Funktionalität muss jetzt angepasst werden
 - Das muss mit im redis gespeichert werden.
 - Beim schreiben/loschen von Blöcken muss das im EditService berücksichtigt werden.
 
-[ ] Im edit-config ist noch eine gruppe zur auswahl, die ist als integer wahlbar und nur noch in WLayerModel vorhanden.
+[?] Im edit-config ist noch eine gruppe zur auswahl, die ist als integer wahlbar und nur noch in WLayerModel vorhanden.
 Dort ist sie ein mapping von Text in Integer. d.h. in der auswahl bitte den text anzeigen, aber den integer speichern.
 Der soll bei jedem block (LayerBlock) beim speichern automatisch gesetzt werden.
 
