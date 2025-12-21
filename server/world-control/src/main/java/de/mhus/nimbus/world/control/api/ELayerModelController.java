@@ -221,6 +221,12 @@ public class ELayerModelController extends BaseEditorController {
 
             WLayerModel saved = modelRepository.save(model);
 
+            // Transfer model to terrain if layer type is MODEL
+            if (layer.getLayerType() == de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+                int chunksAffected = layerService.transferModelToTerrain(saved.getId(), true);
+                log.info("Transferred model to terrain: modelId={}, chunks={}", saved.getId(), chunksAffected);
+            }
+
             log.info("Created layer model: id={}, layerDataId={}, worldId={}, mountX={}, mountY={}, mountZ={}",
                     saved.getId(), saved.getLayerDataId(), saved.getWorldId(),
                     saved.getMountX(), saved.getMountY(), saved.getMountZ());
@@ -326,6 +332,13 @@ public class ELayerModelController extends BaseEditorController {
 
         model.touchUpdate();
         WLayerModel updated = modelRepository.save(model);
+
+        // Transfer model to terrain if layer type is MODEL
+        WLayer layer = layerOpt.get();
+        if (layer.getLayerType() == de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+            int chunksAffected = layerService.transferModelToTerrain(updated.getId(), true);
+            log.info("Transferred updated model to terrain: modelId={}, chunks={}", updated.getId(), chunksAffected);
+        }
 
         log.info("Updated layer model: id={}", id);
         return ResponseEntity.ok(toDto(updated));
