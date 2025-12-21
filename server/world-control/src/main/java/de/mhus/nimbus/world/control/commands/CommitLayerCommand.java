@@ -111,9 +111,23 @@ public class CommitLayerCommand implements Command {
                     return CommandResult.error(-1, "Model does not belong to selected layer");
                 }
 
-                log.info("Calling commitToModel with {} overlay keys", overlayKeys.size());
+                // Validate group selection (if group > 0)
+                int selectedGroup = state.getSelectedGroup();
+                if (selectedGroup > 0) {
+                    // Check if group exists in model.groups
+                    boolean groupExists = model.getGroups() != null &&
+                            model.getGroups().containsValue(selectedGroup);
+                    if (!groupExists) {
+                        log.warn("Selected group {} not found in model groups: {}", selectedGroup, model.getGroups());
+                        // Continue anyway but log warning
+                    } else {
+                        log.info("Using group {} for block assignment", selectedGroup);
+                    }
+                }
+
+                log.info("Calling commitToModel with {} overlay keys, group={}", overlayKeys.size(), selectedGroup);
                 // Commit to WLayerModel instead of WLayerTerrain
-                return commitToModel(worldId, sessionId, model, overlayKeys, state.getSelectedGroup());
+                return commitToModel(worldId, sessionId, model, overlayKeys, selectedGroup);
             }
 
             // 4. For each chunk: load, merge, save, mark dirty

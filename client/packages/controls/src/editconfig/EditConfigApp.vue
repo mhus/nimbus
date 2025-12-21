@@ -325,14 +325,18 @@
               <!-- Group Selection -->
               <div class="form-control w-full mt-2">
                 <label class="label py-1">
-                  <span class="label-text-alt text-xs">Group (0 = all)</span>
+                  <span class="label-text-alt text-xs">Group</span>
                 </label>
-                <input
+                <select
                   v-model.number="editState.selectedGroup"
-                  type="number"
-                  min="0"
-                  class="input input-bordered input-sm w-full text-xs"
-                />
+                  class="select select-bordered select-sm w-full text-xs"
+                  :disabled="saving || editState.editMode"
+                >
+                  <option :value="0">No Group (0)</option>
+                  <option v-for="group in availableGroups" :key="group.id" :value="group.id">
+                    {{ group.name }} ({{ group.id }})
+                  </option>
+                </select>
               </div>
             </div>
           </div>
@@ -482,6 +486,13 @@ const availableModels = ref<Array<{
   mountY: number;
   mountZ: number;
   order: number;
+  groups: Record<string, number>;
+}>>([]);
+
+// Available groups from selected model
+const availableGroups = ref<Array<{
+  name: string;
+  id: number;
 }>>([]);
 
 // Legacy state refs
@@ -761,12 +772,38 @@ watch(currentEditAction, (newAction) => {
 watch(() => editState.value.selectedLayer, async (newLayer) => {
   // Clear model selection when layer changes
   editState.value.selectedModelId = null;
+  availableGroups.value = [];
 
   if (newLayer) {
     await fetchModels();
   } else {
     availableModels.value = [];
   }
+});
+
+// Watch selectedModelId and load groups from model
+watch(() => editState.value.selectedModelId, (newModelId) => {
+  if (!newModelId) {
+    availableGroups.value = [];
+    editState.value.selectedGroup = 0;
+    return;
+  }
+
+  // Find selected model and extract groups
+  const model = availableModels.value.find(m => m.id === newModelId);
+  if (model && model.groups) {
+    // Convert Record<string, number> to Array<{name, id}>
+    availableGroups.value = Object.entries(model.groups).map(([name, id]) => ({
+      name,
+      id
+    }));
+    console.log('[Groups] Loaded', availableGroups.value.length, 'groups from model');
+  } else {
+    availableGroups.value = [];
+  }
+
+  // Reset selected group when model changes
+  editState.value.selectedGroup = 0;
 });
 
 // Lifecycle hooks
