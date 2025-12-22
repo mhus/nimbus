@@ -63,9 +63,10 @@ public class ELayerBlockGridController {
         }
 
         WLayer layer = layerOpt.get();
-        if (layer.getLayerType() != LayerType.GROUND) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Layer is not TERRAIN type"));
-        }
+
+        // Both GROUND and MODEL layers can have terrain data
+        // GROUND: terrain is the primary storage
+        // MODEL: terrain is the projection/cache of models after sync
 
         // Load world to get chunkSize
         Optional<WWorld> worldOpt = worldRepository.findByWorldId(worldId);
@@ -215,9 +216,8 @@ public class ELayerBlockGridController {
         }
 
         WLayer layer = layerOpt.get();
-        if (layer.getLayerType() != LayerType.GROUND) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Layer is not TERRAIN type"));
-        }
+
+        // Both GROUND and MODEL layers can have terrain data
 
         // Load world to get chunkSize
         Optional<WWorld> worldOpt = worldRepository.findByWorldId(worldId);

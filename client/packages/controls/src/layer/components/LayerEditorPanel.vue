@@ -108,55 +108,6 @@
           </label>
         </div>
 
-
-        <!-- Grid Editor Button (only in edit mode) -->
-        <div v-if="isEditMode" class="divider">Visualization</div>
-
-        <div v-if="isEditMode" class="form-control">
-          <button
-            v-if="formData.layerType === 'GROUND'"
-            type="button"
-            class="btn btn-outline btn-info"
-            @click="openGridEditor"
-          >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
-            </svg>
-            Open Grid Editor (Ground)
-          </button>
-          <label v-if="formData.layerType === 'GROUND'" class="label">
-            <span class="label-text-alt">Visualize blocks from all chunks in isometric view</span>
-          </label>
-
-          <button
-            v-if="formData.layerType === 'MODEL'"
-            type="button"
-            class="btn btn-outline btn-info"
-            @click="openGridEditorWithModel"
-            :disabled="models.length === 0"
-          >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
-            </svg>
-            Open Grid Editor (Model)
-          </button>
-          <label v-if="formData.layerType === 'MODEL'" class="label">
-            <span class="label-text-alt">Visualize blocks from selected model in isometric view</span>
-          </label>
-
-          <!-- Model Selection for Grid Editor (MODEL type only) -->
-          <select
-            v-if="formData.layerType === 'MODEL' && models.length > 0"
-            v-model="selectedModelForGrid"
-            class="select select-bordered select-sm mt-2"
-          >
-            <option value="">Select model to visualize</option>
-            <option v-for="model in models" :key="model.id" :value="model.id">
-              {{ model.title || model.name }} - Mount: ({{ model.mountX }}, {{ model.mountY }}, {{ model.mountZ }})
-            </option>
-          </select>
-        </div>
-
         <!-- Model Management (only for MODEL layers and edit mode) -->
         <div v-if="isEditMode && formData.layerType === 'MODEL'" class="divider">Layer Models</div>
 
@@ -192,6 +143,17 @@
             @click="emit('close')"
           >
             Cancel
+          </button>
+          <button
+            v-if="isEditMode"
+            type="button"
+            class="btn btn-info btn-outline"
+            @click="openGridEditor"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+            </svg>
+            Open Grid Editor (Terrain)
           </button>
           <button
             v-if="isEditMode"
@@ -279,7 +241,7 @@ const models = ref<LayerModelDto[]>([]);
 const loadingModels = ref(false);
 
 // Grid editor state
-const selectedModelForGrid = ref('');
+// Removed: selectedModelForGrid - no longer needed
 const showGridEditor = ref(false);
 
 // Initialize form data
@@ -357,35 +319,14 @@ const handleDeleteModel = async (model: LayerModelDto) => {
 /**
  * Open grid editor for TERRAIN layer
  */
+/**
+ * Open grid editor - always opens terrain view for this layer
+ */
 const openGridEditor = () => {
   emit('openGridEditor', {
     sourceType: 'terrain',
     layerId: props.layer?.id,
     layerName: props.layer?.name
-  });
-};
-
-/**
- * Open grid editor for MODEL layer
- */
-const openGridEditorWithModel = () => {
-  if (!selectedModelForGrid.value) {
-    errorMessage.value = 'Please select a model to visualize';
-    return;
-  }
-
-  const selectedModel = models.value.find(m => m.id === selectedModelForGrid.value);
-  if (!selectedModel) {
-    errorMessage.value = 'Selected model not found';
-    return;
-  }
-
-  emit('openGridEditor', {
-    sourceType: 'model',
-    layerId: props.layer?.id,
-    layerName: props.layer?.name,
-    modelId: selectedModel.id,
-    modelName: selectedModel.title || selectedModel.name
   });
 };
 

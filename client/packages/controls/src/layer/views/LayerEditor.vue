@@ -88,9 +88,9 @@
         </div>
       </div>
 
-      <!-- Editor Dialog -->
+      <!-- Editor Dialog (hidden when model editor is open) -->
       <LayerEditorPanel
-        v-if="isEditorOpen"
+        v-if="isEditorOpen && !isModelEditorOpen"
         ref="layerEditorRef"
         :layer="selectedLayer"
         :world-id="currentWorldId!"
@@ -113,6 +113,7 @@
       :world-id="currentWorldId!"
       @close="closeModelEditor"
       @saved="handleModelSaved"
+      @open-grid-editor="handleOpenGridEditor"
     />
   </Teleport>
 

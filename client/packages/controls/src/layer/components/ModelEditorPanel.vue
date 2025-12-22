@@ -191,6 +191,17 @@
           <button
             v-if="isEditMode"
             type="button"
+            class="btn btn-info btn-outline"
+            @click="openGridEditor"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+            </svg>
+            Open Grid Editor
+          </button>
+          <button
+            v-if="isEditMode"
+            type="button"
             class="btn btn-secondary"
             :disabled="syncing"
             @click="handleSync"
@@ -236,6 +247,13 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'saved', model: LayerModelDto): void;
+  (e: 'openGridEditor', params: {
+    sourceType: 'model';
+    layerId: string;
+    layerName?: string;
+    modelId: string;
+    modelName?: string;
+  }): void;
 }>();
 
 const isEditMode = computed(() => !!props.model);
@@ -371,6 +389,26 @@ const handleSave = async () => {
 
 /**
  * Handle manual sync to terrain
+ */
+/**
+ * Open grid editor for this model
+ */
+const openGridEditor = () => {
+  if (!props.model?.id) {
+    errorMessage.value = 'Model not saved yet';
+    return;
+  }
+
+  emit('openGridEditor', {
+    sourceType: 'model',
+    layerId: props.layerId,
+    modelId: props.model.id,
+    modelName: formData.value.title || formData.value.name || 'Unnamed Model'
+  });
+};
+
+/**
+ * Sync model to terrain
  */
 const handleSync = async () => {
   if (!props.model?.id) return;

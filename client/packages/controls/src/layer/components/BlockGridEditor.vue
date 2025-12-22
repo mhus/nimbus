@@ -1,6 +1,6 @@
 <template>
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="handleClose">
-    <div class="bg-base-100 rounded-lg shadow-xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col">
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center" style="z-index: 9999;" @click.self="handleClose">
+    <div class="bg-base-100 rounded-lg shadow-xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col" style="z-index: 10000;">
       <!-- Header -->
       <div class="p-4 border-b border-base-300 flex items-center justify-between">
         <div>
@@ -101,7 +101,7 @@
               @navigate="handlePanView"
             />
             <div class="text-xs text-base-content/70 mt-2">
-              Step: {{ navigationStep }} blocks (X/Z), Y unchanged
+              Step: {{ navigationStep }} blocks
             </div>
           </div>
 
@@ -242,7 +242,12 @@ const viewRotation = ref(0);  // Default: 0 degrees
 
 // View center position (for panning the visible grid area)
 // Start with a reasonable default that will be updated after first load
-const viewCenter = ref<{ x: number; y: number; z: number }>({ x: 0, y: 64, z: 0 });
+// Models start at Y=0, Terrain starts at Y=64
+const viewCenter = ref<{ x: number; y: number; z: number }>({
+  x: 0,
+  y: props.sourceType === 'model' ? 0 : 64,
+  z: 0
+});
 
 // Canvas
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -620,8 +625,8 @@ async function loadBlockCoordinates() {
         color: block.color
       }));
 
-      // Initialize view center for model
-      if (allBlockCoordinates.value.length > 0 && viewCenter.value.x === 0 && viewCenter.value.y === 0 && viewCenter.value.z === 0) {
+      // Initialize view center for model based on actual block bounds
+      if (allBlockCoordinates.value.length > 0) {
         const bounds = {
           minX: Math.min(...allBlockCoordinates.value.map(b => b.x)),
           maxX: Math.max(...allBlockCoordinates.value.map(b => b.x)),
@@ -636,6 +641,8 @@ async function loadBlockCoordinates() {
           y: Math.floor((bounds.minY + bounds.maxY) / 2),
           z: Math.floor((bounds.minZ + bounds.maxZ) / 2),
         };
+
+        console.log('[BlockGridEditor] Model view center set to:', viewCenter.value, 'bounds:', bounds);
       }
 
       applyBlockLimit();
@@ -795,14 +802,9 @@ function handleCanvasHover(event: MouseEvent) {
 }
 
 // Handle pan view navigation (moves the visible area)
-// Only X and Z change, Y stays unchanged
 async function handlePanView(position: { x: number; y: number; z: number }) {
-  console.log('[handlePanView] Moving view center from', viewCenter.value, 'to X/Z:', position.x, position.z);
-  viewCenter.value = {
-    x: position.x,
-    y: viewCenter.value.y,  // Keep Y unchanged
-    z: position.z
-  };
+  console.log('[handlePanView] Moving view center from', viewCenter.value, 'to', position);
+  viewCenter.value = position;
 
   if (props.sourceType === 'terrain') {
     // For terrain: reload blocks from backend with new center
