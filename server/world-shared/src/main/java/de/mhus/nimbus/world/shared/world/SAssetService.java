@@ -7,16 +7,21 @@ import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Service zur Verwaltung von Assets (Inline oder extern gespeichert).
@@ -31,6 +36,9 @@ public class SAssetService {
 
     private final SAssetRepository repository;
     private final StorageService storageService; // optional injected
+
+    @Value("${nimbus.asset.compression.enabled:true}")
+    private boolean compressionEnabled;
 
     /**
      * Speichert ein Asset mit Metadaten (publicData).
@@ -59,10 +67,38 @@ public class SAssetService {
                 .build();
         asset.setCreatedAt(Instant.now());
 
-        var storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, collection.worldId().getId(), "assets/" + collection.path(), stream);
+        // Compression if enabled
+        InputStream finalStream = stream;
+        long originalSize = -1;
+        if (compressionEnabled) {
+            try {
+                byte[] originalData = stream.readAllBytes();
+                originalSize = originalData.length;
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                    gzip.write(originalData);
+                    gzip.finish();
+                }
+                byte[] compressedData = buffer.toByteArray();
+                finalStream = new ByteArrayInputStream(compressedData);
+                asset.setCompressed(true);
+                log.debug("Asset compressed: path={} original={} compressed={} ratio={}",
+                        collection.path(), originalSize, compressedData.length,
+                        String.format("%.1f%%", 100.0 * compressedData.length / originalSize));
+            } catch (Exception e) {
+                log.warn("Failed to compress asset, storing uncompressed: path={}", collection.path(), e);
+                finalStream = new ByteArrayInputStream(new byte[0]); // Fallback to empty if compression fails
+                asset.setCompressed(false);
+            }
+        } else {
+            asset.setCompressed(false);
+        }
+
+        var storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, collection.worldId().getId(), "assets/" + collection.path(), finalStream);
         asset.setStorageId(storageInfo.id());
         asset.setSize(storageInfo.size());
-        log.debug("Storing asset externally path={} size={} storageId={} world={}", collection.path(), storageInfo.size(), storageInfo.id(), collection.worldId());
+        log.debug("Storing asset externally path={} size={} storageId={} world={} compressed={}",
+                collection.path(), storageInfo.size(), storageInfo.id(), collection.worldId(), asset.isCompressed());
 
         return repository.save(asset);
     }
@@ -97,7 +133,22 @@ public class SAssetService {
     public InputStream loadContent(SAsset asset) {
         if (asset == null) return null;
         if (!asset.isEnabled()) throw new IllegalStateException("Asset disabled: " + asset.getId());
-        return storageService.load(asset.getStorageId());
+
+        InputStream stream = storageService.load(asset.getStorageId());
+        if (stream == null) return null;
+
+        // Decompression if needed
+        // Note: If compressed field is not set in DB (legacy data), it defaults to false (uncompressed)
+        if (asset.isCompressed()) {
+            try {
+                return new GZIPInputStream(stream);
+            } catch (Exception e) {
+                log.error("Failed to decompress asset: id={} path={}", asset.getId(), asset.getPath(), e);
+                return new ByteArrayInputStream(new byte[0]);
+            }
+        }
+
+        return stream;
     }
 
     @Transactional
@@ -128,18 +179,51 @@ public class SAssetService {
         if (stream == null) return null;
         return repository.findById(asset.getId()).map(a -> {
             if (!a.isEnabled()) throw new IllegalStateException("Asset disabled: " + a.getId());
+
+            // Compression if enabled
+            InputStream finalStream = stream;
+            long originalSize = -1;
+            if (compressionEnabled) {
+                try {
+                    byte[] originalData = stream.readAllBytes();
+                    originalSize = originalData.length;
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                        gzip.write(originalData);
+                        gzip.finish();
+                    }
+                    byte[] compressedData = buffer.toByteArray();
+                    finalStream = new ByteArrayInputStream(compressedData);
+                    a.setCompressed(true);
+                    log.debug("Asset compressed on update: path={} original={} compressed={} ratio={}",
+                            a.getPath(), originalSize, compressedData.length,
+                            String.format("%.1f%%", 100.0 * compressedData.length / originalSize));
+                } catch (Exception e) {
+                    log.warn("Failed to compress asset on update, storing uncompressed: path={}", a.getPath(), e);
+                    try {
+                        stream.reset(); // Try to reset stream if possible
+                    } catch (Exception ignored) {
+                        // Stream may not support reset, proceed with empty stream
+                        finalStream = new ByteArrayInputStream(new byte[0]);
+                    }
+                    a.setCompressed(false);
+                }
+            } else {
+                a.setCompressed(false);
+            }
+
             if (StringUtils.isNotEmpty(a.getStorageId())) {
-                var storageId = storageService.update(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, a.getStorageId(), stream);
+                var storageId = storageService.update(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, a.getStorageId(), finalStream);
                 a.setSize(storageId.size());
                 a.setStorageId(storageId.id());
-                log.debug("Updated external content id={}", storageId.id());
+                log.debug("Updated external content id={} compressed={}", storageId.id(), a.isCompressed());
             } else {
                 var worldId = a.getWorldId();
                 var path = a.getPath();
-                var storageId = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, stream);
+                var storageId = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, finalStream);
                 a.setSize(storageId.size());
                 a.setStorageId(storageId.id());
-                log.debug("Updated/Created external content id={}", storageId.id());
+                log.debug("Updated/Created external content id={} compressed={}", storageId.id(), a.isCompressed());
             }
             return repository.save(a);
         }).orElse(null);
@@ -165,7 +249,7 @@ public class SAssetService {
         if (newPath == null || newPath.isBlank()) throw new IllegalArgumentException("newPath required");
         if (!source.isEnabled()) throw new IllegalStateException("Source asset disabled: " + source.getId());
 
-        // Load content from source
+        // Load content from source (this decompresses if necessary)
         InputStream sourceContent = loadContent(source);
         if (sourceContent == null) {
             throw new IllegalStateException("Failed to load source asset content: " + source.getId());
@@ -182,6 +266,33 @@ public class SAssetService {
                 .build();
         duplicate.setCreatedAt(Instant.now());
 
+        // Compression if enabled
+        InputStream finalStream = sourceContent;
+        long originalSize = -1;
+        if (compressionEnabled) {
+            try {
+                byte[] originalData = sourceContent.readAllBytes();
+                originalSize = originalData.length;
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                    gzip.write(originalData);
+                    gzip.finish();
+                }
+                byte[] compressedData = buffer.toByteArray();
+                finalStream = new ByteArrayInputStream(compressedData);
+                duplicate.setCompressed(true);
+                log.debug("Asset compressed on duplicate: path={} original={} compressed={} ratio={}",
+                        newPath, originalSize, compressedData.length,
+                        String.format("%.1f%%", 100.0 * compressedData.length / originalSize));
+            } catch (Exception e) {
+                log.warn("Failed to compress asset on duplicate, storing uncompressed: path={}", newPath, e);
+                finalStream = new ByteArrayInputStream(new byte[0]);
+                duplicate.setCompressed(false);
+            }
+        } else {
+            duplicate.setCompressed(false);
+        }
+
         // Store content in new location
         WorldId worldId = WorldId.of(source.getWorldId())
                 .orElseThrow(() -> new IllegalStateException("Invalid worldId in source asset"));
@@ -190,14 +301,14 @@ public class SAssetService {
                 STORAGE_SCHEMA_VERSION,
                 worldId.getId(),
                 "assets/" + newPath,
-                sourceContent
+                finalStream
         );
 
         duplicate.setStorageId(storageInfo.id());
         duplicate.setSize(storageInfo.size());
 
-        log.debug("Duplicated asset: sourcePath={}, newPath={}, size={}, storageId={}",
-                  source.getPath(), newPath, storageInfo.size(), storageInfo.id());
+        log.debug("Duplicated asset: sourcePath={}, newPath={}, size={}, storageId={}, compressed={}",
+                  source.getPath(), newPath, storageInfo.size(), storageInfo.id(), duplicate.isCompressed());
 
         return repository.save(duplicate);
     }

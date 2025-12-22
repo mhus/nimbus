@@ -9,6 +9,18 @@ spring:
   redis:
     url: ${REDIS_URL:redis://localhost:6379}
 
+nimbus:
+  chunk:
+    compression:
+      enabled: ${CHUNK_COMPRESSION_ENABLED:true}
+  layer:
+    terrain:
+      compression:
+        enabled: ${LAYER_TERRAIN_COMPRESSION_ENABLED:true}
+  asset:
+    compression:
+      enabled: ${ASSET_COMPRESSION_ENABLED:true}
+
 world:
   player:
     readiness:

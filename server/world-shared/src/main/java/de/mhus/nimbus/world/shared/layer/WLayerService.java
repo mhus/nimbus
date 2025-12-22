@@ -6,14 +6,18 @@ import de.mhus.nimbus.shared.types.SchemaVersion;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Service for layer management (CRUD operations).
@@ -43,6 +47,9 @@ public class WLayerService {
     private final StorageService storageService;
     private final ObjectMapper objectMapper;
     private final WWorldService worldService;
+
+    @Value("${nimbus.layer.terrain.compression.enabled:true}")
+    private boolean compressionEnabled;
 
     // ==================== LAYER CRUD ====================
 
@@ -329,8 +336,28 @@ public class WLayerService {
                     return newEntity;
                 });
 
+        // Compression if enabled
+        byte[] dataBytes;
+        if (compressionEnabled) {
+            try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                 GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                gzip.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                gzip.finish();
+                dataBytes = buffer.toByteArray();
+                entity.setCompressed(true);
+                log.debug("Layer terrain chunk compressed: layerDataId={} chunkKey={} original={} compressed={} ratio={}",
+                        layerDataId, chunkKey, json.length(), dataBytes.length,
+                        String.format("%.1f%%", 100.0 * dataBytes.length / json.length()));
+            } catch (Exception e) {
+                throw new IllegalStateException("Failed to compress layer terrain chunk", e);
+            }
+        } else {
+            dataBytes = json.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            entity.setCompressed(false);
+        }
+
         // Store via StorageService
-        try (InputStream stream = new ByteArrayInputStream(json.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+        try (InputStream stream = new ByteArrayInputStream(dataBytes)) {
             StorageService.StorageInfo storageInfo;
             if (entity.getStorageId() != null) {
                 storageInfo = storageService.update(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, entity.getStorageId(), stream);
@@ -338,8 +365,8 @@ public class WLayerService {
                 storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "layer/terrain/" + layerDataId + "/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
-            log.debug("Terrain chunk stored: layerDataId={} chunkKey={} storageId={} size={}",
-                    layerDataId, chunkKey, storageInfo.id(), storageInfo.size());
+            log.debug("Terrain chunk stored: layerDataId={} chunkKey={} storageId={} size={} compressed={}",
+                    layerDataId, chunkKey, storageInfo.id(), storageInfo.size(), entity.isCompressed());
         } catch (Exception e) {
             throw new IllegalStateException("Failed to store terrain chunk", e);
         }
@@ -376,9 +403,15 @@ public class WLayerService {
         }
 
         // Load from storage
-        try (InputStream stream = storageService.load(terrain.getStorageId())) {
-            if (stream == null) {
+        try (InputStream inputStream = storageService.load(terrain.getStorageId())) {
+            if (inputStream == null) {
                 return Optional.empty();
+            }
+            InputStream stream = inputStream;
+            // Decompression if needed
+            // Note: If compressed field is not set in DB (legacy data), it defaults to false (uncompressed)
+            if (terrain.isCompressed()) {
+                stream = new GZIPInputStream(inputStream);
             }
             LayerChunkData chunkData = objectMapper.readValue(stream, LayerChunkData.class);
             return Optional.of(chunkData);

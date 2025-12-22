@@ -55,6 +55,13 @@ public class WLayerTerrain {
     @Indexed
     private String storageId;
 
+    /**
+     * Indicates whether the storage data is compressed.
+     * Default is false for backward compatibility (uncompressed).
+     * If field is not set in DB (legacy documents), defaults to false (uncompressed).
+     */
+    private boolean compressed;
+
     private Instant createdAt;
     private Instant updatedAt;
 

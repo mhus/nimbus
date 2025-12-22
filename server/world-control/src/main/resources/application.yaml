@@ -7,6 +7,18 @@ spring:
       uri: ${MONGODB_URI:mongodb://root:example@localhost:27017/world?authSource=admin}
       database: world
 
+nimbus:
+  chunk:
+    compression:
+      enabled: ${CHUNK_COMPRESSION_ENABLED:true}
+  layer:
+    terrain:
+      compression:
+        enabled: ${LAYER_TERRAIN_COMPRESSION_ENABLED:true}
+  asset:
+    compression:
+      enabled: ${ASSET_COMPRESSION_ENABLED:true}
+
 world:
   client:
     player-base-url: ${PLAYER_BASE_URL:http://localhost:9042}
