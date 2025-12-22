@@ -123,11 +123,8 @@ public class ELayerBlockGridController {
 
                     LayerChunkData chunkData = objectMapper.readValue(stream, LayerChunkData.class);
 
-                    // Calculate world offset for this chunk (use loop variables)
-                    int offsetX = chunkX * chunkSize;
-                    int offsetZ = chunkZ * chunkSize;
-
                     // Extract blocks from chunk data
+                    // NOTE: Positions in LayerChunkData are already absolute world coordinates!
                     if (chunkData.getBlocks() != null) {
                         for (LayerBlock layerBlock : chunkData.getBlocks()) {
                             if (layerBlock.getBlock() == null) {
@@ -139,10 +136,10 @@ public class ELayerBlockGridController {
                                 continue;
                             }
 
-                            // Convert relative position to world position
-                            int worldX = offsetX + (int) position.getX();
+                            // Positions are already in world coordinates
+                            int worldX = (int) position.getX();
                             int worldY = (int) position.getY();
-                            int worldZ = offsetZ + (int) position.getZ();
+                            int worldZ = (int) position.getZ();
 
                             // Add all blocks from loaded chunks (no additional filtering)
                             Map<String, Object> coord = new HashMap<>();
@@ -253,10 +250,7 @@ public class ELayerBlockGridController {
 
             LayerChunkData chunkData = objectMapper.readValue(stream, LayerChunkData.class);
 
-            // Find block at specified position (relative to chunk)
-            int relativeX = x - (chunkX * chunkSize);
-            int relativeZ = z - (chunkZ * chunkSize);
-
+            // Find block at specified position (positions in chunk are already absolute world coordinates)
             if (chunkData.getBlocks() != null) {
                 for (LayerBlock layerBlock : chunkData.getBlocks()) {
                     if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
@@ -264,7 +258,7 @@ public class ELayerBlockGridController {
                     }
 
                     var pos = layerBlock.getBlock().getPosition();
-                    if ((int) pos.getX() == relativeX && (int) pos.getY() == y && (int) pos.getZ() == relativeZ) {
+                    if ((int) pos.getX() == x && (int) pos.getY() == y && (int) pos.getZ() == z) {
                         // Return LayerBlock wrapper with block and metadata
                         return ResponseEntity.ok(Map.of(
                                 "block", layerBlock.getBlock(),

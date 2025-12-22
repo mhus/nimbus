@@ -95,13 +95,13 @@
             <h3 class="font-bold text-lg mb-2">Pan View</h3>
             <NavigateSelectedBlockComponent
               :selected-block="viewCenter"
-              :step="Math.max(1, Math.ceil(Math.cbrt(blockLimit) / 4))"
+              :step="navigationStep"
               :size="200"
               :show-execute-button="false"
               @navigate="handlePanView"
             />
             <div class="text-xs text-base-content/70 mt-2">
-              Step: {{ Math.max(1, Math.ceil(Math.cbrt(blockLimit) / 4)) }} blocks
+              Step: {{ navigationStep }} blocks (X/Z), Y unchanged
             </div>
           </div>
 
@@ -264,6 +264,9 @@ const tileHeight = computed(() => tileWidth.value / 2);
 // Dynamic offsets based on canvas size
 const offsetX = computed(() => canvasWidth.value / 2);
 const offsetY = computed(() => canvasHeight.value / 2);  // Center vertically
+
+// Navigation step: size / 4 where size is cube root of blockLimit (represents linear dimension)
+const navigationStep = computed(() => Math.max(1, Math.floor(Math.cbrt(blockLimit.value) / 4)));
 
 // Update canvas size to match container
 function updateCanvasSize() {
@@ -792,9 +795,14 @@ function handleCanvasHover(event: MouseEvent) {
 }
 
 // Handle pan view navigation (moves the visible area)
+// Only X and Z change, Y stays unchanged
 async function handlePanView(position: { x: number; y: number; z: number }) {
-  console.log('[handlePanView] Moving view center from', viewCenter.value, 'to', position);
-  viewCenter.value = position;
+  console.log('[handlePanView] Moving view center from', viewCenter.value, 'to X/Z:', position.x, position.z);
+  viewCenter.value = {
+    x: position.x,
+    y: viewCenter.value.y,  // Keep Y unchanged
+    z: position.z
+  };
 
   if (props.sourceType === 'terrain') {
     // For terrain: reload blocks from backend with new center
