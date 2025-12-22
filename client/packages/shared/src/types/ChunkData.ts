@@ -82,9 +82,9 @@ export interface ChunkData {
    * Height data per XZ position (optional)
    * Flat array of height values
    */
-  heightData?: HeightData[];
+  heightData?: HeightData[]; // javaType: int[][]
 
-  status?: Status[];
+  status?: Status[]; // javaType: int[][]
 
   /**
    * Backdrop data for chunk edges (optional)

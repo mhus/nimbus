@@ -35,7 +35,7 @@
             required
           >
             <option value="">Select type</option>
-            <option value="TERRAIN">Terrain</option>
+            <option value="GROUND">Ground</option>
             <option value="MODEL">Model</option>
           </select>
           <label class="label">
@@ -74,6 +74,21 @@
           </label>
           <label class="label">
             <span class="label-text-alt">Layer enabled flag (soft delete)</span>
+          </label>
+        </div>
+
+        <!-- Base Ground -->
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Base Ground Layer</span>
+            <input
+              v-model="formData.baseGround"
+              type="checkbox"
+              class="checkbox checkbox-primary"
+            />
+          </label>
+          <label class="label">
+            <span class="label-text-alt">If true, this is the base ground layer for the world</span>
           </label>
         </div>
 
@@ -227,6 +242,7 @@ const formData = ref<Partial<WLayer>>({
   layerType: undefined,
   order: 0,
   enabled: true,
+  baseGround: false,
   allChunks: true,
   affectedChunks: []
 });
@@ -368,7 +384,8 @@ const handleSave = async () => {
         allChunks: formData.value.allChunks,
         affectedChunks: formData.value.affectedChunks,
         order: formData.value.order,
-        enabled: formData.value.enabled
+        enabled: formData.value.enabled,
+        baseGround: formData.value.baseGround
       };
       const success = await updateLayer(props.layer.id, updateData);
       if (!success) {
@@ -382,7 +399,8 @@ const handleSave = async () => {
         allChunks: formData.value.allChunks,
         affectedChunks: formData.value.affectedChunks,
         order: formData.value.order,
-        enabled: formData.value.enabled
+        enabled: formData.value.enabled,
+        baseGround: formData.value.baseGround
       };
       const id = await createLayer(createData);
       if (!id) {

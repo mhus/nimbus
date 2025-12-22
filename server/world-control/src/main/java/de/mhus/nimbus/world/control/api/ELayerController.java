@@ -176,7 +176,8 @@ public class ELayerController extends BaseEditorController {
                     request.layerType(),
                     request.order() != null ? request.order() : 0,
                     request.allChunks() != null ? request.allChunks() : true,
-                    request.affectedChunks()
+                    request.affectedChunks(),
+                    request.baseGround() != null ? request.baseGround() : false
             );
 
             // Set enabled flag if provided
@@ -256,6 +257,10 @@ public class ELayerController extends BaseEditorController {
         }
         if (request.enabled() != null) {
             layer.setEnabled(request.enabled());
+            changed = true;
+        }
+        if (request.baseGround() != null) {
+            layer.setBaseGround(request.baseGround());
             changed = true;
         }
 
@@ -419,6 +424,7 @@ public class ELayerController extends BaseEditorController {
                 layer.getAffectedChunks(),
                 layer.getOrder(),
                 layer.isEnabled(),
+                layer.isBaseGround(),
                 layer.getCreatedAt(),
                 layer.getUpdatedAt()
         );

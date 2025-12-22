@@ -199,28 +199,29 @@ public class EditorController extends BaseEditorController {
     @PostMapping("/{worldId}/layers")
     public ResponseEntity<?> createLayer(
             @PathVariable String worldId,
-            @RequestBody CreateLayerRequest request) {
+            @RequestBody de.mhus.nimbus.world.shared.dto.CreateLayerRequest request) {
 
         WorldId.of(worldId).orElseThrow(
                 () -> new IllegalStateException("Invalid worldId: " + worldId)
         );
-        var validation = validateId(request.name, "name");
+        var validation = validateId(request.name(), "name");
         if (validation != null) return validation;
 
         // Check if layer already exists
-        Optional<WLayer> existing = layerService.findLayer(worldId, request.name);
+        Optional<WLayer> existing = layerService.findLayer(worldId, request.name());
         if (existing.isPresent()) {
-            return conflict("Layer with name '" + request.name + "' already exists");
+            return conflict("Layer with name '" + request.name() + "' already exists");
         }
 
         // Create new layer
-        de.mhus.nimbus.world.shared.layer.LayerType layerType = request.layerType != null
-            ? request.layerType
+        de.mhus.nimbus.world.shared.layer.LayerType layerType = request.layerType() != null
+            ? request.layerType()
             : de.mhus.nimbus.world.shared.layer.LayerType.GROUND;
-        int order = request.order != null ? request.order : 10;
-        boolean allChunks = request.allChunks != null ? request.allChunks : false;
+        int order = request.order() != null ? request.order() : 10;
+        boolean allChunks = request.allChunks() != null ? request.allChunks() : false;
+        boolean baseGround = request.baseGround() != null ? request.baseGround() : false;
 
-        WLayer saved = layerService.createLayer(worldId, request.name, layerType, order, allChunks, List.of());
+        WLayer saved = layerService.createLayer(worldId, request.name(), layerType, order, allChunks, List.of(), baseGround);
 
         // Note: mountX/Y/Z are now in WLayerModel, not WLayer
         // Models should be created separately via model creation endpoint
@@ -373,21 +374,6 @@ public class EditorController extends BaseEditorController {
         private Integer mountY;
         private Integer mountZ;
         private Integer selectedGroup;
-    }
-
-    /**
-     * Request DTO for creating a new layer.
-     */
-    @Data
-    public static class CreateLayerRequest {
-        private String name;
-        private de.mhus.nimbus.world.shared.layer.LayerType layerType;
-        private Integer order;
-        private Integer mountX;
-        private Integer mountY;
-        private Integer mountZ;
-        private Boolean enabled;
-        private Boolean allChunks;
     }
 
     /**

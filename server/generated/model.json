@@ -2004,15 +2004,15 @@
         "type" : "HeightData[]",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int[][]",
+        "comment" : "// javaType: int[][]"
       }, {
         "name" : "status",
         "type" : "Status[]",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int[][]",
+        "comment" : "// javaType: int[][]"
       }, {
         "name" : "backdrop",
         "type" : "ChunkDataBackdropDTO",

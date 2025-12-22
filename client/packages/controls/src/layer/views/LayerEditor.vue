@@ -1,8 +1,5 @@
 <template>
   <div class="space-y-4">
-    <!-- World Selector -->
-    <WorldSelector />
-
     <!-- Check if world is selected -->
     <div v-if="!currentWorldId" class="alert alert-info">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +134,6 @@ import { ref, computed, watch, onMounted } from 'vue';
 import type { WLayer, LayerModelDto } from '@nimbus/shared';
 import { useWorld } from '@/composables/useWorld';
 import { useLayers } from '@/composables/useLayers';
-import WorldSelector from '@material/components/WorldSelector.vue';
 import SearchInput from '@components/SearchInput.vue';
 import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';

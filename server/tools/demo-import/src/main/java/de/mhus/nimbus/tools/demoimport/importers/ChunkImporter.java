@@ -102,7 +102,8 @@ public class ChunkImporter {
                 LayerType.TERRAIN,
                 GROUND_LAYER_ORDER,
                 true,  // allChunks
-                List.of()  // no specific chunks
+                List.of(),  // no specific chunks
+                false  // baseGround
         );
 
         log.info("Created ground layer for world: {} (order: {})", worldId, GROUND_LAYER_ORDER);

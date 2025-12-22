@@ -48,6 +48,9 @@ public record UpdateLayerRequest(
         @TypeScript(optional = true)
         Boolean enabled,
 
+        @TypeScript(optional = true)
+        Boolean baseGround,
+
         @Deprecated
         @TypeScript(optional = true)
         Map<Integer, String> groups

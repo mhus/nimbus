@@ -540,6 +540,7 @@ public class McpController extends BaseEditorController {
                     .affectedChunks(request.affectedChunks() != null ? request.affectedChunks() : List.of())
                     .order(request.order() != null ? request.order() : 0)
                     .enabled(request.enabled() != null ? request.enabled() : true)
+                    .baseGround(request.baseGround() != null ? request.baseGround() : false)
                     .build();
 
             layer.touchCreate();

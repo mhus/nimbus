@@ -37,6 +37,8 @@ public record LayerDto(
 
         boolean enabled,
 
+        boolean baseGround,
+
         @TypeScript(optional = true)
         Instant createdAt,
 

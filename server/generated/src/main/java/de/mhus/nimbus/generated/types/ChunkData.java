@@ -19,9 +19,9 @@ public class ChunkData {
     private java.util.List<ItemBlockRef> i;
     @com.fasterxml.jackson.annotation.JsonProperty("heightData")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<HeightData> heightData;
+    private int[][] heightData;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<Status> status;
+    private int[][] status;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private ChunkDataBackdropDTO backdrop;
 }

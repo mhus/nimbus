@@ -84,6 +84,13 @@ public class WLayer {
     @Builder.Default
     private boolean enabled = true;
 
+    /**
+     * Base ground layer flag.
+     * If true, this layer is the base ground layer for the world.
+     */
+    @Builder.Default
+    private boolean baseGround = false;
+
     private Instant createdAt;
     private Instant updatedAt;
 

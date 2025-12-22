@@ -53,15 +53,16 @@ public class WLayerService {
      *
      * @param worldId         World identifier (without instance)
      * @param name            Layer name (unique per world)
-     * @param layerType       Layer type (TERRAIN or MODEL)
+     * @param layerType       Layer type (GROUND or MODEL)
      * @param order           Overlay order
      * @param allChunks       True if affects all chunks
      * @param affectedChunks  List of affected chunks (if allChunks is false)
+     * @param baseGround      True if this is the base ground layer
      * @return Created layer
      */
     @Transactional
     public WLayer createLayer(String worldId, String name, LayerType layerType,
-                              int order, boolean allChunks, List<String> affectedChunks) {
+                              int order, boolean allChunks, List<String> affectedChunks, boolean baseGround) {
         // Validate
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId is required");
@@ -91,6 +92,7 @@ public class WLayerService {
                 .allChunks(allChunks)
                 .affectedChunks(affectedChunks != null ? affectedChunks : List.of())
                 .enabled(true)
+                .baseGround(baseGround)
                 .build();
         layer.touchCreate();
 

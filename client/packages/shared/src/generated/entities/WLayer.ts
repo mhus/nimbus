@@ -15,6 +15,7 @@ export interface WLayer {
   affectedChunks: string[];
   order: number;
   enabled: boolean;
+  baseGround: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

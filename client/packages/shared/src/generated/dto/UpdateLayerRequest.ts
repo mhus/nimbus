@@ -13,5 +13,6 @@ export interface UpdateLayerRequest {
   affectedChunks?: string[];
   order?: number;
   enabled?: boolean;
+  baseGround?: boolean;
   groups?: Record<string, string>;
 }

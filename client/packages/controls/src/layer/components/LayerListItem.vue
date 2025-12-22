@@ -24,9 +24,9 @@
         <!-- Layer Type Badge -->
         <div :class="[
           'badge',
-          layer.layerType === 'TERRAIN' ? 'badge-success' : 'badge-info'
+          layer.layerType === 'GROUND' ? 'badge-success' : 'badge-info'
         ]">
-          {{ layer.layerType === 'TERRAIN' ? 'Terrain' : 'Model' }}
+          {{ layer.layerType === 'GROUND' ? 'Ground' : 'Model' }}
         </div>
 
         <!-- Order Badge -->
