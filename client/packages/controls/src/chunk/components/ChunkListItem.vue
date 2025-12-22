@@ -5,6 +5,7 @@
         <div class="flex-1">
           <h3 class="card-title text-lg">
             Chunk: {{ chunk.chunk }}
+            <span v-if="chunk.compressed" class="badge badge-success badge-sm">Compressed</span>
           </h3>
           <div class="mt-2 space-y-1 text-sm text-base-content/70">
             <p>Storage ID: {{ chunk.storageId || 'N/A' }}</p>

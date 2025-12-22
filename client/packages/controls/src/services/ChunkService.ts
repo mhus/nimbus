@@ -10,6 +10,7 @@ export interface ChunkMetadata {
   worldId: string;
   chunk: string;
   storageId: string;
+  compressed: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -22,6 +22,15 @@
               <div><span class="font-medium">CZ:</span> {{ chunkData.cz }}</div>
               <div><span class="font-medium">Size:</span> {{ chunkData.size }}</div>
               <div><span class="font-medium">Block Count:</span> {{ chunkData.blockCount }}</div>
+              <div>
+                <span class="font-medium">Compressed:</span>
+                <span v-if="chunkMetadata?.compressed" class="badge badge-success badge-sm ml-2">Yes</span>
+                <span v-else class="badge badge-ghost badge-sm ml-2">No</span>
+              </div>
+              <div v-if="chunkMetadata">
+                <span class="font-medium">Storage ID:</span>
+                <span class="text-xs">{{ chunkMetadata.storageId }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -108,7 +117,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue';
-import { chunkService, type ChunkDataResponse } from '@/services/ChunkService';
+import { chunkService, type ChunkDataResponse, type ChunkMetadata } from '@/services/ChunkService';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import LoadingSpinner from '@components/LoadingSpinner.vue';
 
@@ -124,18 +133,25 @@ const emit = defineEmits<{
 }>();
 
 const chunkData = ref<ChunkDataResponse | null>(null);
+const chunkMetadata = ref<ChunkMetadata | null>(null);
 const loading = ref(false);
 const errorMessage = ref('');
 
 /**
- * Load chunk data
+ * Load chunk data and metadata
  */
 const loadChunkData = async () => {
   loading.value = true;
   errorMessage.value = '';
 
   try {
-    chunkData.value = await chunkService.getChunkData(props.worldId, props.chunkKey);
+    // Load both data and metadata in parallel
+    const [data, metadata] = await Promise.all([
+      chunkService.getChunkData(props.worldId, props.chunkKey),
+      chunkService.getChunk(props.worldId, props.chunkKey)
+    ]);
+    chunkData.value = data;
+    chunkMetadata.value = metadata;
   } catch (error: any) {
     errorMessage.value = error.message || 'Failed to load chunk data';
   } finally {

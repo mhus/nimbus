@@ -86,6 +86,13 @@ export interface ChunkData {
   status?: Status[];
 
   /**
+   * Optional compressed data (for future client-side decompression)
+   * Base64-encoded GZIP-compressed JSON of {blocks, heightData}
+   * If present, client should decompress and use instead of blocks/heightData
+   */
+  compressedData?: string;
+
+  /**
    * Backdrop data for chunk edges (optional)
    * Defines backdrop walls at chunk boundaries
    */

@@ -44,6 +44,9 @@ public class WChunk implements Identifiable {
     @Indexed
     private String storageId;
 
+    @Builder.Default
+    private boolean compressed = false;
+
     private Instant createdAt;
     private Instant updatedAt;
 

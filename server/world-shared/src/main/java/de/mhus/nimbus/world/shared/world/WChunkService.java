@@ -10,15 +10,19 @@ import de.mhus.nimbus.shared.types.SchemaVersion;
 import de.mhus.nimbus.shared.types.WorldId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Service für Verwaltung von Welt-Chunks (inline oder extern gespeicherter Datenblock).
@@ -39,6 +43,9 @@ public class WChunkService {
     private final StorageService storageService;
     private final WWorldService worldService;
     private final WItemPositionService itemRegistryService;
+
+    @Value("${nimbus.chunk.compression.enabled:true}")
+    private boolean compressionEnabled;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -96,8 +103,28 @@ public class WChunkService {
                     return neu;
                 });
 
+        // Komprimierung wenn aktiviert
+        byte[] dataBytes;
+        if (compressionEnabled) {
+            try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                 GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                gzip.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                gzip.finish();
+                dataBytes = buffer.toByteArray();
+                entity.setCompressed(true);
+                log.debug("Chunk komprimiert chunkKey={} original={} compressed={} ratio={}",
+                        chunkKey, json.length(), dataBytes.length,
+                        String.format("%.1f%%", 100.0 * dataBytes.length / json.length()));
+            } catch (Exception e) {
+                throw new IllegalStateException("Komprimierung ChunkData fehlgeschlagen", e);
+            }
+        } else {
+            dataBytes = json.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            entity.setCompressed(false);
+        }
+
         // Alle Chunks werden jetzt extern über StorageService gespeichert
-        try (InputStream stream = new ByteArrayInputStream(json.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+        try (InputStream stream = new ByteArrayInputStream(dataBytes)) {
             StorageService.StorageInfo storageInfo;
             if (entity.getStorageId() != null) {
                 // Update existing chunk
@@ -107,8 +134,8 @@ public class WChunkService {
                 storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, lookupWorld.getId(), "chunk/" + chunkKey, stream);
             }
             entity.setStorageId(storageInfo.id());
-            log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} world={}",
-                    chunkKey, storageInfo.size(), storageInfo.id(), lookupWorld.getId());
+            log.debug("Chunk extern gespeichert chunkKey={} size={} storageId={} world={} compressed={}",
+                    chunkKey, storageInfo.size(), storageInfo.id(), lookupWorld.getId(), entity.isCompressed());
         } catch (Exception e) {
             throw new IllegalStateException("Speichern ChunkData fehlgeschlagen", e);
         }
@@ -145,6 +172,52 @@ public class WChunkService {
 
         // Alle Chunks sind jetzt extern gespeichert - Stream direkt vom StorageService zurückgeben
         InputStream stream = storageService.load(chunk.getStorageId());
+        if (stream == null) {
+            return new ByteArrayInputStream(new byte[0]);
+        }
+
+        // Dekomprimierung wenn nötig
+        if (chunk.isCompressed()) {
+            try {
+                return new GZIPInputStream(stream);
+            } catch (Exception e) {
+                log.error("Fehler beim Dekomprimieren von Chunk chunkKey={} world={}", chunkKey, worldId.getId(), e);
+                return new ByteArrayInputStream(new byte[0]);
+            }
+        }
+
+        return stream;
+    }
+
+    /**
+     * Get compressed stream without decompression.
+     * Returns raw compressed data for client-side decompression (future use).
+     * Filters out instances.
+     */
+    @Transactional(readOnly = true)
+    public InputStream getCompressedStream(WorldId worldId, String chunkKey) {
+        var lookupWorld = worldId.withoutInstance();
+
+        WChunk chunk = null;
+
+        // Try branch first if this is a branch world
+        if (lookupWorld.isBranch()) {
+            chunk = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey).orElse(null);
+            if (chunk == null) {
+                // Fallback to parent world (COW)
+                var parentWorld = lookupWorld.withoutBranchAndInstance();
+                chunk = repository.findByWorldIdAndChunk(parentWorld.getId(), chunkKey).orElse(null);
+            }
+        } else {
+            chunk = repository.findByWorldIdAndChunk(lookupWorld.getId(), chunkKey).orElse(null);
+        }
+
+        if (chunk == null || chunk.getStorageId() == null) {
+            return new ByteArrayInputStream(new byte[0]);
+        }
+
+        // Return raw stream (no decompression)
+        InputStream stream = storageService.load(chunk.getStorageId());
         return stream != null ? stream : new ByteArrayInputStream(new byte[0]);
     }
 
@@ -179,6 +252,10 @@ public class WChunkService {
             if (inputStream == null) {
                 return false;
             }
+            InputStream stream = inputStream;
+            if (chunk.isCompressed()) {
+                stream = new GZIPInputStream(inputStream);
+            }
 
             // Set content type and headers
             response.setContentType("application/json");
@@ -186,7 +263,7 @@ public class WChunkService {
 
             // Stream direkt zum Client ohne Memory-Belastung
             try (OutputStream outputStream = response.getOutputStream()) {
-                inputStream.transferTo(outputStream);
+                stream.transferTo(outputStream);
                 outputStream.flush();
             }
 
@@ -230,9 +307,13 @@ public class WChunkService {
             }
 
             // Alle Chunks sind jetzt extern gespeichert - Stream-basierte Deserialisierung
-            try (InputStream stream = storageService.load(entity.getStorageId())) {
-                if (stream == null) {
+            try (InputStream inputStream = storageService.load(entity.getStorageId())) {
+                if (inputStream == null) {
                     return Optional.empty();
+                }
+                InputStream stream = inputStream;
+                if (entity.isCompressed()) {
+                    stream = new GZIPInputStream(inputStream);
                 }
 
                 // Direkte Deserialisierung vom Stream ohne Memory-Verschwendung
