@@ -21,7 +21,9 @@ JobExecutor that automatically generates AI-powered descriptions for game assets
 langchain4j:
   gemini:
     api-key: ${GEMINI_API_KEY:}
-    rate-limit: 15
+    # Rate limit for Flash models only (e.g., gemini-1.5-flash)
+    # Shared globally across all Flash model chat instances
+    flash-rate-limit: 15
 
 # Asset Description Settings
 asset:
@@ -117,16 +119,43 @@ Generated description for asset: textures/items/sword.png
 
 ## Rate Limiting
 
-Gemini Free Tier has a limit of **15 requests per minute**.
+### Gemini Flash Models Only
+
+Rate limiting is **only applied to Gemini Flash models** (e.g., `gemini-1.5-flash`).
+
+- **Flash models**: 15 requests per minute (free tier)
+- **Pro models**: No rate limiting (higher quota)
+
+The system automatically detects Flash models by checking if "flash" is in the model name.
+
+### Global Rate Limiter
+
+The rate limiter is **shared across all chat instances** from the same provider:
+
+```
+GeminiLangchainModel (Provider Instance)
+    └── flashRateLimiter (Global, Shared)
+         ├── Chat 1 (gemini-1.5-flash)
+         ├── Chat 2 (gemini-1.5-flash)
+         └── Chat 3 (gemini-1.5-flash)
+```
+
+All chats using Flash models share the same rate limit counter.
+
+### Behavior
 
 The executor automatically:
 - Waits between requests to stay within limits
 - Uses a sliding window algorithm
+- Shares rate limit across all Flash model chats
 - Logs when rate limiting is active
 
-**Example Log:**
+**Example Logs:**
 ```
-Rate limit reached (15/15), waiting 1234ms
+INFO  - Initialized global Flash rate limiter: 15 RPM
+INFO  - Created Gemini chat: model=gemini-1.5-flash, rateLimit=15 RPM (shared)
+INFO  - Created Gemini chat: model=gemini-pro, no rate limit
+DEBUG - Rate limit reached (15/15), waiting 1234ms
 ```
 
 ## Asset Filtering

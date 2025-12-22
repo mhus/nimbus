@@ -16,20 +16,24 @@ import java.util.Optional;
 /**
  * Google Gemini implementation of LangchainModel.
  * Supports Gemini models (gemini-pro, gemini-pro-vision, etc.)
- * Includes rate limiting to respect API quotas.
+ * Includes rate limiting for Flash models to respect API quotas.
+ * Rate limiter is shared across all chats from this provider instance.
  */
 @Component
 @Slf4j
 public class GeminiLangchainModel implements LangchainModel {
 
     private static final String PROVIDER_NAME = "gemini";
-    private static final int DEFAULT_RATE_LIMIT = 15; // Gemini free tier: 15 RPM
+    private static final int DEFAULT_FLASH_RATE_LIMIT = 15; // Gemini Flash free tier: 15 RPM
 
     @Value("${langchain4j.gemini.api-key:}")
     private String apiKey;
 
-    @Value("${langchain4j.gemini.rate-limit:15}")
-    private int rateLimit;
+    @Value("${langchain4j.gemini.flash-rate-limit:15}")
+    private int flashRateLimit;
+
+    // Global rate limiter shared across all Flash model chats
+    private SimpleRateLimiter flashRateLimiter;
 
     @Override
     public String getName() {
@@ -54,16 +58,41 @@ public class GeminiLangchainModel implements LangchainModel {
                     .build();
 
             String fullName = PROVIDER_NAME + ":" + modelName;
-            SimpleRateLimiter rateLimiter = new SimpleRateLimiter(rateLimit);
-            AiChat chat = new GeminiChat(fullName, chatModel, options, rateLimiter);
 
-            log.info("Created Gemini chat: model={}, rateLimit={} RPM", modelName, rateLimit);
+            // Only use rate limiter for Flash models
+            SimpleRateLimiter rateLimiter = null;
+            if (isFlashModel(modelName)) {
+                // Initialize global rate limiter if needed
+                if (flashRateLimiter == null) {
+                    synchronized (this) {
+                        if (flashRateLimiter == null) {
+                            flashRateLimiter = new SimpleRateLimiter(flashRateLimit);
+                            log.info("Initialized global Flash rate limiter: {} RPM", flashRateLimit);
+                        }
+                    }
+                }
+                rateLimiter = flashRateLimiter;
+                log.info("Created Gemini chat: model={}, rateLimit={} RPM (shared)", modelName, flashRateLimit);
+            } else {
+                log.info("Created Gemini chat: model={}, no rate limit", modelName);
+            }
+
+            AiChat chat = new GeminiChat(fullName, chatModel, options, rateLimiter);
             return Optional.of(chat);
 
         } catch (Exception e) {
             log.error("Failed to create Gemini chat: model={}", modelName, e);
             return Optional.empty();
         }
+    }
+
+    /**
+     * Check if model name is a Flash model that requires rate limiting.
+     */
+    private boolean isFlashModel(String modelName) {
+        if (modelName == null) return false;
+        String lowerName = modelName.toLowerCase();
+        return lowerName.contains("flash");
     }
 
     @Override

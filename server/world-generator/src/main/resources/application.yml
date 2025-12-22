@@ -46,8 +46,10 @@ langchain4j:
   gemini:
     # API key from environment variable or set directly (not recommended for production)
     api-key: ${GEMINI_API_KEY:}
-    # Rate limit in requests per minute (Gemini free tier: 15 RPM)
-    rate-limit: 15
+    # Rate limit in requests per minute for Flash models (Gemini Flash free tier: 15 RPM)
+    # Only applies to models with "flash" in their name (e.g., gemini-1.5-flash)
+    # Shared globally across all Flash model chat instances
+    flash-rate-limit: 15
 
 # AI Model Configuration
 ai:
