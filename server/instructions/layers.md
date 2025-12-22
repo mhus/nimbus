@@ -238,12 +238,12 @@ transformiert.
 - Auto Adjust
 - Manual Adjust
 
-[ ] Im layer-editor soll es eine TransformMove methode geben, dabei werden alle coordinaten des WLayerModel verschoben um den angegebenen wert.
+[?] Im layer-editor soll es eine TransformMove methode geben, dabei werden alle coordinaten des WLayerModel verschoben um den angegebenen wert.
 Es wird für das Model ein 'Sync to Terrain' gestartet.
 
 [ ] Copy Model Layer kopiert eine WLayerModel entity in ein anderes WLayer. Das Yiel muss nicht die gleiche WorldId haben.
 Am besten: Auswahl der Welt, dann auswahl des WLayer (nur Model Layer). Eingabe des names im neuen Layer - der name kann 
-hier angepasst erwden. Das WLayerModel wird kopiert. WorldId und layerDataId 
+hier angepasst werden. Das WLayerModel wird kopiert. WorldId und layerDataId 
 werden automatisch uebernommen aus der dem Ziel WLayer.
 
 ## referenceModelId

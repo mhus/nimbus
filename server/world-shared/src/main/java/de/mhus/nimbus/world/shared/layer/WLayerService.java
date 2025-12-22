@@ -1115,6 +1115,55 @@ public class WLayerService {
     }
 
     /**
+     * Transform a model layer by moving all blocks.
+     * Shifts all block coordinates by the specified offset.
+     * Unlike adjust center methods, the mount point is NOT changed.
+     *
+     * @param modelId Model identifier
+     * @param offsetX X offset to move blocks
+     * @param offsetY Y offset to move blocks
+     * @param offsetZ Z offset to move blocks
+     * @return Updated model with transformed coordinates
+     */
+    @Transactional
+    public Optional<WLayerModel> transformMove(String modelId, int offsetX, int offsetY, int offsetZ) {
+        Optional<WLayerModel> modelOpt = modelRepository.findById(modelId);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for transformMove: modelId={}", modelId);
+            return Optional.empty();
+        }
+
+        WLayerModel model = modelOpt.get();
+
+        List<LayerBlock> content = model.getContent();
+        if (content == null || content.isEmpty()) {
+            log.warn("Model has no content to move: modelId={}", modelId);
+            return Optional.of(model);
+        }
+
+        log.info("Transform move for model: modelId={} offset=({},{},{})", modelId, offsetX, offsetY, offsetZ);
+
+        // Shift all block coordinates
+        for (LayerBlock block : content) {
+            if (block.getBlock() != null && block.getBlock().getPosition() != null) {
+                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                pos.setX(pos.getX() + offsetX);
+                pos.setY(pos.getY() + offsetY);
+                pos.setZ(pos.getZ() + offsetZ);
+            }
+        }
+
+        // Mount point stays the same
+        model.touchUpdate();
+        WLayerModel saved = modelRepository.save(model);
+
+        log.info("Transform moved model: modelId={} offset=({},{},{})",
+                modelId, offsetX, offsetY, offsetZ);
+
+        return Optional.of(saved);
+    }
+
+    /**
      * Save model layer content (deprecated - use createModel or updateModel).
      *
      * @deprecated This method assumes 1:1 relationship. Use createModel for new concept.

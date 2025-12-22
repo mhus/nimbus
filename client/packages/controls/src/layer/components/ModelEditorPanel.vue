@@ -229,6 +229,14 @@
                   Manual Adjust Center
                 </a>
               </li>
+              <li>
+                <a @click="openMoveDialog">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                  Move
+                </a>
+              </li>
             </ul>
           </details>
 
@@ -252,6 +260,81 @@
           >
             <span v-if="saving" class="loading loading-spinner"></span>
             {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Move Dialog -->
+  <div v-if="showMoveDialog" class="modal modal-open" @click.self="closeMoveDialog">
+    <div class="modal-box" @click.stop>
+      <h3 class="font-bold text-lg mb-4">Move Model</h3>
+      <p class="text-sm text-base-content/70 mb-4">
+        Enter the offset values to move all blocks. The mount point stays the same.
+        Model will be automatically synced to terrain.
+      </p>
+
+      <form @submit.prevent="handleTransformMove" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Move Offset</span>
+          </label>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="label">
+                <span class="label-text-alt">X</span>
+              </label>
+              <input
+                v-model.number="moveOffset.x"
+                type="number"
+                class="input input-bordered w-full"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label class="label">
+                <span class="label-text-alt">Y</span>
+              </label>
+              <input
+                v-model.number="moveOffset.y"
+                type="number"
+                class="input input-bordered w-full"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label class="label">
+                <span class="label-text-alt">Z</span>
+              </label>
+              <input
+                v-model.number="moveOffset.z"
+                type="number"
+                class="input input-bordered w-full"
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <label class="label">
+            <span class="label-text-alt">Blocks will be moved by this offset</span>
+          </label>
+        </div>
+
+        <div class="modal-action">
+          <button
+            type="button"
+            class="btn"
+            @click="closeMoveDialog"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :disabled="transforming"
+          >
+            <span v-if="transforming" class="loading loading-spinner"></span>
+            {{ transforming ? 'Moving...' : 'Move & Sync' }}
           </button>
         </div>
       </form>
@@ -383,6 +466,8 @@ const syncing = ref(false);
 const transforming = ref(false);
 const showManualAdjustDialog = ref(false);
 const manualAdjustOffset = ref({ x: 0, y: 0, z: 0 });
+const showMoveDialog = ref(false);
+const moveOffset = ref({ x: 0, y: 0, z: 0 });
 
 // Initialize form data
 if (props.model) {
@@ -625,6 +710,67 @@ const handleTransformManualAdjustCenter = async () => {
 
     // Emit saved event to reload model in parent
     emit('saved', updatedModel);
+  } catch (error: any) {
+    logger.error('Failed to transform model', {}, error);
+    errorMessage.value = error.message || 'Failed to transform model';
+  } finally {
+    transforming.value = false;
+  }
+};
+
+/**
+ * Open move dialog
+ */
+const openMoveDialog = () => {
+  moveOffset.value = { x: 0, y: 0, z: 0 };
+  showMoveDialog.value = true;
+};
+
+/**
+ * Close move dialog
+ */
+const closeMoveDialog = () => {
+  showMoveDialog.value = false;
+  moveOffset.value = { x: 0, y: 0, z: 0 };
+};
+
+/**
+ * Transform model by moving all blocks
+ */
+const handleTransformMove = async () => {
+  if (!props.model?.id) return;
+
+  const { x, y, z } = moveOffset.value;
+
+  errorMessage.value = '';
+  transforming.value = true;
+
+  try {
+    const result = await layerModelService.transformMove(
+      props.worldId,
+      props.layerId,
+      props.model.id,
+      x,
+      y,
+      z
+    );
+    logger.info('Transformed model (move)', {
+      modelId: props.model.id,
+      offset: { x, y, z },
+      chunksAffected: result.chunksAffected
+    });
+
+    // Update form data with new values
+    formData.value = { ...result.model };
+
+    // Close dialog
+    closeMoveDialog();
+
+    // Show success message
+    alert('Model moved and synced successfully! Offset: (' + x + ', ' + y + ', ' + z + '), Chunks affected: ' + result.chunksAffected);
+
+    // Emit saved event to reload model in parent
+    emit('saved', result.model);
   } catch (error: any) {
     logger.error('Failed to transform model', {}, error);
     errorMessage.value = error.message || 'Failed to transform model';

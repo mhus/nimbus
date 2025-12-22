@@ -594,6 +594,99 @@ public class ELayerModelController extends BaseEditorController {
     }
 
     /**
+     * Transform Layer Model by moving all blocks.
+     * Shifts all block coordinates by specified offset. Mount point stays the same.
+     * Automatically syncs to terrain after transformation.
+     * POST /control/worlds/{worldId}/layers/{layerId}/models/{id}/transform/move
+     */
+    @PostMapping("/{id}/transform/move")
+    @Operation(summary = "Transform Layer Model - Move")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Model transformed and synced successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Model not found")
+    })
+    public ResponseEntity<?> transformMove(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Layer identifier") @PathVariable String layerId,
+            @Parameter(description = "Model identifier") @PathVariable String id,
+            @Parameter(description = "X offset") @RequestParam int offsetX,
+            @Parameter(description = "Y offset") @RequestParam int offsetY,
+            @Parameter(description = "Z offset") @RequestParam int offsetZ) {
+
+        log.debug("TRANSFORM MOVE layer model: worldId={}, layerId={}, id={}, offset=({},{},{})",
+                worldId, layerId, id, offsetX, offsetY, offsetZ);
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(layerId, "layerId");
+        if (validation != null) return validation;
+        validation = validateId(id, "id");
+        if (validation != null) return validation;
+
+        // Verify layer exists and belongs to world
+        Optional<WLayer> layerOpt = layerService.findById(layerId);
+        if (layerOpt.isEmpty()) {
+            log.warn("Layer not found: layerId={}", layerId);
+            return notFound("layer not found");
+        }
+
+        WLayer layer = layerOpt.get();
+        String lookupWorldId = WorldId.of(worldId).orElseThrow().withoutInstance().getId();
+        if (!layer.getWorldId().equals(lookupWorldId)) {
+            log.warn("Layer worldId mismatch: expected={}, actual={}", lookupWorldId, layer.getWorldId());
+            return notFound("layer not found");
+        }
+
+        // Verify model exists
+        Optional<WLayerModel> modelOpt = modelRepository.findById(id);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for transform: id={}", id);
+            return notFound("model not found");
+        }
+
+        WLayerModel model = modelOpt.get();
+        if (!model.getWorldId().equals(lookupWorldId)) {
+            log.warn("Model worldId mismatch: expected={}, actual={}", lookupWorldId, model.getWorldId());
+            return notFound("model not found");
+        }
+
+        // Verify layer type is MODEL
+        if (layer.getLayerType() != de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+            log.warn("Layer is not MODEL type: layerId={} type={}", layerId, layer.getLayerType());
+            return bad("layer is not MODEL type");
+        }
+
+        try {
+            // Transform move
+            Optional<WLayerModel> transformedOpt = layerService.transformMove(id, offsetX, offsetY, offsetZ);
+            if (transformedOpt.isEmpty()) {
+                return notFound("model not found");
+            }
+
+            WLayerModel transformed = transformedOpt.get();
+            log.info("Transformed model (move): modelId={}, offset=({},{},{})",
+                    id, offsetX, offsetY, offsetZ);
+
+            // Sync to terrain
+            int chunksAffected = layerService.transferModelToTerrain(id, true);
+            log.info("Synced moved model to terrain: modelId={}, chunks={}", id, chunksAffected);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "model", toDto(transformed),
+                    "chunksAffected", chunksAffected,
+                    "message", "Model moved and synced to terrain successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to transform model: modelId={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to transform model: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Delete Layer Model.
      * DELETE /control/worlds/{worldId}/layers/{layerId}/models/{id}
      */

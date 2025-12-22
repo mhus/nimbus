@@ -119,6 +119,31 @@ export class LayerModelService {
     );
     return response.model;
   }
+
+  /**
+   * Transform model by moving all blocks
+   * Shifts all block coordinates by specified offset. Mount point stays the same.
+   * Automatically syncs to terrain after transformation.
+   */
+  async transformMove(
+    worldId: string,
+    layerId: string,
+    id: string,
+    offsetX: number,
+    offsetY: number,
+    offsetZ: number
+  ): Promise<{ model: LayerModelDto; chunksAffected: number }> {
+    const response = await apiService.post<{
+      success: boolean;
+      model: LayerModelDto;
+      chunksAffected: number;
+      message: string;
+    }>(
+      `/control/worlds/${worldId}/layers/${layerId}/models/${id}/transform/move?offsetX=${offsetX}&offsetY=${offsetY}&offsetZ=${offsetZ}`,
+      {}
+    );
+    return { model: response.model, chunksAffected: response.chunksAffected };
+  }
 }
 
 export const layerModelService = new LayerModelService();
