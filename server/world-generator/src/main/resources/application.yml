@@ -30,6 +30,40 @@ logging:
     root: INFO
     de.mhus.nimbus: DEBUG
 
+# LangChain4j Configuration
+langchain4j:
+  openai:
+    # API key from environment variable or set directly (not recommended for production)
+    api-key: ${OPENAI_API_KEY:}
+    # Model to use (gpt-3.5-turbo, gpt-4, gpt-4-turbo, etc.)
+    model-name: ${LANGCHAIN4J_MODEL:gpt-3.5-turbo}
+    # Request timeout in seconds
+    timeout-seconds: 60
+    # Temperature for response generation (0.0 - 2.0, higher = more creative)
+    temperature: 0.7
+    # Maximum tokens in response
+    max-tokens: 1000
+  gemini:
+    # API key from environment variable or set directly (not recommended for production)
+    api-key: ${GEMINI_API_KEY:}
+    # Rate limit in requests per minute (Gemini free tier: 15 RPM)
+    rate-limit: 15
+
+# AI Model Configuration
+ai:
+  model:
+    # Model mappings: default:<alias>=<provider>:<model>
+    # Example: chat=openai:gpt-4,generate=gemini:gemini-pro
+    mappings: ${AI_MODEL_MAPPINGS:chat=openai:gpt-3.5-turbo,generate=gemini:gemini-pro}
+
+# Asset Description Generation Configuration
+asset:
+  description:
+    # Maximum file size in bytes for description generation (default: 5MB)
+    max-size-bytes: 5242880
+    # AI model to use for description generation (supports model mappings)
+    ai-model: default:generate
+
 world:
   job:
     processing-enabled: true
