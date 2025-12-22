@@ -15,37 +15,36 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Block-based movement system for terrain-aware entity pathfinding.
- * Generates waypoints that follow terrain height (like test_server's BlockBasedMovement).
+ * Water-based movement system for aquatic entities.
+ * Generates waypoints that stay within water bounds (between groundLevel and waterLevel).
  *
  * Features:
- * - Finds valid start position on solid ground
+ * - Finds valid start position in water
  * - Generates waypoints along random direction
- * - Ensures each waypoint is on solid ground
- * - Avoids steep terrain (>3 blocks height difference)
+ * - Ensures each waypoint is within water
+ * - Entities stay between ground and water surface
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class BlockBasedMovement {
+public class WaterBasedMovement {
 
     private final TerrainService terrainService;
     private final Random random = new Random();
 
     /**
-     * Find valid start position by searching for ground level.
+     * Find valid start position in water.
      *
      * @param worldId World identifier
      * @param x Starting X coordinate
      * @param z Starting Z coordinate
-     * @return Ground Y coordinate
+     * @return Water Y coordinate, or -1 if no water at this position
      */
     public int findStartPosition(WorldId worldId, double x, double z) {
         int floorX = (int) Math.floor(x);
         int floorZ = (int) Math.floor(z);
 
-        // Search from reasonable height (128) downward
-        return terrainService.getGroundHeight(worldId, floorX, floorZ, 128);
+        return terrainService.getWaterPosition(worldId, floorX, floorZ);
     }
 
     /**
@@ -75,10 +74,11 @@ public class BlockBasedMovement {
     }
 
     /**
-     * Generate pathway with terrain-aware waypoints.
+     * Generate pathway with water-aware waypoints.
+     * All waypoints stay within water bounds (between ground and water surface).
      *
      * @param worldId World identifier
-     * @param startPosition Starting position (should be on ground)
+     * @param startPosition Starting position (should be in water)
      * @param direction Movement direction (not necessarily normalized)
      * @param waypointCount Number of waypoints to generate
      * @param speed Entity speed (blocks/second)
@@ -112,67 +112,55 @@ public class BlockBasedMovement {
         double dirZ = direction.getZ() / dirLength;
 
         for (int i = 0; i < waypointCount; i++) {
-            // Random step distance (2.0 to 3.0 blocks)
-            double stepDistance = 2.0 + random.nextDouble();
+            // Random step distance (1.5 to 2.5 blocks - fish swim in smaller steps)
+            double stepDistance = 1.5 + random.nextDouble();
 
-            // Calculate next position (2D movement, Y will be adjusted for terrain)
+            // Calculate next position (2D movement, Y will be adjusted for water depth)
             double nextX = currentX + dirX * stepDistance;
             double nextZ = currentZ + dirZ * stepDistance;
 
-            // Find ground height at next position
-            // canWalkOnWater = false for most entities (except fish, boats, etc.)
-            int groundY = terrainService.getGroundHeight(
+            // Find water position at next location
+            int waterY = terrainService.getWaterPosition(
                     worldId,
                     (int) Math.floor(nextX),
-                    (int) Math.floor(nextZ),
-                    (int) currentY + 5,  // Search start slightly above current position
-                    false  // Cannot walk on water
+                    (int) Math.floor(nextZ)
             );
 
-            // Check if position is invalid (water or not found)
-            if (groundY < 0) {
-                // Position has water and entity cannot walk on it, skip
-                log.trace("Skipping waypoint due to water: pos=({}, {})", (int)nextX, (int)nextZ);
+            // Check if position has water
+            if (waterY < 0) {
+                // No water at this position, skip this waypoint
+                log.trace("Skipping waypoint - no water at: pos=({}, {})", (int)nextX, (int)nextZ);
                 continue;
             }
 
-            // Check if terrain is traversable (not too steep)
-            int heightDiff = Math.abs(groundY - (int) currentY);
-            if (heightDiff > 3) {
-                // Too steep, skip this waypoint
-                log.trace("Skipping waypoint due to steep terrain: heightDiff={}, pos=({}, {})",
-                        heightDiff, (int)nextX, (int)nextZ);
-                continue;
-            }
-
-            // Create next position on ground
+            // Create next position in water
             Vector3 nextPosition = new Vector3();
             nextPosition.setX(nextX);
-            nextPosition.setY((double) groundY);
+            nextPosition.setY((double) waterY);
             nextPosition.setZ(nextZ);
 
             // Calculate movement duration based on 3D distance
-            double distance = distance(currentX, currentY, currentZ, nextX, groundY, nextZ);
+            double distance = distance(currentX, currentY, currentZ, nextX, waterY, nextZ);
             long movementDuration = (long) ((distance / speed) * 1000);
             waypointTime += movementDuration;
 
-            // Create waypoint
+            // Create waypoint (fish use WALK pose, could be SWIM later)
             Waypoint waypoint = Waypoint.builder()
                     .timestamp(waypointTime)
                     .target(nextPosition)
                     .rotation(calculateRotation(currentX, currentZ, nextX, nextZ))
-                    .pose(ENTITY_POSES.WALK)
+                    .pose(ENTITY_POSES.WALK)  // Could add SWIM pose later
                     .build();
 
             waypoints.add(waypoint);
 
             // Update current position for next iteration
             currentX = nextX;
-            currentY = groundY;
+            currentY = waterY;
             currentZ = nextZ;
         }
 
-        log.trace("Generated pathway with {} waypoints (requested {})", waypoints.size(), waypointCount);
+        log.trace("Generated water pathway with {} waypoints (requested {})", waypoints.size(), waypointCount);
 
         return waypoints;
     }
@@ -202,7 +190,6 @@ public class BlockBasedMovement {
         double dz = toZ - fromZ;
 
         // Calculate yaw (rotation around Y axis)
-        // atan2(dx, dz) gives angle from north (0 degrees = facing north +Z)
         double yawRad = Math.atan2(dx, dz);
         double yawDeg = Math.toDegrees(yawRad);
 
@@ -213,7 +200,7 @@ public class BlockBasedMovement {
     }
 
     /**
-     * Generate random position within radius around center point.
+     * Generate random position within radius around center point (in water).
      * Useful for behaviors that roam around a home position.
      *
      * @param center Center position
@@ -232,7 +219,7 @@ public class BlockBasedMovement {
 
         Vector3 position = new Vector3();
         position.setX(center.getX() + offsetX);
-        position.setY(center.getY());  // Y will be adjusted by terrain lookup
+        position.setY(center.getY());  // Y will be adjusted by water lookup
         position.setZ(center.getZ() + offsetZ);
 
         return position;

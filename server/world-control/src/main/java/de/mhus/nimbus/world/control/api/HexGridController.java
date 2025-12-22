@@ -25,6 +25,8 @@ import java.util.Map;
 public class HexGridController extends BaseEditorController {
 
     private final WHexGridService hexGridService;
+    private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
+    private final de.mhus.nimbus.world.shared.world.WWorldService worldService;
 
     // DTOs
 
@@ -330,6 +332,68 @@ public class HexGridController extends BaseEditorController {
             }
         } catch (Exception e) {
             return bad("Failed to enable hex grid: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Mark all chunks affected by this hex grid as dirty.
+     * POST /control/worlds/{worldId}/hexgrid/{q}/{r}/dirty
+     */
+    @PostMapping("/{q}/{r}/dirty")
+    public ResponseEntity<?> markAffectedChunksDirty(
+            @PathVariable String worldId,
+            @PathVariable int q,
+            @PathVariable int r) {
+
+        if (blank(worldId)) {
+            return bad("worldId is required");
+        }
+
+        HexVector2 position = HexVector2.builder().q(q).r(r).build();
+
+        try {
+            // Get hex grid entity
+            var hexGridOpt = hexGridService.findByWorldIdAndPosition(worldId, position);
+            if (hexGridOpt.isEmpty()) {
+                return notFound("Hex grid not found at position: " + q + ":" + r);
+            }
+
+            WHexGridEntity hexGrid = hexGridOpt.get();
+
+            // Get world entity for chunk size calculation
+            var world = worldService.getByWorldId(worldId).orElseThrow(
+                    () -> new IllegalArgumentException("World not found: " + worldId)
+            );
+
+            // Validate world configuration
+            if (world.getPublicData() == null) {
+                return bad("World has no publicData configured");
+            }
+            if (world.getPublicData().getHexGridSize() <= 0) {
+                return bad("World hexGridSize is not configured (value: " + world.getPublicData().getHexGridSize() + "). Please configure hexGridSize in world settings.");
+            }
+            if (world.getPublicData().getChunkSize() <= 0) {
+                return bad("World chunkSize is not configured (value: " + world.getPublicData().getChunkSize() + "). Please configure chunkSize in world settings.");
+            }
+
+            // Get all affected chunk keys
+            java.util.Set<String> affectedChunks = hexGrid.getAffectedChunkKeys(world);
+
+            if (affectedChunks.isEmpty()) {
+                return bad("No chunks affected by this hex grid");
+            }
+
+            // Mark all chunks as dirty
+            dirtyChunkService.markChunksDirty(worldId, new java.util.ArrayList<>(affectedChunks), "hexgrid_manual_dirty");
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "position", q + ":" + r,
+                    "chunksMarked", affectedChunks.size(),
+                    "message", "Marked " + affectedChunks.size() + " chunks as dirty"
+            ));
+        } catch (Exception e) {
+            return bad("Failed to mark chunks dirty: " + e.getMessage());
         }
     }
 }

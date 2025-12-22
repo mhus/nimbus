@@ -24,7 +24,7 @@ public class TerrainService {
 
     /**
      * Get ground height at world position (x, z).
-     * Searches downward from startY to find the highest solid block.
+     * First tries to use HeightData if available, otherwise searches downward.
      *
      * @param worldId World identifier
      * @param x X coordinate (world space)
@@ -33,6 +33,21 @@ public class TerrainService {
      * @return Y coordinate of ground surface (top of highest solid block), or 64 if not found
      */
     public int getGroundHeight(WorldId worldId, int x, int z, int startY) {
+        return getGroundHeight(worldId, x, z, startY, false);
+    }
+
+    /**
+     * Get ground height at world position (x, z).
+     * First tries to use HeightData if available, otherwise searches downward.
+     *
+     * @param worldId World identifier
+     * @param x X coordinate (world space)
+     * @param z Z coordinate (world space)
+     * @param startY Starting Y coordinate for downward search
+     * @param canWalkOnWater If true, allows walking on water. If false, skips positions with water.
+     * @return Y coordinate of ground surface (top of highest solid block), or 64 if not found
+     */
+    public int getGroundHeight(WorldId worldId, int x, int z, int startY, boolean canWalkOnWater) {
         try {
             // Calculate chunk coordinates
             int chunkX = Math.floorDiv(x, 16);
@@ -48,6 +63,29 @@ public class TerrainService {
             }
 
             ChunkData chunkData = chunkDataOpt.get();
+
+            // Try to use HeightData first (if available) for better performance
+            if (chunkData.getHeightData() != null) {
+                int localX = ((x % 16) + 16) % 16;
+                int localZ = ((z % 16) + 16) % 16;
+
+                var heightDataDto = chunkService.getHeightDataForColumn(chunkData, localX, localZ);
+                if (heightDataDto != null) {
+                    // Check if there's water at this position
+                    if (heightDataDto.waterLevel() != null && !canWalkOnWater) {
+                        // Position has water and entity cannot walk on water
+                        log.trace("Skipping position with water: ({}, {}), waterLevel={}", x, z, heightDataDto.waterLevel());
+                        return -1; // Indicate invalid position (has water)
+                    }
+
+                    // Return ground level from height data (already calculated)
+                    int groundLevel = heightDataDto.groundLevel();
+                    if (groundLevel >= 0) {
+                        log.trace("Ground height from heightData at ({}, {}): y={}", x, z, groundLevel + 1);
+                        return groundLevel + 1; // +1 to stand on top of block
+                    }
+                }
+            }
 
             // Search downward from startY to find highest solid block
             for (int y = startY; y >= 0; y--) {
@@ -121,5 +159,61 @@ public class TerrainService {
      */
     public boolean isValidHeight(int y) {
         return y >= 0 && y <= 255;
+    }
+
+    /**
+     * Get water position at world position (x, z).
+     * Returns a valid Y position for water-based entities (fish, etc.).
+     * Position must be between groundLevel and waterLevel.
+     *
+     * @param worldId World identifier
+     * @param x X coordinate (world space)
+     * @param z Z coordinate (world space)
+     * @return Y coordinate within water bounds, or -1 if no water at this position
+     */
+    public int getWaterPosition(WorldId worldId, int x, int z) {
+        try {
+            // Calculate chunk coordinates
+            int chunkX = Math.floorDiv(x, 16);
+            int chunkZ = Math.floorDiv(z, 16);
+            String chunkKey = BlockUtil.toChunkKey(chunkX, chunkZ);
+
+            // Load chunk from database
+            Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(worldId, chunkKey, false);
+
+            if (chunkDataOpt.isEmpty()) {
+                log.trace("Chunk not found for water position lookup: world={}, chunk={}", worldId, chunkKey);
+                return -1;
+            }
+
+            ChunkData chunkData = chunkDataOpt.get();
+
+            // Use HeightData to find water bounds
+            if (chunkData.getHeightData() != null) {
+                int localX = ((x % 16) + 16) % 16;
+                int localZ = ((z % 16) + 16) % 16;
+
+                var heightDataDto = chunkService.getHeightDataForColumn(chunkData, localX, localZ);
+                if (heightDataDto != null && heightDataDto.waterLevel() != null) {
+                    // Water exists at this position
+                    int groundLevel = heightDataDto.groundLevel();
+                    int waterLevel = heightDataDto.waterLevel();
+
+                    // Return mid-point between ground and water (where fish swim)
+                    int waterY = (groundLevel + waterLevel) / 2;
+                    log.trace("Water position at ({}, {}): y={} (ground={}, water={})",
+                            x, z, waterY, groundLevel, waterLevel);
+                    return waterY;
+                }
+            }
+
+            // No water at this position
+            log.trace("No water at position ({}, {})", x, z);
+            return -1;
+
+        } catch (Exception e) {
+            log.error("Error getting water position at ({}, {})", x, z, e);
+            return -1;
+        }
     }
 }

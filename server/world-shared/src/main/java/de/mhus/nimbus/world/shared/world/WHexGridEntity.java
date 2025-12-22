@@ -154,4 +154,35 @@ public class WHexGridEntity implements Identifiable {
         }
         return naborMap;
     }
+
+    /**
+     * Get all affected chunk keys for this hex grid.
+     * Calculates all flat positions within the hex and converts them to chunk keys.
+     *
+     * @param worldEntity The world entity containing the hexGridSize and chunkSize configuration
+     * @return Set of affected chunk keys (format: "cx:cz")
+     */
+    public java.util.Set<String> getAffectedChunkKeys(WWorld worldEntity) {
+        if (worldEntity == null || worldEntity.getPublicData() == null) {
+            throw new IllegalArgumentException("World entity or publicData cannot be null");
+        }
+
+        int chunkSize = worldEntity.getPublicData().getChunkSize();
+        if (chunkSize <= 0) {
+            throw new IllegalArgumentException("Invalid chunkSize: " + chunkSize + " (must be positive)");
+        }
+
+        java.util.Set<String> chunkKeys = new java.util.HashSet<>();
+
+        // Iterate over all flat positions in this hex grid
+        for (FlatPosition pos : getFlatPositionSet(worldEntity)) {
+            // Calculate chunk coordinates
+            int cx = Math.floorDiv(pos.x(), chunkSize);
+            int cz = Math.floorDiv(pos.z(), chunkSize);
+            String chunkKey = cx + ":" + cz;
+            chunkKeys.add(chunkKey);
+        }
+
+        return chunkKeys;
+    }
 }

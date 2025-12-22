@@ -203,3 +203,26 @@ Als Rückgabe also der WLayer, WLayerTerrain und optional WLayerModel.
 und die daten zum origin ausgibt. Natuerlich muss nicht das komplette WLayerModel geladen werden sondern nur die metadaten.
 Falls der block in einer gruppe ist, gib auch diese mit zurück.
 
+## Chunk Data und layers
+
+[?] das selektierte feld heightData soll meim erstellen von chunk Daten (WChunkService oder WDirtyChunkService) mit erstellt werden. Das format ist:
+\[
+x: number, // javaType: int
+z: number, // javaType: int
+maxHeight: number, // javaType: int
+groundLevel: number, // javaType: int
+waterLevel?: number // javaType: int
+\]
+fuer jede column im chunk (chunkSize * chunkSize) wird aus den blocks berechnet - muss beim mergen der Layers mit berechnet werden
+- wie die maximale Hoehe ist, das kommt ertmal aus WWorld.publicData.stop.y
+- groundLevel: hoechster Block in einem WLayerTerrain wo baseGround=true gesetzt ist und der Block-blockTypeId.shape ist nicht OCEAN (beispiel implementierung heirzu auch in ../client/packages/engine/src/services/ChunkService.ts
+  Zeile 611:624 (Water)
+- waterLevel: wenn eben ein Water ocean gefunde wurde, dann wird dieser wert gesetzt. Wenn nicht, ist das array kuerzer. 
+
+[?] Erstelle in WChunkService eine funktion die fuer eine Block Column (x,z) den heightData heraus sucht und aus dem int[] ein HeightDataDto erstellt.
+
+[?] Ich haette gerne einen chunk-editor.html in ../client/packages/controls mit dem ich in einer welt alle chunks sehe, und suchen kann, 
+wichtig: pagination. und dann die metadaten (sind nicht viele) sehen kann und dann alle Blocks,
+heighData im chunks in listen sehen kann. benutze zum transfer WChunkService.getStream um den speicher zu schonen. - im header einen world selector. 
+
+[ ] Fuege in HomeApp.vue einen Abschnit für chunk-editor hinzu

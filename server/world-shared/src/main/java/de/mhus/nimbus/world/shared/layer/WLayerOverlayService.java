@@ -30,6 +30,7 @@ public class WLayerOverlayService {
     private final StorageService storageService;
     private final ObjectMapper objectMapper;
     private final WWorldService worldService;
+    private final de.mhus.nimbus.world.shared.world.WBlockTypeService blockTypeService;
 
     /**
      * Generate final chunk by overlaying all enabled layers.
@@ -102,6 +103,10 @@ public class WLayerOverlayService {
         result.setCz(cz);
         result.setSize(chunkSize);
         result.setBlocks(new ArrayList<>(blockMap.values()));
+
+        // Calculate height data
+        int[][] heightData = calculateHeightData(worldId, chunkSize, blockMap.values(), layers);
+        result.setHeightData(heightData);
 
         log.debug("Generated chunk {} from {} layers, {} blocks",
                 chunkKey, layers.size(), blockMap.size());
@@ -282,6 +287,128 @@ public class WLayerOverlayService {
         } catch (Exception e) {
             log.error("Failed to clone block", e);
             return source; // Fallback
+        }
+    }
+
+    /**
+     * Calculate height data for chunk.
+     * Format: int[chunkSize * chunkSize][3 or 4]
+     * Each entry: [x, z, maxHeight, groundLevel, waterLevel?]
+     *
+     * @param worldId World identifier for block type lookups
+     * @param chunkSize Chunk size
+     * @param blocks All blocks in the chunk
+     * @param layers All layers (to find baseGround layer)
+     * @return Height data array
+     */
+    private int[][] calculateHeightData(String worldId, int chunkSize, Collection<Block> blocks, List<WLayer> layers) {
+        var worldIdObj = de.mhus.nimbus.shared.types.WorldId.of(worldId).orElseThrow();
+        var world = worldService.getByWorldId(worldId).orElseThrow();
+        int maxHeight = (int) world.getPublicData().getStop().getY();
+
+        // Find base ground layer
+        WLayer baseGroundLayer = null;
+        for (WLayer layer : layers) {
+            if (layer.isBaseGround() && layer.isEnabled()) {
+                baseGroundLayer = layer;
+                break;
+            }
+        }
+
+        // Group blocks by column (x, z)
+        Map<String, ColumnData> columns = new HashMap<>();
+
+        for (Block block : blocks) {
+            if (block.getPosition() == null) continue;
+
+            int localX = ((int) block.getPosition().getX() % chunkSize + chunkSize) % chunkSize;
+            int localZ = ((int) block.getPosition().getZ() % chunkSize + chunkSize) % chunkSize;
+            String columnKey = localX + "," + localZ;
+
+            ColumnData column = columns.computeIfAbsent(columnKey, k -> new ColumnData(localX, localZ, maxHeight));
+            column.addBlock(block);
+
+            // Check if this block is in baseGround layer and not water
+            if (baseGroundLayer != null && block.getBlockTypeId() != null) {
+                var blockType = blockTypeService.findByBlockId(worldIdObj, block.getBlockTypeId());
+                if (blockType.isPresent() && blockType.get().getPublicData() != null) {
+                    Integer shapeInt = getShapeFromBlockType(blockType.get().getPublicData());
+                    boolean isWater = isWaterShape(shapeInt);
+
+                    if (!isWater) {
+                        int y = (int) block.getPosition().getY();
+                        if (column.groundLevel == null || y > column.groundLevel) {
+                            column.groundLevel = y;
+                        }
+                    } else {
+                        int y = (int) block.getPosition().getY();
+                        if (column.waterLevel == null || y > column.waterLevel) {
+                            column.waterLevel = y;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Convert to array
+        List<int[]> heightDataList = new ArrayList<>();
+        for (ColumnData column : columns.values()) {
+            if (column.waterLevel != null) {
+                heightDataList.add(new int[]{column.x, column.z, column.maxHeight, column.groundLevel != null ? column.groundLevel : -1, column.waterLevel});
+            } else {
+                heightDataList.add(new int[]{column.x, column.z, column.maxHeight, column.groundLevel != null ? column.groundLevel : -1});
+            }
+        }
+
+        return heightDataList.toArray(new int[0][]);
+    }
+
+    /**
+     * Get shape from BlockType (checking modifiers).
+     */
+    private Integer getShapeFromBlockType(de.mhus.nimbus.generated.types.BlockType blockType) {
+        if (blockType.getModifiers() == null || blockType.getModifiers().isEmpty()) {
+            return null;
+        }
+        // Get first modifier (usually status 0)
+        var modifier = blockType.getModifiers().get(0);
+        if (modifier == null || modifier.getVisibility() == null) {
+            return null;
+        }
+        return modifier.getVisibility().getShape();
+    }
+
+    /**
+     * Check if shape is a water type.
+     */
+    private boolean isWaterShape(Integer shapeInt) {
+        if (shapeInt == null) return false;
+        // Check against Shape enum values
+        return shapeInt == de.mhus.nimbus.generated.types.Shape.OCEAN.getTsIndex() ||
+               shapeInt == de.mhus.nimbus.generated.types.Shape.WATER.getTsIndex() ||
+               shapeInt == de.mhus.nimbus.generated.types.Shape.RIVER.getTsIndex() ||
+               shapeInt == de.mhus.nimbus.generated.types.Shape.OCEAN_MAELSTROM.getTsIndex() ||
+               shapeInt == de.mhus.nimbus.generated.types.Shape.OCEAN_COAST.getTsIndex();
+    }
+
+    /**
+     * Helper class to track column data during height calculation.
+     */
+    private static class ColumnData {
+        final int x;
+        final int z;
+        final int maxHeight;
+        Integer groundLevel;
+        Integer waterLevel;
+
+        ColumnData(int x, int z, int maxHeight) {
+            this.x = x;
+            this.z = z;
+            this.maxHeight = maxHeight;
+        }
+
+        void addBlock(Block block) {
+            // Track blocks for future use if needed
         }
     }
 }

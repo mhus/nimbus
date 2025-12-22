@@ -388,9 +388,42 @@ public class WChunkService {
                 .cz(chunkData.getCz())
                 .b(chunkData.getBlocks())        // blocks → b
                 .i(items.isEmpty() ? null : items)  // items from registry → i
-                .h(chunkData.getHeightData())     // heightData → h
+                .h(null)     // TODO: Convert int[][] to List<HeightData> - heightData type mismatch
                 // Note: AreaData (a) currently not in ChunkData
                 .build();
+    }
+
+    /**
+     * Get height data for a specific column (x, z) in chunk data.
+     * Searches through the heightData array for the matching x,z coordinates
+     * and converts the int[] to HeightDataDto.
+     *
+     * @param chunkData Chunk data containing heightData
+     * @param x Local x coordinate within chunk (0 to chunkSize-1)
+     * @param z Local z coordinate within chunk (0 to chunkSize-1)
+     * @return HeightDataDto if found, null otherwise
+     */
+    public de.mhus.nimbus.world.shared.dto.HeightDataDto getHeightDataForColumn(ChunkData chunkData, int x, int z) {
+        if (chunkData == null || chunkData.getHeightData() == null) {
+            return null;
+        }
+
+        // Search for matching column in heightData array
+        for (int[] columnData : chunkData.getHeightData()) {
+            if (columnData.length >= 4 && columnData[0] == x && columnData[1] == z) {
+                // Found matching column
+                // Format: [x, z, maxHeight, groundLevel, waterLevel?]
+                int maxHeight = columnData[2];
+                int groundLevel = columnData[3];
+                Integer waterLevel = columnData.length > 4 ? columnData[4] : null;
+
+                return new de.mhus.nimbus.world.shared.dto.HeightDataDto(
+                        x, z, maxHeight, groundLevel, waterLevel
+                );
+            }
+        }
+
+        return null;
     }
 
     private boolean blank(String s) { return s == null || s.isBlank(); }

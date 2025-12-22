@@ -41,6 +41,7 @@ public class ELayerController extends BaseEditorController {
     private final WLayerService layerService;
     private final de.mhus.nimbus.world.shared.job.WJobService jobService;
     private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
+    private final de.mhus.nimbus.world.shared.world.WChunkRepository chunkRepository;
 
     // DTOs moved to de.mhus.nimbus.world.shared.dto package for TypeScript generation
 
@@ -342,13 +343,21 @@ public class ELayerController extends BaseEditorController {
 
             } else {
                 // For GROUND layers: Mark all affected chunks as dirty
-                List<String> affectedChunks = layer.isAllChunks()
-                        ? List.of() // TODO: Handle allChunks case - would need to get all existing chunks
-                        : layer.getAffectedChunks();
+                List<String> affectedChunks;
+                if (layer.isAllChunks()) {
+                    // Get all existing chunks for this world
+                    affectedChunks = chunkRepository.findByWorldId(lookupWorldId)
+                            .stream()
+                            .map(de.mhus.nimbus.world.shared.world.WChunk::getChunk)
+                            .collect(java.util.stream.Collectors.toList());
+                    log.info("Regenerating GROUND layer with allChunks=true: layerId={}, chunks={}", id, affectedChunks.size());
+                } else {
+                    affectedChunks = layer.getAffectedChunks();
+                }
 
-                if (affectedChunks.isEmpty() && layer.isAllChunks()) {
-                    log.warn("Cannot regenerate GROUND layer with allChunks=true: layerId={}", id);
-                    return bad("Cannot regenerate layer with allChunks=true. Please specify affected chunks.");
+                if (affectedChunks.isEmpty()) {
+                    log.warn("No chunks to regenerate for GROUND layer: layerId={}", id);
+                    return bad("No chunks found to regenerate.");
                 }
 
                 dirtyChunkService.markChunksDirty(lookupWorldId, affectedChunks, "layer_regeneration");

@@ -222,6 +222,18 @@
           </svg>
         </EditorCard>
 
+        <!-- Chunk Editor -->
+        <EditorCard
+          v-if="hasAccess('CHUNK_EDITOR')"
+          title="Chunk Editor"
+          description="View and inspect chunk data"
+          url="./chunk-editor.html"
+        >
+          <svg class="w-8 h-8 text-stone-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+          </svg>
+        </EditorCard>
+
         <!-- Item Editor -->
         <EditorCard
           v-if="hasAccess('ITEM_EDITOR')"
@@ -343,6 +355,7 @@ const editorRoleMap: Record<string, string[]> = {
   'BLOCKTYPE_EDITOR': ['SECTOR_ADMIN', 'BLOCKTYPE_EDITOR', 'WORLD_EDITOR'],
   'ASSET_EDITOR': ['SECTOR_ADMIN', 'ASSET_EDITOR', 'WORLD_EDITOR'],
   'LAYER_EDITOR': ['SECTOR_ADMIN', 'LAYER_EDITOR', 'WORLD_EDITOR'],
+  'CHUNK_EDITOR': ['SECTOR_ADMIN', 'CHUNK_EDITOR', 'WORLD_EDITOR'],
   'ITEM_EDITOR': ['SECTOR_ADMIN', 'ITEM_EDITOR', 'WORLD_EDITOR'],
   'ITEMTYPE_EDITOR': ['SECTOR_ADMIN', 'ITEMTYPE_EDITOR', 'WORLD_EDITOR'],
   'CHEST_EDITOR': ['SECTOR_ADMIN', 'CHEST_EDITOR', 'WORLD_EDITOR'],

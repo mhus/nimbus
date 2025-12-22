@@ -214,6 +214,19 @@
               Cancel
             </button>
             <button
+              v-if="isEditMode"
+              type="button"
+              class="btn btn-warning"
+              @click="handleMarkDirty"
+              :disabled="markingDirty"
+            >
+              <span v-if="markingDirty" class="loading loading-spinner loading-sm"></span>
+              <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {{ markingDirty ? 'Marking...' : 'Mark Chunks Dirty' }}
+            </button>
+            <button
               type="submit"
               class="btn btn-primary"
               :disabled="saving || !isFormValid"
@@ -243,6 +256,7 @@
 import { ref, computed, watch } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import { useHexGrids, type HexGridWithId } from '@/composables/useHexGrids';
+import { apiService } from '@/services/ApiService';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 
@@ -274,6 +288,7 @@ const formData = ref({
 });
 
 const saving = ref(false);
+const markingDirty = ref(false);
 const saveError = ref<string | null>(null);
 const showJsonEditor = ref(false);
 
@@ -380,6 +395,36 @@ const handleSave = async () => {
     saveError.value = `Failed to save hex grid: ${(err as Error).message}`;
   } finally {
     saving.value = false;
+  }
+};
+
+/**
+ * Handle mark chunks dirty
+ */
+const handleMarkDirty = async () => {
+  if (!isEditMode.value || !props.hexGrid) return;
+
+  const confirmed = confirm(
+    `This will mark all chunks affected by this hex grid as dirty for regeneration.\n\n` +
+    `Position: ${formData.value.position.q}:${formData.value.position.r}\n\n` +
+    `Continue?`
+  );
+
+  if (!confirmed) return;
+
+  markingDirty.value = true;
+
+  try {
+    const response = await apiService.post(
+      `/control/worlds/${props.worldId}/hexgrid/${formData.value.position.q}/${formData.value.position.r}/dirty`,
+      {}
+    );
+
+    alert(`Successfully marked ${response.chunksMarked} chunks as dirty!`);
+  } catch (err) {
+    alert(`Failed to mark chunks dirty: ${(err as Error).message}`);
+  } finally {
+    markingDirty.value = false;
   }
 };
 
