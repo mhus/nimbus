@@ -275,8 +275,45 @@ export class ChunkService {
           continue;
         }
 
-        // Note: Decompression now handled in NetworkService for binary frames
-        // ChunkDataTransferObject arrives already decompressed
+        // Decompress chunk data if compressed
+        if (chunkData.c) {
+          try {
+            logger.debug('Decompressing chunk data in ChunkService', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              compressedSize: chunkData.c.length,
+            });
+
+            // Decompress the complete ChunkData object
+            const decompressedStream = new Response(
+              new Blob([chunkData.c]).stream().pipeThrough(new DecompressionStream('gzip'))
+            );
+            const decompressedText = await decompressedStream.text();
+            const cChunk = JSON.parse(decompressedText);
+
+            // Extract fields from decompressed ChunkData and map to ChunkDataTransferObject
+            chunkData.b = cChunk.blocks || [];
+            chunkData.h = cChunk.heightData || [];
+            chunkData.backdrop = cChunk.backdrop;
+
+            // Important: free memory
+            chunkData.c = undefined as any;
+
+            logger.debug('Chunk decompressed in ChunkService', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              blocks: chunkData.b.length,
+              heightData: chunkData.h?.length || 0,
+            });
+          } catch (error) {
+            logger.error('Failed to decompress chunk data in ChunkService', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              error: (error as Error).message,
+            });
+            continue;
+          }
+        }
 
         // Process blocks into ClientBlocks with merged modifiers
         const clientChunkData = await this.processChunkData(chunkData);
@@ -446,7 +483,9 @@ export class ChunkService {
 
     // STEP 1.5: Preload all BlockTypes needed for this chunk
     // Collect unique BlockType IDs from blocks AND items
-    const blockTypeIds = new Set(chunkData.b.map(block => normalizeBlockTypeId(block.blockTypeId)));
+    const blockTypeIds = new Set(
+      (chunkData.b || []).map(block => normalizeBlockTypeId(block.blockTypeId))
+    );
     if (chunkData.i && chunkData.i.length > 0) {
       // All items use BlockType 1 (ITEM type)
       blockTypeIds.add('1');

@@ -334,29 +334,14 @@ export class NetworkService {
         totalSize: data.byteLength,
       });
 
-      // 4. Decompress using native browser API
-      const decompressedStream = new Response(
-        new Blob([compressedBytes]).stream().pipeThrough(new DecompressionStream('gzip'))
-      );
-      const decompressedText = await decompressedStream.text();
-      const payload = JSON.parse(decompressedText);
-
-      logger.debug('Decompressed chunk payload', {
-        cx: header.cx,
-        cz: header.cz,
-        decompressedSize: decompressedText.length,
-        blocks: payload.b?.length || 0,
-        heightData: payload.h?.length || 0,
-      });
-
-      // 5. Reconstruct ChunkDataTransferObject
+      // 4. Build ChunkDataTransferObject with compressed data
+      // Decompression will happen in ChunkService.onChunkUpdate
       const chunkData: ChunkDataTransferObject = {
         cx: header.cx,
         cz: header.cz,
-        b: payload.b || [],
-        h: payload.h || [],
+        b: [],  // Will be filled after decompression
         i: header.i,
-        backdrop: payload.backdrop,
+        c: compressedBytes,  // Pass compressed data to ChunkService
       };
 
       // 6. Process chunk normally via appContext

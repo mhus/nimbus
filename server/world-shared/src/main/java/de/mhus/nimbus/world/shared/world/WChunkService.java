@@ -473,41 +473,19 @@ public class WChunkService {
                     return null;
                 }
 
-                // Read all bytes from stream
-                byte[] storageData = compressedStream.readAllBytes();
+                // Read all bytes from stream (already compressed ChunkData)
+                byte[] compressedData = compressedStream.readAllBytes();
 
-                // Storage contains full ChunkData JSON (compressed)
-                // We need to decompress, extract b/h/backdrop, and re-compress for network
-                try (GZIPInputStream gzipIn = new GZIPInputStream(new ByteArrayInputStream(storageData))) {
-                    ChunkData chunkData = objectMapper.readValue(gzipIn, ChunkData.class);
+                log.debug("Using compressed storage data directly: chunkKey={} size={} bytes",
+                        chunkKey, compressedData.length);
 
-                    // Create payload with only b, h, backdrop (network format)
-                    var payload = new java.util.HashMap<String, Object>();
-                    payload.put("b", chunkData.getBlocks());
-                    payload.put("h", chunkData.getHeightData());
-                    payload.put("backdrop", chunkData.getBackdrop());
-
-                    // Compress payload for network
-                    String payloadJson = objectMapper.writeValueAsString(payload);
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
-                        gzip.write(payloadJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                        gzip.finish();
-                    }
-
-                    byte[] compressedPayload = buffer.toByteArray();
-
-                    log.debug("Converted storage format to network format: chunkKey={} storage={} bytes, network={} bytes",
-                            chunkKey, storageData.length, compressedPayload.length);
-
-                    // Return with compressed data only, no blocks/heightData/backdrop
-                    return ChunkDataTransferObject.builder()
-                            .cx(cx)
-                            .cz(cz)
-                            .i(items.isEmpty() ? null : items)  // items not compressed
-                            .c(compressedPayload)  // compressed network payload
-                            .build();
-                }
+                // Return with compressed ChunkData as-is
+                return ChunkDataTransferObject.builder()
+                        .cx(cx)
+                        .cz(cz)
+                        .i(items.isEmpty() ? null : items)  // items not compressed
+                        .c(compressedData)  // compressed ChunkData from storage (as-is)
+                        .build();
 
             } catch (Exception e) {
                 log.error("Failed to load compressed storage data: chunkKey={}", chunkKey, e);
