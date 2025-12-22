@@ -987,6 +987,134 @@ public class WLayerService {
     }
 
     /**
+     * Transform a model layer by automatically adjusting the center point.
+     * Calculates the average position of all blocks and shifts coordinates so this becomes the new origin.
+     * mountX/Y/Z are adjusted in the opposite direction to keep world position.
+     *
+     * @param modelId Model identifier
+     * @return Updated model with transformed coordinates
+     */
+    @Transactional
+    public Optional<WLayerModel> autoAdjustCenter(String modelId) {
+        Optional<WLayerModel> modelOpt = modelRepository.findById(modelId);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for adjustCenter: modelId={}", modelId);
+            return Optional.empty();
+        }
+
+        WLayerModel model = modelOpt.get();
+
+        // Calculate center point from all blocks
+        List<LayerBlock> content = model.getContent();
+        if (content == null || content.isEmpty()) {
+            log.warn("Model has no content to adjust: modelId={}", modelId);
+            return Optional.of(model);
+        }
+
+        // Calculate average position (center)
+        double sumX = 0, sumY = 0, sumZ = 0;
+        int count = 0;
+
+        for (LayerBlock block : content) {
+            if (block.getBlock() != null && block.getBlock().getPosition() != null) {
+                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                sumX += pos.getX();
+                sumY += pos.getY();
+                sumZ += pos.getZ();
+                count++;
+            }
+        }
+
+        if (count == 0) {
+            log.warn("Model has no valid block positions to adjust: modelId={}", modelId);
+            return Optional.of(model);
+        }
+
+        // Calculate center offset
+        int offsetX = (int) Math.round(sumX / count);
+        int offsetY = (int) Math.round(sumY / count);
+        int offsetZ = (int) Math.round(sumZ / count);
+
+        log.info("Adjusting center for model: modelId={} offset=({},{},{})", modelId, offsetX, offsetY, offsetZ);
+
+        // Shift all block coordinates
+        for (LayerBlock block : content) {
+            if (block.getBlock() != null && block.getBlock().getPosition() != null) {
+                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                pos.setX(pos.getX() - offsetX);
+                pos.setY(pos.getY() - offsetY);
+                pos.setZ(pos.getZ() - offsetZ);
+            }
+        }
+
+        // Adjust mount point in opposite direction to keep world position
+        model.setMountX(model.getMountX() + offsetX);
+        model.setMountY(model.getMountY() + offsetY);
+        model.setMountZ(model.getMountZ() + offsetZ);
+
+        model.touchUpdate();
+        WLayerModel saved = modelRepository.save(model);
+
+        log.info("Auto-adjusted center for model: modelId={} newMount=({},{},{})",
+                modelId, saved.getMountX(), saved.getMountY(), saved.getMountZ());
+
+        return Optional.of(saved);
+    }
+
+    /**
+     * Transform a model layer by manually adjusting the center point.
+     * Shifts all block coordinates by the specified offset and adjusts mountX/Y/Z in opposite direction.
+     * The model remains at the same world position but with a transformed origin.
+     *
+     * @param modelId Model identifier
+     * @param offsetX X offset to shift blocks (will be subtracted from block positions)
+     * @param offsetY Y offset to shift blocks (will be subtracted from block positions)
+     * @param offsetZ Z offset to shift blocks (will be subtracted from block positions)
+     * @return Updated model with transformed coordinates
+     */
+    @Transactional
+    public Optional<WLayerModel> manualAdjustCenter(String modelId, int offsetX, int offsetY, int offsetZ) {
+        Optional<WLayerModel> modelOpt = modelRepository.findById(modelId);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for manual adjustCenter: modelId={}", modelId);
+            return Optional.empty();
+        }
+
+        WLayerModel model = modelOpt.get();
+
+        List<LayerBlock> content = model.getContent();
+        if (content == null || content.isEmpty()) {
+            log.warn("Model has no content to adjust: modelId={}", modelId);
+            return Optional.of(model);
+        }
+
+        log.info("Manual adjust center for model: modelId={} offset=({},{},{})", modelId, offsetX, offsetY, offsetZ);
+
+        // Shift all block coordinates
+        for (LayerBlock block : content) {
+            if (block.getBlock() != null && block.getBlock().getPosition() != null) {
+                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                pos.setX(pos.getX() - offsetX);
+                pos.setY(pos.getY() - offsetY);
+                pos.setZ(pos.getZ() - offsetZ);
+            }
+        }
+
+        // Adjust mount point in opposite direction to keep world position
+        model.setMountX(model.getMountX() + offsetX);
+        model.setMountY(model.getMountY() + offsetY);
+        model.setMountZ(model.getMountZ() + offsetZ);
+
+        model.touchUpdate();
+        WLayerModel saved = modelRepository.save(model);
+
+        log.info("Manual adjusted center for model: modelId={} newMount=({},{},{})",
+                modelId, saved.getMountX(), saved.getMountY(), saved.getMountZ());
+
+        return Optional.of(saved);
+    }
+
+    /**
      * Save model layer content (deprecated - use createModel or updateModel).
      *
      * @deprecated This method assumes 1:1 relationship. Use createModel for new concept.

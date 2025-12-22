@@ -23,7 +23,8 @@ excludeDirSuffixes:
   - logger
   - utils
   - validators
-  - generated
+  - generated/entities
+  - generated/dto
 additionalClassAnnotations:
   - com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
   - org.springframework.aot.hint.annotation.Reflective

@@ -205,7 +205,7 @@ Falls der block in einer gruppe ist, gib auch diese mit zurück.
 
 ## Chunk Data und layers
 
-[?] das selektierte feld heightData soll meim erstellen von chunk Daten (WChunkService oder WDirtyChunkService) mit erstellt werden. Das format ist:
+[x] das selektierte feld heightData soll meim erstellen von chunk Daten (WChunkService oder WDirtyChunkService) mit erstellt werden. Das format ist:
 \[
 x: number, // javaType: int
 z: number, // javaType: int
@@ -219,10 +219,43 @@ fuer jede column im chunk (chunkSize * chunkSize) wird aus den blocks berechnet 
   Zeile 611:624 (Water)
 - waterLevel: wenn eben ein Water ocean gefunde wurde, dann wird dieser wert gesetzt. Wenn nicht, ist das array kuerzer. 
 
-[?] Erstelle in WChunkService eine funktion die fuer eine Block Column (x,z) den heightData heraus sucht und aus dem int[] ein HeightDataDto erstellt.
+[x] Erstelle in WChunkService eine funktion die fuer eine Block Column (x,z) den heightData heraus sucht und aus dem int[] ein HeightDataDto erstellt.
 
-[?] Ich haette gerne einen chunk-editor.html in ../client/packages/controls mit dem ich in einer welt alle chunks sehe, und suchen kann, 
+[x] Ich haette gerne einen chunk-editor.html in ../client/packages/controls mit dem ich in einer welt alle chunks sehe, und suchen kann, 
 wichtig: pagination. und dann die metadaten (sind nicht viele) sehen kann und dann alle Blocks,
 heighData im chunks in listen sehen kann. benutze zum transfer WChunkService.getStream um den speicher zu schonen. - im header einen world selector. 
 
-[ ] Fuege in HomeApp.vue einen Abschnit für chunk-editor hinzu
+[x] Fuege in HomeApp.vue einen Abschnit für chunk-editor hinzu
+
+## Model Layer Transformation
+
+Es wird mehrere Transform methoden geben, sie muessen als Buttons z.b. in einem dropdown menu hinzugefügt werden.
+
+[?] Im layer-editor in ../client/packages/controls soll es für WLayerModel (WLayerModel Dialog) in layer vom Typ Model 
+eine TransformAjustCenter methode geben. Dabei werden alle coordinaten des WLayerModel verschoben und mountX, mountY und mountZ 
+werden in die entgegengesetzte richtung versetzt. So bleibt das model an der gleichen Position wie es war, aber der 0,0,0 ist jetzt 
+transformiert.
+- Auto Adjust
+- Manual Adjust
+
+[ ] Im layer-editor soll es eine TransformMove methode geben, dabei werden alle coordinaten des WLayerModel verschoben um den angegebenen wert.
+Es wird für das Model ein 'Sync to Terrain' gestartet.
+
+[ ] Copy Model Layer kopiert eine WLayerModel entity in ein anderes WLayer. Das Yiel muss nicht die gleiche WorldId haben.
+Am besten: Auswahl der Welt, dann auswahl des WLayer (nur Model Layer). Eingabe des names im neuen Layer - der name kann 
+hier angepasst erwden. Das WLayerModel wird kopiert. WorldId und layerDataId 
+werden automatisch uebernommen aus der dem Ziel WLayer.
+
+## referenceModelId
+
+In WLayerModel gibt es ein Feld referenceModelId in dem soll die Referenz auf ein anderes WLayerModel angelegt werden koennen.
+Die Referenz wird auf 'worldId/WLayerModel.name' gesetzt. z.b. earth616:westview/TownHall
+Der Ersteller muss darauf achten, das der Name eindeutig ist. Werden mehrere gefunden, wird das erste genommen.
+
+[ ] Beim synchen des models auf das Terrain (im WLayerService?) wird der Referenz gefolgt und zuerst dieses geladen und in 
+den Terrain Layer übertragen. Anstelle des eigentlichen WLayerModel inhaltes.
+Dabei sollen die mount werte der beiden layer (reference und aktueller) addiert werden. Die rotation wird nur aus dem aktuellen 
+Layer kopiert.
+
+[ ] Im layer-editor im WLayerModel Dialog soll es einen Button geben, der das referenzierte Model öffnet (sofern vorhanden).
+

@@ -422,6 +422,178 @@ public class ELayerModelController extends BaseEditorController {
     }
 
     /**
+     * Transform Layer Model by automatically adjusting center.
+     * Calculates average position and shifts all block coordinates so this becomes the new origin.
+     * mountX/Y/Z are adjusted in opposite direction to keep world position.
+     * POST /control/worlds/{worldId}/layers/{layerId}/models/{id}/transform/auto-adjust-center
+     */
+    @PostMapping("/{id}/transform/auto-adjust-center")
+    @Operation(summary = "Transform Layer Model - Auto Adjust Center")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Model transformed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Model not found")
+    })
+    public ResponseEntity<?> transformAutoAdjustCenter(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Layer identifier") @PathVariable String layerId,
+            @Parameter(description = "Model identifier") @PathVariable String id) {
+
+        log.debug("TRANSFORM AUTO ADJUST CENTER layer model: worldId={}, layerId={}, id={}", worldId, layerId, id);
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(layerId, "layerId");
+        if (validation != null) return validation;
+        validation = validateId(id, "id");
+        if (validation != null) return validation;
+
+        // Verify layer exists and belongs to world
+        Optional<WLayer> layerOpt = layerService.findById(layerId);
+        if (layerOpt.isEmpty()) {
+            log.warn("Layer not found: layerId={}", layerId);
+            return notFound("layer not found");
+        }
+
+        WLayer layer = layerOpt.get();
+        String lookupWorldId = WorldId.of(worldId).orElseThrow().withoutInstance().getId();
+        if (!layer.getWorldId().equals(lookupWorldId)) {
+            log.warn("Layer worldId mismatch: expected={}, actual={}", lookupWorldId, layer.getWorldId());
+            return notFound("layer not found");
+        }
+
+        // Verify model exists
+        Optional<WLayerModel> modelOpt = modelRepository.findById(id);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for transform: id={}", id);
+            return notFound("model not found");
+        }
+
+        WLayerModel model = modelOpt.get();
+        if (!model.getWorldId().equals(lookupWorldId)) {
+            log.warn("Model worldId mismatch: expected={}, actual={}", lookupWorldId, model.getWorldId());
+            return notFound("model not found");
+        }
+
+        // Verify layer type is MODEL
+        if (layer.getLayerType() != de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+            log.warn("Layer is not MODEL type: layerId={} type={}", layerId, layer.getLayerType());
+            return bad("layer is not MODEL type");
+        }
+
+        try {
+            // Auto adjust center
+            Optional<WLayerModel> transformedOpt = layerService.autoAdjustCenter(id);
+            if (transformedOpt.isEmpty()) {
+                return notFound("model not found");
+            }
+
+            WLayerModel transformed = transformedOpt.get();
+            log.info("Transformed model (auto adjust center): modelId={}, newMount=({},{},{})",
+                    id, transformed.getMountX(), transformed.getMountY(), transformed.getMountZ());
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "model", toDto(transformed),
+                    "message", "Model center auto-adjusted successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to transform model: modelId={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to transform model: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Transform Layer Model by manually adjusting center.
+     * Shifts all block coordinates by specified offset and adjusts mountX/Y/Z in opposite direction.
+     * The model remains at the same world position but with transformed origin.
+     * POST /control/worlds/{worldId}/layers/{layerId}/models/{id}/transform/manual-adjust-center
+     */
+    @PostMapping("/{id}/transform/manual-adjust-center")
+    @Operation(summary = "Transform Layer Model - Manual Adjust Center")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Model transformed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Model not found")
+    })
+    public ResponseEntity<?> transformManualAdjustCenter(
+            @Parameter(description = "World identifier") @PathVariable String worldId,
+            @Parameter(description = "Layer identifier") @PathVariable String layerId,
+            @Parameter(description = "Model identifier") @PathVariable String id,
+            @Parameter(description = "X offset") @RequestParam int offsetX,
+            @Parameter(description = "Y offset") @RequestParam int offsetY,
+            @Parameter(description = "Z offset") @RequestParam int offsetZ) {
+
+        log.debug("TRANSFORM MANUAL ADJUST CENTER layer model: worldId={}, layerId={}, id={}, offset=({},{},{})",
+                worldId, layerId, id, offsetX, offsetY, offsetZ);
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(layerId, "layerId");
+        if (validation != null) return validation;
+        validation = validateId(id, "id");
+        if (validation != null) return validation;
+
+        // Verify layer exists and belongs to world
+        Optional<WLayer> layerOpt = layerService.findById(layerId);
+        if (layerOpt.isEmpty()) {
+            log.warn("Layer not found: layerId={}", layerId);
+            return notFound("layer not found");
+        }
+
+        WLayer layer = layerOpt.get();
+        String lookupWorldId = WorldId.of(worldId).orElseThrow().withoutInstance().getId();
+        if (!layer.getWorldId().equals(lookupWorldId)) {
+            log.warn("Layer worldId mismatch: expected={}, actual={}", lookupWorldId, layer.getWorldId());
+            return notFound("layer not found");
+        }
+
+        // Verify model exists
+        Optional<WLayerModel> modelOpt = modelRepository.findById(id);
+        if (modelOpt.isEmpty()) {
+            log.warn("Model not found for transform: id={}", id);
+            return notFound("model not found");
+        }
+
+        WLayerModel model = modelOpt.get();
+        if (!model.getWorldId().equals(lookupWorldId)) {
+            log.warn("Model worldId mismatch: expected={}, actual={}", lookupWorldId, model.getWorldId());
+            return notFound("model not found");
+        }
+
+        // Verify layer type is MODEL
+        if (layer.getLayerType() != de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+            log.warn("Layer is not MODEL type: layerId={} type={}", layerId, layer.getLayerType());
+            return bad("layer is not MODEL type");
+        }
+
+        try {
+            // Manual adjust center
+            Optional<WLayerModel> transformedOpt = layerService.manualAdjustCenter(id, offsetX, offsetY, offsetZ);
+            if (transformedOpt.isEmpty()) {
+                return notFound("model not found");
+            }
+
+            WLayerModel transformed = transformedOpt.get();
+            log.info("Transformed model (manual adjust center): modelId={}, offset=({},{},{}), newMount=({},{},{})",
+                    id, offsetX, offsetY, offsetZ, transformed.getMountX(), transformed.getMountY(), transformed.getMountZ());
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "model", toDto(transformed),
+                    "message", "Model center manually adjusted successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to transform model: modelId={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to transform model: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Delete Layer Model.
      * DELETE /control/worlds/{worldId}/layers/{layerId}/models/{id}
      */

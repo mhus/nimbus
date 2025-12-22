@@ -86,6 +86,39 @@ export class LayerModelService {
       {}
     );
   }
+
+  /**
+   * Transform model by automatically adjusting center
+   * Calculates average position of all blocks and shifts coordinates to make this the new origin.
+   * mountX/Y/Z are adjusted in opposite direction to keep world position.
+   */
+  async transformAutoAdjustCenter(worldId: string, layerId: string, id: string): Promise<LayerModelDto> {
+    const response = await apiService.post<{ success: boolean; model: LayerModelDto; message: string }>(
+      `/control/worlds/${worldId}/layers/${layerId}/models/${id}/transform/auto-adjust-center`,
+      {}
+    );
+    return response.model;
+  }
+
+  /**
+   * Transform model by manually adjusting center
+   * Shifts all block coordinates by specified offset and adjusts mountX/Y/Z in opposite direction.
+   * The model remains at the same world position but with transformed origin.
+   */
+  async transformManualAdjustCenter(
+    worldId: string,
+    layerId: string,
+    id: string,
+    offsetX: number,
+    offsetY: number,
+    offsetZ: number
+  ): Promise<LayerModelDto> {
+    const response = await apiService.post<{ success: boolean; model: LayerModelDto; message: string }>(
+      `/control/worlds/${worldId}/layers/${layerId}/models/${id}/transform/manual-adjust-center?offsetX=${offsetX}&offsetY=${offsetY}&offsetZ=${offsetZ}`,
+      {}
+    );
+    return response.model;
+  }
 }
 
 export const layerModelService = new LayerModelService();

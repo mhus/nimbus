@@ -199,6 +199,39 @@
             </svg>
             Open Grid Editor
           </button>
+
+          <!-- Transform Dropdown -->
+          <details v-if="isEditMode" class="dropdown dropdown-top">
+            <summary class="btn btn-outline" :class="{ 'btn-disabled': transforming }">
+              <span v-if="transforming" class="loading loading-spinner"></span>
+              <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              {{ transforming ? 'Transforming...' : 'Transform' }}
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+            <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-64 mb-2">
+              <li>
+                <a @click="handleTransformAutoAdjustCenter">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Auto Adjust Center
+                </a>
+              </li>
+              <li>
+                <a @click="openManualAdjustDialog">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  Manual Adjust Center
+                </a>
+              </li>
+            </ul>
+          </details>
+
           <button
             v-if="isEditMode"
             type="button"
@@ -219,6 +252,80 @@
           >
             <span v-if="saving" class="loading loading-spinner"></span>
             {{ saving ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Manual Adjust Center Dialog -->
+  <div v-if="showManualAdjustDialog" class="modal modal-open" @click.self="closeManualAdjustDialog">
+    <div class="modal-box" @click.stop>
+      <h3 class="font-bold text-lg mb-4">Manual Adjust Center</h3>
+      <p class="text-sm text-base-content/70 mb-4">
+        Enter the offset values to shift all block coordinates. The mount point will be adjusted in the opposite direction.
+      </p>
+
+      <form @submit.prevent="handleTransformManualAdjustCenter" class="space-y-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Offset</span>
+          </label>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="label">
+                <span class="label-text-alt">X</span>
+              </label>
+              <input
+                v-model.number="manualAdjustOffset.x"
+                type="number"
+                class="input input-bordered w-full"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label class="label">
+                <span class="label-text-alt">Y</span>
+              </label>
+              <input
+                v-model.number="manualAdjustOffset.y"
+                type="number"
+                class="input input-bordered w-full"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label class="label">
+                <span class="label-text-alt">Z</span>
+              </label>
+              <input
+                v-model.number="manualAdjustOffset.z"
+                type="number"
+                class="input input-bordered w-full"
+                placeholder="0"
+              />
+            </div>
+          </div>
+          <label class="label">
+            <span class="label-text-alt">Blocks will be shifted by -offset, mount point by +offset</span>
+          </label>
+        </div>
+
+        <div class="modal-action">
+          <button
+            type="button"
+            class="btn"
+            @click="closeManualAdjustDialog"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :disabled="transforming"
+          >
+            <span v-if="transforming" class="loading loading-spinner"></span>
+            {{ transforming ? 'Transforming...' : 'Apply' }}
           </button>
         </div>
       </form>
@@ -273,6 +380,9 @@ const formData = ref<Partial<LayerModelDto>>({
 const errorMessage = ref('');
 const saving = ref(false);
 const syncing = ref(false);
+const transforming = ref(false);
+const showManualAdjustDialog = ref(false);
+const manualAdjustOffset = ref({ x: 0, y: 0, z: 0 });
 
 // Initialize form data
 if (props.model) {
@@ -427,6 +537,99 @@ const handleSync = async () => {
     errorMessage.value = error.message || 'Failed to sync model to terrain';
   } finally {
     syncing.value = false;
+  }
+};
+
+/**
+ * Transform model by automatically adjusting center
+ */
+const handleTransformAutoAdjustCenter = async () => {
+  if (!props.model?.id) return;
+
+  if (!confirm('This will automatically adjust the center point of the model to the average position of all blocks. Continue?')) {
+    return;
+  }
+
+  errorMessage.value = '';
+  transforming.value = true;
+
+  try {
+    const updatedModel = await layerModelService.transformAutoAdjustCenter(props.worldId, props.layerId, props.model.id);
+    logger.info('Transformed model (auto adjust center)', { modelId: props.model.id });
+
+    // Update form data with new values
+    formData.value = { ...updatedModel };
+
+    // Show success message
+    alert('Model center auto-adjusted successfully! Mount point: (' + updatedModel.mountX + ', ' + updatedModel.mountY + ', ' + updatedModel.mountZ + ')');
+
+    // Emit saved event to reload model in parent
+    emit('saved', updatedModel);
+  } catch (error: any) {
+    logger.error('Failed to transform model', {}, error);
+    errorMessage.value = error.message || 'Failed to transform model';
+  } finally {
+    transforming.value = false;
+  }
+};
+
+/**
+ * Open manual adjust center dialog
+ */
+const openManualAdjustDialog = () => {
+  manualAdjustOffset.value = { x: 0, y: 0, z: 0 };
+  showManualAdjustDialog.value = true;
+};
+
+/**
+ * Close manual adjust center dialog
+ */
+const closeManualAdjustDialog = () => {
+  showManualAdjustDialog.value = false;
+  manualAdjustOffset.value = { x: 0, y: 0, z: 0 };
+};
+
+/**
+ * Transform model by manually adjusting center
+ */
+const handleTransformManualAdjustCenter = async () => {
+  if (!props.model?.id) return;
+
+  const { x, y, z } = manualAdjustOffset.value;
+
+  errorMessage.value = '';
+  transforming.value = true;
+
+  try {
+    const updatedModel = await layerModelService.transformManualAdjustCenter(
+      props.worldId,
+      props.layerId,
+      props.model.id,
+      x,
+      y,
+      z
+    );
+    logger.info('Transformed model (manual adjust center)', {
+      modelId: props.model.id,
+      offset: { x, y, z }
+    });
+
+    // Update form data with new values
+    formData.value = { ...updatedModel };
+
+    // Close dialog
+    closeManualAdjustDialog();
+
+    // Show success message
+    alert('Model center manually adjusted successfully! Mount point: (' + updatedModel.mountX + ', ' + updatedModel.mountY + ', ' + updatedModel.mountZ + ')');
+
+    // Emit saved event to reload model in parent
+    emit('saved', updatedModel);
+  } catch (error: any) {
+    logger.error('Failed to transform model', {}, error);
+    errorMessage.value = error.message || 'Failed to transform model';
+  } finally {
+    transforming.value = false;
   }
 };
 </script>
