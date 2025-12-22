@@ -61,6 +61,14 @@
             </label>
           </div>
 
+          <!-- Alpha Blending Toggle -->
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-2">
+              <input type="checkbox" v-model="useAlphaBlending" class="checkbox checkbox-sm" @change="drawGrid" />
+              <span class="label-text">Alpha Blending</span>
+            </label>
+          </div>
+
           <div class="divider"></div>
 
           <!-- Navigation Component -->
@@ -210,6 +218,7 @@ const selectedBlock = ref<{ x: number; y: number; z: number } | null>(null);
 const loadingBlockDetails = ref(false);
 const blockDetails = ref<any>(null);
 const blockLimit = ref(128);  // Default: 128 blocks
+const useAlphaBlending = ref(true);  // Default: alpha blending enabled
 
 // View center position (for panning the visible grid area)
 // Start with a reasonable default that will be updated after first load
@@ -353,11 +362,15 @@ function drawGrid() {
     ctx.fill();
   }
 
-  // Sort blocks by depth for proper rendering (back to front)
+  // Sort blocks for proper rendering: bottom-to-top, back-to-front, left-to-right
+  // In isometric view: back = higher Z, front = lower Z; left = lower X, right = higher X
   const sortedBlocks = [...blockCoordinates.value].sort((a, b) => {
-    // Sort by Y first (lower Y = further back), then by X+Z (isometric depth)
+    // 1. Bottom to top (lower Y first)
     if (a.y !== b.y) return a.y - b.y;
-    return (a.x + a.z) - (b.x + b.z);
+    // 2. Back to front (higher Z first, so back blocks are drawn first)
+    if (a.z !== b.z) return b.z - a.z;
+    // 3. Left to right (lower X first)
+    return a.x - b.x;
   });
 
   // Draw each block as a wireframe cube
@@ -392,13 +405,13 @@ function drawGrid() {
       ctx.lineTo(corners[6].x, corners[6].y);
       ctx.lineTo(corners[7].x, corners[7].y);
       ctx.closePath();
-      // Left face
-      ctx.moveTo(corners[4].x, corners[4].y);
-      ctx.lineTo(corners[7].x, corners[7].y);
+      // Left side (Z-positive face)
+      ctx.moveTo(corners[7].x, corners[7].y);
+      ctx.lineTo(corners[6].x, corners[6].y);
+      ctx.lineTo(corners[2].x, corners[2].y);
       ctx.lineTo(corners[3].x, corners[3].y);
-      ctx.lineTo(corners[0].x, corners[0].y);
       ctx.closePath();
-      // Right face
+      // Right side (X-positive face)
       ctx.moveTo(corners[5].x, corners[5].y);
       ctx.lineTo(corners[6].x, corners[6].y);
       ctx.lineTo(corners[2].x, corners[2].y);
@@ -408,10 +421,10 @@ function drawGrid() {
     }
 
     // Draw filled faces
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = useAlphaBlending.value ? 0.8 : 1.0;
 
-    // Top face (green)
-    ctx.fillStyle = isSelected ? '#4ade80' : '#22c55e';
+    // Top face (bright, primary color)
+    ctx.fillStyle = isSelected ? '#60a5fa' : '#3b82f6';
     ctx.beginPath();
     ctx.moveTo(corners[4].x, corners[4].y);
     ctx.lineTo(corners[5].x, corners[5].y);
@@ -419,33 +432,33 @@ function drawGrid() {
     ctx.lineTo(corners[7].x, corners[7].y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#166534';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Left face (blue)
-    ctx.fillStyle = isSelected ? '#60a5fa' : '#3b82f6';
-    ctx.beginPath();
-    ctx.moveTo(corners[4].x, corners[4].y);
-    ctx.lineTo(corners[7].x, corners[7].y);
-    ctx.lineTo(corners[3].x, corners[3].y);
-    ctx.lineTo(corners[0].x, corners[0].y);
-    ctx.closePath();
-    ctx.fill();
     ctx.strokeStyle = '#1e40af';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Right face (red)
-    ctx.fillStyle = isSelected ? '#f87171' : '#ef4444';
+    // Left side (Z-positive face, darker)
+    ctx.fillStyle = isSelected ? '#3b82f6' : '#1e40af';
     ctx.beginPath();
-    ctx.moveTo(corners[5].x, corners[5].y);
-    ctx.lineTo(corners[6].x, corners[6].y);
-    ctx.lineTo(corners[2].x, corners[2].y);
-    ctx.lineTo(corners[1].x, corners[1].y);
+    ctx.moveTo(corners[7].x, corners[7].y);  // Top-back-left
+    ctx.lineTo(corners[6].x, corners[6].y);  // Top-back-right
+    ctx.lineTo(corners[2].x, corners[2].y);  // Bottom-back-right
+    ctx.lineTo(corners[3].x, corners[3].y);  // Bottom-back-left
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#991b1b';
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Right side (X-positive face, medium)
+    ctx.fillStyle = isSelected ? '#4ade80' : '#22c55e';
+    ctx.beginPath();
+    ctx.moveTo(corners[5].x, corners[5].y);  // Top-front-right
+    ctx.lineTo(corners[6].x, corners[6].y);  // Top-back-right
+    ctx.lineTo(corners[2].x, corners[2].y);  // Bottom-back-right
+    ctx.lineTo(corners[1].x, corners[1].y);  // Bottom-front-right
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#166534';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -648,10 +661,14 @@ function handleCanvasClick(event: MouseEvent) {
   const clickX = event.clientX - rect.left;
   const clickY = event.clientY - rect.top;
 
-  // Find clicked block using reverse rendering order (front to back)
+  // Find clicked block using reverse rendering order (front to back for hit detection)
   const sortedBlocks = [...blockCoordinates.value].sort((a, b) => {
-    if (a.y !== b.y) return b.y - a.y; // Reverse Y order
-    return (b.x + b.z) - (a.x + a.z); // Reverse depth order
+    // 1. Top to bottom (higher Y first - closest to camera)
+    if (a.y !== b.y) return b.y - a.y;
+    // 2. Front to back (lower Z first - closer in isometric view)
+    if (a.z !== b.z) return a.z - b.z;
+    // 3. Right to left (higher X first)
+    return b.x - a.x;
   });
 
   for (const block of sortedBlocks) {
