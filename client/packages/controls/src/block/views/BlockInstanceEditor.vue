@@ -939,7 +939,8 @@ async function setMarker(x: number, y: number, z: number, sessionId: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      credentials: 'include'
     }).catch(err => {
       // Log error but don't block UI
       console.warn('Failed to set marker:', err);
