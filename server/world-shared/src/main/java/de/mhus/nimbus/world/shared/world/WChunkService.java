@@ -454,6 +454,12 @@ public class WChunkService {
      * @param chunkData Internal chunk data
      * @return Transfer object with compressed field names (blocks → b, heightData → h, items → i)
      */
+    // TODO XXX : warum wird hier chunkData eigentlich erstellt, der plan ist genau das nicht zu tun und statt dessen die compressed daten zu versenden.
+    // maximal ein fake chunkData objekt sollte hier kommen. Aber hier werden ja backdrop gelesen. warum?
+    // Warum wird der Wchunk nicht gleich mitgegeben, sondern nochmal neu geladen? Das ist alles sehr ineffizient !!!
+    // Warum wird das objekt hier comprimiert? Das war nicht spezifiziert. Wenn kein comprimeirten daten da sind, alles wie immer ist expliziet in der spec.
+    // nochmal: wenn ein WChunk geladen wird, steht da drinn: comprimiert == true, dann wird NICHT das ChunkData objekt erstellt aus dem storage, sondern der storage als
+    // byte[] in das transfer object gepackt. Wenn nicht, alles wie zuvor, nichts comprimieren.
     public ChunkDataTransferObject toTransferObject(WorldId worldId, ChunkData chunkData) {
         if (chunkData == null) return null;
 

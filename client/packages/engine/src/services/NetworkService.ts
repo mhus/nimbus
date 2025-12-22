@@ -101,6 +101,7 @@ export class NetworkService {
       logger.debug('Connecting to WebSocket server', { url: this.websocketUrl });
 
       this.ws = new WebSocket(this.websocketUrl);
+      this.ws.binaryType = 'arraybuffer';  // Enable binary frames
 
       this.ws.onopen = () => this.onOpen();
       this.ws.onmessage = (event) => this.onMessage(event);
@@ -309,10 +310,86 @@ export class NetworkService {
   }
 
   /**
+   * Handle binary WebSocket frame (compressed chunk)
+   */
+  private async handleBinaryChunkMessage(data: ArrayBuffer): Promise<void> {
+    try {
+      // 1. Read header length (first 4 bytes, big-endian int32)
+      const view = new DataView(data);
+      const headerLength = view.getInt32(0);
+
+      // 2. Extract and parse header JSON
+      const headerBytes = new Uint8Array(data, 4, headerLength);
+      const headerText = new TextDecoder('utf-8').decode(headerBytes);
+      const header = JSON.parse(headerText);
+
+      // 3. Extract compressed data
+      const compressedBytes = new Uint8Array(data, 4 + headerLength);
+
+      logger.debug('Received binary chunk', {
+        cx: header.cx,
+        cz: header.cz,
+        headerSize: headerLength,
+        compressedSize: compressedBytes.length,
+        totalSize: data.byteLength,
+      });
+
+      // 4. Decompress using native browser API
+      const decompressedStream = new Response(
+        new Blob([compressedBytes]).stream().pipeThrough(new DecompressionStream('gzip'))
+      );
+      const decompressedText = await decompressedStream.text();
+      const payload = JSON.parse(decompressedText);
+
+      logger.debug('Decompressed chunk payload', {
+        cx: header.cx,
+        cz: header.cz,
+        decompressedSize: decompressedText.length,
+        blocks: payload.b?.length || 0,
+        heightData: payload.h?.length || 0,
+      });
+
+      // 5. Reconstruct ChunkDataTransferObject
+      const chunkData: ChunkDataTransferObject = {
+        cx: header.cx,
+        cz: header.cz,
+        b: payload.b || [],
+        h: payload.h || [],
+        i: header.i,
+        backdrop: payload.backdrop,
+      };
+
+      // 6. Process chunk normally via appContext
+      const chunkService = this.appContext.services.chunk;
+      if (!chunkService) {
+        logger.error('ChunkService not available, cannot process binary chunk', {
+          cx: header.cx,
+          cz: header.cz,
+        });
+        return;
+      }
+
+      await chunkService.onChunkUpdate([chunkData]);
+
+    } catch (error) {
+      ExceptionHandler.handle(error, 'NetworkService.handleBinaryChunkMessage', {
+        dataSize: data.byteLength,
+      });
+    }
+  }
+
+  /**
    * WebSocket message received
    */
   private onMessage(event: MessageEvent): void {
     try {
+      // Handle binary frames (compressed chunks)
+      if (event.data instanceof ArrayBuffer) {
+        this.handleBinaryChunkMessage(event.data);
+        return;
+      }
+
+      // Handle text frames (normal JSON messages)
       const message: BaseMessage = JSON.parse(event.data);
 
       logger.debug('Received message', { type: message.t, responseId: message.r });
