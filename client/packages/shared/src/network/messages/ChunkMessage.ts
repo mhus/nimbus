@@ -37,7 +37,7 @@ export interface ChunkDataTransferObject {
   i?: ItemBlockRef[];
 
   /** Height data, maximum height */
-  h?: HeightData[];
+  h?: HeightData[]; // javaType: int[][]
 
   /** Area data with effects */
   a?: AreaData[];
@@ -53,6 +53,8 @@ export interface ChunkDataTransferObject {
     /** West side backdrop items */
     w?: Array<Backdrop>;
   };
+
+  c?: Uint8Array; // javaType: byte[]
 }
 
 /**

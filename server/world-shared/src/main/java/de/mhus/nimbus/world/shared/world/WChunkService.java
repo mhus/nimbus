@@ -448,6 +448,7 @@ public class WChunkService {
      * Convert ChunkData to ChunkDataTransferObject for network transmission.
      * Komprimiert field names für optimierte Netzwerk-Übertragung.
      * Loads and includes items from item registry.
+     * If chunk is compressed in storage, sends compressed data via 'c' field.
      *
      * @param worldId World identifier
      * @param chunkData Internal chunk data
@@ -459,19 +460,81 @@ public class WChunkService {
         // Load items for this chunk from registry
         var items = itemRegistryService.getItemsInChunk(worldId, chunkData.getCx(), chunkData.getCz());
 
-        log.trace("Converting chunk to transfer object: cx={}, cz={}, blocks={}, items={}",
+        // Check if chunk is stored compressed
+        String chunkKey = chunkData.getCx() + ":" + chunkData.getCz();
+        boolean isCompressed = find(worldId, chunkKey)
+                .map(WChunk::isCompressed)
+                .orElse(false);
+
+        log.trace("Converting chunk to transfer object: cx={}, cz={}, blocks={}, items={}, compressed={}",
                 chunkData.getCx(), chunkData.getCz(),
                 chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0,
-                items.size());
+                items.size(), isCompressed);
 
+        // If chunk is compressed, create compressed payload
+        if (isCompressed && compressionEnabled) {
+            try {
+                // Create temporary object with only blocks, heightData, backdrop
+                var compressedPayload = new java.util.HashMap<String, Object>();
+                compressedPayload.put("b", chunkData.getBlocks());
+                compressedPayload.put("h", chunkData.getHeightData());
+                compressedPayload.put("backdrop", chunkData.getBackdrop());
+
+                // Serialize to JSON and compress
+                String json = objectMapper.writeValueAsString(compressedPayload);
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                    gzip.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    gzip.finish();
+                }
+
+                byte[] compressedData = buffer.toByteArray();
+
+                log.debug("Chunk compressed for network transmission: chunkKey={} original={} compressed={} ratio={}",
+                        chunkKey, json.length(), compressedData.length,
+                        String.format("%.1f%%", 100.0 * compressedData.length / json.length()));
+
+                // Return with compressed data, no blocks/heightData/backdrop
+                return ChunkDataTransferObject.builder()
+                        .cx(chunkData.getCx())
+                        .cz(chunkData.getCz())
+                        .i(items.isEmpty() ? null : items)  // items not compressed
+                        .c(compressedData)  // compressed blocks, heightData, backdrop
+                        .build();
+
+            } catch (Exception e) {
+                log.error("Failed to compress chunk data for transfer, falling back to uncompressed: chunkKey={}", chunkKey, e);
+                // Fall through to uncompressed version
+            }
+        }
+
+        // Uncompressed version (original behavior)
         return ChunkDataTransferObject.builder()
                 .cx(chunkData.getCx())
                 .cz(chunkData.getCz())
                 .b(chunkData.getBlocks())        // blocks → b
                 .i(items.isEmpty() ? null : items)  // items from registry → i
-                .h(null)     // TODO: Convert int[][] to List<HeightData> - heightData type mismatch
+                .h(chunkData.getHeightData())
+                .backdrop(convertBackdrop(chunkData.getBackdrop()))
                 // Note: AreaData (a) currently not in ChunkData
                 .build();
+    }
+
+    /**
+     * Convert ChunkDataBackdropDTO to ChunkDataTransferObjectBackdropDTO.
+     * Just directly assigns the lists since both DTOs are structurally identical.
+     * TODO: These DTOs are structurally identical - consider unifying them in the generator
+     */
+    private de.mhus.nimbus.generated.network.messages.ChunkDataTransferObjectBackdropDTO convertBackdrop(
+            de.mhus.nimbus.generated.types.ChunkDataBackdropDTO source) {
+        if (source == null) return null;
+
+        var target = new de.mhus.nimbus.generated.network.messages.ChunkDataTransferObjectBackdropDTO();
+        target.setN(source.getN());
+        target.setE(source.getE());
+        target.setS(source.getS());
+        target.setW(source.getW());
+        return target;
     }
 
     /**

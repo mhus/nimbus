@@ -2014,6 +2014,13 @@
         "javaTypeHint" : "int[][]",
         "comment" : "// javaType: int[][]"
       }, {
+        "name" : "c",
+        "type" : "Uint8Array",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "byte[]",
+        "comment" : "// javaType: byte[]"
+      }, {
         "name" : "backdrop",
         "type" : "ChunkDataBackdropDTO",
         "optional" : true,
@@ -7231,8 +7238,8 @@
         "type" : "HeightData[]",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int[][]",
+        "comment" : "// javaType: int[][]"
       }, {
         "name" : "a",
         "type" : "AreaData[]",
@@ -7240,6 +7247,13 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "c",
+        "type" : "Uint8Array",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "byte[]",
+        "comment" : "// javaType: byte[]"
       }, {
         "name" : "backdrop",
         "type" : "ChunkDataTransferObjectBackdropDTO",

@@ -100,4 +100,11 @@ export interface ChunkData {
     /** West side backdrop items (negative X direction) */
     w?: Array<Backdrop>;
   };
+
+  /**
+   * Binary compressed chunk data (optional)
+   * Used for efficient storage or transfer of chunk information
+   * The format and compression method are implementation-specific
+   */
+  c?: Uint8Array; // javaType: byte[]
 }

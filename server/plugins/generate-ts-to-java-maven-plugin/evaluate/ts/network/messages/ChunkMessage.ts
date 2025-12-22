@@ -42,6 +42,13 @@ export interface ChunkDataTransferObject {
   /** Area data with effects */
   a?: AreaData[];
 
+  /**
+   * Compressed chunk data (b, h, backdrop)
+   * GZIP-compressed JSON as byte array
+   * If present, decompress and restore b/h/backdrop fields
+   */
+  c?: Uint8Array;
+
   /** Backdrop data for chunk edges */
   backdrop?: {
     /** North side backdrop items */

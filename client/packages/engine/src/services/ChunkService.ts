@@ -275,6 +275,73 @@ export class ChunkService {
           continue;
         }
 
+        // Decompress chunk data if compressed
+        if (chunkData.c && chunkData.c.length > 0) {
+          try {
+            logger.debug('Decompressing chunk data', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              compressedSize: chunkData.c.length,
+              dataType: typeof chunkData.c,
+              isUint8Array: chunkData.c instanceof Uint8Array,
+              isArray: Array.isArray(chunkData.c),
+            });
+
+            // Convert to Uint8Array (JSON serialization converts byte[] to base64 string)
+            let compressedBytes: Uint8Array;
+            if (typeof chunkData.c === 'string') {
+              // Decode from base64 string
+              const binaryString = atob(chunkData.c);
+              const bytes = new Uint8Array(binaryString.length);
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              compressedBytes = bytes;
+            } else if (chunkData.c instanceof Uint8Array) {
+              compressedBytes = chunkData.c;
+            } else if (Array.isArray(chunkData.c)) {
+              compressedBytes = new Uint8Array(chunkData.c);
+            } else {
+              logger.error('Unexpected compressed data format', {
+                type: typeof chunkData.c,
+                constructor: chunkData.c?.constructor?.name,
+              });
+              throw new Error('Compressed data is not in expected format: ' + typeof chunkData.c);
+            }
+
+            // Decompress using browser DecompressionStream API
+            const decompressedStream = new Response(
+              new Blob([compressedBytes]).stream().pipeThrough(new DecompressionStream('gzip'))
+            );
+            const decompressedText = await decompressedStream.text();
+            const decompressedData = JSON.parse(decompressedText);
+
+            // Restore blocks, heightData, backdrop from decompressed data
+            chunkData.b = decompressedData.b || [];
+            chunkData.h = decompressedData.h || [];
+            chunkData.backdrop = decompressedData.backdrop;
+
+            // Free memory
+            chunkData.c = undefined as any;
+
+            logger.debug('Chunk decompressed successfully', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              compressedSize: compressedBytes.length,
+              decompressedSize: decompressedText.length,
+              blocks: chunkData.b.length,
+            });
+          } catch (error) {
+            logger.error('Failed to decompress chunk data, skipping chunk', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              error: (error as Error).message,
+              stack: (error as Error).stack,
+            });
+            continue;
+          }
+        }
+
         // Process blocks into ClientBlocks with merged modifiers
         const clientChunkData = await this.processChunkData(chunkData);
 
