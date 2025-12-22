@@ -395,38 +395,55 @@
       <!-- Action Buttons -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <div class="flex justify-between gap-2">
-            <div class="flex gap-2">
-              <button
-                class="btn btn-error"
-                @click="handleDelete"
-                :disabled="!blockExists || saving"
-              >
-                Delete Block
-              </button>
-              <button class="btn btn-outline btn-sm" @click="showJsonEditor = true">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Button Groups: Two rows -->
+          <div class="space-y-2">
+            <!-- Row 1: Utility buttons -->
+            <div class="flex gap-2 flex-wrap">
+              <button class="btn btn-outline btn-xs" @click="showJsonEditor = true">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
                 Source
               </button>
               <button
-                class="btn btn-outline btn-sm btn-info"
+                class="btn btn-outline btn-xs btn-secondary"
+                @click="showBlockOrigin"
+                :disabled="!blockExists || loadingOrigin"
+                title="Show where this block comes from (layer, terrain, model)"
+              >
+                <span v-if="loadingOrigin" class="loading loading-spinner loading-xs"></span>
+                <svg v-else class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Origin
+              </button>
+              <button
+                class="btn btn-outline btn-xs btn-info"
                 @click="openSaveAsBlockTypeDialog"
                 :disabled="!isValid || saving"
                 title="Save this custom block as a new BlockType template"
               >
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                 </svg>
-                Save as BlockType
+                Save as Type
               </button>
             </div>
 
-            <div class="flex gap-2">
-              <button class="btn btn-ghost" @click="handleCancel" :disabled="saving">
-                Cancel
+            <!-- Row 2: Main action buttons -->
+            <div class="flex justify-between gap-2">
+              <button
+                class="btn btn-error btn-sm"
+                @click="handleDelete"
+                :disabled="!blockExists || saving"
+              >
+                Delete Block
               </button>
+
+              <div class="flex gap-2">
+                <button class="btn btn-ghost" @click="handleCancel" :disabled="saving">
+                  Cancel
+                </button>
               <button
                 class="btn btn-primary"
                 @click="handleApply"
@@ -443,6 +460,7 @@
               >
                 {{ saving ? 'Saving...' : 'Save & Close' }}
               </button>
+              </div>
             </div>
           </div>
         </div>
@@ -545,6 +563,8 @@ import ModifierEditorDialog from '@/components/ModifierEditorDialog.vue';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 import { saveBlockAsBlockType, getBlockTypeEditorUrl as getBlockTypeEditorUrlHelper } from './BlockInstanceEditor_SaveAsBlockType';
+import { blockService } from '@/services/BlockService';
+import type { BlockOriginDto } from '@nimbus/shared';
 
 // Parse URL parameters
 function parseBlockCoordinates(): { x: number; y: number; z: number } | null {
@@ -630,6 +650,9 @@ const confirmTitle = ref('');
 const confirmMessage = ref('');
 const confirmOkText = ref('OK');
 const confirmResolve = ref<((value: boolean) => void) | null>(null);
+
+// Block origin
+const loadingOrigin = ref(false);
 
 // Save as BlockType dialog state
 const showSaveAsBlockTypeDialog = ref(false);
@@ -1381,4 +1404,116 @@ async function handleSaveAsBlockType() {
     savingAsBlockType.value = false;
   }
 }
+
+/**
+ * Show block origin information
+ */
+const showBlockOrigin = async () => {
+  if (!blockCoordinates.value || !worldId) return;
+
+  loadingOrigin.value = true;
+
+  try {
+    const response = await blockService.findOrigin(
+      worldId,
+      blockCoordinates.value.x,
+      blockCoordinates.value.y,
+      blockCoordinates.value.z
+    );
+
+    if (!response.found || !response.origin) {
+      console.info('Block not found in any layer');
+      // Don't set error, just log - block might not be in a layer
+      return;
+    }
+
+    const origin = response.origin;
+
+    // Log full details to console
+    console.group('🔍 Block Origin Information');
+    console.log('Layer:', origin.layerName || 'Unnamed', `(${origin.layerType})`);
+    console.log('Layer ID:', origin.layerId);
+    console.log('Layer Order:', origin.layerOrder);
+    console.log('Terrain Chunk:', origin.terrainChunkKey);
+    console.log('Terrain ID:', origin.terrainId);
+
+    if (origin.modelId) {
+      console.log('\nModel:', origin.modelName || origin.modelTitle || 'Unnamed');
+      console.log('Model ID:', origin.modelId);
+      console.log('Mount Point:', `(${origin.mountX}, ${origin.mountY}, ${origin.mountZ})`);
+    }
+
+    console.log('\nBlock Properties:');
+    console.log('Override:', origin.override);
+    if (origin.group && origin.group > 0) {
+      console.log('Group:', origin.group, origin.groupName ? `(${origin.groupName})` : '');
+    }
+    if (origin.weight && origin.weight > 0) {
+      console.log('Weight:', origin.weight);
+    }
+    if (origin.metadata) {
+      console.log('Metadata:', origin.metadata);
+    }
+    console.groupEnd();
+
+    // Build detailed message for dialog
+    let message = `Layer: ${origin.layerName || 'Unnamed'} (${origin.layerType})\n`;
+    message += `Layer Order: ${origin.layerOrder}\n`;
+
+    if (origin.terrainChunkKey) {
+      message += `Terrain Chunk: ${origin.terrainChunkKey}\n`;
+    } else {
+      message += `Terrain: Not synced yet\n`;
+    }
+    message += `\n`;
+
+    if (origin.modelId) {
+      message += `Model: ${origin.modelName || origin.modelTitle || 'Unnamed'}\n`;
+      message += `Model ID: ${origin.modelId}\n`;
+      message += `Mount Point: (${origin.mountX}, ${origin.mountY}, ${origin.mountZ})\n`;
+      message += `\n`;
+    }
+
+    message += `Block Properties:\n`;
+    message += `Override: ${origin.override ? 'Yes' : 'No'}\n`;
+
+    if (origin.group && origin.group > 0) {
+      message += `Group: ${origin.group}`;
+      if (origin.groupName) {
+        message += ` (${origin.groupName})`;
+      }
+      message += `\n`;
+    }
+
+    if (origin.weight && origin.weight > 0) {
+      message += `Weight: ${origin.weight}\n`;
+    }
+
+    if (origin.metadata) {
+      message += `Metadata: ${origin.metadata}\n`;
+    }
+
+    // Show in dialog (OK only, no cancel)
+    confirmTitle.value = 'Block Origin Information';
+    confirmMessage.value = message;
+    confirmOkText.value = 'OK';
+    confirmDialog.value?.showModal();
+
+    // Wait for user to close dialog
+    await new Promise<void>((resolve) => {
+      const checkClosed = setInterval(() => {
+        if (!confirmDialog.value?.open) {
+          clearInterval(checkClosed);
+          resolve();
+        }
+      }, 100);
+    });
+
+  } catch (err: any) {
+    console.error('Failed to load block origin', err);
+    // Don't show error in UI, just log to console
+  } finally {
+    loadingOrigin.value = false;
+  }
+};
 </script>

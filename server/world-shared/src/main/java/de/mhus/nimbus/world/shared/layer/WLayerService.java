@@ -1077,6 +1077,213 @@ public class WLayerService {
         return positions;
     }
 
+    /**
+     * Result object for block origin lookup.
+     */
+    public record BlockOrigin(
+            WLayer layer,
+            WLayerTerrain terrain,
+            WLayerModel model,      // Optional - only for MODEL layers
+            LayerBlock layerBlock   // The actual block data from the layer
+    ) {}
+
+    /**
+     * Find the origin of a block at a specific position.
+     * Searches backwards through layers (by order descending) to find which layer
+     * defines the block at this position.
+     *
+     * IMPORTANT: Does not load all WLayerModel documents at once to prevent memory overflow.
+     * Loads models one by one when checking MODEL layers.
+     *
+     * @param worldId World identifier
+     * @param x       Block X coordinate
+     * @param y       Block Y coordinate
+     * @param z       Block Z coordinate
+     * @return BlockOrigin with layer, terrain, and optional model, or null if not found
+     */
+    @Transactional(readOnly = true)
+    public BlockOrigin findBlockOrigin(String worldId, int x, int y, int z) {
+        // Calculate chunk key
+        var world = worldService.getByWorldId(worldId).orElseThrow(
+                () -> new IllegalArgumentException("World not found: " + worldId)
+        );
+        var chunkSize = (byte) world.getPublicData().getChunkSize();
+        int cx = Math.floorDiv(x, chunkSize);
+        int cz = Math.floorDiv(z, chunkSize);
+        String chunkKey = cx + ":" + cz;
+
+        // Get all layers affecting this chunk, sorted by order
+        List<WLayer> layers = getLayersAffectingChunk(worldId, chunkKey);
+
+        // Search backwards (highest order first = top layer first)
+        for (int i = layers.size() - 1; i >= 0; i--) {
+            WLayer layer = layers.get(i);
+
+            if (!layer.isEnabled()) {
+                continue;
+            }
+
+            // Load terrain chunk
+            Optional<WLayerTerrain> terrainOpt = terrainRepository
+                    .findByLayerDataIdAndChunkKey(layer.getLayerDataId(), chunkKey);
+
+            if (terrainOpt.isEmpty()) {
+                // For MODEL layers without terrain: Search directly in models
+                if (layer.getLayerType() == LayerType.MODEL) {
+                    WLayerModel sourceModel = findModelForBlock(layer.getLayerDataId(), x, y, z);
+                    if (sourceModel != null) {
+                        // Found in model, but no terrain entry yet
+                        // Find the LayerBlock with this position
+                        LayerBlock foundBlock = findLayerBlockInModel(sourceModel, x, y, z);
+                        if (foundBlock != null) {
+                            log.debug("Block found in model but not in terrain: layerDataId={} pos=({},{},{})",
+                                    layer.getLayerDataId(), x, y, z);
+                            // Return with null terrain to indicate model-only source
+                            return new BlockOrigin(layer, null, sourceModel, foundBlock);
+                        }
+                    }
+                }
+                continue;
+            }
+
+            WLayerTerrain terrain = terrainOpt.get();
+
+            // Load terrain data from storage
+            Optional<LayerChunkData> chunkDataOpt = loadTerrainChunk(layer.getLayerDataId(), chunkKey);
+            if (chunkDataOpt.isEmpty()) {
+                continue;
+            }
+
+            LayerChunkData chunkData = chunkDataOpt.get();
+
+            // Search for block at position in terrain data
+            if (chunkData.getBlocks() != null) {
+                for (LayerBlock layerBlock : chunkData.getBlocks()) {
+                    if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
+                        continue;
+                    }
+
+                    de.mhus.nimbus.generated.types.Vector3 pos = layerBlock.getBlock().getPosition();
+                    if ((int) pos.getX() == x && (int) pos.getY() == y && (int) pos.getZ() == z) {
+                        // Found block at this position
+
+                        // For MODEL layers: Find which model contains this block
+                        WLayerModel sourceModel = null;
+                        if (layer.getLayerType() == LayerType.MODEL) {
+                            sourceModel = findModelForBlock(layer.getLayerDataId(), x, y, z);
+                        }
+
+                        return new BlockOrigin(layer, terrain, sourceModel, layerBlock);
+                    }
+                }
+            }
+        }
+
+        // Block not found in any layer
+        return null;
+    }
+
+    /**
+     * Find which WLayerModel contains a block at the given world coordinates.
+     * Loads models one by one to prevent memory overflow.
+     * Takes rotation into account when calculating world coordinates.
+     *
+     * @param layerDataId Layer data ID
+     * @param worldX      World X coordinate
+     * @param worldY      World Y coordinate
+     * @param worldZ      World Z coordinate
+     * @return WLayerModel containing this block, or null if not found
+     */
+    private WLayerModel findModelForBlock(String layerDataId, int worldX, int worldY, int worldZ) {
+        // Get model IDs (lightweight - only IDs, not full documents)
+        List<String> modelIds = getModelIds(layerDataId);
+
+        // Search through models one by one (reverse order - highest first)
+        for (int i = modelIds.size() - 1; i >= 0; i--) {
+            String modelId = modelIds.get(i);
+
+            // Load single model
+            Optional<WLayerModel> modelOpt = loadModelById(modelId);
+            if (modelOpt.isEmpty()) {
+                continue;
+            }
+
+            WLayerModel model = modelOpt.get();
+
+            // Check if this model contains the block at world coordinates
+            if (findLayerBlockInModel(model, worldX, worldY, worldZ) != null) {
+                return model;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find the LayerBlock in a model at given world coordinates.
+     * Takes rotation into account.
+     *
+     * @param model  WLayerModel to search in
+     * @param worldX World X coordinate
+     * @param worldY World Y coordinate
+     * @param worldZ World Z coordinate
+     * @return LayerBlock if found, null otherwise
+     */
+    private LayerBlock findLayerBlockInModel(WLayerModel model, int worldX, int worldY, int worldZ) {
+        if (model.getContent() == null) {
+            return null;
+        }
+
+        for (LayerBlock layerBlock : model.getContent()) {
+            if (layerBlock.getBlock() == null || layerBlock.getBlock().getPosition() == null) {
+                continue;
+            }
+
+            de.mhus.nimbus.generated.types.Vector3 relativePos = layerBlock.getBlock().getPosition();
+
+            // Apply rotation to relative position
+            int[] rotatedPos = applyRotation(
+                    (int) relativePos.getX(),
+                    (int) relativePos.getZ(),
+                    model.getRotation()
+            );
+
+            // Calculate world position with rotation
+            int blockWorldX = model.getMountX() + rotatedPos[0];
+            int blockWorldY = model.getMountY() + (int) relativePos.getY();
+            int blockWorldZ = model.getMountZ() + rotatedPos[1];
+
+            if (blockWorldX == worldX && blockWorldY == worldY && blockWorldZ == worldZ) {
+                return layerBlock;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Apply rotation to relative coordinates.
+     * Rotation is in 90 degree steps: 0 = no rotation, 1 = 90°, 2 = 180°, 3 = 270°
+     *
+     * @param x        Relative X coordinate
+     * @param z        Relative Z coordinate
+     * @param rotation Rotation in 90 degree steps
+     * @return Rotated coordinates [x, z]
+     */
+    private int[] applyRotation(int x, int z, int rotation) {
+        // Normalize rotation to 0-3
+        int rot = rotation % 4;
+        if (rot < 0) rot += 4;
+
+        return switch (rot) {
+            case 0 -> new int[]{x, z};          // No rotation
+            case 1 -> new int[]{-z, x};         // 90° clockwise
+            case 2 -> new int[]{-x, -z};        // 180°
+            case 3 -> new int[]{z, -x};         // 270° clockwise (= 90° counter-clockwise)
+            default -> new int[]{x, z};
+        };
+    }
+
     // ==================== HELPER METHODS ====================
 
     /**

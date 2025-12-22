@@ -190,3 +190,16 @@ kann. Manchmal klappt das nicht.
 [?] Ich brauche im layer-editor.html noch einen knopf am "Layer" mit dem ich dieses eine model via Job komplett neu pushen lassen kann.
 - Dazu muss für MODEL Layer via JobService ein neuer job mit executor "recreate-model-based-layer", siehe RecreateModelBasedLayerJobExecutor.
 - Bei GROUND Layer muss fuer jeden Chunk ein DirtyChunk via WDirtyChunkService erstellt werden.
+
+## Retracing
+
+[?] Erstelle in WLayerService eien funktion, in die man eine Block Position übergibt, die dann rückwaerts sucht, woher der Block an dieser stelle kommt.
+Als Rückgabe also der WLayer, WLayerTerrain und optional WLayerModel.
+- Lade nicht alle WLayerModel gleichzeitig. Wegen Speicherüberlauf.
+- Du musst rückwerts in der sortierung nach order suchen.
+- Gib auch den LayerBlock zurück wenn möglich
+
+[?] in block instance editor in ../client/packages/controls, erstelle einen button der die layerService.findBlockOrigin() aufruft
+und die daten zum origin ausgibt. Natuerlich muss nicht das komplette WLayerModel geladen werden sondern nur die metadaten.
+Falls der block in einer gruppe ist, gib auch diese mit zurück.
+
