@@ -41,24 +41,43 @@
 
         <!-- Sidebar: Navigation and Block Details -->
         <div class="w-96 border-l border-base-300 p-4 overflow-auto flex flex-col gap-4">
-          <!-- Block Limit Selection -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">View Area Size</span>
-            </label>
-            <select v-model.number="blockLimit" class="select select-bordered select-sm" @change="handleBlockLimitChange">
-              <option :value="16">16 blocks area</option>
-              <option :value="32">32 blocks area</option>
-              <option :value="64">64 blocks area</option>
-              <option :value="128">128 blocks area</option>
-              <option :value="256">256 blocks area</option>
-              <option :value="512">512 blocks area</option>
-            </select>
-            <label class="label">
-              <span class="label-text-alt">
-                {{ sourceType === 'terrain' ? 'Lazy loading chunks on demand' : `Showing ${blockCoordinates.length} of ${allBlockCoordinates.length} blocks` }}
-              </span>
-            </label>
+          <!-- Block Limit and Rotation -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- Block Limit Selection -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">View Area Size</span>
+              </label>
+              <select v-model.number="blockLimit" class="select select-bordered select-sm" @change="handleBlockLimitChange">
+                <option :value="16">16 blocks</option>
+                <option :value="32">32 blocks</option>
+                <option :value="64">64 blocks</option>
+                <option :value="128">128 blocks</option>
+                <option :value="256">256 blocks</option>
+                <option :value="512">512 blocks</option>
+              </select>
+              <label class="label">
+                <span class="label-text-alt">
+                  {{ sourceType === 'terrain' ? 'Lazy loading' : `${blockCoordinates.length}/${allBlockCoordinates.length}` }}
+                </span>
+              </label>
+            </div>
+
+            <!-- Rotation Selection -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-semibold">Rotation</span>
+              </label>
+              <select v-model.number="viewRotation" class="select select-bordered select-sm" @change="drawGrid">
+                <option :value="0">0°</option>
+                <option :value="90">90°</option>
+                <option :value="180">180°</option>
+                <option :value="270">270°</option>
+              </select>
+              <label class="label">
+                <span class="label-text-alt">&nbsp;</span>
+              </label>
+            </div>
           </div>
 
           <!-- Alpha Blending Toggle -->
@@ -219,6 +238,7 @@ const loadingBlockDetails = ref(false);
 const blockDetails = ref<any>(null);
 const blockLimit = ref(128);  // Default: 128 blocks
 const useAlphaBlending = ref(true);  // Default: alpha blending enabled
+const viewRotation = ref(0);  // Default: 0 degrees
 
 // View center position (for panning the visible grid area)
 // Start with a reasonable default that will be updated after first load
@@ -287,6 +307,43 @@ const gridBounds = computed(() => {
   return { minX, maxX, minY, maxY, minZ, maxZ };
 });
 
+// Rotate a block's coordinates around Y-axis based on viewRotation
+// Rotation is performed around viewCenter, not origin
+function rotateBlock(x: number, y: number, z: number): { x: number; y: number; z: number } {
+  // Translate to origin (relative to viewCenter)
+  const relX = x - viewCenter.value.x;
+  const relZ = z - viewCenter.value.z;
+
+  // Rotate around Y-axis (looking down from above)
+  // 0° = no rotation, 90° = rotate clockwise, 180° = flip, 270° = rotate counter-clockwise
+  let rotX: number, rotZ: number;
+  switch (viewRotation.value) {
+    case 90:
+      rotX = -relZ;
+      rotZ = relX;
+      break;
+    case 180:
+      rotX = -relX;
+      rotZ = -relZ;
+      break;
+    case 270:
+      rotX = relZ;
+      rotZ = -relX;
+      break;
+    default: // 0°
+      rotX = relX;
+      rotZ = relZ;
+      break;
+  }
+
+  // Translate back
+  return {
+    x: rotX + viewCenter.value.x,
+    y,
+    z: rotZ + viewCenter.value.z
+  };
+}
+
 // Convert 3D world coordinates to 2D isometric screen coordinates
 function worldToScreen(x: number, y: number, z: number): { x: number; y: number } {
   // Subtract viewCenter to make blocks relative to view
@@ -294,8 +351,9 @@ function worldToScreen(x: number, y: number, z: number): { x: number; y: number 
   const relY = y - viewCenter.value.y;
   const relZ = z - viewCenter.value.z;
 
-  const isoX = (relX - relZ) * (tileWidth.value / 2) + offsetX.value;
-  const isoY = (relX + relZ) * (tileHeight.value / 2) - relY * tileHeight.value + offsetY.value;
+  // Flipped isometric projection (reversed X and Z)
+  const isoX = (relZ - relX) * (tileWidth.value / 2) + offsetX.value;
+  const isoY = (relZ + relX) * (tileHeight.value / 2) - relY * tileHeight.value + offsetY.value;
   return { x: isoX, y: isoY };
 }
 
@@ -340,42 +398,63 @@ function drawGrid() {
   ctx.fillText(`Canvas: ${canvasWidth.value}x${canvasHeight.value}`, 10, 40);
   ctx.fillText(`View Center: (${viewCenter.value.x}, ${viewCenter.value.y}, ${viewCenter.value.z})`, 10, 60);
 
-  // Draw simple numbers at block positions
-  for (let i = 0; i < Math.min(blockCoordinates.value.length, 10); i++) {
-    const block = blockCoordinates.value[i];
-    const pos = worldToScreen(block.x, block.y, block.z);
+  // Draw coordinates at specific blocks for debugging
+  const debugBlocks = [
+    { x: -5, y: 64, z: -5 },  // Front-left
+    { x: 5, y: 64, z: -5 },   // Front-right
+    { x: -5, y: 64, z: 5 },   // Back-left
+    { x: 5, y: 64, z: 5 },    // Back-right
+    { x: 0, y: 64, z: 0 },    // Center
+    { x: 0, y: 64, z: 5 },    // Back-center
+    { x: 5, y: 64, z: 0 },    // Right-center
+  ];
 
-    console.log(`Block ${i+1}: world=(${block.x},${block.y},${block.z}) screen=(${pos.x.toFixed(1)},${pos.y.toFixed(1)}) offset=(${offsetX.value},${offsetY.value})`);
+  ctx.fillStyle = '#000000';
+  ctx.font = '14px bold monospace';
 
-    ctx.fillStyle = '#ff0000';
-    ctx.font = '20px bold monospace';
-    ctx.fillText((i + 1).toString(), pos.x, pos.y);
+  for (const debugBlock of debugBlocks) {
+    const found = blockCoordinates.value.find(b =>
+      b.x === debugBlock.x && b.y === debugBlock.y && b.z === debugBlock.z
+    );
+    if (found) {
+      const rotated = rotateBlock(debugBlock.x, debugBlock.y, debugBlock.z);
+      const pos = worldToScreen(rotated.x, rotated.y + 0.5, rotated.z + 0.5);
+      const label = `(${debugBlock.x},${debugBlock.z})`;
 
-    ctx.fillStyle = '#0000ff';
-    ctx.font = '10px monospace';
-    ctx.fillText(`(${block.x},${block.y},${block.z})`, pos.x, pos.y + 15);
-
-    // Draw a circle to make it more visible
-    ctx.fillStyle = '#ff00ff';
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, 5, 0, 2 * Math.PI);
-    ctx.fill();
+      // Draw black text
+      ctx.fillText(label, pos.x - 20, pos.y);
+    }
   }
 
-  // Sort blocks for proper rendering: bottom-to-top, back-to-front, left-to-right
-  // In isometric view: back = higher Z, front = lower Z; left = lower X, right = higher X
-  const sortedBlocks = [...blockCoordinates.value].sort((a, b) => {
-    // 1. Bottom to top (lower Y first)
+  // Sort blocks for proper rendering in isometric view
+  // Apply rotation to blocks before sorting
+  const rotatedBlocks = blockCoordinates.value.map(block => {
+    const rotated = rotateBlock(block.x, block.y, block.z);
+    return {
+      original: block,
+      x: rotated.x,
+      y: rotated.y,
+      z: rotated.z
+    };
+  });
+
+  // Sort by rotated coordinates
+  const sortedBlocks = rotatedBlocks.sort((a, b) => {
+    // 1. Bottom to top (lower Y first) - stays the same
     if (a.y !== b.y) return a.y - b.y;
-    // 2. Back to front (higher Z first, so back blocks are drawn first)
-    if (a.z !== b.z) return b.z - a.z;
-    // 3. Left to right (lower X first)
+    // 2. Try reversed order: lower Z+X first
+    const depthA = a.z + a.x;
+    const depthB = b.z + b.x;
+    if (depthA !== depthB) return depthA - depthB;  // Lower depth first (reversed)
+    // 3. If same depth, reversed
+    if (a.z !== b.z) return a.z - b.z;
     return a.x - b.x;
   });
 
   // Draw each block as a wireframe cube
-  for (const block of sortedBlocks) {
-    const { x, y, z } = block;
+  for (const blockData of sortedBlocks) {
+    const { x, y, z } = blockData.x !== undefined ? blockData : blockData.original;
+    const block = blockData.original || blockData;
     const color = block.color || '#3b82f6';
     const isSelected = selectedBlock.value?.x === x && selectedBlock.value?.y === y && selectedBlock.value?.z === z;
 
@@ -436,8 +515,8 @@ function drawGrid() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Left side (Z-positive face, darker)
-    ctx.fillStyle = isSelected ? '#3b82f6' : '#1e40af';
+    // Left side (Z-positive face, red)
+    ctx.fillStyle = isSelected ? '#f87171' : '#ef4444';
     ctx.beginPath();
     ctx.moveTo(corners[7].x, corners[7].y);  // Top-back-left
     ctx.lineTo(corners[6].x, corners[6].y);  // Top-back-right
@@ -445,11 +524,11 @@ function drawGrid() {
     ctx.lineTo(corners[3].x, corners[3].y);  // Bottom-back-left
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#1e3a8a';
+    ctx.strokeStyle = '#991b1b';
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Right side (X-positive face, medium)
+    // Right side (X-positive face, green)
     ctx.fillStyle = isSelected ? '#4ade80' : '#22c55e';
     ctx.beginPath();
     ctx.moveTo(corners[5].x, corners[5].y);  // Top-front-right
