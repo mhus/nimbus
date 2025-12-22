@@ -50,30 +50,41 @@ public class ChunkQueryHandler implements MessageHandler {
             int cx = chunkNode.has("x") ? chunkNode.get("x").asInt() : 0;
             int cz = chunkNode.has("z") ? chunkNode.get("z").asInt() : 0;
 
-            // Load chunk data from database (create=true to generate default if not found)
+            // Load chunk entity first
             String chunkKey = cx + ":" + cz;
-            chunkService.loadChunkData(session.getWorldId(), chunkKey, true)
-                    .ifPresentOrElse(
-                            chunkData -> {
-                                // Apply overlays if session is in edit mode
-                                if (session.isEditMode()) {
-                                    editModeService.applyOverlays(session, chunkData);
-                                }
+            var chunkOpt = chunkService.find(session.getWorldId(), chunkKey);
 
-                                // Convert to transfer object for network transmission (includes items)
-                                ChunkDataTransferObject dto = chunkService.toTransferObject(
-                                        session.getWorldId(), chunkData);
-                                responseChunks.add(objectMapper.valueToTree(dto));
-                                log.trace("Loaded chunk: cx={}, cz={}, worldId={}, editMode={}, blocks={}",
-                                        cx, cz, session.getWorldId(),
-                                        session.isEditMode(), chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0);
-                            },
-                            () -> {
-                                log.debug("Chunk not found: cx={}, cz={}, worldId={}",
-                                        cx, cz, session.getWorldId());
-                                // TODO: Send empty chunk or generate default chunk
-                            }
-                    );
+            if (chunkOpt.isEmpty()) {
+                // Generate default chunk if not found
+                var chunkData = chunkService.loadChunkData(session.getWorldId(), chunkKey, true);
+                if (chunkData.isPresent()) {
+                    var saved = chunkService.saveChunk(session.getWorldId(), chunkKey, chunkData.get());
+                    chunkOpt = java.util.Optional.of(saved);
+                } else {
+                    log.debug("Chunk not found and could not generate: cx={}, cz={}", cx, cz);
+                    continue;
+                }
+            }
+
+            var chunk = chunkOpt.get();
+
+            // Handle edit mode overlays (requires loading ChunkData)
+            if (session.isEditMode()) {
+                var chunkData = chunkService.loadChunkData(session.getWorldId(), chunkKey, false);
+                if (chunkData.isPresent()) {
+                    editModeService.applyOverlays(session, chunkData.get());
+                    // Save modified chunk and update entity
+                    chunk = chunkService.saveChunk(session.getWorldId(), chunkKey, chunkData.get());
+                }
+            }
+
+            // Convert to transfer object (uses compressed storage if available)
+            ChunkDataTransferObject dto = chunkService.toTransferObject(session.getWorldId(), chunk);
+            if (dto != null) {
+                responseChunks.add(objectMapper.valueToTree(dto));
+                log.trace("Loaded chunk: cx={}, cz={}, worldId={}, compressed={}",
+                        cx, cz, session.getWorldId(), chunk.isCompressed());
+            }
         }
 
         // Send chunk update response

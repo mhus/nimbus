@@ -128,10 +128,18 @@ public class ChunkUpdateBroadcastListener {
                 log.debug("Chunk deleted, skipping broadcast: world={} chunk={}", worldId, chunkKey);
                 return;
             } else {
-                // Include full chunk data
-                ChunkData chunkData = chunkDataOpt.get();
-                ChunkDataTransferObject transferObject = chunkService.toTransferObject(wid, chunkData);
-                chunksArray.add(objectMapper.valueToTree(transferObject));
+                // Find WChunk entity first
+                var chunkEntityOpt = chunkService.find(wid, chunkKey);
+                if (chunkEntityOpt.isEmpty()) {
+                    log.warn("WChunk entity not found for broadcast: chunkKey={}", chunkKey);
+                    return;
+                }
+
+                // Convert using WChunk entity (efficient for compressed chunks)
+                ChunkDataTransferObject transferObject = chunkService.toTransferObject(wid, chunkEntityOpt.get());
+                if (transferObject != null) {
+                    chunksArray.add(objectMapper.valueToTree(transferObject));
+                }
             }
 
             // Broadcast to all sessions registered for this chunk

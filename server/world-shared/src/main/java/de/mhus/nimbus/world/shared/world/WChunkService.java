@@ -445,76 +445,87 @@ public class WChunkService {
     }
 
     /**
-     * Convert ChunkData to ChunkDataTransferObject for network transmission.
-     * Komprimiert field names für optimierte Netzwerk-Übertragung.
-     * Loads and includes items from item registry.
-     * If chunk is compressed in storage, sends compressed data via 'c' field.
+     * Convert WChunk to ChunkDataTransferObject for network transmission.
+     * If chunk is compressed in storage, directly uses compressed storage data.
+     * If not compressed, loads and converts ChunkData normally.
      *
      * @param worldId World identifier
-     * @param chunkData Internal chunk data
-     * @return Transfer object with compressed field names (blocks → b, heightData → h, items → i)
+     * @param chunk WChunk entity
+     * @return Transfer object optimized for network transmission
      */
-    // TODO XXX : warum wird hier chunkData eigentlich erstellt, der plan ist genau das nicht zu tun und statt dessen die compressed daten zu versenden.
-    // maximal ein fake chunkData objekt sollte hier kommen. Aber hier werden ja backdrop gelesen. warum?
-    // Warum wird der Wchunk nicht gleich mitgegeben, sondern nochmal neu geladen? Das ist alles sehr ineffizient !!!
-    // Warum wird das objekt hier comprimiert? Das war nicht spezifiziert. Wenn kein comprimeirten daten da sind, alles wie immer ist expliziet in der spec.
-    // nochmal: wenn ein WChunk geladen wird, steht da drinn: comprimiert == true, dann wird NICHT das ChunkData objekt erstellt aus dem storage, sondern der storage als
-    // byte[] in das transfer object gepackt. Wenn nicht, alles wie zuvor, nichts comprimieren.
-    public ChunkDataTransferObject toTransferObject(WorldId worldId, ChunkData chunkData) {
-        if (chunkData == null) return null;
+    public ChunkDataTransferObject toTransferObject(WorldId worldId, WChunk chunk) {
+        if (chunk == null) return null;
+
+        String chunkKey = chunk.getChunk();
+        int cx = Integer.parseInt(chunkKey.split(":")[0]);
+        int cz = Integer.parseInt(chunkKey.split(":")[1]);
 
         // Load items for this chunk from registry
-        var items = itemRegistryService.getItemsInChunk(worldId, chunkData.getCx(), chunkData.getCz());
+        var items = itemRegistryService.getItemsInChunk(worldId, cx, cz);
 
-        // Check if chunk is stored compressed
-        String chunkKey = chunkData.getCx() + ":" + chunkData.getCz();
-        boolean isCompressed = find(worldId, chunkKey)
-                .map(WChunk::isCompressed)
-                .orElse(false);
-
-        log.trace("Converting chunk to transfer object: cx={}, cz={}, blocks={}, items={}, compressed={}",
-                chunkData.getCx(), chunkData.getCz(),
-                chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0,
-                items.size(), isCompressed);
-
-        // If chunk is compressed, create compressed payload
-        if (isCompressed && compressionEnabled) {
+        // If chunk is compressed in storage, use storage data directly
+        if (chunk.isCompressed() && chunk.getStorageId() != null) {
+            log.info("Chunk is compressed, loading storage data directly: chunkKey={} storageId={}",
+                    chunkKey, chunk.getStorageId());
             try {
-                // Create temporary object with only blocks, heightData, backdrop
-                var compressedPayload = new java.util.HashMap<String, Object>();
-                compressedPayload.put("b", chunkData.getBlocks());
-                compressedPayload.put("h", chunkData.getHeightData());
-                compressedPayload.put("backdrop", chunkData.getBackdrop());
-
-                // Serialize to JSON and compress
-                String json = objectMapper.writeValueAsString(compressedPayload);
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
-                    gzip.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                    gzip.finish();
+                // Load compressed storage data directly (no decompression!)
+                InputStream compressedStream = storageService.load(chunk.getStorageId());
+                if (compressedStream == null) {
+                    log.warn("Compressed chunk has no storage data: chunkKey={}", chunkKey);
+                    return null;
                 }
 
-                byte[] compressedData = buffer.toByteArray();
+                // Read all bytes from stream
+                byte[] storageData = compressedStream.readAllBytes();
 
-                log.debug("Chunk compressed for network transmission: chunkKey={} original={} compressed={} ratio={}",
-                        chunkKey, json.length(), compressedData.length,
-                        String.format("%.1f%%", 100.0 * compressedData.length / json.length()));
+                // Storage contains full ChunkData JSON (compressed)
+                // We need to decompress, extract b/h/backdrop, and re-compress for network
+                try (GZIPInputStream gzipIn = new GZIPInputStream(new ByteArrayInputStream(storageData))) {
+                    ChunkData chunkData = objectMapper.readValue(gzipIn, ChunkData.class);
 
-                // Return with compressed data, no blocks/heightData/backdrop
-                return ChunkDataTransferObject.builder()
-                        .cx(chunkData.getCx())
-                        .cz(chunkData.getCz())
-                        .i(items.isEmpty() ? null : items)  // items not compressed
-                        .c(compressedData)  // compressed blocks, heightData, backdrop
-                        .build();
+                    // Create payload with only b, h, backdrop (network format)
+                    var payload = new java.util.HashMap<String, Object>();
+                    payload.put("b", chunkData.getBlocks());
+                    payload.put("h", chunkData.getHeightData());
+                    payload.put("backdrop", chunkData.getBackdrop());
+
+                    // Compress payload for network
+                    String payloadJson = objectMapper.writeValueAsString(payload);
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                        gzip.write(payloadJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        gzip.finish();
+                    }
+
+                    byte[] compressedPayload = buffer.toByteArray();
+
+                    log.info("Converted storage format to network format: chunkKey={} storage={} bytes, network={} bytes",
+                            chunkKey, storageData.length, compressedPayload.length);
+
+                    // Return with compressed data only, no blocks/heightData/backdrop
+                    return ChunkDataTransferObject.builder()
+                            .cx(cx)
+                            .cz(cz)
+                            .i(items.isEmpty() ? null : items)  // items not compressed
+                            .c(compressedPayload)  // compressed network payload
+                            .build();
+                }
 
             } catch (Exception e) {
-                log.error("Failed to compress chunk data for transfer, falling back to uncompressed: chunkKey={}", chunkKey, e);
-                // Fall through to uncompressed version
+                log.error("Failed to load compressed storage data: chunkKey={}", chunkKey, e);
+                // Fall through to normal loading
             }
         }
 
-        // Uncompressed version (original behavior)
+        // Uncompressed: Load ChunkData and convert normally
+        Optional<ChunkData> chunkDataOpt = loadChunkData(worldId, chunkKey, false);
+        if (chunkDataOpt.isEmpty()) {
+            log.warn("Chunk data not found: chunkKey={}", chunkKey);
+            return null;
+        }
+
+        ChunkData chunkData = chunkDataOpt.get();
+
         return ChunkDataTransferObject.builder()
                 .cx(chunkData.getCx())
                 .cz(chunkData.getCz())

@@ -68,41 +68,56 @@ public class ChunkSenderService {
 
             for (ChunkCoord coord : chunks) {
                 String chunkKey = coord.cx() + ":" + coord.cz();
-                chunkService.loadChunkData(session.getWorldId(), chunkKey, true)
-                        .ifPresentOrElse(
-                                chunkData -> {
-                                    // Apply overlays if session is in edit mode
-                                    if (session.isEditMode()) {
-                                        editModeService.applyOverlays(session, chunkData);
-                                    }
 
-                                    // Convert to transfer object for network transmission (includes items)
-                                    ChunkDataTransferObject dto = chunkService.toTransferObject(
-                                            session.getWorldId(), chunkData);
+                // First find WChunk entity
+                var chunkOpt = chunkService.find(session.getWorldId(), chunkKey);
+                if (chunkOpt.isEmpty()) {
+                    // Generate default chunk if not found
+                    var chunkData = chunkService.loadChunkData(session.getWorldId(), chunkKey, true);
+                    if (chunkData.isEmpty()) {
+                        log.debug("Chunk not found and could not generate: cx={}, cz={}", coord.cx(), coord.cz());
+                        continue;
+                    }
+                    // Save generated chunk
+                    var saved = chunkService.saveChunk(session.getWorldId(), chunkKey, chunkData.get());
+                    chunkOpt = java.util.Optional.of(saved);
+                }
 
-                                    // Send as binary frame if compressed, otherwise add to JSON array
-                                    if (dto.getC() != null && dto.getC().length > 0) {
-                                        try {
-                                            sendCompressedChunkBinary(session, dto);
-                                            log.trace("Sent binary compressed chunk: cx={}, cz={}, compressed={} bytes",
-                                                    coord.cx(), coord.cz(), dto.getC().length);
-                                        } catch (Exception e) {
-                                            log.error("Failed to send binary chunk, falling back to text: cx={}, cz={}",
-                                                    coord.cx(), coord.cz(), e);
-                                            responseChunks.add(objectMapper.valueToTree(dto));
-                                        }
-                                    } else {
-                                        responseChunks.add(objectMapper.valueToTree(dto));
-                                        log.trace("Loaded chunk: cx={}, cz={}, worldId={}, editMode={}, blocks={}",
-                                                coord.cx(), coord.cz(), session.getWorldId(),
-                                                session.isEditMode(), chunkData.getBlocks() != null ? chunkData.getBlocks().size() : 0);
-                                    }
-                                },
-                                () -> {
-                                    log.debug("Chunk not found: cx={}, cz={}, worldId={}",
-                                            coord.cx(), coord.cz(), session.getWorldId());
-                                }
-                        );
+                var chunk = chunkOpt.get();
+
+                // Handle edit mode overlays (requires loading ChunkData)
+                if (session.isEditMode()) {
+                    var chunkData = chunkService.loadChunkData(session.getWorldId(), chunkKey, false);
+                    if (chunkData.isPresent()) {
+                        editModeService.applyOverlays(session, chunkData.get());
+                        // Save modified chunk and update entity
+                        chunk = chunkService.saveChunk(session.getWorldId(), chunkKey, chunkData.get());
+                    }
+                }
+
+                // Convert to transfer object (uses compressed storage if available)
+                ChunkDataTransferObject dto = chunkService.toTransferObject(session.getWorldId(), chunk);
+                if (dto == null) {
+                    log.warn("Failed to convert chunk to transfer object: chunkKey={}", chunkKey);
+                    continue;
+                }
+
+                // Send as binary frame if compressed, otherwise add to JSON array
+                if (dto.getC() != null && dto.getC().length > 0) {
+                    try {
+                        sendCompressedChunkBinary(session, dto);
+                        log.info("✓ Sent binary compressed chunk: cx={}, cz={}, compressed={} bytes",
+                                coord.cx(), coord.cz(), dto.getC().length);
+                    } catch (Exception e) {
+                        log.error("Failed to send binary chunk, falling back to text: cx={}, cz={}",
+                                coord.cx(), coord.cz(), e);
+                        responseChunks.add(objectMapper.valueToTree(dto));
+                    }
+                } else {
+                    responseChunks.add(objectMapper.valueToTree(dto));
+                    log.trace("Sent uncompressed chunk: cx={}, cz={}, blocks={}",
+                            coord.cx(), coord.cz(), dto.getB() != null ? dto.getB().size() : 0);
+                }
             }
 
             // Send chunk update if any chunks loaded
