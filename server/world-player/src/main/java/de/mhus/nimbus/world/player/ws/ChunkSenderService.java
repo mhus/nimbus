@@ -106,7 +106,7 @@ public class ChunkSenderService {
                 if (dto.getC() != null && dto.getC().length > 0) {
                     try {
                         sendCompressedChunkBinary(session, dto);
-                        log.info("✓ Sent binary compressed chunk: cx={}, cz={}, compressed={} bytes",
+                        log.trace("Sent binary compressed chunk: cx={}, cz={}, compressed={} bytes",
                                 coord.cx(), coord.cz(), dto.getC().length);
                     } catch (Exception e) {
                         log.error("Failed to send binary chunk, falling back to text: cx={}, cz={}",

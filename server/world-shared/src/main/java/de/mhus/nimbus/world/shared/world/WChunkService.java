@@ -465,8 +465,6 @@ public class WChunkService {
 
         // If chunk is compressed in storage, use storage data directly
         if (chunk.isCompressed() && chunk.getStorageId() != null) {
-            log.info("Chunk is compressed, loading storage data directly: chunkKey={} storageId={}",
-                    chunkKey, chunk.getStorageId());
             try {
                 // Load compressed storage data directly (no decompression!)
                 InputStream compressedStream = storageService.load(chunk.getStorageId());
@@ -499,7 +497,7 @@ public class WChunkService {
 
                     byte[] compressedPayload = buffer.toByteArray();
 
-                    log.info("Converted storage format to network format: chunkKey={} storage={} bytes, network={} bytes",
+                    log.debug("Converted storage format to network format: chunkKey={} storage={} bytes, network={} bytes",
                             chunkKey, storageData.length, compressedPayload.length);
 
                     // Return with compressed data only, no blocks/heightData/backdrop
