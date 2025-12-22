@@ -499,23 +499,10 @@ function drawGrid() {
       ctx.stroke();
     }
 
-    // Draw filled faces
+    // Draw filled faces in correct order: back to front
     ctx.globalAlpha = useAlphaBlending.value ? 0.8 : 1.0;
 
-    // Top face (bright, primary color)
-    ctx.fillStyle = isSelected ? '#60a5fa' : '#3b82f6';
-    ctx.beginPath();
-    ctx.moveTo(corners[4].x, corners[4].y);
-    ctx.lineTo(corners[5].x, corners[5].y);
-    ctx.lineTo(corners[6].x, corners[6].y);
-    ctx.lineTo(corners[7].x, corners[7].y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#1e40af';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Left side (Z-positive face, red)
+    // 1. Left side (Z-positive face, red) - furthest back
     ctx.fillStyle = isSelected ? '#f87171' : '#ef4444';
     ctx.beginPath();
     ctx.moveTo(corners[7].x, corners[7].y);  // Top-back-left
@@ -528,7 +515,7 @@ function drawGrid() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Right side (X-positive face, green)
+    // 2. Right side (X-positive face, green) - middle
     ctx.fillStyle = isSelected ? '#4ade80' : '#22c55e';
     ctx.beginPath();
     ctx.moveTo(corners[5].x, corners[5].y);  // Top-front-right
@@ -538,6 +525,19 @@ function drawGrid() {
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = '#166534';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 3. Top face (bright, primary color) - closest to camera
+    ctx.fillStyle = isSelected ? '#60a5fa' : '#3b82f6';
+    ctx.beginPath();
+    ctx.moveTo(corners[4].x, corners[4].y);
+    ctx.lineTo(corners[5].x, corners[5].y);
+    ctx.lineTo(corners[6].x, corners[6].y);
+    ctx.lineTo(corners[7].x, corners[7].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#1e40af';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -594,7 +594,8 @@ async function loadBlockCoordinates() {
       blockLimit: blockLimit.value,
       chunksChecked: data.chunksChecked,
       chunksFound: data.chunksFound,
-      hint: data.hint
+      hint: data.hint,
+      mountPoint: data.mountPoint
     });
 
     if (props.sourceType === 'terrain') {
@@ -607,8 +608,14 @@ async function loadBlockCoordinates() {
         error.value = data.hint;
       }
     } else {
-      // For model: store all blocks and apply client-side filter
-      allBlockCoordinates.value = data.blocks || [];
+      // For model: convert relative coordinates to world coordinates using mountPoint
+      const mountPoint = data.mountPoint || { x: 0, y: 0, z: 0 };
+      allBlockCoordinates.value = (data.blocks || []).map(block => ({
+        x: block.x + mountPoint.x,
+        y: block.y + mountPoint.y,
+        z: block.z + mountPoint.z,
+        color: block.color
+      }));
 
       // Initialize view center for model
       if (allBlockCoordinates.value.length > 0 && viewCenter.value.x === 0 && viewCenter.value.y === 0 && viewCenter.value.z === 0) {
