@@ -279,7 +279,7 @@ export class ChunkService {
 
             // Decompress the complete ChunkData object
             const decompressedStream = new Response(
-              new Blob([chunkData.c]).stream().pipeThrough(new DecompressionStream('gzip'))
+              new Blob([chunkData.c as BlobPart]).stream().pipeThrough(new DecompressionStream('gzip'))
             );
             const decompressedText = await decompressedStream.text();
             const cChunk = JSON.parse(decompressedText);
