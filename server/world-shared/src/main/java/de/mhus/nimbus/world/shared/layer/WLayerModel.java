@@ -142,7 +142,7 @@ public class WLayerModel {
      * Returns world coordinates (mount point + relative position).
      * Streams directly from block data without creating intermediate collections.
      *
-     * @return Stream of block positions as int arrays [x, y, z]
+     * @return Stream of block positions as int arrays [x, y, z, groupId, x-org, y-org, z-org]
      */
     public Stream<int[]> getBlockPositions() {
         if (content == null || content.isEmpty()) {
@@ -157,7 +157,11 @@ public class WLayerModel {
                     return new int[]{
                             mountX + (int) relativePos.getX(),
                             mountY + (int) relativePos.getY(),
-                            mountZ + (int) relativePos.getZ()
+                            mountZ + (int) relativePos.getZ(),
+                            layerBlock.getGroup(),
+                            (int) relativePos.getX(),
+                            (int) relativePos.getY(),
+                            (int) relativePos.getZ(),
                     };
                 });
     }

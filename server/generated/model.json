@@ -1976,6 +1976,46 @@
     "classes" : [ ],
     "typeAliases" : [ ]
   }, {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/Vector3Color.ts",
+    "imports" : [ ],
+    "interfaces" : [ {
+      "name" : "Vector3Color",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "x",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "y",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "z",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "color",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : "// Hex color string (e.g., '#ff0000')"
+      } ],
+      "methods" : [ ]
+    } ],
+    "enums" : [ ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/ChunkData.ts",
     "imports" : [ "./Block", "./ItemBlockRef", "./Backdrop" ],
     "interfaces" : [ {

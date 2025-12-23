@@ -314,7 +314,7 @@ export interface Block {
   /**
    * Position in world coordinates
    */
-  position: Vector3;
+  position: Vector3; // javaType: de.mhus.nimbus.generated.types.Vector3Int
 
   /**
    * Reference to BlockType by ID
