@@ -63,4 +63,16 @@ public interface RepositoryControl {
      * @return true if valid Git repository
      */
     boolean isGitRepository(Path localPath);
+
+    /**
+     * Validate Git configuration and connectivity.
+     * Tests if repository can be accessed with provided credentials.
+     *
+     * @param localPath     Local repository path
+     * @param repositoryUrl Remote repository URL (optional)
+     * @param username      Git username (optional)
+     * @param password      Git password/token (optional)
+     * @return Validation result message
+     */
+    String validate(Path localPath, String repositoryUrl, String username, String password);
 }

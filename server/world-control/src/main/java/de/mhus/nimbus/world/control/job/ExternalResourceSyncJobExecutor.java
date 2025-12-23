@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.control.job;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.control.service.sync.GitHelper;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncService;
 import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
 import de.mhus.nimbus.world.shared.job.JobExecutionException;
@@ -17,16 +18,17 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Job executor for external resource sync operations (export and import).
+ * Job executor for external resource sync operations (export, import, validate).
  *
- * Supports two job types via WJob.type:
+ * Supports three job types via WJob.type:
  * - "export": Export world data to filesystem
  * - "import": Import world data from filesystem
+ * - "validate": Validate Git configuration and connectivity
  *
  * Parameters:
  * - name (required): Name of the ExternalResource in WAnything collection 'externalResource'
  * - force (optional): "true" or "false" (default: "false") - force sync even if timestamps unchanged
- * - remove (optional, import only): "true" or "false" (default: "false") - remove overtaken entities
+ * - remove (optional): "true" or "false" (default: "false") - remove overtaken entities/files
  * - worldId: Provided by job.getWorldId()
  */
 @Component
@@ -38,6 +40,7 @@ public class ExternalResourceSyncJobExecutor implements JobExecutor {
 
     private final WAnythingService anythingService;
     private final ResourceSyncService syncService;
+    private final GitHelper gitHelper;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -53,8 +56,10 @@ public class ExternalResourceSyncJobExecutor implements JobExecutor {
             return executeExport(job);
         } else if ("import".equals(jobType)) {
             return executeImport(job);
+        } else if ("validate".equals(jobType)) {
+            return executeValidate(job);
         } else {
-            throw new JobExecutionException("Unknown job type: " + jobType + " (expected 'export' or 'import')");
+            throw new JobExecutionException("Unknown job type: " + jobType + " (expected 'export', 'import', or 'validate')");
         }
     }
 
@@ -174,6 +179,57 @@ public class ExternalResourceSyncJobExecutor implements JobExecutor {
         } catch (Exception e) {
             log.error("Failed to execute import job", e);
             throw new JobExecutionException("Import job failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Execute validate operation.
+     */
+    private JobResult executeValidate(WJob job) throws JobExecutionException {
+        try {
+            // Parse parameters
+            Map<String, String> params = job.getParameters();
+            String name = params.get("name");
+            if (name == null || name.isBlank()) {
+                throw new JobExecutionException("Missing required parameter: name");
+            }
+
+            String worldIdStr = job.getWorldId();
+            if (worldIdStr == null || worldIdStr.isBlank()) {
+                throw new JobExecutionException("Missing worldId on job");
+            }
+
+            log.info("Starting validate job: worldId={} name={}", worldIdStr, name);
+
+            // Load ExternalResource
+            ExternalResourceDTO dto = loadExternalResource(worldIdStr, name);
+
+            // Validate configuration
+            StringBuilder result = new StringBuilder();
+            result.append("=== ExternalResource Validation ===\n");
+            result.append("Name: ").append(name).append("\n");
+            result.append("World: ").append(worldIdStr).append("\n");
+            result.append("Local Path: ").append(dto.getLocalPath()).append("\n");
+            result.append("Types: ").append(dto.getTypes()).append("\n");
+            result.append("Auto Git: ").append(dto.isAutoGit()).append("\n\n");
+
+            // Validate Git if enabled
+            if (dto.isAutoGit()) {
+                result.append("=== Git Validation ===\n");
+                String gitValidation = gitHelper.validate(dto);
+                result.append(gitValidation);
+            } else {
+                result.append("ℹ️  Git sync disabled (autoGit=false)\n");
+            }
+
+            log.info("Validation completed:\n{}", result);
+            return JobResult.ofSuccess(result.toString());
+
+        } catch (JobExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to execute validate job", e);
+            throw new JobExecutionException("Validate job failed: " + e.getMessage(), e);
         }
     }
 

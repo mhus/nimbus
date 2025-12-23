@@ -167,6 +167,85 @@ public class RepositoryControlWithJGit implements RepositoryControl {
         return gitDir.exists() && gitDir.isDirectory();
     }
 
+    @Override
+    public String validate(Path localPath, String repositoryUrl, String username, String password) {
+        StringBuilder result = new StringBuilder();
+
+        // Check if path exists
+        if (!Files.exists(localPath)) {
+            result.append("❌ Local path does not exist: ").append(localPath).append("\n");
+        } else {
+            result.append("✅ Local path exists: ").append(localPath).append("\n");
+        }
+
+        // Check if it's a git repository
+        if (isGitRepository(localPath)) {
+            result.append("✅ Valid Git repository\n");
+
+            // Try to get repository info
+            try (Git git = openRepository(localPath)) {
+                Repository repo = git.getRepository();
+                String branch = repo.getBranch();
+                result.append("✅ Current branch: ").append(branch).append("\n");
+
+                // Check remote
+                var remotes = git.remoteList().call();
+                if (remotes.isEmpty()) {
+                    result.append("⚠️  No remote configured\n");
+                } else {
+                    result.append("✅ Remotes configured: ").append(remotes.size()).append("\n");
+                    remotes.forEach(remote ->
+                        result.append("   - ").append(remote.getName())
+                              .append(": ").append(remote.getURIs()).append("\n")
+                    );
+                }
+
+                // Test fetch (doesn't download, just checks connectivity)
+                if (!remotes.isEmpty()) {
+                    try {
+                        var fetchCommand = git.fetch();
+                        if (username != null && !username.isBlank() && password != null) {
+                            fetchCommand.setCredentialsProvider(
+                                    new UsernamePasswordCredentialsProvider(username, password)
+                            );
+                        }
+                        fetchCommand.setDryRun(true).call();
+                        result.append("✅ Remote connectivity OK\n");
+                    } catch (Exception e) {
+                        result.append("❌ Remote connectivity failed: ").append(e.getMessage()).append("\n");
+                    }
+                }
+
+            } catch (Exception e) {
+                result.append("❌ Failed to read repository info: ").append(e.getMessage()).append("\n");
+            }
+        } else {
+            result.append("⚠️  Not a Git repository\n");
+
+            if (repositoryUrl != null && !repositoryUrl.isBlank()) {
+                result.append("ℹ️  Repository URL configured: ").append(repositoryUrl).append("\n");
+                result.append("ℹ️  Will clone on first sync\n");
+            } else {
+                result.append("⚠️  No repository URL configured\n");
+            }
+        }
+
+        // Check credentials
+        if (username != null && !username.isBlank()) {
+            result.append("✅ Username configured\n");
+        } else {
+            result.append("⚠️  No username configured\n");
+        }
+
+        if (password != null && !password.isBlank()) {
+            result.append("✅ Password/token configured\n");
+        } else {
+            result.append("⚠️  No password/token configured\n");
+        }
+
+        return result.toString();
+    }
+
     /**
      * Open existing Git repository.
      */

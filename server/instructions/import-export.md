@@ -226,4 +226,69 @@ Git-Integration mit JGit vollständig implementiert!
   - ✅ Robustes Error Handling - Fortsetzung bei Git-Fehlern
 
   Das System ist production-ready und sicher!
+  
+  
+ Git-Credentials Fallback implementiert!
+
+  GitCredentialsProperties erstellt
+
+  Konfiguration in application.yaml:
+  nimbus:
+    git:
+      username: your-git-username
+      password: ghp_your_github_token
+      branch: main
+
+  Fallback-Strategie:
+
+  Priorität:
+  1. ExternalResourceDTO (höchste Priorität)
+    - gitUsername, gitPassword, gitBranch
+  2. application.yaml (Fallback)
+    - nimbus.git.username, nimbus.git.password, nimbus.git.branch
+
+  Verwendung:
+
+  Für Entwicklung:
+  # application.yaml oder application-dev.yaml
+  nimbus:
+    git:
+      username: mhus
+      password: ghp_xxxxxxxxxxxxx
+      branch: main
+
+  Für Produktion:
+  - Credentials in ExternalResourceDTO setzen (pro Repository)
+  - Oder zentrale Credentials in application.yaml
+  
+
+  Verwendung:
+
+  Validate Job:
+  {
+    "type": "validate",
+    "worldId": "earth616:westview",
+    "executor": "externalResourceSync",
+    "parameters": {
+      "name": "export"
+    }
+  }
+
+  Output zeigt:
+  - ✅ Local path exists
+  - ✅ Valid Git repository
+  - ✅ Current branch: main
+  - ✅ Remotes configured: 1
+  - ✅ Remote connectivity OK
+  - ✅ Username: from application.yaml (mhus)
+  - ✅ Password: from application.yaml
+  - ✅ Branch: from application.yaml (main)
+
+  Für Entwicklung in application.yaml:
+  nimbus:
+    git:
+      username: mhus
+      password: ghp_your_github_token
+      branch: main
+  
 ```
