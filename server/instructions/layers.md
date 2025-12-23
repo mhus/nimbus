@@ -271,3 +271,11 @@ Es ist nun moeglich mehrere referenz ketten yu haben. es wird eine maximale tief
 2. Layername ausgewaehlt werden kann
 
 [?] Der world-selector im header von layer-editor soll auch world collections zur auswahl stellen.
+
+## Layer Clone Block
+
+In EditService soll es einen neuen Modus geben CLONE_BLOCK
+- Erweitere EditAction.ts, erzuege modul generated mit mavn install neu
+- erweitere edit-config.html
+- erweitere EditService.java um die neue funktionalitaet
+  - den Block suchen, in den aktuellen Layer einfuegen - im grunde eine kombination von bereits bestehenden Funktionen

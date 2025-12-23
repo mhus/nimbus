@@ -616,12 +616,12 @@ async function loadBlockCoordinates() {
         error.value = data.hint;
       }
     } else {
-      // For model: convert relative coordinates to world coordinates using mountPoint
-      const mountPoint = data.mountPoint || { x: 0, y: 0, z: 0 };
+      // For model: use relative coordinates directly (without adding mountPoint)
+      // This shows the block coordinates as stored in WLayerModel.content
       allBlockCoordinates.value = (data.blocks || []).map(block => ({
-        x: block.x + mountPoint.x,
-        y: block.y + mountPoint.y,
-        z: block.z + mountPoint.z,
+        x: block.x,
+        y: block.y,
+        z: block.z,
         color: block.color
       }));
 

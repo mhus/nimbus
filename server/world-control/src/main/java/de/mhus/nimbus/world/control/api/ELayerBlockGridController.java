@@ -122,7 +122,14 @@ public class ELayerBlockGridController {
                         continue;
                     }
 
-                    LayerChunkData chunkData = objectMapper.readValue(stream, LayerChunkData.class);
+                    // Decompress if needed
+                    InputStream dataStream = stream;
+                    if (terrain.isCompressed()) {
+                        dataStream = new java.util.zip.GZIPInputStream(stream);
+                    }
+
+                    LayerChunkData chunkData = objectMapper.readValue(dataStream, LayerChunkData.class);
+                    dataStream.close();
 
                     // Extract blocks from chunk data
                     // NOTE: Positions in LayerChunkData are already absolute world coordinates!
@@ -248,7 +255,14 @@ public class ELayerBlockGridController {
                 return ResponseEntity.notFound().build();
             }
 
-            LayerChunkData chunkData = objectMapper.readValue(stream, LayerChunkData.class);
+            // Decompress if needed
+            InputStream dataStream = stream;
+            if (terrain.isCompressed()) {
+                dataStream = new java.util.zip.GZIPInputStream(stream);
+            }
+
+            LayerChunkData chunkData = objectMapper.readValue(dataStream, LayerChunkData.class);
+            dataStream.close();
 
             // Find block at specified position (positions in chunk are already absolute world coordinates)
             if (chunkData.getBlocks() != null) {
