@@ -213,6 +213,10 @@ public class EditService {
             case ROUGH_BLOCKS:
                 roughBlocks(worldId, sessionId, x, y, z);
                 break;
+            case CLONE_BLOCK:
+                // Clone block from layer to current position
+                cloneBlock(worldId, sessionId, x, y, z);
+                break;
             default:
                 log.warn("Unknown edit action: {}", action);
                 setSelectedBlock(worldId, sessionId, x, y, z);
@@ -482,6 +486,46 @@ public class EditService {
     private void deleteBlock(String worldId, String sessionId, int x, int y, int z) {
         log.debug("Delete block: session={} pos=({},{},{})", sessionId, x, y, z);
         setBlock(worldId, sessionId, AIR_BLOCK, x, y, z);
+    }
+
+    /**
+     * Clone block from layer at position.
+     * Combination of finding the block at the position and pasting it.
+     * The block is read from the layer system and inserted into the current edit layer.
+     */
+    @Transactional
+    private void cloneBlock(String worldId, String sessionId, int x, int y, int z) {
+        log.debug("Clone block: session={} pos=({},{},{})", sessionId, x, y, z);
+
+        // Get block info at this position from the layer system
+        Map<String, Object> blockInfo = blockInfoService.loadBlockInfo(worldId, sessionId, x, y, z);
+        if (blockInfo == null || blockInfo.isEmpty()) {
+            log.warn("No block found to clone at position: session={} pos=({},{},{})", sessionId, x, y, z);
+            return;
+        }
+
+        // Extract block data
+        @SuppressWarnings("unchecked")
+        Map<String, Object> blockData = (Map<String, Object>) blockInfo.get("block");
+        if (blockData == null) {
+            log.warn("No block data in blockInfo for clone: session={} pos=({},{},{})", sessionId, x, y, z);
+            return;
+        }
+
+        try {
+            // Convert to Block object
+            String blockJson = objectMapper.writeValueAsString(blockData);
+            Block blockToClone = objectMapper.readValue(blockJson, Block.class);
+
+            // Use existing setBlock method to paste at same position
+            // This handles all the overlay logic, client updates, etc.
+            setBlock(worldId, sessionId, blockToClone, x, y, z);
+
+            log.info("Block cloned: session={} pos=({},{},{}) type={}",
+                    sessionId, x, y, z, blockToClone.getBlockTypeId());
+        } catch (Exception e) {
+            log.error("Failed to clone block: session={} pos=({},{},{})", sessionId, x, y, z, e);
+        }
     }
 
     /**

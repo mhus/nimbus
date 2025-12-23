@@ -550,6 +550,8 @@ function getActionDescription(action: EditAction): string {
       return 'Applies smoothing to block geometry';
     case EditAction.ROUGH_BLOCKS:
       return 'Applies rough geometry to blocks';
+    case EditAction.CLONE_BLOCK:
+      return 'Clones existing block from layer to position';
     default:
       return '';
   }

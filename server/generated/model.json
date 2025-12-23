@@ -1,5 +1,22 @@
 {
   "files" : [ {
+    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/generated/LayerType.ts",
+    "imports" : [ ],
+    "interfaces" : [ ],
+    "enums" : [ {
+      "name" : "LayerType",
+      "values" : [ "GROUND", "MODEL" ],
+      "enumValues" : [ {
+        "name" : "GROUND",
+        "value" : "GROUND"
+      }, {
+        "name" : "MODEL",
+        "value" : "MODEL"
+      } ]
+    } ],
+    "classes" : [ ],
+    "typeAliases" : [ ]
+  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/SKeyDto.ts",
     "imports" : [ ],
     "interfaces" : [ {
@@ -4694,7 +4711,7 @@
     "interfaces" : [ ],
     "enums" : [ {
       "name" : "EditAction",
-      "values" : [ "OPEN_CONFIG_DIALOG", "OPEN_EDITOR", "MARK_BLOCK", "PASTE_BLOCK", "DELETE_BLOCK", "SMOOTH_BLOCKS", "ROUGH_BLOCKS" ],
+      "values" : [ "OPEN_CONFIG_DIALOG", "OPEN_EDITOR", "MARK_BLOCK", "PASTE_BLOCK", "DELETE_BLOCK", "SMOOTH_BLOCKS", "ROUGH_BLOCKS", "CLONE_BLOCK" ],
       "enumValues" : [ {
         "name" : "OPEN_CONFIG_DIALOG",
         "value" : "OPEN_CONFIG_DIALOG"
@@ -4716,6 +4733,9 @@
       }, {
         "name" : "ROUGH_BLOCKS",
         "value" : "ROUGH_BLOCKS"
+      }, {
+        "name" : "CLONE_BLOCK",
+        "value" : "CLONE_BLOCK"
       } ]
     } ],
     "classes" : [ ],

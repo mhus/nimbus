@@ -26,4 +26,7 @@ export enum EditAction {
 
   /** Roughens blocks (applies rough geometry) */
   ROUGH_BLOCKS = 'ROUGH_BLOCKS',
+
+  /** Clones an existing block from the layer to the selected position */
+  CLONE_BLOCK = 'CLONE_BLOCK',
 }

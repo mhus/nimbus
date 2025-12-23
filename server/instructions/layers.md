@@ -274,7 +274,7 @@ Es ist nun moeglich mehrere referenz ketten yu haben. es wird eine maximale tief
 
 ## Layer Clone Block
 
-In EditService soll es einen neuen Modus geben CLONE_BLOCK
+[?] In EditService soll es einen neuen Modus geben CLONE_BLOCK
 - Erweitere EditAction.ts, erzuege modul generated mit mavn install neu
 - erweitere edit-config.html
 - erweitere EditService.java um die neue funktionalitaet

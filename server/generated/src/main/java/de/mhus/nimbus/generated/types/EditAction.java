@@ -11,7 +11,8 @@ public enum EditAction implements de.mhus.nimbus.types.TsEnum {
     PASTE_BLOCK("PASTE_BLOCK"),
     DELETE_BLOCK("DELETE_BLOCK"),
     SMOOTH_BLOCKS("SMOOTH_BLOCKS"),
-    ROUGH_BLOCKS("ROUGH_BLOCKS");
+    ROUGH_BLOCKS("ROUGH_BLOCKS"),
+    CLONE_BLOCK("CLONE_BLOCK");
 
     @lombok.Getter
     private final String tsIndex;
