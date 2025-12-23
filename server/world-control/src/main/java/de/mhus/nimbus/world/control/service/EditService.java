@@ -892,6 +892,7 @@ public class EditService {
             positionsList.add(String.valueOf(pos[0]));
             positionsList.add(String.valueOf(pos[1]));
             positionsList.add(String.valueOf(pos[2]));
+            positionsList.add("#00ff00"); // for existing blocks
         }
 
         // Build command context
@@ -901,11 +902,11 @@ public class EditService {
                 .originServer("world-control")
                 .build();
 
-        // Build command arguments: modelselector, 'enable', '#00ff00', true, true, <positions>
+        // Build command arguments: modelselector, 'enable', '#00ff00', true, true, <positions+color>
         List<String> args = new ArrayList<>();
         args.add("modelselector");
         args.add("enable");
-        args.add("#00ff00");
+        args.add("#00dd00"); // for modified blocks
         args.add("true");
         args.add("true");
         args.addAll(positionsList);

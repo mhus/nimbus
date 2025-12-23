@@ -127,7 +127,7 @@ doSend('teamStatus','team_ teamData','player_0',50,1);    # Player1 health=50, a
 doSetShortcut('click0', 'use', {"command":"notification", commandArgs: [0,"Title","Message {{x}} {{y}} {{z}}","textures/magic/blue_crystal.png"], iconPath:"textures/magic/blue_crystal.png" })
 doSend('control.EditBlockTrigger','[x,y,z]')
 
-doModelselector('enable','#ff0000',true,true,8,74,8)
+doModelselector('enable','#ff0000',true,true,8,74,8,'#00ff00')
 doModelselector('move',1,0,0)
 doModelselector('disable')
 

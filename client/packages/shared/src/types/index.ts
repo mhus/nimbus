@@ -4,6 +4,7 @@
 
 // Core types
 export * from './Vector3';
+export * from './Vector3Color';
 export * from './Rotation';
 export * from './Color';
 export * from './Shape';

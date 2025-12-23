@@ -1,33 +1,33 @@
 /**
  * ModelSelectorCommand - Control the model selector
  *
- * The model selector allows selecting multiple blocks simultaneously with a custom color.
+ * The model selector allows selecting multiple blocks simultaneously with individual colors per element.
  * It has two activation levels: enabled and visible.
  *
  * Usage:
- *   modelselector                                               - Show current status
- *   modelselector enable <color> <watchBlocks> <show> [coords] - Enable model selector
- *   modelselector disable                                       - Disable model selector
- *   modelselector show <true|false>                             - Show/hide selector
- *   modelselector add <x1> <y1> <z1> [... <xn> <yn> <zn>]      - Add coordinates
- *   modelselector remove <x1> <y1> <z1> [... <xn> <yn> <zn>]   - Remove coordinates
- *   modelselector move <offsetX> <offsetY> <offsetZ>            - Move all blocks by offset
- *   modelselector list                                          - List all coordinates
+ *   modelselector                                                            - Show current status
+ *   modelselector enable <defaultColor> <watchBlocks> <show> [x y z color ...] - Enable model selector
+ *   modelselector disable                                                    - Disable model selector
+ *   modelselector show <true|false>                                          - Show/hide selector
+ *   modelselector add <x1> <y1> <z1> <color1> [... <xn> <yn> <zn> <colorn>] - Add coordinates
+ *   modelselector remove <x1> <y1> <z1> [... <xn> <yn> <zn>]                - Remove coordinates
+ *   modelselector move <offsetX> <offsetY> <offsetZ>                         - Move all blocks by offset
+ *   modelselector list                                                       - List all coordinates
  *
  * Examples:
- *   modelselector enable #ff0000 true true 10 20 30 11 20 30   - Enable with red color, watch blocks, visible
- *   modelselector enable #00ff00 false true                     - Enable with green color, no watch, visible
- *   modelselector disable                                        - Disable model selector
- *   modelselector show false                                     - Hide without removing coordinates
- *   modelselector add 10 20 30 11 20 30                         - Add two blocks
- *   modelselector remove 10 20 30                               - Remove one block
- *   modelselector move 5 0 0                                    - Move all blocks by +5 in X direction
- *   modelselector list                                           - List all coordinates
+ *   modelselector enable #ffff00 true true 10 20 30 #ff0000 11 20 30 #00ff00 - Enable, default yellow, 2 blocks
+ *   modelselector enable #ff0000 false true                                   - Enable, default red, no coords
+ *   modelselector disable                                                     - Disable model selector
+ *   modelselector show false                                                  - Hide without removing coordinates
+ *   modelselector add 10 20 30 #ff0000 11 20 30 #00ff00                      - Add two blocks with colors
+ *   modelselector remove 10 20 30                                             - Remove one block
+ *   modelselector move 5 0 0                                                  - Move all blocks by +5 in X direction
+ *   modelselector list                                                        - List all coordinates
  */
 
 import { CommandHandler } from './CommandHandler';
 import type { AppContext } from '../AppContext';
-import { getLogger, toBoolean, toNumber, toString } from '@nimbus/shared';
+import { getLogger, toBoolean, toNumber, toString, type Vector3Color } from '@nimbus/shared';
 import { Vector3 } from '@babylonjs/core';
 
 const logger = getLogger('ModelSelectorCommand');
@@ -42,7 +42,7 @@ export class ModelSelectorCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Control the model selector (enable|disable|show|add|remove|move|list)';
+    return 'Control the model selector with individual colors per element (enable|disable|show|add|remove|move|list)';
   }
 
   async execute(parameters: any[]): Promise<any> {
@@ -78,10 +78,10 @@ export class ModelSelectorCommand extends CommandHandler {
           error: `Unknown subcommand: ${subcommand}`,
           usage: 'modelselector [enable|disable|show|add|remove|move|list]',
           examples: [
-            'modelselector enable #ff0000 true true 10 20 30',
+            'modelselector enable #ffff00 true true 10 20 30 #ff0000',
             'modelselector disable',
             'modelselector show false',
-            'modelselector add 10 20 30 11 20 30',
+            'modelselector add 10 20 30 #ff0000 11 20 30 #00ff00',
             'modelselector remove 10 20 30',
             'modelselector move 5 0 0',
             'modelselector list',
@@ -104,59 +104,61 @@ export class ModelSelectorCommand extends CommandHandler {
       blockCount: coordinates.length,
       usage: 'modelselector [enable|disable|show|add|remove|move|list]',
       examples: [
-        'modelselector enable #ff0000 true true 10 20 30 - Enable with red color',
-        'modelselector disable                            - Disable',
-        'modelselector show false                         - Hide',
-        'modelselector add 10 20 30                       - Add block',
-        'modelselector move 5 0 0                         - Move blocks',
-        'modelselector list                               - List blocks',
+        'modelselector enable #ffff00 true true 10 20 30 #ff0000 - Default yellow, one red block',
+        'modelselector disable                                     - Disable',
+        'modelselector show false                                  - Hide',
+        'modelselector add 10 20 30 #ff0000                        - Add red block',
+        'modelselector move 5 0 0                                  - Move blocks',
+        'modelselector list                                        - List blocks',
       ],
     };
   }
 
   /**
    * Enable model selector
-   * Parameters: <color> <watchBlocks> <show> [<x1> <y1> <z1> ... <xn> <yn> <zn>]
+   * Parameters: <defaultColor> <watchBlocks> <show> [<x1> <y1> <z1> <color1> ... <xn> <yn> <zn> <colorn>]
    */
   private executeEnable(selectService: any, params: any[]): any {
     if (params.length < 3) {
       return {
         error: 'Missing required parameters',
-        usage: 'modelselector enable <color> <watchBlocks> <show> [<x1> <y1> <z1> ...]',
+        usage: 'modelselector enable <defaultColor> <watchBlocks> <show> [<x1> <y1> <z1> <color1> ...]',
         examples: [
-          'modelselector enable #ff0000 true true          - Red, watch blocks, visible, no coords',
-          'modelselector enable #00ff00 false true 10 20 30 - Green, no watch, visible, one block',
+          'modelselector enable #ffff00 true true                                    - Default yellow, watch blocks, visible',
+          'modelselector enable #ff0000 false true 10 20 30 #00ff00                 - Default red, one green block',
+          'modelselector enable #ffff00 true true 10 20 30 #ff0000 11 20 30 #00ff00 - Default yellow, two blocks',
         ],
       };
     }
 
-    const color = toString(params[0]);
+    const defaultColor = toString(params[0]);
     const watchBlocks = toBoolean(params[1]);
     const show = toBoolean(params[2]);
 
-    // Parse coordinates (groups of 3)
-    const coordinates: Vector3[] = [];
-    for (let i = 3; i < params.length; i += 3) {
-      if (i + 2 < params.length) {
+    // Parse coordinates (groups of 4: x, y, z, color)
+    const coordinates: Vector3Color[] = [];
+    for (let i = 3; i < params.length; i += 4) {
+      if (i + 3 < params.length) {
         const x = toNumber(params[i]);
         const y = toNumber(params[i + 1]);
         const z = toNumber(params[i + 2]);
-        coordinates.push(new Vector3(x, y, z));
+        const color = toString(params[i + 3]);
+        coordinates.push({ x, y, z, color });
       } else {
         return {
-          error: 'Invalid coordinates (must be groups of 3: x y z)',
+          error: 'Invalid coordinates (must be groups of 4: x y z color)',
           received: params.slice(3),
         };
       }
     }
 
     try {
-      selectService.enableModelSelector(color, watchBlocks, show, coordinates);
-      logger.info('Model selector enabled', { color, watchBlocks, show, blockCount: coordinates.length });
+      selectService.enableModelSelector(defaultColor, watchBlocks, show, coordinates);
+      logger.info('Model selector enabled', { defaultColor, watchBlocks, show, blockCount: coordinates.length });
       return {
         success: true,
         message: 'Model selector enabled',
-        color,
+        defaultColor,
         watchBlocks,
         visible: show,
         blockCount: coordinates.length,
@@ -227,27 +229,28 @@ export class ModelSelectorCommand extends CommandHandler {
 
   /**
    * Add coordinates to model selector
-   * Parameters: <x1> <y1> <z1> [... <xn> <yn> <zn>]
+   * Parameters: <x1> <y1> <z1> <color1> [... <xn> <yn> <zn> <colorn>]
    */
   private executeAdd(selectService: any, params: any[]): any {
-    if (params.length === 0 || params.length % 3 !== 0) {
+    if (params.length === 0 || params.length % 4 !== 0) {
       return {
-        error: 'Invalid coordinates (must be groups of 3: x y z)',
-        usage: 'modelselector add <x1> <y1> <z1> [... <xn> <yn> <zn>]',
+        error: 'Invalid coordinates (must be groups of 4: x y z color)',
+        usage: 'modelselector add <x1> <y1> <z1> <color1> [... <xn> <yn> <zn> <colorn>]',
         examples: [
-          'modelselector add 10 20 30              - Add one block',
-          'modelselector add 10 20 30 11 20 30    - Add two blocks',
+          'modelselector add 10 20 30 #ff0000                        - Add one red block',
+          'modelselector add 10 20 30 #ff0000 11 20 30 #00ff00      - Add two blocks with colors',
         ],
       };
     }
 
-    // Parse coordinates (groups of 3)
-    const coordinates: Vector3[] = [];
-    for (let i = 0; i < params.length; i += 3) {
+    // Parse coordinates (groups of 4: x, y, z, color)
+    const coordinates: Vector3Color[] = [];
+    for (let i = 0; i < params.length; i += 4) {
       const x = toNumber(params[i]);
       const y = toNumber(params[i + 1]);
       const z = toNumber(params[i + 2]);
-      coordinates.push(new Vector3(x, y, z));
+      const color = toString(params[i + 3]);
+      coordinates.push({ x, y, z, color });
     }
 
     try {
@@ -271,6 +274,7 @@ export class ModelSelectorCommand extends CommandHandler {
   /**
    * Remove coordinates from model selector
    * Parameters: <x1> <y1> <z1> [... <xn> <yn> <zn>]
+   * Note: Color is not needed for removal, only position matters
    */
   private executeRemove(selectService: any, params: any[]): any {
     if (params.length === 0 || params.length % 3 !== 0) {
@@ -284,13 +288,13 @@ export class ModelSelectorCommand extends CommandHandler {
       };
     }
 
-    // Parse coordinates (groups of 3)
-    const coordinates: Vector3[] = [];
+    // Parse coordinates (groups of 3, color not needed for removal)
+    const coordinates: Vector3Color[] = [];
     for (let i = 0; i < params.length; i += 3) {
       const x = toNumber(params[i]);
       const y = toNumber(params[i + 1]);
       const z = toNumber(params[i + 2]);
-      coordinates.push(new Vector3(x, y, z));
+      coordinates.push({ x, y, z, color: '#000000' }); // Dummy color, not used for removal
     }
 
     try {
@@ -364,10 +368,11 @@ export class ModelSelectorCommand extends CommandHandler {
       };
     }
 
-    const coordList = coordinates.map((coord: Vector3) => ({
+    const coordList = coordinates.map((coord: Vector3Color) => ({
       x: coord.x,
       y: coord.y,
       z: coord.z,
+      color: coord.color,
     }));
 
     return {

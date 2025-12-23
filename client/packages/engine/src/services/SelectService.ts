@@ -14,6 +14,7 @@ import {
   getStateValues,
   type ClientEntity,
   type BlockType,
+  type Vector3Color,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ChunkService } from './ChunkService';
@@ -88,14 +89,13 @@ export class SelectService {
   private editHighlightMesh?: Mesh;
   private editHighlightMaterial?: StandardMaterial;
 
-  // Model selector (multi-block selection with custom color)
+  // Model selector (multi-block selection with custom color per element)
   private modelSelectorEnabled: boolean = false;
   private modelSelectorVisible: boolean = false;
   private modelSelectorWatchBlocks: boolean = false;
-  private modelSelectorColor: Color3 = new Color3(1, 1, 0); // Default yellow
-  private modelSelectorCoordinates: Vector3[] = [];
-  private modelSelectorMeshes: Mesh[] = [];
-  private modelSelectorMaterial?: StandardMaterial;
+  private modelSelectorDefaultColor: string = '#ffff00'; // Default color for new blocks from watchBlocks
+  private modelSelectorCoordinates: Vector3Color[] = [];
+  private modelSelectorMeshes: Map<string, { mesh: Mesh; material: StandardMaterial }> = new Map();
 
   // Cached player properties (updated via event)
   private playerEyeHeight: number = 1.6; // Default value
@@ -1025,19 +1025,19 @@ export class SelectService {
   /**
    * Enable model selector
    *
-   * Shows multiple blocks as selected with custom color.
+   * Shows multiple blocks as selected with custom color per element.
    * If already enabled, automatically disables and re-enables with new parameters.
    *
-   * @param color Highlight color (hex string or Color3)
+   * @param defaultColor Default color for new blocks added via watchBlocks (hex string)
    * @param watchBlocks Automatically add new blocks from network
    * @param show Make visible immediately
-   * @param selected Initial list of coordinates to select
+   * @param selected Initial list of coordinates with colors to select
    */
   enableModelSelector(
-    color: string | Color3,
+    defaultColor: string,
     watchBlocks: boolean,
     show: boolean,
-    selected: Vector3[]
+    selected: Vector3Color[]
   ): void {
     try {
       // If already enabled, disable first
@@ -1045,15 +1045,9 @@ export class SelectService {
         this.disableModelSelector();
       }
 
-      // Parse color
-      if (typeof color === 'string') {
-        this.modelSelectorColor = Color3.FromHexString(color);
-      } else {
-        this.modelSelectorColor = color;
-      }
-
       // Set state
       this.modelSelectorEnabled = true;
+      this.modelSelectorDefaultColor = defaultColor;
       this.modelSelectorWatchBlocks = watchBlocks;
       this.modelSelectorVisible = show;
 
@@ -1066,22 +1060,11 @@ export class SelectService {
         return;
       }
 
-      if (!this.modelSelectorMaterial) {
-        this.modelSelectorMaterial = new StandardMaterial('modelSelectorMaterial', this.scene);
-        this.modelSelectorMaterial.wireframe = false;
-        this.modelSelectorMaterial.disableDepthWrite = true;
-        this.modelSelectorMaterial.alpha = 0.3;
-      }
-
-      // Update material color
-      this.modelSelectorMaterial.diffuseColor = this.modelSelectorColor;
-      this.modelSelectorMaterial.emissiveColor = this.modelSelectorColor.scale(0.5);
-
       // Create meshes for all coordinates
       this.updateModelSelectorMeshes();
 
       logger.info('Model selector enabled', {
-        color: color,
+        defaultColor,
         watchBlocks,
         show,
         blockCount: selected.length,
@@ -1103,9 +1086,12 @@ export class SelectService {
       this.modelSelectorWatchBlocks = false;
       this.modelSelectorCoordinates = [];
 
-      // Dispose all meshes
-      this.modelSelectorMeshes.forEach(mesh => mesh.dispose());
-      this.modelSelectorMeshes = [];
+      // Dispose all meshes and materials
+      this.modelSelectorMeshes.forEach(({ mesh, material }) => {
+        mesh.dispose();
+        material.dispose();
+      });
+      this.modelSelectorMeshes.clear();
 
       logger.info('Model selector disabled');
     } catch (error) {
@@ -1128,7 +1114,7 @@ export class SelectService {
       this.modelSelectorVisible = visible;
 
       // Update mesh visibility
-      this.modelSelectorMeshes.forEach(mesh => {
+      this.modelSelectorMeshes.forEach(({ mesh }) => {
         mesh.setEnabled(visible);
       });
 
@@ -1141,22 +1127,22 @@ export class SelectService {
   /**
    * Add coordinates to model selector
    *
-   * @param selected List of coordinates to add
+   * @param selected List of coordinates with colors to add
    */
-  addToModelSelector(selected: Vector3[]): void {
+  addToModelSelector(selected: Vector3Color[]): void {
     try {
       if (!this.modelSelectorEnabled) {
         logger.warn('Cannot add to model selector: not enabled');
         return;
       }
 
-      // Add new coordinates (avoid duplicates)
+      // Add new coordinates (avoid duplicates based on position)
       for (const coord of selected) {
         const exists = this.modelSelectorCoordinates.some(
           c => c.x === coord.x && c.y === coord.y && c.z === coord.z
         );
         if (!exists) {
-          this.modelSelectorCoordinates.push(coord.clone());
+          this.modelSelectorCoordinates.push({ ...coord });
         }
       }
 
@@ -1175,16 +1161,16 @@ export class SelectService {
   /**
    * Remove coordinates from model selector
    *
-   * @param selected List of coordinates to remove
+   * @param selected List of coordinates to remove (color is ignored for removal)
    */
-  removeFromModelSelector(selected: Vector3[]): void {
+  removeFromModelSelector(selected: Vector3Color[]): void {
     try {
       if (!this.modelSelectorEnabled) {
         logger.warn('Cannot remove from model selector: not enabled');
         return;
       }
 
-      // Remove coordinates
+      // Remove coordinates (only check position, ignore color)
       this.modelSelectorCoordinates = this.modelSelectorCoordinates.filter(coord => {
         return !selected.some(
           s => s.x === coord.x && s.y === coord.y && s.z === coord.z
@@ -1206,9 +1192,9 @@ export class SelectService {
   /**
    * Get all coordinates in model selector
    *
-   * @returns List of Vector3 coordinates
+   * @returns List of Vector3Color coordinates
    */
-  getModelSelectorCoordinates(): Vector3[] {
+  getModelSelectorCoordinates(): Vector3Color[] {
     return [...this.modelSelectorCoordinates];
   }
 
@@ -1251,6 +1237,7 @@ export class SelectService {
    * Move all model selector blocks by an offset
    *
    * Moves all coordinates and updates meshes accordingly.
+   * Keeps the color of each element.
    *
    * @param offset Vector3 offset to move blocks by
    */
@@ -1266,13 +1253,14 @@ export class SelectService {
         return;
       }
 
-      // Move all coordinates by offset
+      // Move all coordinates by offset (keep color)
       this.modelSelectorCoordinates = this.modelSelectorCoordinates.map(coord => {
-        return new Vector3(
-          coord.x + offset.x,
-          coord.y + offset.y,
-          coord.z + offset.z
-        );
+        return {
+          x: coord.x + offset.x,
+          y: coord.y + offset.y,
+          z: coord.z + offset.z,
+          color: coord.color,
+        };
       });
 
       // Update meshes with new coordinates
@@ -1291,25 +1279,43 @@ export class SelectService {
    * Update model selector meshes based on current coordinates
    *
    * Creates or disposes meshes to match coordinate list.
+   * Each coordinate has its own material with individual color.
    */
   private updateModelSelectorMeshes(): void {
-    if (!this.scene || !this.modelSelectorMaterial) {
+    if (!this.scene) {
       return;
     }
 
-    // Dispose all existing meshes
-    this.modelSelectorMeshes.forEach(mesh => mesh.dispose());
-    this.modelSelectorMeshes = [];
+    // Dispose all existing meshes and materials
+    this.modelSelectorMeshes.forEach(({ mesh, material }) => {
+      mesh.dispose();
+      material.dispose();
+    });
+    this.modelSelectorMeshes.clear();
 
-    // Create mesh for each coordinate
+    // Create mesh for each coordinate with individual color
     for (const coord of this.modelSelectorCoordinates) {
+      const key = `${coord.x}_${coord.y}_${coord.z}`;
+
+      // Create mesh
       const mesh = MeshBuilder.CreateBox(
-        `modelSelector_${coord.x}_${coord.y}_${coord.z}`,
+        `modelSelector_${key}`,
         { size: 1.0 },
         this.scene
       );
 
-      mesh.material = this.modelSelectorMaterial;
+      // Create individual material for this mesh with its specific color
+      const material = new StandardMaterial(`modelSelectorMaterial_${key}`, this.scene);
+      material.wireframe = false;
+      material.disableDepthWrite = true;
+      material.alpha = 0.3;
+
+      // Parse color from hex string
+      const color3 = Color3.FromHexString(coord.color);
+      material.diffuseColor = color3;
+      material.emissiveColor = color3.scale(0.5);
+
+      mesh.material = material;
       mesh.isPickable = false;
       mesh.renderingGroupId = RENDERING_GROUPS.SELECTION_OVERLAY;
 
@@ -1320,19 +1326,20 @@ export class SelectService {
       const scale = 1.02;
       mesh.scaling.set(scale, scale, scale);
 
-      // Enable edge rendering
+      // Enable edge rendering with color
       mesh.enableEdgesRendering();
       mesh.edgesWidth = 3.0;
-      mesh.edgesColor = this.modelSelectorColor.toColor4(1.0);
+      mesh.edgesColor = color3.toColor4(1.0);
 
       // Set visibility
       mesh.setEnabled(this.modelSelectorVisible);
 
-      this.modelSelectorMeshes.push(mesh);
+      // Store mesh and material
+      this.modelSelectorMeshes.set(key, { mesh, material });
     }
 
     logger.debug('Model selector meshes updated', {
-      meshCount: this.modelSelectorMeshes.length,
+      meshCount: this.modelSelectorMeshes.size,
     });
   }
 
@@ -1340,20 +1347,30 @@ export class SelectService {
    * Handle new block from network (for watchBlocks mode)
    *
    * Called by NetworkService when new blocks are received in EDITOR mode.
+   * Converts blocks to Vector3Color using the default color set in enableModelSelector.
    *
-   * @param blocks List of new blocks
+   * @param blocks List of new block positions (without color)
    */
-  onNewBlocks(blocks: Vector3[]): void {
+  onNewBlocks(blocks: { x: number; y: number; z: number }[]): void {
     try {
       if (!this.modelSelectorEnabled || !this.modelSelectorWatchBlocks) {
         return;
       }
 
+      // Convert blocks to Vector3Color using default color
+      const coordinates: Vector3Color[] = blocks.map(b => ({
+        x: b.x,
+        y: b.y,
+        z: b.z,
+        color: this.modelSelectorDefaultColor,
+      }));
+
       // Add new blocks to model selector
-      this.addToModelSelector(blocks);
+      this.addToModelSelector(coordinates);
 
       logger.debug('New blocks added to model selector', {
         blockCount: blocks.length,
+        defaultColor: this.modelSelectorDefaultColor,
       });
     } catch (error) {
       ExceptionHandler.handle(error, 'SelectService.onNewBlocks');
@@ -1569,10 +1586,12 @@ export class SelectService {
     this.editHighlightMesh?.dispose();
     this.editHighlightMaterial?.dispose();
 
-    // Dispose model selector resources
-    this.modelSelectorMeshes.forEach(mesh => mesh.dispose());
-    this.modelSelectorMeshes = [];
-    this.modelSelectorMaterial?.dispose();
+    // Dispose model selector resources (meshes and materials)
+    this.modelSelectorMeshes.forEach(({ mesh, material }) => {
+      mesh.dispose();
+      material.dispose();
+    });
+    this.modelSelectorMeshes.clear();
 
     this.currentSelectedBlock = null;
     this.selectedEditBlock = null;
