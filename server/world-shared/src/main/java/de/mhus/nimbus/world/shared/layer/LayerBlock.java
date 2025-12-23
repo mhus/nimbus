@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.layer;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import de.mhus.nimbus.generated.types.Block;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LayerBlock {
 
     /**

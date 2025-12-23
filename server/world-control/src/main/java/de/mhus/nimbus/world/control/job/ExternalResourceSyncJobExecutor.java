@@ -1,0 +1,261 @@
+package de.mhus.nimbus.world.control.job;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.control.service.sync.ResourceSyncService;
+import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
+import de.mhus.nimbus.world.shared.job.JobExecutionException;
+import de.mhus.nimbus.world.shared.job.JobExecutor;
+import de.mhus.nimbus.world.shared.job.WJob;
+import de.mhus.nimbus.world.shared.world.WAnything;
+import de.mhus.nimbus.world.shared.world.WAnythingService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Job executor for external resource sync operations (export and import).
+ *
+ * Supports two job types via WJob.type:
+ * - "export": Export world data to filesystem
+ * - "import": Import world data from filesystem
+ *
+ * Parameters:
+ * - name (required): Name of the ExternalResource in WAnything collection 'externalResource'
+ * - force (optional): "true" or "false" (default: "false") - force sync even if timestamps unchanged
+ * - remove (optional, import only): "true" or "false" (default: "false") - remove overtaken entities
+ * - worldId: Provided by job.getWorldId()
+ */
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class ExternalResourceSyncJobExecutor implements JobExecutor {
+
+    private static final String COLLECTION_NAME = "externalResource";
+
+    private final WAnythingService anythingService;
+    private final ResourceSyncService syncService;
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public String getExecutorName() {
+        return "externalResourceSync";
+    }
+
+    @Override
+    public JobResult execute(WJob job) throws JobExecutionException {
+        String jobType = job.getType();
+
+        if ("export".equals(jobType)) {
+            return executeExport(job);
+        } else if ("import".equals(jobType)) {
+            return executeImport(job);
+        } else {
+            throw new JobExecutionException("Unknown job type: " + jobType + " (expected 'export' or 'import')");
+        }
+    }
+
+    /**
+     * Execute export operation.
+     */
+    private JobResult executeExport(WJob job) throws JobExecutionException {
+        try {
+            // Parse parameters
+            Map<String, String> params = job.getParameters();
+            String name = params.get("name");
+            if (name == null || name.isBlank()) {
+                throw new JobExecutionException("Missing required parameter: name");
+            }
+
+            boolean force = parseBooleanParameter(params, "force", false);
+            boolean remove = parseBooleanParameter(params, "remove", false);
+
+            // Get and validate worldId
+            WorldId worldId = getWorldId(job);
+            String worldIdStr = job.getWorldId();
+
+            log.info("Starting export job: worldId={} name={} force={} remove={}", worldIdStr, name, force, remove);
+
+            // Load ExternalResource
+            ExternalResourceDTO dto = loadExternalResource(worldIdStr, name);
+
+            // Execute export
+            log.info("Executing export: worldId={} localPath={} types={} force={} remove={}",
+                    worldId, dto.getLocalPath(), dto.getTypes(), force, remove);
+
+            ResourceSyncService.ExportResult result = syncService.export(worldId, dto, force, remove);
+
+            // Update ExternalResourceDTO with sync result
+            updateSyncStatus(worldIdStr, name, dto, result.timestamp(),
+                    result.success() ? "Success" : result.errorMessage());
+
+            // Return result
+            if (result.success()) {
+                String resultMessage = String.format(
+                        "Export completed successfully: worldId=%s name=%s exported=%d deleted=%d types=%s",
+                        worldId, name, result.entityCount(), result.deletedCount(), result.exportedByType()
+                );
+                log.info(resultMessage);
+                return JobResult.ofSuccess(resultMessage);
+            } else {
+                String errorMessage = String.format(
+                        "Export failed: worldId=%s name=%s error=%s",
+                        worldId, name, result.errorMessage()
+                );
+                log.error(errorMessage);
+                return JobResult.ofFailure(errorMessage);
+            }
+
+        } catch (JobExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to execute export job", e);
+            throw new JobExecutionException("Export job failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Execute import operation.
+     */
+    private JobResult executeImport(WJob job) throws JobExecutionException {
+        try {
+            // Parse parameters
+            Map<String, String> params = job.getParameters();
+            String name = params.get("name");
+            if (name == null || name.isBlank()) {
+                throw new JobExecutionException("Missing required parameter: name");
+            }
+
+            boolean force = parseBooleanParameter(params, "force", false);
+            boolean remove = parseBooleanParameter(params, "remove", false);
+
+            // Get and validate worldId
+            WorldId worldId = getWorldId(job);
+            String worldIdStr = job.getWorldId();
+
+            log.info("Starting import job: worldId={} name={} force={} remove={}",
+                    worldIdStr, name, force, remove);
+
+            // Load ExternalResource
+            ExternalResourceDTO dto = loadExternalResource(worldIdStr, name);
+
+            // Execute import
+            log.info("Executing import: worldId={} localPath={} types={} force={} remove={}",
+                    worldId, dto.getLocalPath(), dto.getTypes(), force, remove);
+
+            ResourceSyncService.ImportResult result = syncService.importData(worldId, dto, force, remove);
+
+            // Update ExternalResourceDTO with sync result
+            updateSyncStatus(worldIdStr, name, dto, result.timestamp(),
+                    result.success() ? "Success" : result.errorMessage());
+
+            // Return result
+            if (result.success()) {
+                String resultMessage = String.format(
+                        "Import completed successfully: worldId=%s name=%s imported=%d deleted=%d types=%s",
+                        worldId, name, result.imported(), result.deleted(), result.importedByType()
+                );
+                log.info(resultMessage);
+                return JobResult.ofSuccess(resultMessage);
+            } else {
+                String errorMessage = String.format(
+                        "Import failed: worldId=%s name=%s error=%s",
+                        worldId, name, result.errorMessage()
+                );
+                log.error(errorMessage);
+                return JobResult.ofFailure(errorMessage);
+            }
+
+        } catch (JobExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to execute import job", e);
+            throw new JobExecutionException("Import job failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get and validate WorldId from job.
+     */
+    private WorldId getWorldId(WJob job) throws JobExecutionException {
+        String worldIdStr = job.getWorldId();
+        if (worldIdStr == null || worldIdStr.isBlank()) {
+            throw new JobExecutionException("Missing worldId on job");
+        }
+
+        try {
+            WorldId.validate(worldIdStr);
+            return WorldId.of(worldIdStr).orElseThrow(
+                    () -> new JobExecutionException("Invalid worldId: " + worldIdStr)
+            );
+        } catch (Exception e) {
+            throw new JobExecutionException("Invalid worldId: " + worldIdStr, e);
+        }
+    }
+
+    /**
+     * Load ExternalResource from WAnything.
+     */
+    private ExternalResourceDTO loadExternalResource(String worldIdStr, String name) throws JobExecutionException {
+        log.debug("Searching for ExternalResource: worldId={} collection={} name={}",
+                worldIdStr, COLLECTION_NAME, name);
+
+        Optional<WAnything> entityOpt = anythingService.findByWorldIdAndCollectionAndName(
+                worldIdStr,
+                COLLECTION_NAME,
+                name
+        );
+
+        if (entityOpt.isEmpty()) {
+            log.error("ExternalResource not found: worldId={} collection={} name={}",
+                    worldIdStr, COLLECTION_NAME, name);
+            throw new JobExecutionException("ExternalResource not found: " + name + " for worldId: " + worldIdStr);
+        }
+
+        log.info("Found ExternalResource: worldId={} name={}", worldIdStr, name);
+
+        WAnything entity = entityOpt.get();
+
+        try {
+            return objectMapper.convertValue(entity.getData(), ExternalResourceDTO.class);
+        } catch (Exception e) {
+            throw new JobExecutionException("Failed to parse ExternalResourceDTO: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Update sync status in WAnything.
+     */
+    private void updateSyncStatus(String worldIdStr, String name, ExternalResourceDTO dto,
+                                   java.time.Instant timestamp, String result) {
+        try {
+            Optional<WAnything> entityOpt = anythingService.findByWorldIdAndCollectionAndName(
+                    worldIdStr,
+                    COLLECTION_NAME,
+                    name
+            );
+
+            if (entityOpt.isPresent()) {
+                WAnything entity = entityOpt.get();
+                dto.setLastSync(timestamp);
+                dto.setLastSyncResult(result);
+                entity.setData(objectMapper.convertValue(dto, Map.class));
+                entity.touchUpdate();
+                anythingService.save(entity);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to update sync status", e);
+        }
+    }
+
+    private boolean parseBooleanParameter(Map<String, String> params, String key, boolean defaultValue) {
+        String value = params.get(key);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return Boolean.parseBoolean(value);
+    }
+}

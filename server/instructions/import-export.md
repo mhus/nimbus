@@ -26,11 +26,155 @@ ExternalResourceDTO:
 - types : List<String> (liste der zu synchronisierenden Typen, z.b. assets, backdrops, blocktypes, layers ...)
 - autoGit: boolean // try to handle git repository, pull, commit, push
 
-## Export
+## ResourceSyncService
 
+Erstelle in world-control einen ResourceSyncService der dafuer zustaendig ist daten zu exportieren und importieren. Er
+hält eine lazy liste von ResourceSyncType.
+- export(world: WorldId, definition ExternalResourceDTO, boolean force)
+- import(world: WorldId, definition ExternalResourceDTO)
 
+Erstelle das Interface ResourceSyncType:
+- name: String
+- export(dataPath: Path, world: WorldId, boolean force): void
+- import(dataPath: Path, world: WorldId): void
+- removeOvertaken(dataPath: Path, world: World): void // loescht nicht mehr vorhandene Eintraege
 
+in die Resource YAML wird ein updatedAt Zeitstempel gespeichert. Dieser wird beim Exportieren
+verwendet um zu erkennen ob ein Eintrag aktualisiert wurde.
 
+Resourcen werden möglichs so gespeichert, das 
+- sie durch ein diff/patch tool gut vergleichbar sind.
+- sie ebi gleichen daten kein update im content haben
 
-## Import
+## AssetResourceSyncType
+
+Exportiert in den subfolder "assets" alle Assets als YAML dateien und die binary daten.
+Die daten werden wie in den assets in die richtigen ordner gespeichert.
+Daneben immer eine *.info.yaml Datei. z.b.
+
+```text
+assets/textures/blocks/stone.png
+assets/textures/blocks/stone.png.info.yaml
+```
+
+Beim import werden entsprechende *.info.yaml dateien gesucht und entsprechend importiert.
+
+## BackdropResourceSyncType
+
+Exportiert alle Backdrops als YAML dateien in den ordner "backdrops".
+
+```text
+backdrops/none.yaml
+```
+
+## BlockTypeResourceSyncType
+
+Exportiert alle BlockTypes als YAML dateien in den ordner "blocktypes".
+
+```text
+blocktypes/stone.yaml
+```
+
+## ModelLayerResourceSyncType
+
+Alle WLayer vom typ model werden gesyncht in den Ordner "models".
+
+Pro WLayer wird ein Oordner erstellt und darin für jedes model eine datei.
+
+Im Layer ordner in einer datei _info.yaml werden die Daten aus dem WLayer gespeichert.
+
+```text
+models/NewTown/_info.yaml
+models/NewTown/TownHall.yaml
+```
+
+## GroundLayerResourceSyncType
+
+Alle GroundLayer werden gesyncht in den Ordner "ground".
+Pro GroundLayer wird eine ordner erstellt. In diesem ordner ist eine _info.yaml die Daten aus dem WLayer beinhält.
+Alle chunks (WLayerTerrain) werden in separate Dateien gespeichert mit dem Namen chunk_x_y.yaml.
+Da es viele Dateien sein konnen, werden diese nochmal in unterordner gespeichert. Dabei wird chunk % 100 gerechnet.
+Also cx % 100 und cz % 100. Als trenner _ nutzen, damit auch negative zahlen gut sichtbar sind.
+
+```text
+ground/groud/_info.yaml
+ground/ground/0_0/chunk_0_0.yaml
+ground/ground/-1_1/chunk_-18_177.yaml
+```
+
+## WAnything und Job
+
+[x] Erstelle einen JobExecutor zum exportieren.
+Es wird beim Job ein WAnything name mitgegeben, der in der collection 'externalResource' gesucht wird.
+Job:
+- name: String
+- force: boolean
+- worldId ist am Job
+Ablauf:
+- suche das WAnything objekt, lade das ExternalResourceDTO data objekt
+- starte auf dem ResourceSyncService.export(worldId, data, force)
+
+[ ] Erstelle einen JobExecutor zum importieren.
+Es wird beim Job ein WAnything name mitgegeben, der in der collection 'externalResource' gesucht wird.
+Job:
+- name: String
+- force: boolean
+- remove: boolean
+- worldId ist am Job
+Ablauf:
+- suche das WAnything objekt, lade das ExternalResourceDTO data objekt
+- starte auf dem ResourceSyncService.import(worldId, data, force)
+- wenn remove true, dann starte auf dem ResourceSyncService.removeOvertaken(dataPath, world)
+
+Anpassung: eigentlich kenn ein jobExecuter fuer bedes genutzt werden mit zwei verschiednenen job types
+- export
+- import
+Nenne den jobExecutor dann "externalResourceSync"
+
+```text
+ Zusammenfassung der Änderungen:
+
+  1. removeOvertaken wurde integriert
+
+  - ✅ Entfernt als separate Methode im Interface
+  - ✅ Integriert als boolean removeOvertaken Parameter in importData()
+  - ✅ Effizienter: Nur ein Filesystem-Scan statt zwei
+
+  2. Alle Implementierungen aktualisiert:
+
+  - ✅ BackdropResourceSyncType
+  - ✅ BlockTypeResourceSyncType
+  - ✅ AssetResourceSyncType
+  - ✅ ModelLayerResourceSyncType
+  - ✅ GroundLayerResourceSyncType
+
+  3. API aktualisiert:
+
+  - ✅ ResourceSyncService: importData(worldId, definition, force, removeOvertaken)
+  - ✅ ExternalResourceController: Import-Endpoint mit remove Parameter
+  - ✅ ExternalResourceSyncJobExecutor: Kombinierter Job für Export/Import
+
+  4. Job Executor Details:
+
+  Executor Name: externalResourceSync
+
+  Export Job (type: "export"):
+  Parameters: name, force
+
+  Import Job (type: "import"):
+  Parameters: name, force, remove
+
+  - remove = true: Löscht DB-Entities, die nicht im Filesystem sind
+  - remove = false: Nur Import, keine Löschungen (DB behält zusätzliche Entities)
+
+  Das System ist jetzt sauber und effizient strukturiert!
+```
+
+## Git Control
+
+[ ] wenn im ExternalResourceDTO autoGit true ist, dann versuche den git repository zu synchronisieren.
+Versuche dazu eine library wie jgit zu nutzen. Erstelle eine strategy RepsoitoryControlWithJGit
+zu erstellen und ein Interface RepositoryControl. Damit die funktionalitaet austauschbar ist.
+- erweitere ggf. ExternalResourceDTO um neue Attribute fuer gitRepositoryUrl
+- sei nicht vorsichtig. Es ist wichtig die daten zu sichern, nutze z.b. git reset -HARD
 
