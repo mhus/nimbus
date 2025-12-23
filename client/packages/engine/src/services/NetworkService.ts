@@ -326,7 +326,7 @@ export class NetworkService {
       // 3. Extract compressed data
       const compressedBytes = new Uint8Array(data, 4 + headerLength);
 
-      logger.info('Received binary chunk', {
+      logger.debug('Received binary chunk', {
         cx: header.cx,
         cz: header.cz,
         headerSize: headerLength,
