@@ -754,8 +754,13 @@ function handleCanvasClick(event: MouseEvent) {
   if (!canvas) return;
 
   const rect = canvas.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
-  const clickY = event.clientY - rect.top;
+
+  // Account for canvas scaling (CSS size vs actual canvas size)
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const clickX = (event.clientX - rect.left) * scaleX;
+  const clickY = (event.clientY - rect.top) * scaleY;
 
   // Find clicked block using reverse rendering order (front to back for hit detection)
   const sortedBlocks = [...blockCoordinates.value].sort((a, b) => {
@@ -799,6 +804,14 @@ function handleCanvasClick(event: MouseEvent) {
 // Handle canvas hover (optional - for highlighting)
 function handleCanvasHover(event: MouseEvent) {
   // Could implement hover highlighting here
+  // Note: If implementing, use the same scaling logic as handleCanvasClick:
+  // const canvas = canvasRef.value;
+  // if (!canvas) return;
+  // const rect = canvas.getBoundingClientRect();
+  // const scaleX = canvas.width / rect.width;
+  // const scaleY = canvas.height / rect.height;
+  // const hoverX = (event.clientX - rect.left) * scaleX;
+  // const hoverY = (event.clientY - rect.top) * scaleY;
 }
 
 // Handle pan view navigation (moves the visible area)
