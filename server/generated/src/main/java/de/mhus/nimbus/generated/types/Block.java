@@ -11,7 +11,7 @@ package de.mhus.nimbus.generated.types;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class Block {
-    private Vector3 position;
+    private de.mhus.nimbus.generated.types.Vector3Int position;
     @com.fasterxml.jackson.annotation.JsonProperty("blockTypeId")
     private String blockTypeId;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

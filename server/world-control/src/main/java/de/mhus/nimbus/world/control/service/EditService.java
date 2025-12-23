@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.EditAction;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import de.mhus.nimbus.world.shared.layer.LayerType;
@@ -40,7 +41,7 @@ public class EditService {
 
     private static final Block AIR_BLOCK = Block.builder()
             .blockTypeId("0")
-            .position(Vector3.builder().x(0.0).y(0.0).z(0.0).build())
+            .position(Vector3Int.builder().x(0).y(0).z(0).build())
             .build();
     private final WorldRedisService redisService;
     private final WLayerService layerService;
@@ -134,7 +135,7 @@ public class EditService {
                 Optional<WLayer> layerOpt = layerService.findLayer(worldId, state.getSelectedLayer());
                 if (layerOpt.isPresent() && layerOpt.get().getLayerType() == LayerType.MODEL) {
                     // Display model blocks in client
-                    displayModelInClient(worldId, sessionId, layerOpt.get());
+                    displayModelInClient(worldId, sessionId, layerOpt.get(), state.getSelectedGroup());
                 }
             }
         } else {
@@ -454,10 +455,10 @@ public class EditService {
         Block pastedBlock = BlockUtil.cloneBlock(originalBlock);
 
         // Set new position
-        pastedBlock.setPosition(Vector3.builder()
-                .x((double) x)
-                .y((double) y)
-                .z((double) z)
+        pastedBlock.setPosition(Vector3Int.builder()
+                .x(x)
+                .y(y)
+                .z(z)
                 .build());
 
         // Save to Redis overlay using BlockOverlayService
@@ -814,10 +815,10 @@ public class EditService {
 
         // Set position in block if not already set
         if (block.getPosition() == null) {
-            block.setPosition(Vector3.builder()
-                    .x((double) x)
-                    .y((double) y)
-                    .z((double) z)
+            block.setPosition(Vector3Int.builder()
+                    .x(x)
+                    .y(y)
+                    .z(z)
                     .build());
         }
 
@@ -856,7 +857,7 @@ public class EditService {
         if (state.getSelectedLayer() != null) {
             Optional<WLayer> layerOpt = layerService.findLayer(worldId, state.getSelectedLayer());
             if (layerOpt.isPresent() && layerOpt.get().getLayerType() == LayerType.MODEL) {
-                displayModelInClient(worldId, sessionId, layerOpt.get());
+                displayModelInClient(worldId, sessionId, layerOpt.get(),state.getSelectedGroup());
             }
         }
     }
@@ -869,7 +870,7 @@ public class EditService {
      * @param sessionId Session identifier
      * @param layer     Layer with MODEL type
      */
-    private void displayModelInClient(String worldId, String sessionId, WLayer layer) {
+    private void displayModelInClient(String worldId, String sessionId, WLayer layer, int selectedGroupId) {
         // Get playerUrl from WSession
         Optional<WSession> wSession = wSessionService.getWithPlayerUrl(sessionId);
         if (wSession.isEmpty() || Strings.isBlank(wSession.get().getPlayerUrl())) {
@@ -892,7 +893,14 @@ public class EditService {
             positionsList.add(String.valueOf(pos[0]));
             positionsList.add(String.valueOf(pos[1]));
             positionsList.add(String.valueOf(pos[2]));
-            positionsList.add("#00ff00"); // for existing blocks
+            if (pos[4] == 0 && pos[5] == 0 && pos[6] == 0) {
+                positionsList.add("#ff0000"); // the root block
+            } else
+            if (pos[3] == selectedGroupId) {
+                positionsList.add("#ffff00"); // selected group
+            } else {
+                positionsList.add("#00ff00"); // for existing blocks
+            }
         }
 
         // Build command context

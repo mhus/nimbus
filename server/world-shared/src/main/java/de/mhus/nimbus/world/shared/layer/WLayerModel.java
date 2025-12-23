@@ -153,15 +153,15 @@ public class WLayerModel {
                 .filter(layerBlock -> layerBlock.getBlock() != null)
                 .filter(layerBlock -> layerBlock.getBlock().getPosition() != null)
                 .map(layerBlock -> {
-                    de.mhus.nimbus.generated.types.Vector3 relativePos = layerBlock.getBlock().getPosition();
+                    de.mhus.nimbus.generated.types.Vector3Int relativePos = layerBlock.getBlock().getPosition();
                     return new int[]{
-                            mountX + (int) relativePos.getX(),
-                            mountY + (int) relativePos.getY(),
-                            mountZ + (int) relativePos.getZ(),
+                            mountX + relativePos.getX(),
+                            mountY + relativePos.getY(),
+                            mountZ + relativePos.getZ(),
                             layerBlock.getGroup(),
-                            (int) relativePos.getX(),
-                            (int) relativePos.getY(),
-                            (int) relativePos.getZ(),
+                            relativePos.getX(),
+                            relativePos.getY(),
+                            relativePos.getZ(),
                     };
                 });
     }

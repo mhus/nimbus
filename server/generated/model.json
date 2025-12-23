@@ -2777,8 +2777,8 @@
         "type" : "Vector3",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "de.mhus.nimbus.generated.types.Vector3Int",
+        "comment" : "// javaType: de.mhus.nimbus.generated.types.Vector3Int"
       }, {
         "name" : "blockTypeId",
         "type" : "string",

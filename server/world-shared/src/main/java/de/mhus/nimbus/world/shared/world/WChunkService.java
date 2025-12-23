@@ -5,6 +5,7 @@ import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.shared.storage.StorageService;
 import de.mhus.nimbus.shared.types.SchemaVersion;
 import de.mhus.nimbus.shared.types.WorldId;
@@ -412,7 +413,7 @@ public class WChunkService {
     private Block createBlock(int x, int y, int z, String blockTypeId) {
         Block block = new Block();
 
-        Vector3 position = new Vector3();
+        Vector3Int position = new Vector3Int();
         position.setX(x);
         position.setY(y);
         position.setZ(z);

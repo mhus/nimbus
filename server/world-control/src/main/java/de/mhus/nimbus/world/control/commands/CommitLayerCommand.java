@@ -397,10 +397,10 @@ public class CommitLayerCommand implements Command {
 
                 // Update block position to relative (with rotation applied)
                 Block relBlock = BlockUtil.cloneBlock(block);
-                relBlock.setPosition(de.mhus.nimbus.generated.types.Vector3.builder()
-                        .x((double) finalX)
-                        .y((double) finalY)
-                        .z((double) finalZ)
+                relBlock.setPosition(de.mhus.nimbus.generated.types.Vector3Int.builder()
+                        .x(finalX)
+                        .y(finalY)
+                        .z(finalZ)
                         .build());
 
                 if (BlockUtil.isAirType(block.getBlockTypeId())) {

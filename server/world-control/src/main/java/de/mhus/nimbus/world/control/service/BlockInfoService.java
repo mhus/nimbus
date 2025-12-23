@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
@@ -231,8 +232,8 @@ public class BlockInfoService {
             for (de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock : chunkData.getBlocks()) {
                 Block block = layerBlock.getBlock();
                 if (block != null && block.getPosition() != null) {
-                    Vector3 pos = block.getPosition();
-                    if ((int) pos.getX() == x && (int) pos.getY() == y && (int) pos.getZ() == z) {
+                    Vector3Int pos = block.getPosition();
+                    if (pos.getX() == x && pos.getY() == y && pos.getZ() == z) {
                         return block;
                     }
                 }
@@ -270,11 +271,11 @@ public class BlockInfoService {
             for (de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock : model.getContent()) {
                 Block block = layerBlock.getBlock();
                 if (block != null && block.getPosition() != null) {
-                    Vector3 pos = block.getPosition();
+                    Vector3Int pos = block.getPosition();
                     if ((int) pos.getX() == relativeX && (int) pos.getY() == relativeY && (int) pos.getZ() == relativeZ) {
                         // Create new block with absolute position
                         Block absoluteBlock = Block.builder()
-                                .position(Vector3.builder().x((double) x).y((double) y).z((double) z).build())
+                                .position(Vector3Int.builder().x(x).y(y).z(z).build())
                                 .blockTypeId(block.getBlockTypeId())
                                 .offsets(block.getOffsets())
                                 .cornerHeights(block.getCornerHeights())
@@ -321,11 +322,11 @@ public class BlockInfoService {
         // Find block at position (Vector3 uses doubles, need int comparison)
         if (chunkData.getBlocks() != null) {
             for (Block block : chunkData.getBlocks()) {
-                Vector3 pos = block.getPosition();
+                Vector3Int pos = block.getPosition();
                 if (pos != null &&
-                    (int)pos.getX() == x &&
-                    (int)pos.getY() == y &&
-                    (int)pos.getZ() == z) {
+                    pos.getX() == x &&
+                    pos.getY() == y &&
+                    pos.getZ() == z) {
                     log.debug("Found block in chunk: pos=({},{},{}) blockTypeId={}",
                             x, y, z, block.getBlockTypeId());
                     return block;
@@ -342,10 +343,10 @@ public class BlockInfoService {
      * Create air block at position.
      */
     private Block createAirBlock(int x, int y, int z) {
-        Vector3 position = Vector3.builder()
-                .x((double) x)
-                .y((double) y)
-                .z((double) z)
+        Vector3Int position = Vector3Int.builder()
+                .x(x)
+                .y(y)
+                .z(z)
                 .build();
 
         Block block = Block.builder()

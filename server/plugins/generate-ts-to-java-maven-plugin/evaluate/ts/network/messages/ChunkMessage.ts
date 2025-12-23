@@ -47,7 +47,7 @@ export interface ChunkDataTransferObject {
    * GZIP-compressed JSON as byte array
    * If present, decompress and restore b/h/backdrop fields
    */
-  c?: Uint8Array;
+  c?: Uint8Array; // javaType: int[][]
 
   /** Backdrop data for chunk edges */
   backdrop?: {

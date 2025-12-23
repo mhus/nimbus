@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.shared.world;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Vector3Int;
 import lombok.experimental.UtilityClass;
 
 import java.util.Optional;
@@ -33,14 +34,14 @@ public class BlockUtil {
      * @param position Vector3 position
      * @return Position key string
      */
-    public static String positionKey(Vector3 position) {
+    public static String positionKey(Vector3Int position) {
         if (position == null) {
             return "0:0:0";
         }
         return String.format("%d:%d:%d",
-                (int) position.getX(),
-                (int) position.getY(),
-                (int) position.getZ());
+                position.getX(),
+                position.getY(),
+                position.getZ());
     }
 
     /**

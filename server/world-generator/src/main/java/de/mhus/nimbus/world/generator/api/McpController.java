@@ -675,10 +675,10 @@ public class McpController extends BaseEditorController {
             // Convert request blocks to LayerBlocks
             List<LayerBlock> newBlocks = request.blocks().stream()
                     .map(b -> {
-                        de.mhus.nimbus.generated.types.Vector3 pos = new de.mhus.nimbus.generated.types.Vector3();
-                        pos.setX((float) b.x());
-                        pos.setY((float) b.y());
-                        pos.setZ((float) b.z());
+                        de.mhus.nimbus.generated.types.Vector3Int pos = new de.mhus.nimbus.generated.types.Vector3Int();
+                        pos.setX(b.x());
+                        pos.setY(b.y());
+                        pos.setZ(b.z());
 
                         Block block = Block.builder()
                                 .position(pos)

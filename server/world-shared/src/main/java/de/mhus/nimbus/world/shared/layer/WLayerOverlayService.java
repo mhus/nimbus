@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.shared.storage.StorageService;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
@@ -249,7 +250,7 @@ public class WLayerOverlayService {
                 if (worldX >= chunkMinX && worldX <= chunkMaxX &&
                         worldZ >= chunkMinZ && worldZ <= chunkMaxZ) {
 
-                    Vector3 worldPos = new Vector3();
+                    Vector3Int worldPos = new Vector3Int();
                     worldPos.setX(worldX);
                     worldPos.setY(worldY);
                     worldPos.setZ(worldZ);
@@ -280,8 +281,8 @@ public class WLayerOverlayService {
     /**
      * Generate block key from position.
      */
-    private String blockKey(Vector3 pos) {
-        return (int) pos.getX() + ":" + (int) pos.getY() + ":" + (int) pos.getZ();
+    private String blockKey(Vector3Int pos) {
+        return pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
     }
 
     /**

@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.generator.generator;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.RotationXY;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.world.shared.job.JobExecutionException;
 import de.mhus.nimbus.world.shared.job.JobExecutor;
 import de.mhus.nimbus.world.shared.job.WJob;
@@ -167,7 +168,7 @@ public abstract class AbstractTerrainGenerator implements JobExecutor {
     protected Block createBlock(int x, int y, int z, String blockTypeId) {
         return Block.builder()
                 .blockTypeId(blockTypeId)
-                .position(Vector3.builder().x(x).y(y).z(z).build())
+                .position(Vector3Int.builder().x(x).y(y).z(z).build())
                 .rotation(RotationXY.builder().x(0).y(0).build())
                 .build();
     }

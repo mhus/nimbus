@@ -15,5 +15,6 @@ public class ChunkDataTransferObject {
     private java.util.List<ItemBlockRef> i;
     private java.util.List<HeightData> h;
     private java.util.List<AreaData> a;
+    private int[][] c;
     private ChunkDataTransferObjectBackdropDTO backdrop;
 }

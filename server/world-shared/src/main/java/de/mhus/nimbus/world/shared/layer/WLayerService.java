@@ -629,7 +629,7 @@ public class WLayerService {
                 if (worldX >= chunkMinX && worldX <= chunkMaxX &&
                         worldZ >= chunkMinZ && worldZ <= chunkMaxZ) {
 
-                    de.mhus.nimbus.generated.types.Vector3 worldPos = new de.mhus.nimbus.generated.types.Vector3();
+                    de.mhus.nimbus.generated.types.Vector3Int worldPos = new de.mhus.nimbus.generated.types.Vector3Int();
                     worldPos.setX(worldX);
                     worldPos.setY(worldY);
                     worldPos.setZ(worldZ);
@@ -781,7 +781,7 @@ public class WLayerService {
                 }
 
                 // Get original position
-                de.mhus.nimbus.generated.types.Vector3 originalPos = block.getBlock().getPosition();
+                de.mhus.nimbus.generated.types.Vector3Int originalPos = block.getBlock().getPosition();
                 int x = (int) originalPos.getX();
                 int y = (int) originalPos.getY();
                 int z = (int) originalPos.getZ();
@@ -790,7 +790,7 @@ public class WLayerService {
                 int[] rotated = rotatePosition(x, z, accumulatedRotation);
 
                 // Then add accumulated mount offsets
-                de.mhus.nimbus.generated.types.Vector3 adjustedPos = new de.mhus.nimbus.generated.types.Vector3();
+                de.mhus.nimbus.generated.types.Vector3Int adjustedPos = new de.mhus.nimbus.generated.types.Vector3Int();
                 adjustedPos.setX(rotated[0] + mountXOffset);
                 adjustedPos.setY(y + mountYOffset);
                 adjustedPos.setZ(rotated[1] + mountZOffset);
@@ -1015,7 +1015,7 @@ public class WLayerService {
             if (worldX >= chunkMinX && worldX <= chunkMaxX &&
                     worldZ >= chunkMinZ && worldZ <= chunkMaxZ) {
 
-                de.mhus.nimbus.generated.types.Vector3 worldPos = new de.mhus.nimbus.generated.types.Vector3();
+                de.mhus.nimbus.generated.types.Vector3Int worldPos = new de.mhus.nimbus.generated.types.Vector3Int();
                 worldPos.setX(worldX);
                 worldPos.setY(worldY);
                 worldPos.setZ(worldZ);
@@ -1051,8 +1051,8 @@ public class WLayerService {
     /**
      * Generate block key from position.
      */
-    private String blockKey(de.mhus.nimbus.generated.types.Vector3 pos) {
-        return (int) pos.getX() + ":" + (int) pos.getY() + ":" + (int) pos.getZ();
+    private String blockKey(de.mhus.nimbus.generated.types.Vector3Int pos) {
+        return pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
     }
 
     /**
@@ -1060,7 +1060,7 @@ public class WLayerService {
      */
     private de.mhus.nimbus.generated.types.Block cloneBlockWithPosition(
             de.mhus.nimbus.generated.types.Block source,
-            de.mhus.nimbus.generated.types.Vector3 newPosition) {
+            de.mhus.nimbus.generated.types.Vector3Int newPosition) {
         try {
             String json = objectMapper.writeValueAsString(source);
             de.mhus.nimbus.generated.types.Block cloned = objectMapper.readValue(json, de.mhus.nimbus.generated.types.Block.class);
@@ -1179,7 +1179,7 @@ public class WLayerService {
 
         for (LayerBlock block : content) {
             if (block.getBlock() != null && block.getBlock().getPosition() != null) {
-                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                de.mhus.nimbus.generated.types.Vector3Int pos = block.getBlock().getPosition();
                 sumX += pos.getX();
                 sumY += pos.getY();
                 sumZ += pos.getZ();
@@ -1202,7 +1202,7 @@ public class WLayerService {
         // Shift all block coordinates
         for (LayerBlock block : content) {
             if (block.getBlock() != null && block.getBlock().getPosition() != null) {
-                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                de.mhus.nimbus.generated.types.Vector3Int pos = block.getBlock().getPosition();
                 pos.setX(pos.getX() - offsetX);
                 pos.setY(pos.getY() - offsetY);
                 pos.setZ(pos.getZ() - offsetZ);
@@ -1255,7 +1255,7 @@ public class WLayerService {
         // Shift all block coordinates
         for (LayerBlock block : content) {
             if (block.getBlock() != null && block.getBlock().getPosition() != null) {
-                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                de.mhus.nimbus.generated.types.Vector3Int pos = block.getBlock().getPosition();
                 pos.setX(pos.getX() - offsetX);
                 pos.setY(pos.getY() - offsetY);
                 pos.setZ(pos.getZ() - offsetZ);
@@ -1308,7 +1308,7 @@ public class WLayerService {
         // Shift all block coordinates
         for (LayerBlock block : content) {
             if (block.getBlock() != null && block.getBlock().getPosition() != null) {
-                de.mhus.nimbus.generated.types.Vector3 pos = block.getBlock().getPosition();
+                de.mhus.nimbus.generated.types.Vector3Int pos = block.getBlock().getPosition();
                 pos.setX(pos.getX() + offsetX);
                 pos.setY(pos.getY() + offsetY);
                 pos.setZ(pos.getZ() + offsetZ);
@@ -1595,8 +1595,8 @@ public class WLayerService {
                         continue;
                     }
 
-                    de.mhus.nimbus.generated.types.Vector3 pos = layerBlock.getBlock().getPosition();
-                    if ((int) pos.getX() == x && (int) pos.getY() == y && (int) pos.getZ() == z) {
+                    de.mhus.nimbus.generated.types.Vector3Int pos = layerBlock.getBlock().getPosition();
+                    if (pos.getX() == x && pos.getY() == y && pos.getZ() == z) {
                         // Found block at this position
 
                         // For MODEL layers: Find which model contains this block
@@ -1671,18 +1671,18 @@ public class WLayerService {
                 continue;
             }
 
-            de.mhus.nimbus.generated.types.Vector3 relativePos = layerBlock.getBlock().getPosition();
+            de.mhus.nimbus.generated.types.Vector3Int relativePos = layerBlock.getBlock().getPosition();
 
             // Apply rotation to relative position
             int[] rotatedPos = applyRotation(
-                    (int) relativePos.getX(),
-                    (int) relativePos.getZ(),
+                    relativePos.getX(),
+                    relativePos.getZ(),
                     model.getRotation()
             );
 
             // Calculate world position with rotation
             int blockWorldX = model.getMountX() + rotatedPos[0];
-            int blockWorldY = model.getMountY() + (int) relativePos.getY();
+            int blockWorldY = model.getMountY() + relativePos.getY();
             int blockWorldZ = model.getMountZ() + rotatedPos[1];
 
             if (blockWorldX == worldX && blockWorldY == worldY && blockWorldZ == worldZ) {

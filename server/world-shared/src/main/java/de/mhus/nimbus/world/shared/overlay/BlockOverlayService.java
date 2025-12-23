@@ -102,10 +102,10 @@ public class BlockOverlayService {
      */
     public String deleteBlockOverlay(String worldId, String sessionId, int x, int y, int z) {
         // Create AIR block
-        de.mhus.nimbus.generated.types.Vector3 position = de.mhus.nimbus.generated.types.Vector3.builder()
-                .x((double) x)
-                .y((double) y)
-                .z((double) z)
+        de.mhus.nimbus.generated.types.Vector3Int position = de.mhus.nimbus.generated.types.Vector3Int.builder()
+                .x(x)
+                .y(y)
+                .z(z)
                 .build();
 
         Block airBlock = Block.builder()

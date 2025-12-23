@@ -90,7 +90,7 @@ export interface ChunkData {
    * GZIP-compressed JSON as byte array
    * If present, client must decompress and restore blocks/heightData/backdrop
    */
-  c?: Uint8Array;
+  c?: Uint8Array; // javaType: int[][]
 
   /**
    * Backdrop data for chunk edges (optional)

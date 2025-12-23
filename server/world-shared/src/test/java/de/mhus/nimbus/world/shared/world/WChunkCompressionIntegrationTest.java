@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.shared.world;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.generated.types.Vector3;
+import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.shared.storage.StorageService;
 import de.mhus.nimbus.shared.types.SchemaVersion;
 import de.mhus.nimbus.shared.types.WorldId;
@@ -153,7 +154,7 @@ class WChunkCompressionIntegrationTest {
         List<Block> blocks = new ArrayList<>();
         for (int i = 0; i < blockCount; i++) {
             Block block = new Block();
-            Vector3 position = new Vector3();
+            Vector3Int position = new Vector3Int();
             position.setX(cx * 32 + (i % 32));
             position.setY(i / 32);
             position.setZ(cz * 32 + (i / 32));
