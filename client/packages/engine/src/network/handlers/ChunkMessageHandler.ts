@@ -19,6 +19,8 @@ const logger = getLogger('ChunkMessageHandler');
 
 /**
  * Handles CHUNK_UPDATE messages from server
+ * This handler is not in use at the moent, chunk updates will be sent compressed
+ * and processed via NetworkService.handleBinaryChunkMessage()
  */
 export class ChunkMessageHandler extends MessageHandler<ChunkDataTransferObject[]> {
   readonly messageType = MessageType.CHUNK_UPDATE;
@@ -32,7 +34,7 @@ export class ChunkMessageHandler extends MessageHandler<ChunkDataTransferObject[
       const chunks = message.d;
 
       if (!chunks || chunks.length === 0) {
-        logger.debug('Received empty chunk update');
+        logger.info('Received empty chunk update');
         return;
       }
 

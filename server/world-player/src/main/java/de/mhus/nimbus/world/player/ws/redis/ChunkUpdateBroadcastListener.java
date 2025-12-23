@@ -2,19 +2,22 @@ package de.mhus.nimbus.world.player.ws.redis;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
-import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.player.ws.BroadcastService;
+import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.player.ws.SessionManager;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import de.mhus.nimbus.world.shared.world.WChunkService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.BinaryMessage;
 
-import java.util.Optional;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Redis listener for chunk update events.
@@ -41,7 +44,7 @@ import java.util.Optional;
 public class ChunkUpdateBroadcastListener {
 
     private final WorldRedisMessagingService redisMessaging;
-    private final BroadcastService broadcastService;
+    private final SessionManager sessionManager;
     private final WChunkService chunkService;
     private final ObjectMapper objectMapper;
 
@@ -112,39 +115,56 @@ public class ChunkUpdateBroadcastListener {
                 return;
             }
 
-            Optional<ChunkData> chunkDataOpt = chunkService.loadChunkData(wid, chunkKey, false);
-
-            if (chunkDataOpt.isEmpty() && !deleted) {
-                log.warn("Updated chunk not found in database: world={} chunk={}", worldId, chunkKey);
-                return;
-            }
-
-            // Build client message - ARRAY format like ChunkRegistrationHandler
-            ArrayNode chunksArray = objectMapper.createArrayNode();
-
-            if (deleted || chunkDataOpt.isEmpty()) {
-                // Send deleted marker (empty array or special format?)
-                // For now, skip sending deleted chunks
+            if (deleted) {
                 log.debug("Chunk deleted, skipping broadcast: world={} chunk={}", worldId, chunkKey);
                 return;
-            } else {
-                // Find WChunk entity first
-                var chunkEntityOpt = chunkService.find(wid, chunkKey);
-                if (chunkEntityOpt.isEmpty()) {
-                    log.warn("WChunk entity not found for broadcast: chunkKey={}", chunkKey);
-                    return;
-                }
-
-                // Convert using WChunk entity (efficient for compressed chunks)
-                ChunkDataTransferObject transferObject = chunkService.toTransferObject(wid, chunkEntityOpt.get());
-                if (transferObject != null) {
-                    chunksArray.add(objectMapper.valueToTree(transferObject));
-                }
             }
 
-            // Broadcast to all sessions registered for this chunk
-            int sent = broadcastService.broadcastToChunk(
-                    worldId, cx, cz, "c.u", chunksArray, null);
+            // Find WChunk entity
+            var chunkEntityOpt = chunkService.find(wid, chunkKey);
+            if (chunkEntityOpt.isEmpty()) {
+                log.warn("WChunk entity not found for broadcast: chunkKey={}", chunkKey);
+                return;
+            }
+
+            // Convert to transfer object (uses compressed storage if available)
+            ChunkDataTransferObject dto = chunkService.toTransferObject(wid, chunkEntityOpt.get());
+            if (dto == null) {
+                log.warn("Failed to convert chunk to transfer object: chunkKey={}", chunkKey);
+                return;
+            }
+
+            // Send as binary message to all sessions registered for this chunk
+            int sent = 0;
+            for (PlayerSession session : sessionManager.getAllSessions().values()) {
+                // Skip if not authenticated
+                if (!session.isAuthenticated()) continue;
+
+                // Skip if different world
+                if (session.getWorldId() == null || !worldId.equals(session.getWorldId().getId())) continue;
+
+                // Check if session has registered the chunk
+                if (!session.isChunkRegistered(cx, cz)) {
+                    log.trace("Session {} has not registered chunk ({}, {}), skipping",
+                            session.getSessionId(), cx, cz);
+                    continue;
+                }
+
+                // Send as binary frame if compressed
+                if (dto.getC() != null && dto.getC().length > 0) {
+                    try {
+                        sendCompressedChunkBinary(session, dto);
+                        sent++;
+                        log.trace("Sent binary chunk update to session: cx={}, cz={}, compressed={} bytes",
+                                cx, cz, dto.getC().length);
+                    } catch (Exception e) {
+                        log.error("Failed to send binary chunk update to session: cx={}, cz={}",
+                                cx, cz, e);
+                    }
+                } else {
+                    log.warn("Chunk not compressed, cannot broadcast: cx={}, cz={}", cx, cz);
+                }
+            }
 
             log.info("Broadcast chunk update to {} sessions: world={} chunk={}",
                     sent, worldId, chunkKey);
@@ -168,5 +188,34 @@ public class ChunkUpdateBroadcastListener {
 
     private int parseChunkZ(String chunkKey) {
         return Integer.parseInt(chunkKey.split(":")[1]);
+    }
+
+    /**
+     * Send compressed chunk as binary WebSocket frame.
+     * Format: [4 bytes header length][header JSON][GZIP compressed data]
+     */
+    private void sendCompressedChunkBinary(PlayerSession session, ChunkDataTransferObject dto) throws Exception {
+        // 1. Build header with metadata (small data, stays JSON)
+        Map<String, Object> header = new LinkedHashMap<>();
+        header.put("cx", dto.getCx());
+        header.put("cz", dto.getCz());
+        if (dto.getI() != null && !dto.getI().isEmpty()) {
+            header.put("i", dto.getI());
+        }
+
+        String headerJson = objectMapper.writeValueAsString(header);
+        byte[] headerBytes = headerJson.getBytes(StandardCharsets.UTF_8);
+
+        // 2. Build binary frame: [4 bytes length][header][compressed data]
+        ByteBuffer buffer = ByteBuffer.allocate(4 + headerBytes.length + dto.getC().length);
+        buffer.putInt(headerBytes.length);  // Header length as int32 (big-endian)
+        buffer.put(headerBytes);             // Header JSON
+        buffer.put(dto.getC());              // GZIP compressed data
+
+        // 3. Send as binary WebSocket frame
+        session.getWebSocketSession().sendMessage(new BinaryMessage(buffer.array()));
+
+        log.debug("Sent binary chunk update: cx={}, cz={}, header={} bytes, compressed={} bytes, total={} bytes",
+                dto.getCx(), dto.getCz(), headerBytes.length, dto.getC().length, buffer.position());
     }
 }

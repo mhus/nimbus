@@ -267,13 +267,6 @@ export class ChunkService {
 
         // Check if chunk already exists
         const existingChunk = this.chunks.get(key);
-        if (existingChunk) {
-          logger.debug('Chunk already loaded, skipping duplicate', {
-            cx: chunkData.cx,
-            cz: chunkData.cz,
-          });
-          continue;
-        }
 
         // Decompress chunk data if compressed
         if (chunkData.c) {
@@ -318,28 +311,60 @@ export class ChunkService {
         // Process blocks into ClientBlocks with merged modifiers
         const clientChunkData = await this.processChunkData(chunkData);
 
-        const clientChunk: ClientChunk = new ClientChunk(clientChunkData);
-
-        this.chunks.set(key, clientChunk);
-
-        // Emit event for rendering
-        this.emit('chunk:loaded', clientChunk);
-
-        // Load permanent audio for this chunk (non-blocking)
-        this.loadPermanentAudioForChunk(clientChunk).catch(error => {
-          logger.warn('Failed to load permanent audio for chunk (non-blocking)', {
+        if (existingChunk) {
+          // Update existing chunk
+          logger.info('Updating existing chunk with new data', {
             cx: chunkData.cx,
             cz: chunkData.cz,
-            error: (error as Error).message,
+            oldBlocks: existingChunk.data.data.size,
+            newBlocks: clientChunkData.data.size,
           });
-        });
 
-        logger.debug('Chunk loaded', {
-          cx: chunkData.cx,
-          cz: chunkData.cz,
-          blocks: chunkData.b.length,
-          clientBlocks: clientChunkData.data.size,
-        });
+          // Replace chunk data
+          existingChunk.data = clientChunkData;
+          existingChunk.isRendered = false;
+
+          // Emit event for re-rendering
+          this.emit('chunk:updated', existingChunk);
+
+          // Reload permanent audio for updated chunk (non-blocking)
+          this.loadPermanentAudioForChunk(existingChunk).catch(error => {
+            logger.warn('Failed to reload permanent audio for updated chunk (non-blocking)', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              error: (error as Error).message,
+            });
+          });
+
+          logger.info('Chunk updated and marked for re-rendering', {
+            cx: chunkData.cx,
+            cz: chunkData.cz,
+          });
+        } else {
+          // Create new chunk
+          const clientChunk: ClientChunk = new ClientChunk(clientChunkData);
+
+          this.chunks.set(key, clientChunk);
+
+          // Emit event for rendering
+          this.emit('chunk:loaded', clientChunk);
+
+          // Load permanent audio for this chunk (non-blocking)
+          this.loadPermanentAudioForChunk(clientChunk).catch(error => {
+            logger.warn('Failed to load permanent audio for chunk (non-blocking)', {
+              cx: chunkData.cx,
+              cz: chunkData.cz,
+              error: (error as Error).message,
+            });
+          });
+
+          logger.debug('Chunk loaded', {
+            cx: chunkData.cx,
+            cz: chunkData.cz,
+            blocks: chunkData.b.length,
+            clientBlocks: clientChunkData.data.size,
+          });
+        }
       }
 
       // Check if initial player spawn is ready
