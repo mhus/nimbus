@@ -241,7 +241,7 @@ transformiert.
 [?] Im layer-editor soll es eine TransformMove methode geben, dabei werden alle coordinaten des WLayerModel verschoben um den angegebenen wert.
 Es wird für das Model ein 'Sync to Terrain' gestartet.
 
-[ ] Copy Model Layer kopiert eine WLayerModel entity in ein anderes WLayer. Das Yiel muss nicht die gleiche WorldId haben.
+[?] Copy Model Layer kopiert eine WLayerModel entity in ein anderes WLayer. Das Ziel muss nicht die gleiche WorldId haben.
 Am besten: Auswahl der Welt, dann auswahl des WLayer (nur Model Layer). Eingabe des names im neuen Layer - der name kann 
 hier angepasst werden. Das WLayerModel wird kopiert. WorldId und layerDataId 
 werden automatisch uebernommen aus der dem Ziel WLayer.
@@ -250,12 +250,15 @@ werden automatisch uebernommen aus der dem Ziel WLayer.
 
 In WLayerModel gibt es ein Feld referenceModelId in dem soll die Referenz auf ein anderes WLayerModel angelegt werden koennen.
 Die Referenz wird auf 'worldId/WLayerModel.name' gesetzt. z.b. earth616:westview/TownHall
+- Das macht es einfach in der Datenbank zu suchen, worldId + name
 Der Ersteller muss darauf achten, das der Name eindeutig ist. Werden mehrere gefunden, wird das erste genommen.
 
 [ ] Beim synchen des models auf das Terrain (im WLayerService?) wird der Referenz gefolgt und zuerst dieses geladen und in 
 den Terrain Layer übertragen. Anstelle des eigentlichen WLayerModel inhaltes.
 Dabei sollen die mount werte der beiden layer (reference und aktueller) addiert werden. Die rotation wird nur aus dem aktuellen 
 Layer kopiert.
+Danach werden die Blocks im aktuellen layer gesyncht.
+Es ist nun moeglich mehrere referenz ketten yu haben. es wird eine maximale tiefe von 10 gesetzt.
 
 [ ] Im layer-editor im WLayerModel Dialog soll es einen Button geben, der das referenzierte Model öffnet (sofern vorhanden).
 

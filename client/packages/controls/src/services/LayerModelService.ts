@@ -144,6 +144,34 @@ export class LayerModelService {
     );
     return { model: response.model, chunksAffected: response.chunksAffected };
   }
+
+  /**
+   * Copy model to another layer (possibly in different world)
+   * Creates a complete copy with new worldId and layerDataId from target layer
+   */
+  async copyModel(
+    sourceWorldId: string,
+    sourceLayerId: string,
+    sourceModelId: string,
+    targetLayerId: string,
+    newName?: string
+  ): Promise<{ id: string; model: LayerModelDto }> {
+    const params = new URLSearchParams({ targetLayerId });
+    if (newName) {
+      params.append('newName', newName);
+    }
+
+    const response = await apiService.post<{
+      success: boolean;
+      id: string;
+      model: LayerModelDto;
+      message: string;
+    }>(
+      `/control/worlds/${sourceWorldId}/layers/${sourceLayerId}/models/${sourceModelId}/copy?${params.toString()}`,
+      {}
+    );
+    return { id: response.id, model: response.model };
+  }
 }
 
 export const layerModelService = new LayerModelService();

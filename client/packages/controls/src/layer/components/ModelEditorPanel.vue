@@ -237,6 +237,14 @@
                   Move
                 </a>
               </li>
+              <li>
+                <a @click="openCopyDialog">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy to Layer
+                </a>
+              </li>
             </ul>
           </details>
 
@@ -414,6 +422,80 @@
       </form>
     </div>
   </div>
+
+  <!-- Copy Model Dialog -->
+  <div v-if="showCopyDialog" class="modal modal-open" @click.self="closeCopyDialog">
+    <div class="modal-box max-w-2xl" @click.stop>
+      <h3 class="font-bold text-lg mb-4">Copy Model to Another Layer</h3>
+      <p class="text-sm text-base-content/70 mb-4">
+        Copy this model to a different layer, possibly in another world.
+      </p>
+
+      <form @submit.prevent="handleCopyModel" class="space-y-4">
+        <!-- Target Layer ID -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Target Layer ID *</span>
+          </label>
+          <input
+            v-model="copyFormData.targetLayerId"
+            type="text"
+            class="input input-bordered"
+            placeholder="Enter target layer ID"
+            required
+          />
+          <label class="label">
+            <span class="label-text-alt">The layer must be of type MODEL</span>
+          </label>
+        </div>
+
+        <!-- New Name (Optional) -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">New Name (Optional)</span>
+          </label>
+          <input
+            v-model="copyFormData.newName"
+            type="text"
+            class="input input-bordered"
+            placeholder="Leave empty to keep original name"
+          />
+          <label class="label">
+            <span class="label-text-alt">If empty, the original name will be used</span>
+          </label>
+        </div>
+
+        <!-- Info Box -->
+        <div class="alert alert-info">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="text-sm">
+            <p>The worldId and layerDataId will be automatically taken from the target layer.</p>
+            <p>All blocks, groups, and settings will be copied.</p>
+          </div>
+        </div>
+
+        <div class="modal-action">
+          <button
+            type="button"
+            class="btn"
+            @click="closeCopyDialog"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :disabled="copying"
+          >
+            <span v-if="copying" class="loading loading-spinner"></span>
+            {{ copying ? 'Copying...' : 'Copy Model' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -468,6 +550,9 @@ const showManualAdjustDialog = ref(false);
 const manualAdjustOffset = ref({ x: 0, y: 0, z: 0 });
 const showMoveDialog = ref(false);
 const moveOffset = ref({ x: 0, y: 0, z: 0 });
+const showCopyDialog = ref(false);
+const copying = ref(false);
+const copyFormData = ref({ targetLayerId: '', newName: '' });
 
 // Initialize form data
 if (props.model) {
@@ -776,6 +861,66 @@ const handleTransformMove = async () => {
     errorMessage.value = error.message || 'Failed to transform model';
   } finally {
     transforming.value = false;
+  }
+};
+
+/**
+ * Open copy dialog
+ */
+const openCopyDialog = () => {
+  copyFormData.value = { targetLayerId: '', newName: '' };
+  showCopyDialog.value = true;
+};
+
+/**
+ * Close copy dialog
+ */
+const closeCopyDialog = () => {
+  showCopyDialog.value = false;
+  copyFormData.value = { targetLayerId: '', newName: '' };
+};
+
+/**
+ * Copy model to another layer
+ */
+const handleCopyModel = async () => {
+  if (!props.model?.id) return;
+
+  const { targetLayerId, newName } = copyFormData.value;
+
+  if (!targetLayerId) {
+    errorMessage.value = 'Target layer ID is required';
+    return;
+  }
+
+  errorMessage.value = '';
+  copying.value = true;
+
+  try {
+    const result = await layerModelService.copyModel(
+      props.worldId,
+      props.layerId,
+      props.model.id,
+      targetLayerId,
+      newName || undefined
+    );
+    logger.info('Copied model', {
+      sourceModelId: props.model.id,
+      targetLayerId,
+      newModelId: result.id,
+      newName
+    });
+
+    // Close dialog
+    closeCopyDialog();
+
+    // Show success message
+    alert('Model copied successfully! New ID: ' + result.id + (newName ? ', Name: ' + result.model.name : ''));
+  } catch (error: any) {
+    logger.error('Failed to copy model', {}, error);
+    errorMessage.value = error.message || 'Failed to copy model';
+  } finally {
+    copying.value = false;
   }
 };
 </script>

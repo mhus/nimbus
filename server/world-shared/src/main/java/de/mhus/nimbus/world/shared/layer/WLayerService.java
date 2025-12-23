@@ -1164,6 +1164,64 @@ public class WLayerService {
     }
 
     /**
+     * Copy a model layer to another layer (possibly in different world).
+     * Creates a complete copy of the WLayerModel with new worldId, layerDataId, and optional new name.
+     *
+     * @param sourceModelId Source model identifier
+     * @param targetLayerId Target layer identifier (must be MODEL type)
+     * @param newName Optional new name for the copied model (null keeps original)
+     * @return Created model copy
+     */
+    @Transactional
+    public Optional<WLayerModel> copyModel(String sourceModelId, String targetLayerId, String newName) {
+        // Load source model
+        Optional<WLayerModel> sourceOpt = modelRepository.findById(sourceModelId);
+        if (sourceOpt.isEmpty()) {
+            log.warn("Source model not found for copy: modelId={}", sourceModelId);
+            return Optional.empty();
+        }
+
+        // Load target layer
+        Optional<WLayer> targetLayerOpt = layerRepository.findById(targetLayerId);
+        if (targetLayerOpt.isEmpty()) {
+            log.warn("Target layer not found for copy: layerId={}", targetLayerId);
+            return Optional.empty();
+        }
+
+        WLayer targetLayer = targetLayerOpt.get();
+        if (targetLayer.getLayerType() != LayerType.MODEL) {
+            log.warn("Target layer is not MODEL type: layerId={} type={}", targetLayerId, targetLayer.getLayerType());
+            throw new IllegalArgumentException("Target layer must be MODEL type");
+        }
+
+        WLayerModel source = sourceOpt.get();
+
+        // Create copy with new worldId and layerDataId from target layer
+        WLayerModel copy = WLayerModel.builder()
+                .worldId(targetLayer.getWorldId())
+                .name(newName != null ? newName : source.getName())
+                .title(source.getTitle())
+                .layerDataId(targetLayer.getLayerDataId())
+                .mountX(source.getMountX())
+                .mountY(source.getMountY())
+                .mountZ(source.getMountZ())
+                .rotation(source.getRotation())
+                .referenceModelId(source.getReferenceModelId())
+                .order(source.getOrder())
+                .content(new ArrayList<>(source.getContent())) // Deep copy of content list
+                .groups(new HashMap<>(source.getGroups())) // Copy of groups map
+                .build();
+
+        copy.touchCreate();
+        WLayerModel saved = modelRepository.save(copy);
+
+        log.info("Copied model: sourceId={} targetLayerId={} newId={} newName={}",
+                sourceModelId, targetLayerId, saved.getId(), saved.getName());
+
+        return Optional.of(saved);
+    }
+
+    /**
      * Save model layer content (deprecated - use createModel or updateModel).
      *
      * @deprecated This method assumes 1:1 relationship. Use createModel for new concept.

@@ -687,6 +687,86 @@ public class ELayerModelController extends BaseEditorController {
     }
 
     /**
+     * Copy Layer Model to another layer (possibly in different world).
+     * Creates a complete copy with new worldId and layerDataId from target layer.
+     * POST /control/worlds/{worldId}/layers/{layerId}/models/{id}/copy
+     */
+    @PostMapping("/{id}/copy")
+    @Operation(summary = "Copy Layer Model to another layer")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Model copied successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters"),
+            @ApiResponse(responseCode = "404", description = "Model or target layer not found")
+    })
+    public ResponseEntity<?> copyModel(
+            @Parameter(description = "Source world identifier") @PathVariable String worldId,
+            @Parameter(description = "Source layer identifier") @PathVariable String layerId,
+            @Parameter(description = "Source model identifier") @PathVariable String id,
+            @Parameter(description = "Target layer identifier") @RequestParam String targetLayerId,
+            @Parameter(description = "New name (optional)") @RequestParam(required = false) String newName) {
+
+        log.debug("COPY layer model: sourceWorldId={}, sourceLayerId={}, sourceId={}, targetLayerId={}, newName={}",
+                worldId, layerId, id, targetLayerId, newName);
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        var validation = validateId(layerId, "layerId");
+        if (validation != null) return validation;
+        validation = validateId(id, "id");
+        if (validation != null) return validation;
+        validation = validateId(targetLayerId, "targetLayerId");
+        if (validation != null) return validation;
+
+        // Verify source layer exists
+        Optional<WLayer> sourceLayerOpt = layerService.findById(layerId);
+        if (sourceLayerOpt.isEmpty()) {
+            log.warn("Source layer not found: layerId={}", layerId);
+            return notFound("source layer not found");
+        }
+
+        // Verify source model exists
+        Optional<WLayerModel> sourceModelOpt = modelRepository.findById(id);
+        if (sourceModelOpt.isEmpty()) {
+            log.warn("Source model not found for copy: id={}", id);
+            return notFound("source model not found");
+        }
+
+        WLayerModel sourceModel = sourceModelOpt.get();
+        String lookupWorldId = WorldId.of(worldId).orElseThrow().withoutInstance().getId();
+        if (!sourceModel.getWorldId().equals(lookupWorldId)) {
+            log.warn("Source model worldId mismatch: expected={}, actual={}", lookupWorldId, sourceModel.getWorldId());
+            return notFound("source model not found");
+        }
+
+        try {
+            // Copy model
+            Optional<WLayerModel> copiedOpt = layerService.copyModel(id, targetLayerId, newName);
+            if (copiedOpt.isEmpty()) {
+                return notFound("failed to copy model");
+            }
+
+            WLayerModel copied = copiedOpt.get();
+            log.info("Copied model: sourceId={} targetLayerId={} newId={} newName={}",
+                    id, targetLayerId, copied.getId(), copied.getName());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "success", true,
+                    "id", copied.getId(),
+                    "model", toDto(copied),
+                    "message", "Model copied successfully"
+            ));
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error copying model: {}", e.getMessage());
+            return bad(e.getMessage());
+        } catch (Exception e) {
+            log.error("Failed to copy model: modelId={}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to copy model: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Delete Layer Model.
      * DELETE /control/worlds/{worldId}/layers/{layerId}/models/{id}
      */
