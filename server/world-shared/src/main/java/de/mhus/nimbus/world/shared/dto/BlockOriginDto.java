@@ -48,18 +48,11 @@ public record BlockOriginDto(
         @TypeScript(optional = true)
         Integer mountZ,
 
-        // Block information
-        @TypeScript(optional = true)
-        Boolean override,
-
         @TypeScript(optional = true)
         Integer group,
 
         @TypeScript(optional = true)
         String groupName,  // Name of the group if block is in a group
-
-        @TypeScript(optional = true)
-        Double weight,
 
         @TypeScript(optional = true)
         String metadata

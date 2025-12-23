@@ -22,23 +22,10 @@ public class LayerBlock {
     private Block block;
 
     /**
-     * Layer-specific weight or priority.
-     * Can be used for advanced overlay algorithms.
-     */
-    private Integer weight;
-
-    /**
      * Layer-specific metadata.
      * Can be used for layer-specific behavior.
      */
     private String metadata;
-
-    /**
-     * Flag to indicate if this block should override previous layers.
-     * If false, this block might be skipped if another block exists at this position.
-     */
-    @Builder.Default
-    private boolean override = true;
 
     /**
      * Group identifier for this block.

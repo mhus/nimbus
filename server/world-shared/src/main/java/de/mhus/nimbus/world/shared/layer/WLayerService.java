@@ -635,18 +635,10 @@ public class WLayerService {
                     worldPos.setZ(worldZ);
                     String key = blockKey(worldPos);
 
-                    // Check override flag
-                    if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
-                        // Skip if block exists and override is false
-                        continue;
-                    }
-
                     // Create new LayerBlock with world coordinates
                     LayerBlock newLayerBlock = LayerBlock.builder()
                             .block(cloneBlockWithPosition(relativeBlock, worldPos))
-                            .override(layerBlock.isOverride())
                             .group(layerBlock.getGroup())
-                            .weight(layerBlock.getWeight())
                             .metadata(layerBlock.getMetadata())
                             .build();
 
@@ -797,9 +789,7 @@ public class WLayerService {
 
                 LayerBlock adjustedBlock = LayerBlock.builder()
                         .block(cloneBlockWithPosition(block.getBlock(), adjustedPos))
-                        .override(block.isOverride())
                         .group(block.getGroup())
-                        .weight(block.getWeight())
                         .metadata(block.getMetadata())
                         .build();
 
@@ -1021,18 +1011,10 @@ public class WLayerService {
                 worldPos.setZ(worldZ);
                 String key = blockKey(worldPos);
 
-                // Check override flag
-                if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
-                    // Skip if block exists and override is false
-                    continue;
-                }
-
                 // Create new LayerBlock with world coordinates
                 LayerBlock newLayerBlock = LayerBlock.builder()
                         .block(cloneBlockWithPosition(relativeBlock, worldPos))
-                        .override(layerBlock.isOverride())
                         .group(layerBlock.getGroup())
-                        .weight(layerBlock.getWeight())
                         .metadata(layerBlock.getMetadata())
                         .build();
 

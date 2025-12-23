@@ -170,12 +170,6 @@ public class WLayerOverlayService {
                     Block block = layerBlock.getBlock();
                     String key = blockKey(block.getPosition());
 
-                    // Check override flag
-                    if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
-                        // Skip if block exists and override is false
-                        continue;
-                    }
-
                     blockMap.put(key, block); // Overwrite previous layer
                 }
             }
@@ -255,12 +249,6 @@ public class WLayerOverlayService {
                     worldPos.setY(worldY);
                     worldPos.setZ(worldZ);
                     String key = blockKey(worldPos);
-
-                    // Check override flag
-                    if (!layerBlock.isOverride() && blockMap.containsKey(key)) {
-                        // Skip if block exists and override is false
-                        continue;
-                    }
 
                     // Create block with world coordinates
                     Block worldBlock = cloneBlock(relativeBlock);

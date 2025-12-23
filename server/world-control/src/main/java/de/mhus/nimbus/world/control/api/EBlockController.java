@@ -103,10 +103,6 @@ public class EBlockController extends BaseEditorController {
         }
 
         Integer groupValue = origin.layerBlock().getGroup() > 0 ? Integer.valueOf(origin.layerBlock().getGroup()) : null;
-        Double weightValue = null;
-        if (origin.layerBlock().getWeight() != null && origin.layerBlock().getWeight() > 0) {
-            weightValue = Double.valueOf(origin.layerBlock().getWeight());
-        }
 
         return new BlockOriginDto(
                 origin.layer().getId(),
@@ -121,10 +117,8 @@ public class EBlockController extends BaseEditorController {
                 origin.model() != null ? Integer.valueOf(origin.model().getMountX()) : null,
                 origin.model() != null ? Integer.valueOf(origin.model().getMountY()) : null,
                 origin.model() != null ? Integer.valueOf(origin.model().getMountZ()) : null,
-                origin.layerBlock().isOverride(),
                 groupValue,
                 groupName,
-                weightValue,
                 origin.layerBlock().getMetadata()
         );
     }

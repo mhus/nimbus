@@ -16,9 +16,7 @@ export interface BlockOriginDto {
   mountX?: number;
   mountY?: number;
   mountZ?: number;
-  override?: boolean;
   group?: number;
   groupName?: string;
-  weight?: number;
   metadata?: string;
 }

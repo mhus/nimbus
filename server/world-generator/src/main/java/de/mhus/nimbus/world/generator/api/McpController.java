@@ -688,7 +688,6 @@ public class McpController extends BaseEditorController {
                         return LayerBlock.builder()
                                 .block(block)
                                 .group(b.group() != null ? b.group() : 0)
-                                .override(true)
                                 .build();
                     })
                     .collect(Collectors.toList());
@@ -794,8 +793,6 @@ public class McpController extends BaseEditorController {
             dto.put("blockId", block.getBlockTypeId());
         }
         dto.put("group", layerBlock.getGroup());
-        dto.put("weight", layerBlock.getWeight());
-        dto.put("override", layerBlock.isOverride());
         dto.put("metadata", layerBlock.getMetadata());
         return dto;
     }

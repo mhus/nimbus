@@ -914,7 +914,7 @@ public class EditService {
         List<String> args = new ArrayList<>();
         args.add("modelselector");
         args.add("enable");
-        args.add("#00dd00"); // for modified blocks
+        args.add("#dddd00"); // for modified blocks
         args.add("true");
         args.add("true");
         args.addAll(positionsList);

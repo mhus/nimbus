@@ -284,8 +284,6 @@ public class CommitLayerCommand implements Command {
                     LayerBlock layerBlock = LayerBlock.builder()
                             .block(block)
                             .group(group)
-                            .weight(0)
-                            .override(true)
                             .build();
 
                     blockIndex.put(posKey, layerBlock);
@@ -414,8 +412,6 @@ public class CommitLayerCommand implements Command {
                     LayerBlock layerBlock = LayerBlock.builder()
                             .block(relBlock)
                             .group(group)
-                            .weight(0)
-                            .override(true)
                             .build();
 
                     contentIndex.put(relPosKey, layerBlock);

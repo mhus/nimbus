@@ -176,8 +176,6 @@ public abstract class AbstractTerrainGenerator implements JobExecutor {
     protected LayerBlock createLayerBlock(Block block) {
         return LayerBlock.builder()
                 .block(block)
-                .weight(1)
-                .override(true)
                 .group(0)
                 .build();
     }

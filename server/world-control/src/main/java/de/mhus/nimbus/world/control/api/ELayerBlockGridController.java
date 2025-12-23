@@ -277,8 +277,6 @@ public class ELayerBlockGridController {
                         return ResponseEntity.ok(Map.of(
                                 "block", layerBlock.getBlock(),
                                 "group", layerBlock.getGroup(),
-                                "weight", layerBlock.getWeight() != null ? layerBlock.getWeight() : 0,
-                                "override", layerBlock.isOverride(),
                                 "metadata", layerBlock.getMetadata() != null ? layerBlock.getMetadata() : ""
                         ));
                     }
@@ -424,8 +422,6 @@ public class ELayerBlockGridController {
                     return ResponseEntity.ok(Map.of(
                             "block", layerBlock.getBlock(),
                             "group", layerBlock.getGroup(),
-                            "weight", layerBlock.getWeight() != null ? layerBlock.getWeight() : 0,
-                            "override", layerBlock.isOverride(),
                             "metadata", layerBlock.getMetadata() != null ? layerBlock.getMetadata() : ""
                     ));
                 }
