@@ -48,4 +48,25 @@ public class ExternalResourceDTO {
      * Enable automatic git pull/commit/push operations.
      */
     private boolean autoGit;
+
+    /**
+     * Git repository URL for clone/remote operations.
+     * Optional, only needed if repository doesn't exist yet or for remote sync.
+     */
+    private String gitRepositoryUrl;
+
+    /**
+     * Git branch name (default: "main" or "master").
+     */
+    private String gitBranch;
+
+    /**
+     * Git username for authentication.
+     */
+    private String gitUsername;
+
+    /**
+     * Git password/token for authentication.
+     */
+    private String gitPassword;
 }

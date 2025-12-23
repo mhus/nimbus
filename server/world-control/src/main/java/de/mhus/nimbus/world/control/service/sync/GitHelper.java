@@ -1,108 +1,120 @@
 package de.mhus.nimbus.world.control.service.sync;
 
+import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.nio.file.Paths;
 
 /**
- * Helper service for Git operations.
- * Executes git commands using ProcessBuilder.
+ * Helper service for Git operations using RepositoryControl.
+ * Handles Git sync based on ExternalResourceDTO configuration.
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class GitHelper {
 
+    private final RepositoryControl repositoryControl;
+
     /**
-     * Execute git pull with rebase.
+     * Initialize or clone repository if needed.
      *
-     * @param repoPath Path to git repository
-     * @throws IOException if git command fails
+     * @param definition ExternalResource configuration
+     * @throws IOException if init/clone fails
      */
-    public void pull(Path repoPath) throws IOException {
-        log.info("Git pull in: {}", repoPath);
-        executeGit(repoPath, "pull", "--rebase");
+    public void initOrClone(ExternalResourceDTO definition) throws IOException {
+        if (!definition.isAutoGit()) {
+            return;
+        }
+
+        Path localPath = Paths.get(definition.getLocalPath());
+
+        repositoryControl.initOrClone(
+                localPath,
+                definition.getGitRepositoryUrl(),
+                definition.getGitBranch(),
+                definition.getGitUsername(),
+                definition.getGitPassword()
+        );
+    }
+
+    /**
+     * Pull latest changes from remote.
+     * Uses hard reset before pull to ensure clean state.
+     *
+     * @param definition ExternalResource configuration
+     * @throws IOException if pull fails
+     */
+    public void pull(ExternalResourceDTO definition) throws IOException {
+        if (!definition.isAutoGit()) {
+            return;
+        }
+
+        Path localPath = Paths.get(definition.getLocalPath());
+
+        // Ensure repository exists
+        if (!repositoryControl.isGitRepository(localPath)) {
+            log.warn("Not a git repository, skipping pull: {}", localPath);
+            return;
+        }
+
+        repositoryControl.pull(
+                localPath,
+                definition.getGitUsername(),
+                definition.getGitPassword()
+        );
     }
 
     /**
      * Commit all changes and push to remote.
      *
-     * @param repoPath Path to git repository
-     * @param message  Commit message
-     * @throws IOException if git command fails
+     * @param definition ExternalResource configuration
+     * @param message    Commit message
+     * @throws IOException if commit/push fails
      */
-    public void commitAndPush(Path repoPath, String message) throws IOException {
-        log.info("Git commit and push in: {}", repoPath);
-
-        // Add all changes
-        executeGit(repoPath, "add", ".");
-
-        // Commit (may fail if no changes)
-        try {
-            executeGit(repoPath, "commit", "-m", message);
-        } catch (IOException e) {
-            if (e.getMessage() != null && e.getMessage().contains("nothing to commit")) {
-                log.info("No changes to commit");
-                return;
-            }
-            throw e;
+    public void commitAndPush(ExternalResourceDTO definition, String message) throws IOException {
+        if (!definition.isAutoGit()) {
+            return;
         }
 
-        // Push
-        executeGit(repoPath, "push");
+        Path localPath = Paths.get(definition.getLocalPath());
+
+        // Ensure repository exists
+        if (!repositoryControl.isGitRepository(localPath)) {
+            log.warn("Not a git repository, skipping commit/push: {}", localPath);
+            return;
+        }
+
+        repositoryControl.commitAndPush(
+                localPath,
+                message,
+                definition.getGitUsername(),
+                definition.getGitPassword()
+        );
     }
 
     /**
-     * Execute a git command.
+     * Reset repository to clean state.
      *
-     * @param repoPath Path to git repository
-     * @param commands Git commands and arguments
-     * @throws IOException if command fails
+     * @param definition ExternalResource configuration
+     * @throws IOException if reset fails
      */
-    private void executeGit(Path repoPath, String... commands) throws IOException {
-        List<String> cmd = new ArrayList<>();
-        cmd.add("git");
-        cmd.addAll(Arrays.asList(commands));
-
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.directory(repoPath.toFile());
-        pb.redirectErrorStream(true);
-
-        log.debug("Executing: {} in {}", String.join(" ", cmd), repoPath);
-
-        Process process;
-        try {
-            process = pb.start();
-        } catch (IOException e) {
-            throw new IOException("Failed to start git process: " + e.getMessage(), e);
+    public void resetHard(ExternalResourceDTO definition) throws IOException {
+        if (!definition.isAutoGit()) {
+            return;
         }
 
-        // Read output
-        String output;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            output = reader.lines().collect(Collectors.joining("\n"));
+        Path localPath = Paths.get(definition.getLocalPath());
+
+        if (!repositoryControl.isGitRepository(localPath)) {
+            log.warn("Not a git repository, skipping reset: {}", localPath);
+            return;
         }
 
-        // Wait for completion
-        int exitCode;
-        try {
-            exitCode = process.waitFor();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException("Git process interrupted", e);
-        }
-
-        if (exitCode != 0) {
-            throw new IOException("Git command failed (exit code " + exitCode + "): " + output);
-        }
-
-        log.debug("Git command successful: {}", output);
+        repositoryControl.resetHard(localPath);
     }
 }

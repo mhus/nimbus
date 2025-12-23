@@ -51,10 +51,19 @@ public class ResourceSyncService {
         try {
             Path dataPath = Paths.get(definition.getLocalPath());
 
+            // Initialize or clone repository if needed
+            if (definition.isAutoGit()) {
+                try {
+                    gitHelper.initOrClone(definition);
+                } catch (Exception e) {
+                    log.warn("Git init/clone failed: {}", e.getMessage());
+                }
+            }
+
             // Git pull if enabled
             if (definition.isAutoGit()) {
                 try {
-                    gitHelper.pull(dataPath);
+                    gitHelper.pull(definition);
                 } catch (Exception e) {
                     log.warn("Git pull failed, continuing with export: {}", e.getMessage());
                 }
@@ -98,7 +107,7 @@ public class ResourceSyncService {
                 try {
                     String message = String.format("Export world %s (%d exported, %d deleted)",
                             worldId.getId(), totalExported, totalDeleted);
-                    gitHelper.commitAndPush(dataPath, message);
+                    gitHelper.commitAndPush(definition, message);
                 } catch (Exception e) {
                     log.warn("Git commit/push failed: {}", e.getMessage());
                 }
@@ -129,10 +138,19 @@ public class ResourceSyncService {
         try {
             Path dataPath = Paths.get(definition.getLocalPath());
 
+            // Initialize or clone repository if needed
+            if (definition.isAutoGit()) {
+                try {
+                    gitHelper.initOrClone(definition);
+                } catch (Exception e) {
+                    log.warn("Git init/clone failed: {}", e.getMessage());
+                }
+            }
+
             // Git pull if enabled
             if (definition.isAutoGit()) {
                 try {
-                    gitHelper.pull(dataPath);
+                    gitHelper.pull(definition);
                 } catch (Exception e) {
                     log.warn("Git pull failed, continuing with import: {}", e.getMessage());
                 }
