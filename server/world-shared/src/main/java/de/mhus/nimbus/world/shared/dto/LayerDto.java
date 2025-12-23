@@ -6,12 +6,14 @@ import de.mhus.nimbus.world.shared.layer.LayerType;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 /**
  * DTO for WLayer entity.
  * Used for API responses and TypeScript generation.
  *
- * Note: mountX/Y/Z and groups are now in WLayerModel, not WLayer.
+ * Note: mountX/Y/Z are in WLayerModel.
+ * groups is available both in WLayer (for GROUND layers) and WLayerModel (for MODEL layers).
  */
 @GenerateTypeScript("dto")
 public record LayerDto(
@@ -38,6 +40,9 @@ public record LayerDto(
         boolean enabled,
 
         boolean baseGround,
+
+        @TypeScript(optional = true)
+        Map<String, Integer> groups,
 
         @TypeScript(optional = true)
         Instant createdAt,

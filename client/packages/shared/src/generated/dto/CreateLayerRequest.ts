@@ -17,5 +17,5 @@ export interface CreateLayerRequest {
   order?: number;
   enabled?: boolean;
   baseGround?: boolean;
-  groups?: Record<string, string>;
+  groups?: Record<string, number>;
 }

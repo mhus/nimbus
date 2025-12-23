@@ -12,8 +12,8 @@ import java.util.Map;
  *
  * All fields are optional - only provided fields will be updated.
  *
- * Note: mountX/Y/Z, ground, and groups are deprecated - these fields are now in WLayerModel.
- * They are kept here for backwards compatibility but will be ignored.
+ * Note: mountX/Y/Z are deprecated - these fields are now in WLayerModel.
+ * groups is available both in WLayer (for GROUND layers) and WLayerModel (for MODEL layers).
  */
 @GenerateTypeScript("dto")
 public record UpdateLayerRequest(
@@ -51,8 +51,7 @@ public record UpdateLayerRequest(
         @TypeScript(optional = true)
         Boolean baseGround,
 
-        @Deprecated
         @TypeScript(optional = true)
-        Map<Integer, String> groups
+        Map<String, Integer> groups
 ) {
 }

@@ -472,7 +472,7 @@ const availableLayers = ref<Array<{
   mountX: number;
   mountY: number;
   mountZ: number;
-  groups: string[];
+  groups: Record<string, number>;
   id: string;
   layerDataId: string;
 }>>([]);
@@ -805,6 +805,31 @@ watch(() => editState.value.selectedModelId, (newModelId) => {
   }
 
   // Reset selected group when model changes
+  editState.value.selectedGroup = 0;
+});
+
+// Watch selectedLayer and load groups for GROUND layers from WLayer
+watch(() => editState.value.selectedLayer, (newLayer) => {
+  const layerInfo = selectedLayerInfo.value;
+
+  // If it's a GROUND layer, load groups from WLayer
+  if (layerInfo && layerInfo.layerType === 'GROUND' && layerInfo.groups) {
+    // Convert Record<string, number> to Array<{name, id}>
+    availableGroups.value = Object.entries(layerInfo.groups).map(([name, id]) => ({
+      name,
+      id
+    }));
+    console.log('[Groups] Loaded', availableGroups.value.length, 'groups from GROUND layer');
+  } else if (layerInfo && layerInfo.layerType === 'MODEL') {
+    // For MODEL layers, groups will be loaded from the selected model (see watch above)
+    // Clear groups here, they'll be populated when model is selected
+    availableGroups.value = [];
+  } else {
+    // No layer or no groups
+    availableGroups.value = [];
+  }
+
+  // Reset selected group when layer changes
   editState.value.selectedGroup = 0;
 });
 

@@ -16,6 +16,7 @@ export interface LayerDto {
   order: number;
   enabled: boolean;
   baseGround: boolean;
+  groups?: Record<string, number>;
   createdAt?: Date;
   updatedAt?: Date;
 }

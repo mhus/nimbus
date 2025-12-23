@@ -107,6 +107,53 @@
           </label>
         </div>
 
+        <!-- Groups (only for GROUND layers) -->
+        <div v-if="formData.layerType === 'GROUND'" class="form-control">
+          <label class="label">
+            <span class="label-text">Groups</span>
+          </label>
+          <div class="space-y-2">
+            <div v-for="(groupId, groupName) in formData.groups" :key="groupName" class="flex gap-2">
+              <input
+                :value="groupName"
+                type="text"
+                class="input input-bordered flex-1"
+                placeholder="Group name"
+                @input="updateGroupName(groupName as string, ($event.target as HTMLInputElement).value)"
+              />
+              <input
+                :value="groupId"
+                type="number"
+                class="input input-bordered w-24"
+                placeholder="ID"
+                @input="updateGroupId(groupName as string, parseInt(($event.target as HTMLInputElement).value))"
+              />
+              <button
+                type="button"
+                class="btn btn-ghost btn-square"
+                @click="removeGroup(groupName as string)"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline"
+              @click="addGroup"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Group
+            </button>
+          </div>
+          <label class="label">
+            <span class="label-text-alt">Group mapping: name → ID for organized block management in GROUND layers</span>
+          </label>
+        </div>
+
         <!-- Affected Chunks (only if not allChunks) -->
         <div v-if="!formData.allChunks" class="form-control">
           <label class="label">
@@ -244,7 +291,8 @@ const formData = ref<Partial<WLayer>>({
   enabled: true,
   baseGround: false,
   allChunks: true,
-  affectedChunks: []
+  affectedChunks: [],
+  groups: {}
 });
 
 const affectedChunksText = ref('');
@@ -273,6 +321,50 @@ watch(affectedChunksText, (newValue) => {
     .map(line => line.trim())
     .filter(line => line.length > 0);
 });
+
+/**
+ * Add a new group
+ */
+const addGroup = () => {
+  const groups = formData.value.groups || {};
+  const maxId = Math.max(0, ...Object.values(groups).map(v => typeof v === 'number' ? v : 0));
+  const newId = maxId + 1;
+  formData.value.groups = {
+    ...groups,
+    [`group${newId}`]: newId
+  };
+};
+
+/**
+ * Remove a group
+ */
+const removeGroup = (groupName: string) => {
+  const groups = { ...formData.value.groups };
+  delete groups[groupName];
+  formData.value.groups = groups;
+};
+
+/**
+ * Update group name
+ */
+const updateGroupName = (oldName: string, newName: string) => {
+  if (oldName === newName) return;
+  const groups = { ...formData.value.groups };
+  const groupId = groups[oldName];
+  delete groups[oldName];
+  groups[newName] = groupId;
+  formData.value.groups = groups;
+};
+
+/**
+ * Update group ID
+ */
+const updateGroupId = (groupName: string, newId: number) => {
+  formData.value.groups = {
+    ...formData.value.groups,
+    [groupName]: newId
+  };
+};
 
 /**
  * Load models for this layer
@@ -385,7 +477,8 @@ const handleSave = async () => {
         affectedChunks: formData.value.affectedChunks,
         order: formData.value.order,
         enabled: formData.value.enabled,
-        baseGround: formData.value.baseGround
+        baseGround: formData.value.baseGround,
+        groups: formData.value.groups
       };
       const success = await updateLayer(props.layer.id, updateData);
       if (!success) {
@@ -400,7 +493,8 @@ const handleSave = async () => {
         affectedChunks: formData.value.affectedChunks,
         order: formData.value.order,
         enabled: formData.value.enabled,
-        baseGround: formData.value.baseGround
+        baseGround: formData.value.baseGround,
+        groups: formData.value.groups
       };
       const id = await createLayer(createData);
       if (!id) {

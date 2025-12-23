@@ -284,6 +284,7 @@ Es ist nun moeglich mehrere referenz ketten yu haben. es wird eine maximale tief
 
 Ich habe jetzt in WLayer auch ein groups parameter eingefuegt. Dieser kann fuer WLayer vom typ GROUND genutzt werden um
 blocks zu gruppieren.
-[ ] In edit-config soll beim selectieren von GROUND Layer auch ein gruppen dropdown angezeigt werden (aktuell nur MODEL).
-[ ] Beim hinzufuegen eines Blocks wird die gruppe im WLayerTerrain mit am LaverBlock gesetzt.
+[?] In edit-config (../client/packages/controls) soll beim selectieren von GROUND Layer auch ein gruppen dropdown angezeigt werden (aktuell nur MODEL).
+[?] Speichere das wie bei WLayerModel als gruppe in der session im vorhandenen feld
+[?] Beim hinzufuegen eines Blocks wird die gruppe im WLayerTerrain mit am LaverBlock gesetzt.
 

@@ -187,6 +187,12 @@ public class ELayerController extends BaseEditorController {
                 layer = layerService.save(layer);
             }
 
+            // Set groups if provided
+            if (request.groups() != null) {
+                layer.setGroups(request.groups());
+                layer = layerService.save(layer);
+            }
+
             log.info("Created layer: id={}, name={}, type={}, layerDataId={}",
                     layer.getId(), layer.getName(), layer.getLayerType(), layer.getLayerDataId());
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", layer.getId()));
@@ -242,8 +248,8 @@ public class ELayerController extends BaseEditorController {
             layer.setName(request.name());
             changed = true;
         }
-        // Note: mountX/Y/Z, ground, and groups are now in WLayerModel, not WLayer
-        // These fields should be ignored or handled via WLayerModel endpoints
+        // Note: mountX/Y/Z are now in WLayerModel, not WLayer
+        // groups is available both in WLayer (for GROUND layers) and WLayerModel (for MODEL layers)
         if (request.allChunks() != null) {
             layer.setAllChunks(request.allChunks());
             changed = true;
@@ -262,6 +268,10 @@ public class ELayerController extends BaseEditorController {
         }
         if (request.baseGround() != null) {
             layer.setBaseGround(request.baseGround());
+            changed = true;
+        }
+        if (request.groups() != null) {
+            layer.setGroups(request.groups());
             changed = true;
         }
 
@@ -434,6 +444,7 @@ public class ELayerController extends BaseEditorController {
                 layer.getOrder(),
                 layer.isEnabled(),
                 layer.isBaseGround(),
+                layer.getGroups(),
                 layer.getCreatedAt(),
                 layer.getUpdatedAt()
         );

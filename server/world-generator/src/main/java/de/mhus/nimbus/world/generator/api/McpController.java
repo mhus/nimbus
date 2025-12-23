@@ -771,11 +771,14 @@ public class McpController extends BaseEditorController {
         dto.put("name", layer.getName());
         dto.put("layerType", layer.getLayerType().name());
         dto.put("layerDataId", layer.getLayerDataId());
-        // Note: mountX/Y/Z, ground, and groups removed - these are now in WLayerModel
+        // Note: mountX/Y/Z removed - these are now in WLayerModel
+        // groups is available both in WLayer (for GROUND layers) and WLayerModel (for MODEL layers)
         dto.put("allChunks", layer.isAllChunks());
         dto.put("affectedChunks", layer.getAffectedChunks());
         dto.put("order", layer.getOrder());
         dto.put("enabled", layer.isEnabled());
+        dto.put("baseGround", layer.isBaseGround());
+        dto.put("groups", layer.getGroups());
         dto.put("createdAt", layer.getCreatedAt());
         dto.put("updatedAt", layer.getUpdatedAt());
         return dto;
