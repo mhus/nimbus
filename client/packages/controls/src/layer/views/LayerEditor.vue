@@ -192,8 +192,8 @@ watch(currentWorldId, () => {
 }, { immediate: true });
 
 onMounted(() => {
-  // Load worlds with allWithoutInstances filter for layer editor
-  loadWorlds('allWithoutInstances');
+  // Load worlds with collections for layer editor
+  loadWorlds('withCollections');
 });
 
 /**

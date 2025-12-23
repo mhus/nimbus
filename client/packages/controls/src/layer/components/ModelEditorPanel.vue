@@ -121,14 +121,25 @@
           <label class="label">
             <span class="label-text">Reference Model ID</span>
           </label>
-          <input
-            v-model="formData.referenceModelId"
-            type="text"
-            class="input input-bordered"
-            placeholder="Optional reference to another model"
-          />
+          <div class="join w-full">
+            <input
+              v-model="formData.referenceModelId"
+              type="text"
+              class="input input-bordered join-item flex-1"
+              placeholder="Format: worldId/modelName (e.g., earth616/TownHall)"
+            />
+            <button
+              type="button"
+              class="btn btn-outline join-item"
+              @click="openReferenceSearchDialog"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
           <label class="label">
-            <span class="label-text-alt">If set, the referenced model will be rendered first, then this model on top</span>
+            <span class="label-text-alt">Format: worldId/modelName. Referenced model will be rendered first, then this model on top. Max depth: 10</span>
           </label>
         </div>
 
@@ -428,24 +439,84 @@
     <div class="modal-box max-w-2xl" @click.stop>
       <h3 class="font-bold text-lg mb-4">Copy Model to Another Layer</h3>
       <p class="text-sm text-base-content/70 mb-4">
-        Copy this model to a different layer, possibly in another world.
+        Copy this model to a different MODEL layer, possibly in another world.
       </p>
 
+      <!-- Error Alert -->
+      <ErrorAlert v-if="copyError" :message="copyError" class="mb-4" />
+
       <form @submit.prevent="handleCopyModel" class="space-y-4">
-        <!-- Target Layer ID -->
+        <!-- Target World Selection -->
         <div class="form-control">
           <label class="label">
-            <span class="label-text">Target Layer ID *</span>
+            <span class="label-text">Target World *</span>
           </label>
-          <input
-            v-model="copyFormData.targetLayerId"
-            type="text"
-            class="input input-bordered"
-            placeholder="Enter target layer ID"
+          <select
+            v-model="copyFormData.targetWorldId"
+            class="select select-bordered"
             required
-          />
+            @change="handleCopyWorldChange"
+          >
+            <option value="" disabled>Select target world...</option>
+            <option v-if="loadingCopyWorlds" disabled>Loading worlds...</option>
+            <option
+              v-for="world in copyAvailableWorlds"
+              :key="world.worldId"
+              :value="world.worldId"
+            >
+              {{ world.name }} ({{ world.worldId }})
+            </option>
+          </select>
           <label class="label">
-            <span class="label-text-alt">The layer must be of type MODEL</span>
+            <span class="label-text-alt">Select the world to copy to (includes collections)</span>
+          </label>
+        </div>
+
+        <!-- Target Layer Selection -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Target Layer *</span>
+          </label>
+          <div class="join w-full">
+            <select
+              v-if="copyAvailableLayers.length > 0"
+              v-model="copyFormData.targetLayerId"
+              class="select select-bordered join-item flex-1"
+              required
+            >
+              <option value="" disabled>Select target layer...</option>
+              <option v-if="loadingCopyLayers" disabled>Loading layers...</option>
+              <option
+                v-for="layer in copyAvailableLayers"
+                :key="layer.id"
+                :value="layer.id"
+              >
+                {{ layer.name }} ({{ layer.layerType }})
+              </option>
+            </select>
+            <input
+              v-else
+              v-model="copyFormData.targetLayerId"
+              type="text"
+              class="input input-bordered join-item flex-1"
+              placeholder="Enter layer ID manually"
+              required
+            />
+            <button
+              v-if="copyFormData.targetWorldId"
+              type="button"
+              class="btn btn-outline join-item"
+              :disabled="loadingCopyLayers"
+              @click="loadLayersForCopyWorld"
+            >
+              <span v-if="loadingCopyLayers" class="loading loading-spinner loading-sm"></span>
+              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+          <label class="label">
+            <span class="label-text-alt">Only MODEL type layers are shown. Click refresh to load layers.</span>
           </label>
         </div>
 
@@ -487,10 +558,126 @@
           <button
             type="submit"
             class="btn btn-primary"
-            :disabled="copying"
+            :disabled="copying || !copyFormData.targetLayerId"
           >
             <span v-if="copying" class="loading loading-spinner"></span>
             {{ copying ? 'Copying...' : 'Copy Model' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Reference Search Dialog -->
+  <div v-if="showReferenceSearchDialog" class="modal modal-open" @click.self="closeReferenceSearchDialog">
+    <div class="modal-box max-w-2xl" @click.stop>
+      <h3 class="font-bold text-lg mb-4">Select Reference Model</h3>
+      <p class="text-sm text-base-content/70 mb-4">
+        Select a world and model to reference. Format: worldId/modelName
+      </p>
+
+      <!-- Error Alert -->
+      <ErrorAlert v-if="referenceSearchError" :message="referenceSearchError" class="mb-4" />
+
+      <form @submit.prevent="handleSelectReference" class="space-y-4">
+        <!-- World Selection -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">World *</span>
+          </label>
+          <select
+            v-model="referenceSearch.worldId"
+            class="select select-bordered"
+            required
+            @change="handleWorldIdChange"
+          >
+            <option value="" disabled>Select a world...</option>
+            <option v-if="loadingWorlds" disabled>Loading worlds...</option>
+            <option
+              v-for="world in availableWorlds"
+              :key="world.worldId"
+              :value="world.worldId"
+            >
+              {{ world.name }} ({{ world.worldId }})
+            </option>
+          </select>
+          <label class="label">
+            <span class="label-text-alt">Select the world where the reference model exists (includes collections)</span>
+          </label>
+        </div>
+
+        <!-- Model Name/Layer Selection -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Model Name *</span>
+          </label>
+          <div class="join w-full">
+            <select
+              v-if="availableModels.length > 0"
+              v-model="referenceSearch.modelName"
+              class="select select-bordered join-item flex-1"
+              required
+            >
+              <option value="" disabled>Select a model...</option>
+              <option v-if="loadingModels" disabled>Loading models...</option>
+              <option
+                v-for="model in availableModels"
+                :key="model.id"
+                :value="model.name"
+              >
+                {{ model.title || model.name || 'Unnamed' }} ({{ model.name }})
+              </option>
+            </select>
+            <input
+              v-else
+              v-model="referenceSearch.modelName"
+              type="text"
+              class="input input-bordered join-item flex-1"
+              placeholder="Enter model name manually"
+              required
+            />
+            <button
+              v-if="referenceSearch.worldId"
+              type="button"
+              class="btn btn-outline join-item"
+              :disabled="loadingModels"
+              @click="loadModelsForWorld"
+            >
+              <span v-if="loadingModels" class="loading loading-spinner loading-sm"></span>
+              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
+          <label class="label">
+            <span class="label-text-alt">The technical name of the model (WLayerModel.name). Click refresh to load available models.</span>
+          </label>
+        </div>
+
+        <!-- Preview -->
+        <div v-if="referenceSearch.worldId && referenceSearch.modelName" class="alert alert-info">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="text-sm">
+            <p><strong>Reference ID:</strong> {{ referenceSearch.worldId }}/{{ referenceSearch.modelName }}</p>
+            <p class="text-xs mt-1">This reference will be resolved when syncing to terrain</p>
+          </div>
+        </div>
+
+        <div class="modal-action">
+          <button
+            type="button"
+            class="btn"
+            @click="closeReferenceSearchDialog"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+          >
+            Select Reference
           </button>
         </div>
       </form>
@@ -500,9 +687,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import type { LayerModelDto, CreateLayerModelRequest, UpdateLayerModelRequest } from '@nimbus/shared';
+import type { LayerModelDto, CreateLayerModelRequest, UpdateLayerModelRequest, WorldInfo } from '@nimbus/shared';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import { layerModelService } from '@/services/LayerModelService';
+import { worldService } from '@/services/WorldService';
+import { layerService } from '@/services/LayerService';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('ModelEditorPanel');
@@ -552,7 +741,19 @@ const showMoveDialog = ref(false);
 const moveOffset = ref({ x: 0, y: 0, z: 0 });
 const showCopyDialog = ref(false);
 const copying = ref(false);
-const copyFormData = ref({ targetLayerId: '', newName: '' });
+const copyError = ref('');
+const copyFormData = ref({ targetWorldId: '', targetLayerId: '', newName: '' });
+const copyAvailableWorlds = ref<WorldInfo[]>([]);
+const loadingCopyWorlds = ref(false);
+const copyAvailableLayers = ref<any[]>([]);
+const loadingCopyLayers = ref(false);
+const showReferenceSearchDialog = ref(false);
+const referenceSearchError = ref('');
+const referenceSearch = ref({ worldId: '', modelName: '' });
+const availableWorlds = ref<WorldInfo[]>([]);
+const loadingWorlds = ref(false);
+const availableModels = ref<LayerModelDto[]>([]);
+const loadingModels = ref(false);
 
 // Initialize form data
 if (props.model) {
@@ -865,10 +1066,75 @@ const handleTransformMove = async () => {
 };
 
 /**
+ * Load available worlds for copy (with collections)
+ */
+const loadCopyWorlds = async () => {
+  loadingCopyWorlds.value = true;
+  copyError.value = '';
+
+  try {
+    copyAvailableWorlds.value = await worldService.getWorlds('withCollections');
+    logger.info('Loaded worlds for copy', { count: copyAvailableWorlds.value.length });
+  } catch (error: any) {
+    logger.error('Failed to load worlds for copy', {}, error);
+    copyError.value = 'Failed to load worlds: ' + (error.message || 'Unknown error');
+  } finally {
+    loadingCopyWorlds.value = false;
+  }
+};
+
+/**
+ * Load layers for selected copy world (MODEL type only)
+ */
+const loadLayersForCopyWorld = async () => {
+  if (!copyFormData.value.targetWorldId) {
+    return;
+  }
+
+  loadingCopyLayers.value = true;
+  copyError.value = '';
+  copyAvailableLayers.value = [];
+
+  try {
+    const layersResponse = await layerService.getLayers(copyFormData.value.targetWorldId, { limit: 1000 });
+
+    // Filter only MODEL type layers
+    const modelLayers = layersResponse.layers.filter(layer => layer.layerType === 'MODEL');
+
+    copyAvailableLayers.value = modelLayers;
+    logger.info('Loaded MODEL layers for copy world', {
+      worldId: copyFormData.value.targetWorldId,
+      count: modelLayers.length
+    });
+  } catch (error: any) {
+    logger.error('Failed to load layers for copy', {}, error);
+    copyError.value = 'Failed to load layers: ' + (error.message || 'Unknown error');
+  } finally {
+    loadingCopyLayers.value = false;
+  }
+};
+
+/**
+ * Handle copy world change
+ */
+const handleCopyWorldChange = () => {
+  // Clear layer selection and error when world changes
+  copyError.value = '';
+  copyAvailableLayers.value = [];
+  copyFormData.value.targetLayerId = '';
+};
+
+/**
  * Open copy dialog
  */
-const openCopyDialog = () => {
-  copyFormData.value = { targetLayerId: '', newName: '' };
+const openCopyDialog = async () => {
+  copyFormData.value = { targetWorldId: '', targetLayerId: '', newName: '' };
+  copyError.value = '';
+  copyAvailableLayers.value = [];
+
+  // Load available worlds
+  await loadCopyWorlds();
+
   showCopyDialog.value = true;
 };
 
@@ -877,7 +1143,10 @@ const openCopyDialog = () => {
  */
 const closeCopyDialog = () => {
   showCopyDialog.value = false;
-  copyFormData.value = { targetLayerId: '', newName: '' };
+  copyFormData.value = { targetWorldId: '', targetLayerId: '', newName: '' };
+  copyError.value = '';
+  copyAvailableWorlds.value = [];
+  copyAvailableLayers.value = [];
 };
 
 /**
@@ -889,11 +1158,11 @@ const handleCopyModel = async () => {
   const { targetLayerId, newName } = copyFormData.value;
 
   if (!targetLayerId) {
-    errorMessage.value = 'Target layer ID is required';
+    copyError.value = 'Target layer is required';
     return;
   }
 
-  errorMessage.value = '';
+  copyError.value = '';
   copying.value = true;
 
   try {
@@ -918,9 +1187,138 @@ const handleCopyModel = async () => {
     alert('Model copied successfully! New ID: ' + result.id + (newName ? ', Name: ' + result.model.name : ''));
   } catch (error: any) {
     logger.error('Failed to copy model', {}, error);
-    errorMessage.value = error.message || 'Failed to copy model';
+    copyError.value = error.message || 'Failed to copy model';
   } finally {
     copying.value = false;
   }
+};
+
+/**
+ * Load available worlds (with collections)
+ */
+const loadAvailableWorlds = async () => {
+  loadingWorlds.value = true;
+  referenceSearchError.value = '';
+
+  try {
+    availableWorlds.value = await worldService.getWorlds('withCollections');
+    logger.info('Loaded worlds for reference', { count: availableWorlds.value.length });
+  } catch (error: any) {
+    logger.error('Failed to load worlds', {}, error);
+    referenceSearchError.value = 'Failed to load worlds: ' + (error.message || 'Unknown error');
+  } finally {
+    loadingWorlds.value = false;
+  }
+};
+
+/**
+ * Load models for selected world
+ */
+const loadModelsForWorld = async () => {
+  if (!referenceSearch.value.worldId) {
+    return;
+  }
+
+  loadingModels.value = true;
+  referenceSearchError.value = '';
+  availableModels.value = [];
+
+  try {
+    // Get all layers for the world
+    const layersResponse = await layerService.getLayers(referenceSearch.value.worldId, { limit: 1000 });
+
+    // Filter MODEL type layers and load their models
+    const modelLayers = layersResponse.layers.filter(layer => layer.layerType === 'MODEL');
+
+    const allModels: LayerModelDto[] = [];
+    for (const layer of modelLayers) {
+      try {
+        const modelsResponse = await layerModelService.getModels(referenceSearch.value.worldId, layer.id);
+        allModels.push(...modelsResponse.models.filter(m => m.name)); // Only models with names
+      } catch (error) {
+        logger.warn('Failed to load models for layer', { layerId: layer.id });
+      }
+    }
+
+    availableModels.value = allModels;
+    logger.info('Loaded models for world', {
+      worldId: referenceSearch.value.worldId,
+      count: allModels.length
+    });
+  } catch (error: any) {
+    logger.error('Failed to load models', {}, error);
+    referenceSearchError.value = 'Failed to load models: ' + (error.message || 'Unknown error');
+  } finally {
+    loadingModels.value = false;
+  }
+};
+
+/**
+ * Open reference search dialog
+ */
+const openReferenceSearchDialog = async () => {
+  // Parse existing referenceModelId if present
+  if (formData.value.referenceModelId) {
+    const slashIndex = formData.value.referenceModelId.lastIndexOf('/');
+    if (slashIndex > 0) {
+      referenceSearch.value = {
+        worldId: formData.value.referenceModelId.substring(0, slashIndex),
+        modelName: formData.value.referenceModelId.substring(slashIndex + 1)
+      };
+    } else {
+      referenceSearch.value = { worldId: '', modelName: '' };
+    }
+  } else {
+    referenceSearch.value = { worldId: '', modelName: '' };
+  }
+  referenceSearchError.value = '';
+  availableModels.value = [];
+
+  // Load available worlds
+  await loadAvailableWorlds();
+
+  showReferenceSearchDialog.value = true;
+};
+
+/**
+ * Close reference search dialog
+ */
+const closeReferenceSearchDialog = () => {
+  showReferenceSearchDialog.value = false;
+  referenceSearchError.value = '';
+  referenceSearch.value = { worldId: '', modelName: '' };
+  availableWorlds.value = [];
+  availableModels.value = [];
+};
+
+/**
+ * Handle world ID change
+ */
+const handleWorldIdChange = () => {
+  // Clear error and models when world changes
+  referenceSearchError.value = '';
+  availableModels.value = [];
+  referenceSearch.value.modelName = '';
+};
+
+/**
+ * Handle select reference
+ */
+const handleSelectReference = () => {
+  const { worldId, modelName } = referenceSearch.value;
+
+  if (!worldId || !modelName) {
+    referenceSearchError.value = 'Both world ID and model name are required';
+    return;
+  }
+
+  // Build reference ID in format "worldId/modelName"
+  const referenceId = `${worldId}/${modelName}`;
+  formData.value.referenceModelId = referenceId;
+
+  logger.info('Selected reference model', { referenceId });
+
+  // Close dialog
+  closeReferenceSearchDialog();
 };
 </script>

@@ -246,6 +246,11 @@ Am besten: Auswahl der Welt, dann auswahl des WLayer (nur Model Layer). Eingabe 
 hier angepasst werden. Das WLayerModel wird kopiert. WorldId und layerDataId 
 werden automatisch uebernommen aus der dem Ziel WLayer.
 
+[?] Im Copier dialog soll anstelle der id
+1. die Welt selektiert werden (auch World Collecions - siehe world selector fuer die Abfrage am Backend)
+2. der WLayer (nur Model Layer) selektiert werden
+
+
 ## referenceModelId
 
 In WLayerModel gibt es ein Feld referenceModelId in dem soll die Referenz auf ein anderes WLayerModel angelegt werden koennen.
@@ -261,9 +266,8 @@ Danach werden die Blocks im aktuellen layer gesyncht.
 Es ist nun moeglich mehrere referenz ketten yu haben. es wird eine maximale tiefe von 10 gesetzt.
 - es ist vermutlich sinnvoll auch die rotation zu addieren.
 
-[ ] Im layer-editor an referenceModelId sol es ein such icon geben. Es geht ein dialog auf in dem
+[?] Im layer-editor an referenceModelId sol es ein such icon geben. Es geht ein dialog auf in dem
 1. WorldId selektiert werden kann
 2. Layername ausgewaehlt werden kann
 
-[ ] Im layer-editor im WLayerModel Dialog soll es einen Button geben, der das referenzierte Model öffnet (sofern vorhanden).
-
+[?] Der world-selector im header von layer-editor soll auch world collections zur auswahl stellen.
