@@ -44,4 +44,11 @@ public interface WLayerModelRepository extends MongoRepository<WLayerModel, Stri
      * Delete model by layerDataId.
      */
     void deleteByLayerDataId(String layerDataId);
+
+    /**
+     * Find models by worldId and name.
+     * Used for resolving referenceModelId in format "worldId/name".
+     * If multiple models match, the first one will be used.
+     */
+    List<WLayerModel> findByWorldIdAndName(String worldId, String name);
 }

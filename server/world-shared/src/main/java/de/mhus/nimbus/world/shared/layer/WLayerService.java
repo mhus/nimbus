@@ -668,6 +668,149 @@ public class WLayerService {
     }
 
     /**
+     * Resolve a reference model ID (format: "worldId/name" or "worldId:branch/name").
+     * Returns the referenced model or empty if not found.
+     *
+     * @param referenceModelId Reference in format "worldId/name" (e.g., "earth616:westview/TownHall")
+     * @return Referenced model or empty
+     */
+    private Optional<WLayerModel> resolveReferenceModel(String referenceModelId) {
+        if (referenceModelId == null || referenceModelId.isBlank()) {
+            return Optional.empty();
+        }
+
+        // Parse reference: "worldId/name"
+        int slashIndex = referenceModelId.lastIndexOf('/');
+        if (slashIndex <= 0) {
+            log.warn("Invalid referenceModelId format (expected 'worldId/name'): {}", referenceModelId);
+            return Optional.empty();
+        }
+
+        String worldId = referenceModelId.substring(0, slashIndex);
+        String modelName = referenceModelId.substring(slashIndex + 1);
+
+        // Find model by worldId and name
+        List<WLayerModel> models = modelRepository.findByWorldIdAndName(worldId, modelName);
+        if (models.isEmpty()) {
+            log.warn("Referenced model not found: worldId={} name={}", worldId, modelName);
+            return Optional.empty();
+        }
+
+        if (models.size() > 1) {
+            log.warn("Multiple models found for reference (using first): worldId={} name={} count={}",
+                    worldId, modelName, models.size());
+        }
+
+        return Optional.of(models.get(0));
+    }
+
+    /**
+     * Rotate a position around origin by 90-degree steps.
+     * Rotation is around Y-axis (vertical axis).
+     *
+     * @param x        X coordinate
+     * @param z        Z coordinate
+     * @param rotation Rotation in 90-degree steps (0-3)
+     * @return Rotated [x, z] coordinates
+     */
+    private int[] rotatePosition(int x, int z, int rotation) {
+        int normalizedRotation = rotation % 4;
+        return switch (normalizedRotation) {
+            case 1 -> new int[]{-z, x};  // 90 degrees clockwise
+            case 2 -> new int[]{-x, -z}; // 180 degrees
+            case 3 -> new int[]{z, -x};  // 270 degrees clockwise (90 counter-clockwise)
+            default -> new int[]{x, z};  // 0 degrees (no rotation)
+        };
+    }
+
+    /**
+     * Resolve and merge referenced models recursively.
+     * Follows referenceModelId chain up to maxDepth and returns merged content.
+     * Mount points are added together, rotations are accumulated.
+     *
+     * @param model            Current model to resolve
+     * @param depth            Current recursion depth
+     * @param maxDepth         Maximum recursion depth (default 10)
+     * @param mountXOffset     Accumulated mount X offset from parent references
+     * @param mountYOffset     Accumulated mount Y offset from parent references
+     * @param mountZOffset     Accumulated mount Z offset from parent references
+     * @param accumulatedRotation Accumulated rotation from parent references (0-3)
+     * @return List of LayerBlocks with resolved positions
+     */
+    private List<LayerBlock> resolveModelWithReferences(WLayerModel model, int depth, int maxDepth,
+                                                        int mountXOffset, int mountYOffset, int mountZOffset,
+                                                        int accumulatedRotation) {
+        if (depth > maxDepth) {
+            log.warn("Maximum reference depth exceeded: modelId={} depth={}", model.getId(), depth);
+            return new ArrayList<>();
+        }
+
+        List<LayerBlock> result = new ArrayList<>();
+        int currentRotation = (model.getRotation() + accumulatedRotation) % 4;
+
+        // First, resolve reference if present
+        if (model.getReferenceModelId() != null && !model.getReferenceModelId().isBlank()) {
+            Optional<WLayerModel> refModelOpt = resolveReferenceModel(model.getReferenceModelId());
+            if (refModelOpt.isPresent()) {
+                WLayerModel refModel = refModelOpt.get();
+                log.debug("Following reference: modelId={} -> refId={} refName={} depth={} rotation={}",
+                        model.getId(), refModel.getId(), refModel.getName(), depth, currentRotation);
+
+                // Apply current model's rotation to mount offsets before recursing
+                int[] rotatedMount = rotatePosition(model.getMountX(), model.getMountZ(), accumulatedRotation);
+
+                // Recursively resolve reference with accumulated mount offsets and rotation
+                List<LayerBlock> refBlocks = resolveModelWithReferences(
+                        refModel,
+                        depth + 1,
+                        maxDepth,
+                        mountXOffset + rotatedMount[0],
+                        mountYOffset + model.getMountY(),
+                        mountZOffset + rotatedMount[1],
+                        currentRotation
+                );
+                result.addAll(refBlocks);
+            }
+        }
+
+        // Then add this model's own content with accumulated mount offsets and rotation
+        if (model.getContent() != null && !model.getContent().isEmpty()) {
+            for (LayerBlock block : model.getContent()) {
+                if (block.getBlock() == null || block.getBlock().getPosition() == null) {
+                    continue;
+                }
+
+                // Get original position
+                de.mhus.nimbus.generated.types.Vector3 originalPos = block.getBlock().getPosition();
+                int x = (int) originalPos.getX();
+                int y = (int) originalPos.getY();
+                int z = (int) originalPos.getZ();
+
+                // Apply accumulated rotation
+                int[] rotated = rotatePosition(x, z, accumulatedRotation);
+
+                // Then add accumulated mount offsets
+                de.mhus.nimbus.generated.types.Vector3 adjustedPos = new de.mhus.nimbus.generated.types.Vector3();
+                adjustedPos.setX(rotated[0] + mountXOffset);
+                adjustedPos.setY(y + mountYOffset);
+                adjustedPos.setZ(rotated[1] + mountZOffset);
+
+                LayerBlock adjustedBlock = LayerBlock.builder()
+                        .block(cloneBlockWithPosition(block.getBlock(), adjustedPos))
+                        .override(block.isOverride())
+                        .group(block.getGroup())
+                        .weight(block.getWeight())
+                        .metadata(block.getMetadata())
+                        .build();
+
+                result.add(adjustedBlock);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Transfer a single WLayerModel into WLayerTerrain storage.
      * This method calculates affected chunks, generates terrain data for each chunk,
      * and optionally marks chunks as dirty.
@@ -699,22 +842,41 @@ public class WLayerService {
 
         WLayer layer = layerOpt.get();
 
-        // Calculate affected chunks from model content
-        Set<String> affectedChunks = calculateAffectedChunks(model);
+        // Resolve model with references (max depth 10)
+        // Start with rotation 0 since we want to apply the model's own rotation
+        log.debug("Resolving model with references: modelId={} rotation={}", modelId, model.getRotation());
+        List<LayerBlock> resolvedContent = resolveModelWithReferences(model, 0, 10, 0, 0, 0, 0);
+
+        if (resolvedContent.isEmpty()) {
+            log.debug("Model has no resolved content: modelId={}", modelId);
+            return 0;
+        }
+
+        // Create temporary model with resolved content for chunk calculation
+        WLayerModel resolvedModel = WLayerModel.builder()
+                .worldId(model.getWorldId())
+                .mountX(model.getMountX())
+                .mountY(model.getMountY())
+                .mountZ(model.getMountZ())
+                .content(resolvedContent)
+                .build();
+
+        // Calculate affected chunks from resolved model content
+        Set<String> affectedChunks = calculateAffectedChunks(resolvedModel);
 
         if (affectedChunks.isEmpty()) {
-            log.debug("Model has no content or no affected chunks: modelId={}", modelId);
+            log.debug("Resolved model has no affected chunks: modelId={}", modelId);
             return 0;
         }
 
         // Update WLayer.affectedChunks if needed
         updateLayerAffectedChunks(layer, affectedChunks);
 
-        // Transfer model blocks to terrain for each affected chunk
+        // Transfer resolved model blocks to terrain for each affected chunk
         int chunksProcessed = 0;
         for (String chunkKey : affectedChunks) {
             try {
-                transferModelToTerrainChunk(model, layer.getLayerDataId(), chunkKey);
+                transferModelToTerrainChunk(resolvedModel, layer.getLayerDataId(), chunkKey);
                 chunksProcessed++;
             } catch (Exception e) {
                 log.error("Failed to transfer model to terrain chunk: modelId={} chunkKey={}", modelId, chunkKey, e);

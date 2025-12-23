@@ -253,12 +253,17 @@ Die Referenz wird auf 'worldId/WLayerModel.name' gesetzt. z.b. earth616:westview
 - Das macht es einfach in der Datenbank zu suchen, worldId + name
 Der Ersteller muss darauf achten, das der Name eindeutig ist. Werden mehrere gefunden, wird das erste genommen.
 
-[ ] Beim synchen des models auf das Terrain (im WLayerService?) wird der Referenz gefolgt und zuerst dieses geladen und in 
+[?] Beim synchen des models auf das Terrain (im WLayerService?) wird der Referenz gefolgt und zuerst dieses geladen und in 
 den Terrain Layer übertragen. Anstelle des eigentlichen WLayerModel inhaltes.
 Dabei sollen die mount werte der beiden layer (reference und aktueller) addiert werden. Die rotation wird nur aus dem aktuellen 
 Layer kopiert.
 Danach werden die Blocks im aktuellen layer gesyncht.
 Es ist nun moeglich mehrere referenz ketten yu haben. es wird eine maximale tiefe von 10 gesetzt.
+- es ist vermutlich sinnvoll auch die rotation zu addieren.
+
+[ ] Im layer-editor an referenceModelId sol es ein such icon geben. Es geht ein dialog auf in dem
+1. WorldId selektiert werden kann
+2. Layername ausgewaehlt werden kann
 
 [ ] Im layer-editor im WLayerModel Dialog soll es einen Button geben, der das referenzierte Model öffnet (sofern vorhanden).
 
