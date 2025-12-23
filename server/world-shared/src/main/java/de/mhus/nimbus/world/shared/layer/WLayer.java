@@ -85,6 +85,15 @@ public class WLayer {
     private boolean enabled = true;
 
     /**
+     * Group mapping: group name -> group ID.
+     * Allows named access to groups defined in the layer.
+     * This is for Ground Layers, Model Layers use a mapping in WLayerModel.
+     * Example: {"blackRiver": 1}
+     */
+    @Builder.Default
+    private Map<String, Integer> groups = new HashMap<>();
+
+    /**
      * Base ground layer flag.
      * If true, this layer is the base ground layer for the world.
      */

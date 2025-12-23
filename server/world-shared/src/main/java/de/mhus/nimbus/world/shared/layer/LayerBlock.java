@@ -23,7 +23,7 @@ public class LayerBlock {
 
     /**
      * Layer-specific metadata.
-     * Can be used for layer-specific behavior.
+     * Can be used for layer-specific behavior or description.
      */
     private String metadata;
 
