@@ -315,7 +315,7 @@ Aber nicht, wenn es sich um einen value bereich: "" handelt.
 
 ## Imports 
 
-[ ] beim iport muss die worldId bei jedem entity durch die worldId im job DTO ueberschrieben werden. Es kann sein, das die daten frueher einer anderen welt
+[?] beim import muss die worldId bei jedem entity durch die worldId im job DTO ueberschrieben werden. Es kann sein, das die daten frueher einer anderen welt
 zugeordnet wurden.
 - Ausserdem muessen machche parameter auf prefix gerueft werden. Ein prefix wir durch ':' getrennt.
 - Ist kein prefix, muss der ggf. vorgestellt werden. <prefix>:<path>
@@ -332,6 +332,7 @@ Zu ersetzende keys:
   - publicData.modifiers.<key>.visibility.textures.<key> - wenn string ist, dann prefixMapping anwenden
   - publicData.modifiers.<key>.visibility.textures.<key>.path
 
+[ ] Import muss noch geprüft werden. Erkennen von gleichen entities.
 
 ## Weitere Daten
 
