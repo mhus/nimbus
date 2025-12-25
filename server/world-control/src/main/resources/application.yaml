@@ -8,6 +8,8 @@ spring:
       database: world
 
 nimbus:
+  encryption:
+    password: ${NIMBUS_ENCRYPTION_PASSWORD:changeThisPasswordInProduction}
   chunk:
     compression:
       enabled: ${CHUNK_COMPRESSION_ENABLED:true}

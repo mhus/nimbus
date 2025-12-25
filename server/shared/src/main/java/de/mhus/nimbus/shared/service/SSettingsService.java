@@ -24,6 +24,7 @@ import java.util.Optional;
 public class SSettingsService {
 
     private final SSettingsRepository repository;
+    private final AesEncryptionService encryptionService;
 
     /**
      * Get a setting by key
@@ -333,34 +334,34 @@ public class SSettingsService {
 
     /**
      * Set an encrypted password setting.
-     * Note: Currently uses Base64 encoding. For production, implement proper encryption.
+     * Uses AES-256-GCM encryption with password-based key derivation.
      */
     public SSettings setEncryptedPassword(String key, String plainPassword) {
         if (plainPassword == null) {
             return setSetting(key, null, "password");
         }
-        // TODO: Implement proper encryption (e.g., AES, RSA)
-        // For now, use Base64 encoding as placeholder
-        String encoded = java.util.Base64.getEncoder().encodeToString(plainPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        return setSetting(key, encoded, "password");
+        try {
+            String encrypted = encryptionService.encrypt(plainPassword);
+            return setSetting(key, encrypted, "password");
+        } catch (Exception e) {
+            log.error("Failed to encrypt password for key '{}': {}", key, e.getMessage());
+            throw new RuntimeException("Failed to encrypt password", e);
+        }
     }
 
     /**
      * Get a decrypted password setting.
-     * Note: Currently uses Base64 decoding. For production, implement proper decryption.
+     * Uses AES-256-GCM decryption with password-based key derivation.
      */
     public String getDecryptedPassword(String key) {
-        String encoded = getStringValue(key);
-        if (encoded == null || encoded.isBlank()) {
+        String encrypted = getStringValue(key);
+        if (encrypted == null || encrypted.isBlank()) {
             return null;
         }
         try {
-            // TODO: Implement proper decryption (e.g., AES, RSA)
-            // For now, use Base64 decoding as placeholder
-            byte[] decoded = java.util.Base64.getDecoder().decode(encoded);
-            return new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
-        } catch (IllegalArgumentException e) {
-            log.warn("Failed to decode password for key '{}': {}", key, e.getMessage());
+            return encryptionService.decrypt(encrypted);
+        } catch (Exception e) {
+            log.warn("Failed to decrypt password for key '{}': {}", key, e.getMessage());
             return null;
         }
     }

@@ -6,6 +6,10 @@ spring:
       uri: mongodb://root:example@localhost:27017/universe?authSource=admin
       database: universe
 
+nimbus:
+  encryption:
+    password: ${NIMBUS_ENCRYPTION_PASSWORD:changeThisPasswordInProduction}
+
 universe:
   security:
     auth-expires-minutes: 15

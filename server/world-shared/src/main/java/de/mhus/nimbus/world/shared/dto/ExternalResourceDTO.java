@@ -67,9 +67,9 @@ public class ExternalResourceDTO {
     private String gitUsername;
 
     /**
-     * Git password/token for authentication.
+     * setting key where Git password/token for authentication is stored as password.
      */
-    private String gitPassword;
+    private String gitPasswordSetting;
 
     /**
      * Prefix mapping for import (alt=neu).

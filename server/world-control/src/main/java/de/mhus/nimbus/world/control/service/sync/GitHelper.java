@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.control.service.sync;
 
-import de.mhus.nimbus.world.control.config.GitCredentialsProperties;
+import de.mhus.nimbus.shared.service.SSettingsService;
 import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,15 +13,17 @@ import java.nio.file.Paths;
 /**
  * Helper service for Git operations using RepositoryControl.
  * Handles Git sync based on ExternalResourceDTO configuration.
- * Falls back to GitCredentialsProperties from application.yaml if DTO doesn't provide credentials.
+ * Credentials must be provided in the DTO or stored in SSettingsService.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class GitHelper {
 
+    private static final String DEFAULT_BRANCH = "main";
+
     private final RepositoryControl repositoryControl;
-    private final GitCredentialsProperties gitProperties;
+    private final SSettingsService settingsService;
 
     /**
      * Initialize or clone repository if needed.
@@ -142,54 +144,62 @@ public class GitHelper {
         enhanced.append("\n=== Credential Source ===\n");
 
         if (definition.getGitUsername() != null && !definition.getGitUsername().isBlank()) {
-            enhanced.append("Username: from ExternalResourceDTO\n");
-        } else if (gitProperties.getUsername() != null) {
-            enhanced.append("Username: from application.yaml (").append(gitProperties.getUsername()).append(")\n");
+            enhanced.append("Username: ").append(definition.getGitUsername()).append("\n");
+        } else {
+            enhanced.append("Username: not set (anonymous or public repository)\n");
         }
 
-        if (definition.getGitPassword() != null && !definition.getGitPassword().isBlank()) {
-            enhanced.append("Password: from ExternalResourceDTO\n");
-        } else if (gitProperties.getPassword() != null) {
-            enhanced.append("Password: from application.yaml\n");
+        if (definition.getGitPasswordSetting() != null && !definition.getGitPasswordSetting().isBlank()) {
+            enhanced.append("Password: from SSettingsService (key: ").append(definition.getGitPasswordSetting()).append(")\n");
+        } else {
+            enhanced.append("Password: not set (anonymous or public repository)\n");
         }
 
         if (definition.getGitBranch() != null && !definition.getGitBranch().isBlank()) {
-            enhanced.append("Branch: from ExternalResourceDTO (").append(definition.getGitBranch()).append(")\n");
+            enhanced.append("Branch: ").append(definition.getGitBranch()).append("\n");
         } else {
-            enhanced.append("Branch: from application.yaml (").append(gitProperties.getBranch()).append(")\n");
+            enhanced.append("Branch: ").append(DEFAULT_BRANCH).append(" (default)\n");
         }
 
         return enhanced.toString();
     }
 
     /**
-     * Get effective username (DTO or fallback to properties).
+     * Get effective username from DTO.
+     * Returns null if not provided (anonymous access or no authentication needed).
      */
     private String getEffectiveUsername(ExternalResourceDTO definition) {
         if (definition.getGitUsername() != null && !definition.getGitUsername().isBlank()) {
             return definition.getGitUsername();
         }
-        return gitProperties.getUsername();
+        return null;
     }
 
     /**
-     * Get effective password (DTO or fallback to properties).
+     * Get effective password from SSettingsService.
+     * The gitPassword field in DTO is used as a key to read the encrypted password from SSettingsService.
+     * Returns null if not provided (anonymous access or no authentication needed).
      */
     private String getEffectivePassword(ExternalResourceDTO definition) {
-        if (definition.getGitPassword() != null && !definition.getGitPassword().isBlank()) {
-            return definition.getGitPassword();
+        if (definition.getGitPasswordSetting() != null && !definition.getGitPasswordSetting().isBlank()) {
+            // gitPassword is the key to read from SSettingsService
+            String decryptedPassword = settingsService.getDecryptedPassword(definition.getGitPasswordSetting());
+            if (decryptedPassword != null) {
+                return decryptedPassword;
+            }
+            log.warn("No encrypted password found in SSettingsService for key '{}'", definition.getGitPasswordSetting());
         }
-        return gitProperties.getPassword();
+        return null;
     }
 
     /**
-     * Get effective branch (DTO or fallback to properties).
+     * Get effective branch from DTO or use default.
      */
     private String getEffectiveBranch(ExternalResourceDTO definition) {
         if (definition.getGitBranch() != null && !definition.getGitBranch().isBlank()) {
             return definition.getGitBranch();
         }
-        return gitProperties.getBranch();
+        return DEFAULT_BRANCH;
     }
 }
 

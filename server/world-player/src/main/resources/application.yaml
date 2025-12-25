@@ -10,6 +10,8 @@ spring:
     url: ${REDIS_URL:redis://localhost:6379}
 
 nimbus:
+  encryption:
+    password: ${NIMBUS_ENCRYPTION_PASSWORD:changeThisPasswordInProduction}
   chunk:
     compression:
       enabled: ${CHUNK_COMPRESSION_ENABLED:true}
