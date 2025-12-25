@@ -313,19 +313,34 @@ damit diese besser in git gemerged werden keonne sollten sie mehr new line entha
 ist, immer nach/vor einem {, }, [, ] oder nach , ein enter einzfuegen, also eine art formaterung in den json dateien, aber ohne new line.
 Aber nicht, wenn es sich um einen value bereich: "" handelt.
 
-## Imports prüfen
+## Imports 
 
-[ ] ...
+[ ] beim iport muss die worldId bei jedem entity durch die worldId im job DTO ueberschrieben werden. Es kann sein, das die daten frueher einer anderen welt
+zugeordnet wurden.
+- Ausserdem muessen machche parameter auf prefix gerueft werden. Ein prefix wir durch ':' getrennt.
+- Ist kein prefix, muss der ggf. vorgestellt werden. <prefix>:<path>
+- Ist ein ein prefix vorhanden, muss er evtl erstelt werden.
+Regeln als map in ExternalResourceDTO.prefixMapping:
+- alt=new
+- Wenn alt leerer string, ist ein fehlender prefix gemeint
+z.B prefixMapping = {"":"r", "w":"s"}
+- ersetze fehlenden prefix ("some/other/path" oder "/some/other/path") durch r:some/other/path
+- ersetze "w:some/other/path" durch s:some/other/path
+Zu ersetzende keys:
+- blocktypes
+  - publicData.modifiers.<key>.audio.path
+  - publicData.modifiers.<key>.visibility.textures.<key> - wenn string ist, dann prefixMapping anwenden
+  - publicData.modifiers.<key>.visibility.textures.<key>.path
 
 
 ## Weitere Daten
 
-[?] Exportiere auf die geliche weise wie WBackdrop auch WItem
+[x] Exportiere auf die geliche weise wie WBackdrop auch WItem
 
-[?] Exportiere auf die geliche weise wie WBlockType auch WItemPosition
+[x] Exportiere auf die geliche weise wie WBlockType auch WItemPosition
 
-[?] Exportiere auf die geliche weise wie WBlockType auch WEntity
+[x] Exportiere auf die geliche weise wie WBlockType auch WEntity
 
-[?] Exportiere auf die geliche weise wie WBlockType auch WEntityModel
+[x] Exportiere auf die geliche weise wie WBlockType auch WEntityModel
 
-[ ] Exportiere auf die gleiche weise wie WBackdrop auch WItemType
+[x] Exportiere auf die gleiche weise wie WBackdrop auch WItemType

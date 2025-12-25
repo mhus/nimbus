@@ -177,7 +177,7 @@ public class ResourceSyncService {
 
                 try {
                     log.info("Importing type: {}", typeName);
-                    ResourceSyncType.ImportResult typeResult = syncType.importData(dataPath, worldId, force, removeOvertaken);
+                    ResourceSyncType.ImportResult typeResult = syncType.importData(dataPath, worldId, definition, force, removeOvertaken);
                     importedByType.put(typeName, typeResult.imported());
                     deletedByType.put(typeName, typeResult.deleted());
                     totalImported += typeResult.imported();

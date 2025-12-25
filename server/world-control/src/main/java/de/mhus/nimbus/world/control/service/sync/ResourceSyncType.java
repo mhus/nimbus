@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.service.sync;
 
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -44,12 +45,13 @@ public interface ResourceSyncType {
      *
      * @param dataPath       Root import path
      * @param worldId        World to import into
+     * @param definition     ExternalResourceDTO with prefixMapping and target worldId
      * @param force          Force import even if DB is newer
      * @param removeOvertaken Remove entities that no longer exist in filesystem
      * @return Import result with imported and deleted counts
      * @throws IOException if file operations fail
      */
-    ImportResult importData(Path dataPath, WorldId worldId, boolean force, boolean removeOvertaken) throws IOException;
+    ImportResult importData(Path dataPath, WorldId worldId, ExternalResourceDTO definition, boolean force, boolean removeOvertaken) throws IOException;
 
     /**
      * Result of import operation for a single type.

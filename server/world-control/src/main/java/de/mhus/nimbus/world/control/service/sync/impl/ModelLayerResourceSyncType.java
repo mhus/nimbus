@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.control.service.sync.DocumentTransformer;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
+import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
 import de.mhus.nimbus.world.shared.layer.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
     private final WLayerModelRepository modelRepository;
     private final MongoTemplate mongoTemplate;
     private final SchemaMigrationService migrationService;
+    private final DocumentTransformer documentTransformer;
     private final ObjectMapper objectMapper;
 
     @Qualifier("syncYamlMapper")
@@ -124,7 +127,7 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
     }
 
     @Override
-    public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, boolean force, boolean removeOvertaken) throws IOException {
+    public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, ExternalResourceDTO definition, boolean force, boolean removeOvertaken) throws IOException {
         Path modelsDir = dataPath.resolve("models");
         if (!Files.exists(modelsDir)) {
             log.info("No models directory found");
@@ -160,6 +163,9 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
                     String migratedJson = migrationService.migrateToLatest(json, entityType);
                     Document migratedLayerDoc = Document.parse(migratedJson);
 
+                    // Transform document (worldId replacement + prefix mapping)
+                    migratedLayerDoc = documentTransformer.transformForImport(migratedLayerDoc, definition);
+
                     // Check if should import
                     if (!force) {
                         Document existing = mongoTemplate.findById(migratedLayerDoc.get("_id"), Document.class, LAYER_COLLECTION);
@@ -193,6 +199,9 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
                                 }
                                 String migratedModelJson = migrationService.migrateToLatest(modelJson, modelEntityType);
                                 Document migratedModelDoc = Document.parse(migratedModelJson);
+
+                                // Transform document (worldId replacement + prefix mapping)
+                                migratedModelDoc = documentTransformer.transformForImport(migratedModelDoc, definition);
 
                                 // Check if should import
                                 if (!force) {

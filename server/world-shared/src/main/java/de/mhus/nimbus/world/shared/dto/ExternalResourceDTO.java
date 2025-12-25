@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Configuration for import/export definitions.
@@ -69,4 +70,11 @@ public class ExternalResourceDTO {
      * Git password/token for authentication.
      */
     private String gitPassword;
+
+    /**
+     * Prefix mapping for import (alt=neu).
+     * Empty string key means "no prefix".
+     * Example: {"":"r", "w":"s"} replaces missing prefix with "r:" and "w:" with "s:"
+     */
+    private Map<String, String> prefixMapping;
 }

@@ -7,7 +7,9 @@ import de.mhus.nimbus.shared.storage.StorageData;
 import de.mhus.nimbus.shared.storage.StorageDataRepository;
 import de.mhus.nimbus.shared.storage.StorageService;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.control.service.sync.DocumentTransformer;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
+import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
 import de.mhus.nimbus.world.shared.layer.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +47,7 @@ public class GroundLayerResourceSyncType implements ResourceSyncType {
     private final StorageService storageService;
     private final MongoTemplate mongoTemplate;
     private final SchemaMigrationService migrationService;
+    private final DocumentTransformer documentTransformer;
     private final ObjectMapper objectMapper;
 
     @Qualifier("syncYamlMapper")
@@ -173,7 +176,7 @@ public class GroundLayerResourceSyncType implements ResourceSyncType {
     }
 
     @Override
-    public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, boolean force, boolean removeOvertaken) throws IOException {
+    public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, ExternalResourceDTO definition, boolean force, boolean removeOvertaken) throws IOException {
         Path groundDir = dataPath.resolve("ground");
         if (!Files.exists(groundDir)) {
             log.info("No ground directory found");
@@ -208,6 +211,9 @@ public class GroundLayerResourceSyncType implements ResourceSyncType {
                     }
                     String migratedJson = migrationService.migrateToLatest(json, entityType);
                     Document migratedLayerDoc = Document.parse(migratedJson);
+
+                    // Transform document (worldId replacement + prefix mapping)
+                    migratedLayerDoc = documentTransformer.transformForImport(migratedLayerDoc, definition);
 
                     // Check if should import
                     if (!force) {

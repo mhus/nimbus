@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.control.service.sync.DocumentTransformer;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
+import de.mhus.nimbus.world.shared.dto.ExternalResourceDTO;
 import de.mhus.nimbus.world.shared.world.WEntity;
 import de.mhus.nimbus.world.shared.world.WEntityService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,7 @@ public class EntityResourceSyncType implements ResourceSyncType {
     private final WEntityService entityService;
     private final MongoTemplate mongoTemplate;
     private final SchemaMigrationService migrationService;
+    private final DocumentTransformer documentTransformer;
     private final ObjectMapper objectMapper;
 
     @Qualifier("syncYamlMapper")
@@ -109,7 +112,7 @@ public class EntityResourceSyncType implements ResourceSyncType {
     }
 
     @Override
-    public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, boolean force, boolean removeOvertaken) throws IOException {
+    public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, ExternalResourceDTO definition, boolean force, boolean removeOvertaken) throws IOException {
         Path entitiesDir = dataPath.resolve("entities");
         if (!Files.exists(entitiesDir)) {
             log.info("No entities directory found");
@@ -138,6 +141,9 @@ public class EntityResourceSyncType implements ResourceSyncType {
 
                     String migratedJson = migrationService.migrateToLatest(json, entityType);
                     Document migratedDoc = Document.parse(migratedJson);
+
+                    // Transform document (worldId replacement + prefix mapping)
+                    migratedDoc = documentTransformer.transformForImport(migratedDoc, definition);
 
                     // Check if should import
                     if (!force) {

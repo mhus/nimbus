@@ -32,7 +32,11 @@
       "Bash(npm run build:*)",
       "Bash(npm run type-check:*)",
       "WebSearch",
-      "WebFetch(domain:mvnrepository.com)"
+      "WebFetch(domain:mvnrepository.com)",
+      "Bash(for file in AssetResourceSyncType.java EntityResourceSyncType.java EntityModelResourceSyncType.java ItemResourceSyncType.java ItemTypeResourceSyncType.java ItemPositionResourceSyncType.java ModelLayerResourceSyncType.java GroundLayerResourceSyncType.java)",
+      "Bash(do echo \"Processing $file\")",
+      "Bash(while read file)",
+      "Bash(do if ! grep -q \"DocumentTransformer\" \"$file\")"
     ],
     "deny": [],
     "ask": []
