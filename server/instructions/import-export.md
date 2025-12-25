@@ -292,3 +292,40 @@ Git-Integration mit JGit vollständig implementiert!
       branch: main
   
 ```
+
+# Direct database access
+
+[x] Der export und import soll direkt aus der mongodb heraus passieren. Zumindest bei allen strukturen, die nicht aus dem StorageService (nur WLayer mit Type Ground) kommen.
+- Das wurde bereits implementiert in: server/tools/world-export/src bzw. server/tools/world-import/src
+- Beim import soll, wie in server/tools/world-import/src auch die Migration von Datensaetzien durchgefuehrt werden.
+- Für Storage basierte daten (nur WLayer mit Type Ground) soll sich aktuell noch nichts ändern.
+
+[x] Bei Storage basierten daten (nur WLayer mit Type Ground) soll die schema und schema version einmalig in der datei _schema.yaml gespeichert werden.
+- Dazu wird aus der ersten chunk-datei die schema version gelesen und in die _schema.yaml datei geschrieben. Neben die _info.yaml datei.
+- Dies kann direkt aus dem StorageData objekt gelesen werden.
+- Es wird davon ausgegenagen, das alle dateien die gleiche version haben.
+
+[x] Bei Storage basierten daten (nur WLayer mit Type Ground) sollen die daten nicht mehr als yaml datei, sonern als json direkt aus dem storage
+gespeichert werden. also anstelle von chunk_x_y.yaml chunk_x_y.json - keine umwandlung in yaml dateien noetig.
+
+[x] ground storage daten sind immer json dateien, so wie "{"cx":5,"cz":-3,"blocks":[{"block":{"position":{"x":160.0,"y":66....."
+damit diese besser in git gemerged werden keonne sollten sie mehr new line enthalten, aber keine inline spaces. Die idee
+ist, immer nach/vor einem {, }, [, ] oder nach , ein enter einzfuegen, also eine art formaterung in den json dateien, aber ohne new line.
+Aber nicht, wenn es sich um einen value bereich: "" handelt.
+
+## Imports prüfen
+
+[ ] ...
+
+
+## Weitere Daten
+
+[ ] Exportiere auf die geliche weise wie WBackdrop auch WItem
+
+[ ] Exportiere auf die geliche weise wie WBlockType auch WItemPosition
+
+[ ] Exportiere auf die geliche weise wie WBlockType auch WEntity
+
+[ ] Exportiere auf die geliche weise wie WBlockType auch WEntityModel
+
+

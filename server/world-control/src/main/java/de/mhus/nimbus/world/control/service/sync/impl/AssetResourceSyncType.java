@@ -1,23 +1,25 @@
 package de.mhus.nimbus.world.control.service.sync.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
-import de.mhus.nimbus.world.shared.world.AssetMetadata;
 import de.mhus.nimbus.world.shared.world.SAsset;
 import de.mhus.nimbus.world.shared.world.SAssetService;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,14 +27,20 @@ import java.util.stream.Stream;
 
 /**
  * Import/export implementation for assets.
- * Exports assets as binary files + .info.yaml metadata in assets/ folder.
+ * Exports MongoDB documents directly as .info.yaml + binary files.
+ * Binary data comes from StorageService, metadata from MongoDB documents.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AssetResourceSyncType implements ResourceSyncType {
 
+    private static final String COLLECTION_NAME = "s_assets";
+
     private final SAssetService assetService;
+    private final MongoTemplate mongoTemplate;
+    private final SchemaMigrationService migrationService;
+    private final ObjectMapper objectMapper;
 
     @Qualifier("syncYamlMapper")
     private final YAMLMapper yamlMapper;
@@ -47,47 +55,55 @@ public class AssetResourceSyncType implements ResourceSyncType {
         Path assetsDir = dataPath.resolve("assets");
         Files.createDirectories(assetsDir);
 
-        List<SAsset> assets = assetService.findByWorldId(worldId);
+        // Get assets directly from MongoDB as Documents
+        Query query = new Query(Criteria.where("worldId").is(worldId.getId()));
+        List<Document> documents = mongoTemplate.find(query, Document.class, COLLECTION_NAME);
+
         Set<String> dbAssetPaths = new HashSet<>();
         int exported = 0;
 
-        for (SAsset asset : assets) {
-            if (!asset.isEnabled()) {
-                continue; // Skip disabled assets
-            }
-
-            dbAssetPaths.add(asset.getPath());
-            Path targetBinary = assetsDir.resolve(asset.getPath());
-            Path targetInfo = assetsDir.resolve(asset.getPath() + ".info.yaml");
-
-            // Check if export needed
-            if (!force && Files.exists(targetInfo)) {
-                Instant fileTime = Files.getLastModifiedTime(targetInfo).toInstant();
-                if (asset.getCreatedAt() != null && asset.getCreatedAt().isBefore(fileTime)) {
-                    log.debug("Skipping asset {} (not modified)", asset.getPath());
+        for (Document doc : documents) {
+            try {
+                String path = doc.getString("path");
+                Object assetIdObj = doc.get("_id");
+                if (path == null || assetIdObj == null) {
+                    log.warn("Asset without path or _id, skipping");
                     continue;
                 }
+
+                String assetId = assetIdObj.toString(); // ObjectId to String
+                dbAssetPaths.add(path);
+                Path targetBinary = assetsDir.resolve(path);
+                Path targetInfo = assetsDir.resolve(path + ".info.yaml");
+
+                // Create parent directories
+                Files.createDirectories(targetBinary.getParent());
+
+                // Find SAsset entity for binary data
+                List<SAsset> assets = assetService.findByWorldId(worldId);
+                SAsset asset = assets.stream()
+                        .filter(a -> assetId.equals(a.getId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (asset == null) {
+                    log.warn("Asset entity not found for document: {}", assetId);
+                    continue;
+                }
+
+                // Export binary data
+                try (InputStream stream = assetService.loadContent(asset)) {
+                    Files.copy(stream, targetBinary, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                // Export metadata as MongoDB Document (preserves all fields)
+                yamlMapper.writeValue(targetInfo.toFile(), doc);
+                log.debug("Exported asset: {}", path);
+                exported++;
+
+            } catch (Exception e) {
+                log.warn("Failed to export asset document", e);
             }
-
-            // Create parent directories
-            Files.createDirectories(targetBinary.getParent());
-
-            // Export binary data
-            try (InputStream stream = assetService.loadContent(asset)) {
-                Files.copy(stream, targetBinary, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            // Export metadata
-            AssetInfoExportDTO dto = AssetInfoExportDTO.builder()
-                    .path(asset.getPath())
-                    .createdAt(asset.getCreatedAt())
-                    .createdBy(asset.getCreatedBy())
-                    .metadata(asset.getPublicData())
-                    .build();
-
-            yamlMapper.writeValue(targetInfo.toFile(), dto);
-            log.debug("Exported asset: {}", asset.getPath());
-            exported++;
         }
 
         // Remove files not in DB if requested
@@ -98,8 +114,10 @@ public class AssetResourceSyncType implements ResourceSyncType {
 
                 for (Path infoFile : infoFiles) {
                     try {
-                        AssetInfoExportDTO dto = yamlMapper.readValue(infoFile.toFile(), AssetInfoExportDTO.class);
-                        if (!dbAssetPaths.contains(dto.getPath())) {
+                        Document doc = yamlMapper.readValue(infoFile.toFile(), Document.class);
+                        String path = doc.getString("path");
+
+                        if (!dbAssetPaths.contains(path)) {
                             // Delete both info and binary file
                             Files.delete(infoFile);
                             String relativePath = assetsDir.relativize(infoFile).toString();
@@ -108,7 +126,7 @@ public class AssetResourceSyncType implements ResourceSyncType {
                             if (Files.exists(binaryFile)) {
                                 Files.delete(binaryFile);
                             }
-                            log.info("Deleted files not in database: {}", dto.getPath());
+                            log.info("Deleted files not in database: {}", path);
                             deleted++;
                         }
                     } catch (IOException e) {
@@ -130,7 +148,7 @@ public class AssetResourceSyncType implements ResourceSyncType {
         }
 
         // Collect filesystem assets
-        Set<String> filesystemAssets = new HashSet<>();
+        Set<String> filesystemAssetPaths = new HashSet<>();
         int imported = 0;
 
         // Find all .info.yaml files recursively
@@ -141,10 +159,12 @@ public class AssetResourceSyncType implements ResourceSyncType {
 
             for (Path infoFile : infoFiles) {
                 try {
-                    AssetInfoExportDTO dto = yamlMapper.readValue(infoFile.toFile(), AssetInfoExportDTO.class);
-                    filesystemAssets.add(dto.getPath());
+                    // Read YAML as Document
+                    Document doc = yamlMapper.readValue(infoFile.toFile(), Document.class);
+                    String path = doc.getString("path");
+                    filesystemAssetPaths.add(path);
 
-                    // Get binary file path (remove .info.yaml)
+                    // Get binary file path
                     String relativePath = assetsDir.relativize(infoFile).toString();
                     relativePath = relativePath.substring(0, relativePath.length() - ".info.yaml".length());
                     Path binaryFile = assetsDir.resolve(relativePath);
@@ -154,35 +174,59 @@ public class AssetResourceSyncType implements ResourceSyncType {
                         continue;
                     }
 
-                    // Check if exists in DB
-                    var existing = assetService.findByPath(worldId, dto.getPath());
+                    String json = objectMapper.writeValueAsString(doc);
 
-                    if (existing.isPresent()) {
-                        SAsset asset = existing.get();
-                        // Only update if file is newer (unless force=true)
-                        if (!force) {
-                            Instant fileTime = Files.getLastModifiedTime(infoFile).toInstant();
-                            if (asset.getCreatedAt() != null && fileTime.isBefore(asset.getCreatedAt())) {
-                                log.debug("Skipping asset {} (DB is newer)", dto.getPath());
-                                continue;
+                    // Migrate if needed
+                    String entityType = doc.getString("_class");
+                    if (entityType == null) {
+                        entityType = "de.mhus.nimbus.world.shared.world.SAsset";
+                    }
+
+                    String migratedJson = migrationService.migrateToLatest(json, entityType);
+                    Document migratedDoc = Document.parse(migratedJson);
+
+                    // Check if should import metadata
+                    if (!force) {
+                        Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
+                        if (existing != null) {
+                            Object fileCreatedAt = migratedDoc.get("createdAt");
+                            Object dbCreatedAt = existing.get("createdAt");
+                            if (fileCreatedAt != null && dbCreatedAt != null) {
+                                if (dbCreatedAt.toString().compareTo(fileCreatedAt.toString()) > 0) {
+                                    log.debug("Skipping asset {} (DB is newer)", path);
+                                    continue;
+                                }
                             }
-                        }
-
-                        // Update content
-                        try (InputStream stream = Files.newInputStream(binaryFile)) {
-                            assetService.updateContent(asset, stream);
-                        }
-                        // Update metadata separately
-                        assetService.updateMetadata(asset, dto.getMetadata());
-                    } else {
-                        // Create new asset
-                        try (InputStream stream = Files.newInputStream(binaryFile)) {
-                            assetService.saveAsset(worldId, dto.getPath(), stream,
-                                    dto.getCreatedBy(), dto.getMetadata());
                         }
                     }
 
-                    log.debug("Imported asset: {}", dto.getPath());
+                    // Check if asset exists - need to update binary content
+                    Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
+
+                    if (existing != null) {
+                        // Asset exists, update content and metadata
+                        SAsset asset = assetService.findByPath(worldId, path).orElse(null);
+                        if (asset != null) {
+                            try (InputStream stream = Files.newInputStream(binaryFile)) {
+                                assetService.updateContent(asset, stream);
+                            }
+                        }
+                        // Update metadata in MongoDB
+                        mongoTemplate.save(migratedDoc, COLLECTION_NAME);
+                    } else {
+                        // New asset - save metadata first, then update content
+                        mongoTemplate.save(migratedDoc, COLLECTION_NAME);
+
+                        // Now update with binary content
+                        SAsset asset = assetService.findByPath(worldId, path).orElse(null);
+                        if (asset != null) {
+                            try (InputStream stream = Files.newInputStream(binaryFile)) {
+                                assetService.updateContent(asset, stream);
+                            }
+                        }
+                    }
+
+                    log.debug("Imported asset: {}", path);
                     imported++;
 
                 } catch (Exception e) {
@@ -197,7 +241,7 @@ public class AssetResourceSyncType implements ResourceSyncType {
             List<SAsset> dbAssets = assetService.findByWorldId(worldId);
 
             for (SAsset asset : dbAssets) {
-                if (!filesystemAssets.contains(asset.getPath())) {
+                if (!filesystemAssetPaths.contains(asset.getPath())) {
                     assetService.delete(asset);
                     log.info("Deleted asset not in filesystem: {}", asset.getPath());
                     deleted++;
@@ -206,17 +250,5 @@ public class AssetResourceSyncType implements ResourceSyncType {
         }
 
         return ResourceSyncType.ImportResult.of(imported, deleted);
-    }
-
-    /**
-     * DTO for asset metadata export/import.
-     */
-    @Data
-    @Builder
-    public static class AssetInfoExportDTO {
-        private String path;
-        private Instant createdAt;
-        private String createdBy;
-        private AssetMetadata metadata;
     }
 }

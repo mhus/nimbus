@@ -1,22 +1,24 @@
 package de.mhus.nimbus.world.control.service.sync.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import de.mhus.nimbus.generated.types.BlockType;
+import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
 import de.mhus.nimbus.world.shared.world.WBlockType;
 import de.mhus.nimbus.world.shared.world.WBlockTypeService;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,14 +26,19 @@ import java.util.stream.Stream;
 
 /**
  * Import/export implementation for block types.
- * Exports block types as YAML files in blocktypes/ folder.
+ * Exports MongoDB documents directly as YAML files (preserves all fields including _schema).
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class BlockTypeResourceSyncType implements ResourceSyncType {
 
+    private static final String COLLECTION_NAME = "w_blocktypes";
+
     private final WBlockTypeService blockTypeService;
+    private final MongoTemplate mongoTemplate;
+    private final SchemaMigrationService migrationService;
+    private final ObjectMapper objectMapper;
 
     @Qualifier("syncYamlMapper")
     private final YAMLMapper yamlMapper;
@@ -46,43 +53,35 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
         Path blocktypesDir = dataPath.resolve("blocktypes");
         Files.createDirectories(blocktypesDir);
 
-        // Get block types directly for this worldId (no lookup)
-        List<WBlockType> blockTypes = blockTypeService.findByWorldId(worldId);
+        // Get blocktypes directly from MongoDB as Documents
+        Query query = new Query(Criteria.where("worldId").is(worldId.getId()));
+        List<Document> documents = mongoTemplate.find(query, Document.class, COLLECTION_NAME);
+
         Set<String> dbBlockIds = new HashSet<>();
         int exported = 0;
 
-        for (WBlockType blockType : blockTypes) {
-            if (!blockType.isEnabled()) {
-                continue; // Skip disabled block types
-            }
-
-            dbBlockIds.add(blockType.getBlockId());
-
-            // Sanitize filename (replace : with _)
-            String filename = blockType.getBlockId().replace(":", "_") + ".yaml";
-            Path targetFile = blocktypesDir.resolve(filename);
-
-            // Check if export needed
-            if (!force && Files.exists(targetFile)) {
-                Instant fileTime = Files.getLastModifiedTime(targetFile).toInstant();
-                if (blockType.getUpdatedAt() != null && blockType.getUpdatedAt().isBefore(fileTime)) {
-                    log.debug("Skipping blocktype {} (not modified)", blockType.getBlockId());
+        for (Document doc : documents) {
+            try {
+                String blockId = doc.getString("blockId");
+                if (blockId == null) {
+                    log.warn("BlockType without blockId, skipping");
                     continue;
                 }
+
+                dbBlockIds.add(blockId);
+
+                // Sanitize filename (replace : with _)
+                String filename = blockId.replace(":", "_") + ".yaml";
+                Path targetFile = blocktypesDir.resolve(filename);
+
+                // Write MongoDB Document directly as YAML
+                yamlMapper.writeValue(targetFile.toFile(), doc);
+                log.debug("Exported blocktype: {}", blockId);
+                exported++;
+
+            } catch (Exception e) {
+                log.warn("Failed to export blocktype document", e);
             }
-
-            // Create export DTO
-            BlockTypeExportDTO dto = BlockTypeExportDTO.builder()
-                    .blockId(blockType.getBlockId())
-                    .updatedAt(blockType.getUpdatedAt())
-                    .enabled(blockType.isEnabled())
-                    .publicData(blockType.getPublicData())
-                    .build();
-
-            // Write YAML
-            yamlMapper.writeValue(targetFile.toFile(), dto);
-            log.debug("Exported blocktype: {}", blockType.getBlockId());
-            exported++;
         }
 
         // Remove files not in DB if requested
@@ -91,8 +90,10 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
             try (Stream<Path> files = Files.list(blocktypesDir)) {
                 for (Path file : files.filter(f -> f.toString().endsWith(".yaml")).toList()) {
                     try {
-                        BlockTypeExportDTO dto = yamlMapper.readValue(file.toFile(), BlockTypeExportDTO.class);
-                        if (!dbBlockIds.contains(dto.getBlockId())) {
+                        Document doc = yamlMapper.readValue(file.toFile(), Document.class);
+                        String blockId = doc.getString("blockId");
+
+                        if (!dbBlockIds.contains(blockId)) {
                             Files.delete(file);
                             log.info("Deleted file not in database: {}", file);
                             deleted++;
@@ -115,32 +116,47 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
             return ResourceSyncType.ImportResult.of(0, 0);
         }
 
-        // Collect filesystem block types
-        Set<String> filesystemBlockTypes = new HashSet<>();
+        // Collect filesystem block IDs
+        Set<String> filesystemBlockIds = new HashSet<>();
         int imported = 0;
 
         try (Stream<Path> files = Files.list(blocktypesDir)) {
             for (Path file : files.filter(f -> f.toString().endsWith(".yaml")).toList()) {
                 try {
-                    BlockTypeExportDTO dto = yamlMapper.readValue(file.toFile(), BlockTypeExportDTO.class);
-                    filesystemBlockTypes.add(dto.getBlockId());
+                    // Read YAML and convert to JSON for migration
+                    Document doc = yamlMapper.readValue(file.toFile(), Document.class);
+                    String blockId = doc.getString("blockId");
+                    filesystemBlockIds.add(blockId);
 
-                    // Check if exists (directly for this worldId, no lookup)
-                    var existing = blockTypeService.findByBlockId(worldId, dto.getBlockId());
+                    String json = objectMapper.writeValueAsString(doc);
 
-                    if (existing.isPresent()) {
-                        WBlockType blockType = existing.get();
-                        // Only update if file is newer (unless force=true)
-                        if (!force && dto.getUpdatedAt() != null && blockType.getUpdatedAt() != null &&
-                                dto.getUpdatedAt().isBefore(blockType.getUpdatedAt())) {
-                            log.debug("Skipping blocktype {} (DB is newer)", dto.getBlockId());
-                            continue;
+                    // Migrate if needed
+                    String entityType = doc.getString("_class");
+                    if (entityType == null) {
+                        entityType = "de.mhus.nimbus.world.shared.world.WBlockType";
+                    }
+
+                    String migratedJson = migrationService.migrateToLatest(json, entityType);
+                    Document migratedDoc = Document.parse(migratedJson);
+
+                    // Check if should import
+                    if (!force) {
+                        Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
+                        if (existing != null) {
+                            Object fileUpdatedAt = migratedDoc.get("updatedAt");
+                            Object dbUpdatedAt = existing.get("updatedAt");
+                            if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                                if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                    log.debug("Skipping blocktype {} (DB is newer)", blockId);
+                                    continue;
+                                }
+                            }
                         }
                     }
 
-                    // Save using service (creates or updates)
-                    blockTypeService.save(worldId, dto.getBlockId(), dto.getPublicData());
-                    log.debug("Imported blocktype: {}", dto.getBlockId());
+                    // Save to MongoDB
+                    mongoTemplate.save(migratedDoc, COLLECTION_NAME);
+                    log.debug("Imported blocktype: {}", blockId);
                     imported++;
 
                 } catch (Exception e) {
@@ -155,7 +171,7 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
             List<WBlockType> dbBlockTypes = blockTypeService.findByWorldId(worldId);
 
             for (WBlockType blockType : dbBlockTypes) {
-                if (!filesystemBlockTypes.contains(blockType.getBlockId())) {
+                if (!filesystemBlockIds.contains(blockType.getBlockId())) {
                     blockTypeService.delete(worldId, blockType.getBlockId());
                     log.info("Deleted blocktype not in filesystem: {}", blockType.getBlockId());
                     deleted++;
@@ -164,17 +180,5 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
         }
 
         return ResourceSyncType.ImportResult.of(imported, deleted);
-    }
-
-    /**
-     * DTO for blocktype export/import.
-     */
-    @Data
-    @Builder
-    public static class BlockTypeExportDTO {
-        private String blockId;
-        private Instant updatedAt;
-        private boolean enabled;
-        private BlockType publicData;
     }
 }

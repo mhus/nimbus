@@ -1,35 +1,45 @@
 package de.mhus.nimbus.world.control.service.sync.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
 import de.mhus.nimbus.world.shared.layer.*;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Stream;
 
 /**
  * Import/export implementation for model layers.
- * Exports model layers as folders with _info.yaml and model YAML files.
+ * Exports MongoDB documents directly as YAML files (preserves all fields including _schema).
+ * Structure: models/{layerName}/_info.yaml + models/{layerName}/{modelName}.yaml
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ModelLayerResourceSyncType implements ResourceSyncType {
 
+    private static final String LAYER_COLLECTION = "w_layers";
+    private static final String MODEL_COLLECTION = "w_layer_model";
+
     private final WLayerService layerService;
     private final WLayerRepository layerRepository;
     private final WLayerModelRepository modelRepository;
+    private final MongoTemplate mongoTemplate;
+    private final SchemaMigrationService migrationService;
+    private final ObjectMapper objectMapper;
 
     @Qualifier("syncYamlMapper")
     private final YAMLMapper yamlMapper;
@@ -44,70 +54,55 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
         Path modelsDir = dataPath.resolve("models");
         Files.createDirectories(modelsDir);
 
-        // Get layers directly for this worldId (no lookup)
-        List<WLayer> layers = layerService.findLayersByWorld(worldId.getId()).stream()
-                .filter(l -> l.getLayerType() == LayerType.MODEL && l.isEnabled())
-                .toList();
+        // Get MODEL layers from MongoDB as Documents
+        Query layerQuery = Query.query(
+                Criteria.where("worldId").is(worldId.getId())
+                        .and("layerType").is("MODEL")
+        );
+        List<Document> layerDocs = mongoTemplate.find(layerQuery, Document.class, LAYER_COLLECTION);
 
         Set<String> dbLayerNames = new HashSet<>();
         int exported = 0;
 
-        for (WLayer layer : layers) {
-            dbLayerNames.add(layer.getName());
-            Path layerDir = modelsDir.resolve(layer.getName());
-            Files.createDirectories(layerDir);
-
-            Path infoFile = layerDir.resolve("_info.yaml");
-
-            // Check if export needed
-            if (!force && Files.exists(infoFile)) {
-                Instant fileTime = Files.getLastModifiedTime(infoFile).toInstant();
-                if (layer.getUpdatedAt() != null && layer.getUpdatedAt().isBefore(fileTime)) {
-                    log.debug("Skipping model layer {} (not modified)", layer.getName());
+        for (Document layerDoc : layerDocs) {
+            try {
+                String layerName = layerDoc.getString("name");
+                String layerDataId = layerDoc.getString("layerDataId");
+                if (layerName == null || layerDataId == null) {
+                    log.warn("Layer without name or layerDataId, skipping");
                     continue;
                 }
-            }
 
-            // Export layer info
-            ModelLayerInfoDTO infoDTO = ModelLayerInfoDTO.builder()
-                    .layerType(LayerType.MODEL)
-                    .name(layer.getName())
-                    .title(layer.getTitle())
-                    .order(layer.getOrder())
-                    .enabled(layer.isEnabled())
-                    .allChunks(layer.isAllChunks())
-                    .affectedChunks(layer.getAffectedChunks())
-                    .groups(layer.getGroups())
-                    .updatedAt(layer.getUpdatedAt())
-                    .build();
+                dbLayerNames.add(layerName);
+                Path layerDir = modelsDir.resolve(layerName);
+                Files.createDirectories(layerDir);
 
-            yamlMapper.writeValue(infoFile.toFile(), infoDTO);
-            exported++;
-
-            // Export models
-            List<WLayerModel> models = modelRepository.findByLayerDataIdOrderByOrder(layer.getLayerDataId());
-            for (WLayerModel model : models) {
-                Path modelFile = layerDir.resolve(model.getName() + ".yaml");
-
-                ModelExportDTO modelDTO = ModelExportDTO.builder()
-                        .name(model.getName())
-                        .title(model.getTitle())
-                        .mountX(model.getMountX())
-                        .mountY(model.getMountY())
-                        .mountZ(model.getMountZ())
-                        .rotation(model.getRotation())
-                        .order(model.getOrder())
-                        .referenceModelId(model.getReferenceModelId())
-                        .groups(model.getGroups())
-                        .content(model.getContent())
-                        .updatedAt(model.getUpdatedAt())
-                        .build();
-
-                yamlMapper.writeValue(modelFile.toFile(), modelDTO);
+                // Export layer as _info.yaml
+                Path infoFile = layerDir.resolve("_info.yaml");
+                yamlMapper.writeValue(infoFile.toFile(), layerDoc);
                 exported++;
-            }
 
-            log.debug("Exported model layer: {} with {} models", layer.getName(), models.size());
+                // Export models for this layer
+                Query modelQuery = Query.query(Criteria.where("layerDataId").is(layerDataId));
+                List<Document> modelDocs = mongoTemplate.find(modelQuery, Document.class, MODEL_COLLECTION);
+
+                for (Document modelDoc : modelDocs) {
+                    String modelName = modelDoc.getString("name");
+                    if (modelName == null) {
+                        log.warn("Model without name, skipping");
+                        continue;
+                    }
+
+                    Path modelFile = layerDir.resolve(modelName + ".yaml");
+                    yamlMapper.writeValue(modelFile.toFile(), modelDoc);
+                    exported++;
+                }
+
+                log.debug("Exported model layer: {} with {} models", layerName, modelDocs.size());
+
+            } catch (Exception e) {
+                log.warn("Failed to export model layer document", e);
+            }
         }
 
         // Remove layer folders not in DB if requested
@@ -117,7 +112,6 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
                 for (Path layerDir : layerDirs.filter(Files::isDirectory).toList()) {
                     String layerName = layerDir.getFileName().toString();
                     if (!dbLayerNames.contains(layerName)) {
-                        // Delete entire layer folder recursively
                         deleteRecursively(layerDir);
                         log.info("Deleted layer folder not in database: {}", layerName);
                         deleted++;
@@ -129,20 +123,6 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
         return ResourceSyncType.ExportResult.of(exported, deleted);
     }
 
-    /**
-     * Delete directory recursively.
-     */
-    private void deleteRecursively(Path path) throws IOException {
-        if (Files.isDirectory(path)) {
-            try (Stream<Path> entries = Files.list(path)) {
-                for (Path entry : entries.toList()) {
-                    deleteRecursively(entry);
-                }
-            }
-        }
-        Files.delete(path);
-    }
-
     @Override
     public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, boolean force, boolean removeOvertaken) throws IOException {
         Path modelsDir = dataPath.resolve("models");
@@ -151,15 +131,16 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
             return ResourceSyncType.ImportResult.of(0, 0);
         }
 
-        // Collect filesystem layers and models
-        Map<String, Set<String>> filesystemModels = new HashMap<>(); // layerName -> modelNames
+        Set<String> filesystemLayerNames = new HashSet<>();
+        Map<String, Set<String>> filesystemModelNames = new HashMap<>();
         int imported = 0;
 
         try (Stream<Path> layerDirs = Files.list(modelsDir)) {
             for (Path layerDir : layerDirs.filter(Files::isDirectory).toList()) {
                 String layerName = layerDir.getFileName().toString();
+                filesystemLayerNames.add(layerName);
                 Set<String> modelNames = new HashSet<>();
-                filesystemModels.put(layerName, modelNames);
+                filesystemModelNames.put(layerName, modelNames);
 
                 Path infoFile = layerDir.resolve("_info.yaml");
                 if (!Files.exists(infoFile)) {
@@ -168,97 +149,67 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
                 }
 
                 try {
-                    ModelLayerInfoDTO infoDTO = yamlMapper.readValue(infoFile.toFile(), ModelLayerInfoDTO.class);
+                    // Import layer from _info.yaml
+                    Document layerDoc = yamlMapper.readValue(infoFile.toFile(), Document.class);
 
-                    // Check if layer exists (directly for this worldId)
-                    Optional<WLayer> existingLayer = layerService.findLayer(worldId.getId(), infoDTO.getName());
+                    String json = objectMapper.writeValueAsString(layerDoc);
+                    String entityType = layerDoc.getString("_class");
+                    if (entityType == null) {
+                        entityType = "de.mhus.nimbus.world.shared.layer.WLayer";
+                    }
+                    String migratedJson = migrationService.migrateToLatest(json, entityType);
+                    Document migratedLayerDoc = Document.parse(migratedJson);
 
-                    WLayer layer;
-                    if (existingLayer.isPresent()) {
-                        layer = existingLayer.get();
-                        // Update layer
-                        layer.setTitle(infoDTO.getTitle());
-                        layer.setOrder(infoDTO.getOrder());
-                        layer.setEnabled(infoDTO.isEnabled());
-                        layer.setAllChunks(infoDTO.isAllChunks());
-                        layer.setAffectedChunks(infoDTO.getAffectedChunks());
-                        layer.setGroups(infoDTO.getGroups());
-                        layer.setUpdatedAt(infoDTO.getUpdatedAt());
-                        layer.touchUpdate();
-                        layer = layerRepository.save(layer);
-                    } else {
-                        // Create new layer
-                        layer = layerService.createLayer(
-                                worldId.getId(),
-                                infoDTO.getName(),
-                                LayerType.MODEL,
-                                infoDTO.getOrder(),
-                                infoDTO.isAllChunks(),
-                                infoDTO.getAffectedChunks(),
-                                false
-                        );
-                        layer.setTitle(infoDTO.getTitle());
-                        layer.setGroups(infoDTO.getGroups());
-                        layer.setUpdatedAt(infoDTO.getUpdatedAt());
-                        layer = layerRepository.save(layer);
+                    // Check if should import
+                    if (!force) {
+                        Document existing = mongoTemplate.findById(migratedLayerDoc.get("_id"), Document.class, LAYER_COLLECTION);
+                        if (existing != null) {
+                            Object fileUpdatedAt = migratedLayerDoc.get("updatedAt");
+                            Object dbUpdatedAt = existing.get("updatedAt");
+                            if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                                if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                    log.debug("Skipping layer {} (DB is newer)", layerName);
+                                    continue;
+                                }
+                            }
+                        }
                     }
 
+                    mongoTemplate.save(migratedLayerDoc, LAYER_COLLECTION);
                     imported++;
 
                     // Import models
                     try (Stream<Path> modelFiles = Files.list(layerDir)) {
                         for (Path modelFile : modelFiles.filter(f -> f.toString().endsWith(".yaml") && !f.getFileName().toString().equals("_info.yaml")).toList()) {
                             try {
-                                ModelExportDTO modelDTO = yamlMapper.readValue(modelFile.toFile(), ModelExportDTO.class);
-                                modelNames.add(modelDTO.getName());
+                                Document modelDoc = yamlMapper.readValue(modelFile.toFile(), Document.class);
+                                String modelName = modelDoc.getString("name");
+                                modelNames.add(modelName);
 
-                                // Check if model exists (use repository directly)
-                                List<WLayerModel> existingModels = modelRepository.findByWorldIdAndName(
-                                        worldId.getId(),
-                                        modelDTO.getName()
-                                );
+                                String modelJson = objectMapper.writeValueAsString(modelDoc);
+                                String modelEntityType = modelDoc.getString("_class");
+                                if (modelEntityType == null) {
+                                    modelEntityType = "de.mhus.nimbus.world.shared.layer.WLayerModel";
+                                }
+                                String migratedModelJson = migrationService.migrateToLatest(modelJson, modelEntityType);
+                                Document migratedModelDoc = Document.parse(migratedModelJson);
 
-                                // Make layer final for lambda
-                                final String layerDataId = layer.getLayerDataId();
-                                final String finalWorldId = worldId.getId();
-
-                                WLayerModel model;
-                                if (!existingModels.isEmpty()) {
-                                    // Find model with matching layerDataId
-                                    model = existingModels.stream()
-                                            .filter(m -> m.getLayerDataId().equals(layerDataId))
-                                            .findFirst()
-                                            .orElseGet(() -> {
-                                                // Model exists but for different layer, create new
-                                                WLayerModel newModel = new WLayerModel();
-                                                newModel.setWorldId(finalWorldId);
-                                                newModel.setLayerDataId(layerDataId);
-                                                newModel.setName(modelDTO.getName());
-                                                newModel.touchCreate();
-                                                return newModel;
-                                            });
-                                } else {
-                                    model = new WLayerModel();
-                                    model.setWorldId(worldId.getId());
-                                    model.setLayerDataId(layerDataId);
-                                    model.setName(modelDTO.getName());
-                                    model.touchCreate();
+                                // Check if should import
+                                if (!force) {
+                                    Document existing = mongoTemplate.findById(migratedModelDoc.get("_id"), Document.class, MODEL_COLLECTION);
+                                    if (existing != null) {
+                                        Object fileUpdatedAt = migratedModelDoc.get("updatedAt");
+                                        Object dbUpdatedAt = existing.get("updatedAt");
+                                        if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                                            if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                                log.debug("Skipping model {} (DB is newer)", modelName);
+                                                continue;
+                                            }
+                                        }
+                                    }
                                 }
 
-                                // Update fields
-                                model.setTitle(modelDTO.getTitle());
-                                model.setMountX(modelDTO.getMountX());
-                                model.setMountY(modelDTO.getMountY());
-                                model.setMountZ(modelDTO.getMountZ());
-                                model.setRotation(modelDTO.getRotation());
-                                model.setOrder(modelDTO.getOrder());
-                                model.setReferenceModelId(modelDTO.getReferenceModelId());
-                                model.setGroups(modelDTO.getGroups());
-                                model.setContent(modelDTO.getContent());
-                                model.setUpdatedAt(modelDTO.getUpdatedAt());
-                                model.touchUpdate();
-
-                                modelRepository.save(model);
+                                mongoTemplate.save(migratedModelDoc, MODEL_COLLECTION);
                                 imported++;
 
                             } catch (Exception e) {
@@ -267,7 +218,7 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
                         }
                     }
 
-                    log.debug("Imported model layer: {}", infoDTO.getName());
+                    log.debug("Imported model layer: {}", layerName);
 
                 } catch (Exception e) {
                     log.warn("Failed to import model layer from: " + layerDir, e);
@@ -283,16 +234,14 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
                     .toList();
 
             for (WLayer layer : dbLayers) {
-                if (!filesystemModels.containsKey(layer.getName())) {
-                    // Layer not in filesystem, delete
+                if (!filesystemLayerNames.contains(layer.getName())) {
                     layerService.deleteLayer(worldId.getId(), layer.getName());
                     log.info("Deleted model layer not in filesystem: {}", layer.getName());
                     deleted++;
-                } else {
-                    // Check models within layer
-                    Set<String> fsModels = filesystemModels.get(layer.getName());
+                } else if (filesystemModelNames.containsKey(layer.getName())) {
+                    // Remove models within this layer
+                    Set<String> fsModels = filesystemModelNames.get(layer.getName());
                     List<WLayerModel> dbModels = modelRepository.findByLayerDataIdOrderByOrder(layer.getLayerDataId());
-
                     for (WLayerModel model : dbModels) {
                         if (!fsModels.contains(model.getName())) {
                             modelRepository.delete(model);
@@ -308,38 +257,16 @@ public class ModelLayerResourceSyncType implements ResourceSyncType {
     }
 
     /**
-     * DTO for model layer info export/import.
+     * Delete directory recursively.
      */
-    @Data
-    @Builder
-    public static class ModelLayerInfoDTO {
-        private LayerType layerType;
-        private String name;
-        private String title;
-        private int order;
-        private boolean enabled;
-        private boolean allChunks;
-        private List<String> affectedChunks;
-        private Map<String, Integer> groups;
-        private Instant updatedAt;
-    }
-
-    /**
-     * DTO for model export/import.
-     */
-    @Data
-    @Builder
-    public static class ModelExportDTO {
-        private String name;
-        private String title;
-        private int mountX;
-        private int mountY;
-        private int mountZ;
-        private int rotation;
-        private int order;
-        private String referenceModelId;
-        private Map<String, Integer> groups;
-        private List<LayerBlock> content;
-        private Instant updatedAt;
+    private void deleteRecursively(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            try (Stream<Path> entries = Files.list(path)) {
+                for (Path entry : entries.toList()) {
+                    deleteRecursively(entry);
+                }
+            }
+        }
+        Files.delete(path);
     }
 }

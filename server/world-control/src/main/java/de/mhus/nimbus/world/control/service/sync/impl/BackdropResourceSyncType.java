@@ -1,22 +1,24 @@
 package de.mhus.nimbus.world.control.service.sync.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import de.mhus.nimbus.generated.types.Backdrop;
+import de.mhus.nimbus.shared.service.SchemaMigrationService;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
 import de.mhus.nimbus.world.shared.world.WBackdrop;
 import de.mhus.nimbus.world.shared.world.WBackdropService;
-import lombok.Builder;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,14 +26,19 @@ import java.util.stream.Stream;
 
 /**
  * Import/export implementation for backdrops.
- * Exports backdrops as YAML files in backdrops/ folder.
+ * Exports MongoDB documents directly as YAML files (preserves all fields including _schema).
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class BackdropResourceSyncType implements ResourceSyncType {
 
+    private static final String COLLECTION_NAME = "w_backdrops";
+
     private final WBackdropService backdropService;
+    private final MongoTemplate mongoTemplate;
+    private final SchemaMigrationService migrationService;
+    private final ObjectMapper objectMapper;
 
     @Qualifier("syncYamlMapper")
     private final YAMLMapper yamlMapper;
@@ -46,40 +53,32 @@ public class BackdropResourceSyncType implements ResourceSyncType {
         Path backdropsDir = dataPath.resolve("backdrops");
         Files.createDirectories(backdropsDir);
 
-        // Get backdrops directly for this worldId (no lookup)
-        List<WBackdrop> backdrops = backdropService.findByWorldId(worldId);
+        // Get backdrops directly from MongoDB as Documents
+        Query query = new Query(Criteria.where("worldId").is(worldId.getId()));
+        List<Document> documents = mongoTemplate.find(query, Document.class, COLLECTION_NAME);
+
         Set<String> dbBackdropIds = new HashSet<>();
         int exported = 0;
 
-        for (WBackdrop backdrop : backdrops) {
-            if (!backdrop.isEnabled()) {
-                continue; // Skip disabled backdrops
-            }
-
-            dbBackdropIds.add(backdrop.getBackdropId());
-            Path targetFile = backdropsDir.resolve(backdrop.getBackdropId() + ".yaml");
-
-            // Check if export needed
-            if (!force && Files.exists(targetFile)) {
-                Instant fileTime = Files.getLastModifiedTime(targetFile).toInstant();
-                if (backdrop.getUpdatedAt() != null && backdrop.getUpdatedAt().isBefore(fileTime)) {
-                    log.debug("Skipping backdrop {} (not modified)", backdrop.getBackdropId());
+        for (Document doc : documents) {
+            try {
+                String backdropId = doc.getString("backdropId");
+                if (backdropId == null) {
+                    log.warn("Backdrop without backdropId, skipping");
                     continue;
                 }
+
+                dbBackdropIds.add(backdropId);
+                Path targetFile = backdropsDir.resolve(backdropId + ".yaml");
+
+                // Write MongoDB Document directly as YAML
+                yamlMapper.writeValue(targetFile.toFile(), doc);
+                log.debug("Exported backdrop: {}", backdropId);
+                exported++;
+
+            } catch (Exception e) {
+                log.warn("Failed to export backdrop document", e);
             }
-
-            // Export complete entity as DTO
-            BackdropExportDTO dto = BackdropExportDTO.builder()
-                    .backdropId(backdrop.getBackdropId())
-                    .updatedAt(backdrop.getUpdatedAt())
-                    .enabled(backdrop.isEnabled())
-                    .publicData(backdrop.getPublicData())
-                    .build();
-
-            // Write YAML
-            yamlMapper.writeValue(targetFile.toFile(), dto);
-            log.debug("Exported backdrop: {}", backdrop.getBackdropId());
-            exported++;
         }
 
         // Remove files not in DB if requested
@@ -110,32 +109,47 @@ public class BackdropResourceSyncType implements ResourceSyncType {
             return ResourceSyncType.ImportResult.of(0, 0);
         }
 
-        // Collect filesystem backdrops
-        Set<String> filesystemBackdrops = new HashSet<>();
+        // Collect filesystem backdrop IDs
+        Set<String> filesystemBackdropIds = new HashSet<>();
         int imported = 0;
 
         try (Stream<Path> files = Files.list(backdropsDir)) {
             for (Path file : files.filter(f -> f.toString().endsWith(".yaml")).toList()) {
                 try {
-                    BackdropExportDTO dto = yamlMapper.readValue(file.toFile(), BackdropExportDTO.class);
-                    filesystemBackdrops.add(dto.getBackdropId());
+                    // Read YAML and convert to JSON for migration
+                    Document doc = yamlMapper.readValue(file.toFile(), Document.class);
+                    String backdropId = doc.getString("backdropId");
+                    filesystemBackdropIds.add(backdropId);
 
-                    // Check if exists (directly for this worldId, no lookup)
-                    var existing = backdropService.findByBackdropId(worldId, dto.getBackdropId());
+                    String json = objectMapper.writeValueAsString(doc);
 
-                    if (existing.isPresent()) {
-                        WBackdrop backdrop = existing.get();
-                        // Only update if file is newer (unless force=true)
-                        if (!force && dto.getUpdatedAt() != null && backdrop.getUpdatedAt() != null &&
-                                dto.getUpdatedAt().isBefore(backdrop.getUpdatedAt())) {
-                            log.debug("Skipping backdrop {} (DB is newer)", dto.getBackdropId());
-                            continue;
+                    // Migrate if needed
+                    String entityType = doc.getString("_class");
+                    if (entityType == null) {
+                        entityType = "de.mhus.nimbus.world.shared.world.WBackdrop";
+                    }
+
+                    String migratedJson = migrationService.migrateToLatest(json, entityType);
+                    Document migratedDoc = Document.parse(migratedJson);
+
+                    // Check if should import
+                    if (!force) {
+                        Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
+                        if (existing != null) {
+                            Object fileUpdatedAt = migratedDoc.get("updatedAt");
+                            Object dbUpdatedAt = existing.get("updatedAt");
+                            if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                                if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                    log.debug("Skipping backdrop {} (DB is newer)", backdropId);
+                                    continue;
+                                }
+                            }
                         }
                     }
 
-                    // Save using service (creates or updates)
-                    backdropService.save(worldId, dto.getBackdropId(), dto.getPublicData());
-                    log.debug("Imported backdrop: {}", dto.getBackdropId());
+                    // Save to MongoDB
+                    mongoTemplate.save(migratedDoc, COLLECTION_NAME);
+                    log.debug("Imported backdrop: {}", backdropId);
                     imported++;
 
                 } catch (Exception e) {
@@ -150,7 +164,7 @@ public class BackdropResourceSyncType implements ResourceSyncType {
             List<WBackdrop> dbBackdrops = backdropService.findByWorldId(worldId);
 
             for (WBackdrop backdrop : dbBackdrops) {
-                if (!filesystemBackdrops.contains(backdrop.getBackdropId())) {
+                if (!filesystemBackdropIds.contains(backdrop.getBackdropId())) {
                     backdropService.delete(worldId, backdrop.getBackdropId());
                     log.info("Deleted backdrop not in filesystem: {}", backdrop.getBackdropId());
                     deleted++;
@@ -159,17 +173,5 @@ public class BackdropResourceSyncType implements ResourceSyncType {
         }
 
         return ResourceSyncType.ImportResult.of(imported, deleted);
-    }
-
-    /**
-     * DTO for backdrop export/import.
-     */
-    @Data
-    @Builder
-    public static class BackdropExportDTO {
-        private String backdropId;
-        private Instant updatedAt;
-        private boolean enabled;
-        private Backdrop publicData;
     }
 }
