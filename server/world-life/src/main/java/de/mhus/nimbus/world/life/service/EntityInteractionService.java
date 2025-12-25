@@ -1,23 +1,16 @@
 package de.mhus.nimbus.world.life.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.life.behavior.BehaviorRegistry;
-import de.mhus.nimbus.world.life.behavior.EntityBehavior;
-import de.mhus.nimbus.world.life.config.WorldLifeProperties;
-import de.mhus.nimbus.world.life.model.ChunkCoordinate;
+import de.mhus.nimbus.world.life.config.WorldLifeSettings;
 import de.mhus.nimbus.world.life.model.SimulationState;
 import de.mhus.nimbus.world.life.redis.PathwayPublisher;
-import de.mhus.nimbus.world.shared.world.WEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Service for processing entity interactions from players.
@@ -36,7 +29,7 @@ public class EntityInteractionService {
     private final EntityOwnershipService ownershipService;
     private final BehaviorRegistry behaviorRegistry;
     private final PathwayPublisher pathwayPublisher;
-    private final WorldLifeProperties properties;
+    private final WorldLifeSettings properties;
     private final SimulatorService simulatorService;
 
     /**

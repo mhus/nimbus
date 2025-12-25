@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class RegionProperties {
+public class RegionSettings {
 
     @Autowired
     private SSettingsService settingsService;

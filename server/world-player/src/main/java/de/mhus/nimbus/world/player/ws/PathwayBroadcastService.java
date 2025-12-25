@@ -8,7 +8,7 @@ import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.generated.types.Rotation;
 import de.mhus.nimbus.generated.types.ENTITY_POSES;
 import de.mhus.nimbus.shared.engine.EngineMapper;
-import de.mhus.nimbus.world.player.config.PathwayBroadcastProperties;
+import de.mhus.nimbus.world.player.config.PathwayBroadcastSettings;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.session.SessionClosedConsumer;
 import de.mhus.nimbus.world.player.session.SessionPingConsumer;
@@ -47,7 +47,7 @@ public class PathwayBroadcastService implements SessionPingConsumer, SessionClos
     private final SessionManager sessionManager;
     private final WorldRedisMessagingService redisMessaging;
     private final EngineMapper engineMapper;
-    private final PathwayBroadcastProperties properties;
+    private final PathwayBroadcastSettings properties;
     private final StringRedisTemplate redisTemplate;
 
     private static final String CACHE_KEY_PREFIX = "pathway:";

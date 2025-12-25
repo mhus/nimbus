@@ -20,7 +20,7 @@ import java.util.Optional;
 public class WSessionService {
 
     private final StringRedisTemplate redis;
-    private final WorldProperties props;
+    private final WorldSettings props;
 
     private static final String KEY_PREFIX = "wsession:"; // Namespace
     private static final String FIELD_STATUS = "status";

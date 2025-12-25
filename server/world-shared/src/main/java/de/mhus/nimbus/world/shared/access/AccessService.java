@@ -11,7 +11,7 @@ import de.mhus.nimbus.shared.user.WorldRoles;
 import de.mhus.nimbus.world.shared.dto.*;
 import de.mhus.nimbus.world.shared.region.RCharacter;
 import de.mhus.nimbus.world.shared.region.RCharacterService;
-import de.mhus.nimbus.world.shared.region.RegionProperties;
+import de.mhus.nimbus.world.shared.region.RegionSettings;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
 import de.mhus.nimbus.world.shared.world.WWorld;
@@ -52,10 +52,10 @@ public class AccessService {
     private final de.mhus.nimbus.world.shared.sector.RUserService userService;
     private final de.mhus.nimbus.world.shared.session.WSessionService sessionService;
     private final JwtService jwtService;
-    private final AccessProperties properties;
+    private final AccessSettings properties;
     private final Base64Service base64Service;
     private final de.mhus.nimbus.shared.utils.LocationService locationService;
-    private final RegionProperties regionProperties;
+    private final RegionSettings regionProperties;
 
     // Cache for world token (server-to-server authentication)
     private volatile String cachedWorldToken;
@@ -283,7 +283,7 @@ public class AccessService {
                 .build();
     }
 
-    private String findJumpUrl(AccessProperties properties, DevSessionLoginRequest request, String sessionId) {
+    private String findJumpUrl(AccessSettings properties, DevSessionLoginRequest request, String sessionId) {
         var url = properties.getJumpUrlSession();
         url = url.replace("{worldId}", request.getWorldId());
         url = url.replace("{session}", sessionId);
@@ -292,7 +292,7 @@ public class AccessService {
         return url;
     }
 
-    private String findJumpUrl(AccessProperties properties, DevAgentLoginRequest request) {
+    private String findJumpUrl(AccessSettings properties, DevAgentLoginRequest request) {
         var url = properties.getJumpUrlAgent();
         url = url.replace("{worldId}", request.getWorldId());
         url = url.replace("{userId}", request.getUserId());

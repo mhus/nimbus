@@ -1,12 +1,11 @@
 package de.mhus.nimbus.world.life.behavior;
 
 import de.mhus.nimbus.generated.types.ENTITY_POSES;
-import de.mhus.nimbus.generated.types.Entity;
 import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.generated.types.Waypoint;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.life.config.WorldLifeProperties;
+import de.mhus.nimbus.world.life.config.WorldLifeSettings;
 import de.mhus.nimbus.world.life.model.SimulationState;
 import de.mhus.nimbus.world.life.movement.BlockBasedMovement;
 import de.mhus.nimbus.world.shared.world.WEntity;
@@ -41,7 +40,7 @@ public class PreyAnimalBehavior implements EntityBehavior {
     private static final long DEFAULT_MAX_IDLE_DURATION_MS = 3000;
 
     private final BlockBasedMovement blockMovement;
-    private final WorldLifeProperties properties;
+    private final WorldLifeSettings properties;
     private final Random random = new Random();
 
     @Override

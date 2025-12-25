@@ -6,7 +6,7 @@ import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyService;
 import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.shared.utils.ConfidentialUtil;
-import de.mhus.nimbus.world.shared.region.RegionProperties;
+import de.mhus.nimbus.world.shared.region.RegionSettings;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ public class InitRegionService {
 
     private final KeyService keyService;
     private final RRegionService regionService;
-    private final RegionProperties regionProperties;
+    private final RegionSettings regionProperties;
 
     @PostConstruct
     public void init() {

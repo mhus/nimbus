@@ -22,7 +22,7 @@ import java.util.List;
 public class JobCleanupScheduler {
 
     private final WJobService jobService;
-    private final JobProperties properties;
+    private final JobSettings properties;
 
     /**
      * Clean up old jobs at fixed intervals.

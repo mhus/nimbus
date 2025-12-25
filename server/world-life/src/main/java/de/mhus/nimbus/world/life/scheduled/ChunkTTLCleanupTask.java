@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.life.scheduled;
 
-import de.mhus.nimbus.world.life.config.WorldLifeProperties;
+import de.mhus.nimbus.world.life.config.WorldLifeSettings;
 import de.mhus.nimbus.world.life.model.ChunkCoordinate;
 import de.mhus.nimbus.world.life.service.ChunkAliveService;
 import de.mhus.nimbus.world.life.service.ChunkTTLTracker;
@@ -27,7 +27,7 @@ public class ChunkTTLCleanupTask {
 
     private final ChunkAliveService chunkAliveService;
     private final ChunkTTLTracker ttlTracker;
-    private final WorldLifeProperties properties;
+    private final WorldLifeSettings properties;
 
     /**
      * Clean up chunks that have exceeded the TTL threshold.

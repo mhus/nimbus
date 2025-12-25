@@ -10,11 +10,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 @Configuration
-@EnableConfigurationProperties(WorldRedisProperties.class)
+@EnableConfigurationProperties(WorldRedisSettings.class)
 public class WorldRedisConfig {
 
     @Bean
-    public LettuceConnectionFactory worldRedisConnectionFactory(WorldRedisProperties props) {
+    public LettuceConnectionFactory worldRedisConnectionFactory(WorldRedisSettings props) {
         RedisStandaloneConfiguration conf = new RedisStandaloneConfiguration();
         conf.setHostName(props.getHost());
         conf.setPort(props.getPort());

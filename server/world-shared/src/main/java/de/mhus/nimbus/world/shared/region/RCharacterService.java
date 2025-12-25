@@ -1,6 +1,5 @@
 package de.mhus.nimbus.world.shared.region;
 
-import de.mhus.nimbus.generated.types.RegionItemInfo; // geändert
 import de.mhus.nimbus.world.shared.sector.RUser;
 import de.mhus.nimbus.world.shared.sector.RUserRepository;
 import org.springframework.stereotype.Service;
@@ -15,9 +14,9 @@ public class RCharacterService {
 
     private final RCharacterRepository repository;
     private final RUserRepository userRepository;
-    private final RegionCharacterLimitProperties limitProperties;
+    private final RegionCharacterSettings limitProperties;
 
-    public RCharacterService(RCharacterRepository repository, RUserRepository userRepository, RegionCharacterLimitProperties limitProperties) {
+    public RCharacterService(RCharacterRepository repository, RUserRepository userRepository, RegionCharacterSettings limitProperties) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.limitProperties = limitProperties;

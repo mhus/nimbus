@@ -3,7 +3,7 @@ package de.mhus.nimbus.world.shared.access;
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.shared.security.KeyIntent;
 import de.mhus.nimbus.shared.security.KeyType;
-import de.mhus.nimbus.world.shared.region.RegionProperties;
+import de.mhus.nimbus.world.shared.region.RegionSettings;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
@@ -44,7 +44,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final WSessionService sessionService;
-    private final RegionProperties regionProperties;
+    private final RegionSettings regionProperties;
 
     /**
      * Determines if the given request path requires authentication.

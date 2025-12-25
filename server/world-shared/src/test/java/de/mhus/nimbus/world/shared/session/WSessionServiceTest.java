@@ -20,7 +20,7 @@ class WSessionServiceTest {
     @Test
     void createAndGetAndUpdateAndDelete() {
         StringRedisTemplate template = Mockito.mock(StringRedisTemplate.class);
-        WorldProperties props = Mockito.mock(WorldProperties.class);
+        WorldSettings props = Mockito.mock(WorldSettings.class);
         Mockito.when(props.getWaitingMinutes()).thenReturn(5L);
         Mockito.when(props.getRunningHours()).thenReturn(12L);
         Mockito.when(props.getDeprecatedMinutes()).thenReturn(30L);
@@ -56,7 +56,7 @@ class WSessionServiceTest {
     @Test
     void cleanupExpiredRemovesOnlyExpired() {
         StringRedisTemplate template = Mockito.mock(StringRedisTemplate.class);
-        WorldProperties props = Mockito.mock(WorldProperties.class);
+        WorldSettings props = Mockito.mock(WorldSettings.class);
         Mockito.when(props.isCleanupEnabled()).thenReturn(true);
         Mockito.when(props.getCleanupScanCount()).thenReturn(100);
         Mockito.when(props.getCleanupMaxDeletes()).thenReturn(1000);

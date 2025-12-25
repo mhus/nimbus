@@ -38,7 +38,7 @@ public class WorldClientService {
 
     @Qualifier("worldRestTemplate")
     private final RestTemplate restTemplate;
-    private final WorldClientProperties properties;
+    private final WorldClientSettings properties;
     private final ObjectMapper objectMapper;
     private final LocationService locationService;
     private final AccessService accessService;

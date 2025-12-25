@@ -2,8 +2,8 @@ package de.mhus.nimbus.world.control.security;
 
 import de.mhus.nimbus.shared.security.JwtService;
 import de.mhus.nimbus.world.shared.access.AccessFilterBase;
-import de.mhus.nimbus.world.shared.access.AccessProperties;
-import de.mhus.nimbus.world.shared.region.RegionProperties;
+import de.mhus.nimbus.world.shared.access.AccessSettings;
+import de.mhus.nimbus.world.shared.region.RegionSettings;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +21,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ControlAccessFilter extends AccessFilterBase {
 
-    private final AccessProperties accessProperties;
+    private final AccessSettings accessProperties;
 
-    public ControlAccessFilter(JwtService jwtService, WSessionService sessionService, AccessProperties accessProperties, RegionProperties regionProperties) {
+    public ControlAccessFilter(JwtService jwtService, WSessionService sessionService, AccessSettings accessProperties, RegionSettings regionProperties) {
         super(jwtService, sessionService, regionProperties);
         this.accessProperties = accessProperties;
     }

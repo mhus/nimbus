@@ -29,7 +29,7 @@ public class WorldClientConfig {
 
     @Bean
     @ConditionalOnMissingBean(name = "worldRestTemplate")
-    public RestTemplate worldRestTemplate(WorldClientProperties properties, RestTemplateBuilder builder) {
+    public RestTemplate worldRestTemplate(WorldClientSettings properties, RestTemplateBuilder builder) {
         // RestTemplate with automatic Bearer token authentication
         return builder
                 .setConnectTimeout(Duration.ofMillis(properties.getCommandTimeoutMs()))

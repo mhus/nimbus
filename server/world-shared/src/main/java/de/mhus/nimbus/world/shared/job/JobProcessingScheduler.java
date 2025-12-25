@@ -23,7 +23,7 @@ public class JobProcessingScheduler {
     private final WJobService jobService;
     private final JobExecutorRegistry executorRegistry;
     private final WorldRedisLockService lockService;
-    private final JobProperties properties;
+    private final JobSettings properties;
 
     private static final Duration JOB_LOCK_TTL = Duration.ofMinutes(5);
 

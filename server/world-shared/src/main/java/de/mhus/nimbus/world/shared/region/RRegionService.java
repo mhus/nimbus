@@ -29,7 +29,7 @@ public class RRegionService {
     private final KeyService keyService; // neu
     private final JwtService jwtService; // neu
     private final RUniverseClientService universeClientService; // neu
-    private final RegionProperties regionProperties;
+    private final RegionSettings regionProperties;
 
     public RRegion create(String name, String maintainers) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name must not be blank");

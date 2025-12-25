@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.life.config.WorldLifeProperties;
+import de.mhus.nimbus.world.life.config.WorldLifeSettings;
 import de.mhus.nimbus.world.life.model.EntityOwnership;
 import de.mhus.nimbus.world.shared.redis.WorldRedisMessagingService;
 import jakarta.annotation.PostConstruct;
@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EntityOwnershipService {
 
     private final WorldRedisMessagingService redisMessaging;
-    private final WorldLifeProperties properties;
+    private final WorldLifeSettings properties;
     private final ObjectMapper objectMapper;
 
     /**

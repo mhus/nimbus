@@ -34,7 +34,7 @@ import java.util.Optional;
 public class RUniverseClientService {
 
     private final JwtService jwtService;
-    private final RegionProperties regionProperties;
+    private final RegionSettings regionProperties;
 
     public Optional<UniverseWorldDto> fetch(String regionId, String worldId) {
         String url = regionProperties.getUniverseBaseUrl() + "/universe/region/" + encode(regionId) + "/world/" + encode(worldId);
