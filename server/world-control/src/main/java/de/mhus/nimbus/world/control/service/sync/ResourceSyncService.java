@@ -26,7 +26,8 @@ import java.util.Map;
 public class ResourceSyncService {
 
     private static final List<String> ALL_TYPES = Arrays.asList(
-            "asset", "backdrop", "blocktype", "model", "ground"
+            "asset", "backdrop", "blocktype", "item", "itemtype", "itemposition",
+            "entity", "entitymodel", "model", "ground"
     );
 
     private final List<ResourceSyncType> syncTypes;

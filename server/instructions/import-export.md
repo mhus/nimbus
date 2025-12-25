@@ -320,12 +320,12 @@ Aber nicht, wenn es sich um einen value bereich: "" handelt.
 
 ## Weitere Daten
 
-[ ] Exportiere auf die geliche weise wie WBackdrop auch WItem
+[?] Exportiere auf die geliche weise wie WBackdrop auch WItem
 
-[ ] Exportiere auf die geliche weise wie WBlockType auch WItemPosition
+[?] Exportiere auf die geliche weise wie WBlockType auch WItemPosition
 
-[ ] Exportiere auf die geliche weise wie WBlockType auch WEntity
+[?] Exportiere auf die geliche weise wie WBlockType auch WEntity
 
-[ ] Exportiere auf die geliche weise wie WBlockType auch WEntityModel
+[?] Exportiere auf die geliche weise wie WBlockType auch WEntityModel
 
-
+[ ] Exportiere auf die gleiche weise wie WBackdrop auch WItemType

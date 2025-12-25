@@ -1,0 +1,185 @@
+package de.mhus.nimbus.world.control.service.sync.impl;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import de.mhus.nimbus.shared.service.SchemaMigrationService;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.control.service.sync.ResourceSyncType;
+import de.mhus.nimbus.world.shared.world.WItemType;
+import de.mhus.nimbus.world.shared.world.WItemTypeService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+
+/**
+ * Import/export implementation for item types.
+ * Exports MongoDB documents directly as YAML files (preserves all fields including _schema).
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class ItemTypeResourceSyncType implements ResourceSyncType {
+
+    private static final String COLLECTION_NAME = "w_itemtypes";
+
+    private final WItemTypeService itemTypeService;
+    private final MongoTemplate mongoTemplate;
+    private final SchemaMigrationService migrationService;
+    private final ObjectMapper objectMapper;
+
+    @Qualifier("syncYamlMapper")
+    private final YAMLMapper yamlMapper;
+
+    @Override
+    public String name() {
+        return "itemtype";
+    }
+
+    @Override
+    public ResourceSyncType.ExportResult export(Path dataPath, WorldId worldId, boolean force, boolean removeOvertaken) throws IOException {
+        Path itemTypesDir = dataPath.resolve("itemtypes");
+        Files.createDirectories(itemTypesDir);
+
+        // Get item types directly from MongoDB as Documents
+        Query query = new Query(Criteria.where("worldId").is(worldId.getId()));
+        List<Document> documents = mongoTemplate.find(query, Document.class, COLLECTION_NAME);
+
+        Set<String> dbItemTypeIds = new HashSet<>();
+        int exported = 0;
+
+        for (Document doc : documents) {
+            try {
+                String itemType = doc.getString("itemType");
+                if (itemType == null) {
+                    log.warn("ItemType without itemType field, skipping");
+                    continue;
+                }
+
+                dbItemTypeIds.add(itemType);
+
+                // Sanitize filename (replace : with _)
+                String filename = itemType.replace(":", "_") + ".yaml";
+                Path targetFile = itemTypesDir.resolve(filename);
+
+                // Write MongoDB Document directly as YAML
+                yamlMapper.writeValue(targetFile.toFile(), doc);
+                log.debug("Exported item type: {}", itemType);
+                exported++;
+
+            } catch (Exception e) {
+                log.warn("Failed to export item type document", e);
+            }
+        }
+
+        // Remove files not in DB if requested
+        int deleted = 0;
+        if (removeOvertaken && Files.exists(itemTypesDir)) {
+            try (Stream<Path> files = Files.list(itemTypesDir)) {
+                for (Path file : files.filter(f -> f.toString().endsWith(".yaml")).toList()) {
+                    try {
+                        Document doc = yamlMapper.readValue(file.toFile(), Document.class);
+                        String itemType = doc.getString("itemType");
+
+                        if (!dbItemTypeIds.contains(itemType)) {
+                            Files.delete(file);
+                            log.info("Deleted file not in database: {}", file);
+                            deleted++;
+                        }
+                    } catch (IOException e) {
+                        log.warn("Failed to check file for deletion: " + file, e);
+                    }
+                }
+            }
+        }
+
+        return ResourceSyncType.ExportResult.of(exported, deleted);
+    }
+
+    @Override
+    public ResourceSyncType.ImportResult importData(Path dataPath, WorldId worldId, boolean force, boolean removeOvertaken) throws IOException {
+        Path itemTypesDir = dataPath.resolve("itemtypes");
+        if (!Files.exists(itemTypesDir)) {
+            log.info("No itemtypes directory found");
+            return ResourceSyncType.ImportResult.of(0, 0);
+        }
+
+        // Collect filesystem item type IDs
+        Set<String> filesystemItemTypeIds = new HashSet<>();
+        int imported = 0;
+
+        try (Stream<Path> files = Files.list(itemTypesDir)) {
+            for (Path file : files.filter(f -> f.toString().endsWith(".yaml")).toList()) {
+                try {
+                    // Read YAML as Document
+                    Document doc = yamlMapper.readValue(file.toFile(), Document.class);
+                    String itemType = doc.getString("itemType");
+                    filesystemItemTypeIds.add(itemType);
+
+                    String json = objectMapper.writeValueAsString(doc);
+
+                    // Migrate if needed
+                    String entityType = doc.getString("_class");
+                    if (entityType == null) {
+                        entityType = "de.mhus.nimbus.world.shared.world.WItemType";
+                    }
+
+                    String migratedJson = migrationService.migrateToLatest(json, entityType);
+                    Document migratedDoc = Document.parse(migratedJson);
+
+                    // Check if should import
+                    if (!force) {
+                        Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
+                        if (existing != null) {
+                            Object fileUpdatedAt = migratedDoc.get("updatedAt");
+                            Object dbUpdatedAt = existing.get("updatedAt");
+                            if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                                if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                    log.debug("Skipping item type {} (DB is newer)", itemType);
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+
+                    // Save to MongoDB
+                    mongoTemplate.save(migratedDoc, COLLECTION_NAME);
+                    log.debug("Imported item type: {}", itemType);
+                    imported++;
+
+                } catch (Exception e) {
+                    log.warn("Failed to import item type from file: " + file, e);
+                }
+            }
+        }
+
+        // Remove overtaken if requested
+        int deleted = 0;
+        if (removeOvertaken) {
+            List<WItemType> dbItemTypes = itemTypeService.findByWorldId(worldId);
+
+            for (WItemType itemType : dbItemTypes) {
+                if (!filesystemItemTypeIds.contains(itemType.getItemType())) {
+                    itemTypeService.delete(worldId, itemType.getItemType());
+                    log.info("Deleted item type not in filesystem: {}", itemType.getItemType());
+                    deleted++;
+                }
+            }
+        }
+
+        return ResourceSyncType.ImportResult.of(imported, deleted);
+    }
+}
+

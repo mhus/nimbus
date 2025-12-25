@@ -78,29 +78,38 @@ public class ExternalResourceSyncJobExecutor implements JobExecutor {
             boolean force = parseBooleanParameter(params, "force", false);
             boolean remove = parseBooleanParameter(params, "remove", false);
 
-            // Get and validate worldId
-            WorldId worldId = getWorldId(job);
-            String worldIdStr = job.getWorldId();
+            String jobWorldIdStr = job.getWorldId();
 
-            log.info("Starting export job: worldId={} name={} force={} remove={}", worldIdStr, name, force, remove);
+            log.info("Starting export job: jobWorldId={} name={} force={} remove={}", jobWorldIdStr, name, force, remove);
 
-            // Load ExternalResource
-            ExternalResourceDTO dto = loadExternalResource(worldIdStr, name);
+            // Load ExternalResource (use job worldId to find it)
+            ExternalResourceDTO dto = loadExternalResource(jobWorldIdStr, name);
+
+            // Use worldId from DTO, not from job!
+            WorldId worldId;
+            try {
+                WorldId.validate(dto.getWorldId());
+                worldId = WorldId.of(dto.getWorldId()).orElseThrow(
+                        () -> new JobExecutionException("Invalid worldId in ExternalResourceDTO: " + dto.getWorldId())
+                );
+            } catch (Exception e) {
+                throw new JobExecutionException("Invalid worldId in ExternalResourceDTO: " + dto.getWorldId(), e);
+            }
 
             // Execute export
-            log.info("Executing export: worldId={} localPath={} types={} force={} remove={}",
+            log.info("Executing export: worldId={} (from DTO) localPath={} types={} force={} remove={}",
                     worldId, dto.getLocalPath(), dto.getTypes(), force, remove);
 
             ResourceSyncService.ExportResult result = syncService.export(worldId, dto, force, remove);
 
-            // Update ExternalResourceDTO with sync result
-            updateSyncStatus(worldIdStr, name, dto, result.timestamp(),
+            // Update ExternalResourceDTO with sync result (use job worldId for lookup)
+            updateSyncStatus(jobWorldIdStr, name, dto, result.timestamp(),
                     result.success() ? "Success" : result.errorMessage());
 
             // Return result
             if (result.success()) {
                 String resultMessage = String.format(
-                        "Export completed successfully: worldId=%s name=%s exported=%d deleted=%d types=%s",
+                        "Export completed successfully: worldId=%s (from DTO) name=%s exported=%d deleted=%d types=%s",
                         worldId, name, result.entityCount(), result.deletedCount(), result.exportedByType()
                 );
                 log.info(resultMessage);
@@ -137,24 +146,33 @@ public class ExternalResourceSyncJobExecutor implements JobExecutor {
             boolean force = parseBooleanParameter(params, "force", false);
             boolean remove = parseBooleanParameter(params, "remove", false);
 
-            // Get and validate worldId
-            WorldId worldId = getWorldId(job);
-            String worldIdStr = job.getWorldId();
+            String jobWorldIdStr = job.getWorldId();
 
-            log.info("Starting import job: worldId={} name={} force={} remove={}",
-                    worldIdStr, name, force, remove);
+            log.info("Starting import job: jobWorldId={} name={} force={} remove={}",
+                    jobWorldIdStr, name, force, remove);
 
-            // Load ExternalResource
-            ExternalResourceDTO dto = loadExternalResource(worldIdStr, name);
+            // Load ExternalResource (use job worldId to find it)
+            ExternalResourceDTO dto = loadExternalResource(jobWorldIdStr, name);
+
+            // Use worldId from DTO, not from job!
+            WorldId worldId;
+            try {
+                WorldId.validate(dto.getWorldId());
+                worldId = WorldId.of(dto.getWorldId()).orElseThrow(
+                        () -> new JobExecutionException("Invalid worldId in ExternalResourceDTO: " + dto.getWorldId())
+                );
+            } catch (Exception e) {
+                throw new JobExecutionException("Invalid worldId in ExternalResourceDTO: " + dto.getWorldId(), e);
+            }
 
             // Execute import
-            log.info("Executing import: worldId={} localPath={} types={} force={} remove={}",
+            log.info("Executing import: worldId={} (from DTO) localPath={} types={} force={} remove={}",
                     worldId, dto.getLocalPath(), dto.getTypes(), force, remove);
 
             ResourceSyncService.ImportResult result = syncService.importData(worldId, dto, force, remove);
 
-            // Update ExternalResourceDTO with sync result
-            updateSyncStatus(worldIdStr, name, dto, result.timestamp(),
+            // Update ExternalResourceDTO with sync result (use job worldId for lookup)
+            updateSyncStatus(jobWorldIdStr, name, dto, result.timestamp(),
                     result.success() ? "Success" : result.errorMessage());
 
             // Return result
