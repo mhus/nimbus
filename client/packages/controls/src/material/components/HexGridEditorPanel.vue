@@ -100,6 +100,38 @@
           />
         </div>
 
+        <!-- Splash Screen -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Splash Screen (optional)</span>
+          </label>
+          <input
+            v-model="formData.splashScreen"
+            type="text"
+            class="input input-bordered"
+            placeholder="Enter splash screen path or asset reference"
+          />
+          <label class="label">
+            <span class="label-text-alt">Asset path for splash screen image displayed when entering this hex grid</span>
+          </label>
+        </div>
+
+        <!-- Splash Screen Audio -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Splash Screen Audio (optional)</span>
+          </label>
+          <input
+            v-model="formData.splashScreenAudio"
+            type="text"
+            class="input input-bordered"
+            placeholder="Enter splash screen audio path or asset reference"
+          />
+          <label class="label">
+            <span class="label-text-alt">Asset path for audio played when entering this hex grid</span>
+          </label>
+        </div>
+
         <!-- Entry Point Position -->
         <div class="divider">Entry Point (optional)</div>
         <div class="grid grid-cols-3 gap-4">
@@ -280,6 +312,8 @@ const formData = ref({
   name: '',
   description: '',
   icon: '',
+  splashScreen: '',
+  splashScreenAudio: '',
   enabled: true,
   entryPoint: {
     position: { x: 0, y: 0, z: 0 },
@@ -300,6 +334,8 @@ watch(() => props.hexGrid, (hexGrid) => {
       name: hexGrid.publicData.name || '',
       description: hexGrid.publicData.description || '',
       icon: hexGrid.publicData.icon || '',
+      splashScreen: hexGrid.publicData.splashScreen || '',
+      splashScreenAudio: hexGrid.publicData.splashScreenAudio || '',
       enabled: hexGrid.enabled ?? true,
       entryPoint: hexGrid.publicData.entryPoint ? {
         position: { ...hexGrid.publicData.entryPoint.position },
@@ -316,6 +352,8 @@ watch(() => props.hexGrid, (hexGrid) => {
       name: '',
       description: '',
       icon: '',
+      splashScreen: '',
+      splashScreenAudio: '',
       enabled: true,
       entryPoint: {
         position: { x: 0, y: 0, z: 0 },
@@ -369,6 +407,12 @@ const handleSave = async () => {
     // Add optional fields
     if (formData.value.icon) {
       publicData.icon = formData.value.icon;
+    }
+    if (formData.value.splashScreen) {
+      publicData.splashScreen = formData.value.splashScreen;
+    }
+    if (formData.value.splashScreenAudio) {
+      publicData.splashScreenAudio = formData.value.splashScreenAudio;
     }
     if (hasEntryPoint()) {
       publicData.entryPoint = formData.value.entryPoint;

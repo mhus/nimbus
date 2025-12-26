@@ -6,7 +6,7 @@ import java.util.Optional;
 
 /**
  * UserId represents a unique identifier for a user in the format "userId".
- * UserId is a string of 'a-zA-Z0-9_-' from 3 to 64 characters.
+ * UserId is a string of 'a-zA-Z0-9_-' from 2 to 64 characters.
  */
 public class UserId implements Comparable<UserId> {
 
@@ -24,8 +24,8 @@ public class UserId implements Comparable<UserId> {
     }
 
     private static boolean validate(String id) {
-        if (id == null || id.length() < 3) return false;
-        return id.matches("[a-zA-Z0-9_\\-]{3,64}");
+        if (id == null || id.length() < 2) return false;
+        return id.matches("[a-zA-Z0-9_\\-]{2,64}");
     }
 
     public String toString() {
