@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -57,13 +57,16 @@ public class SchemaVersionEventListener extends AbstractMongoEventListener<Objec
     private boolean autoMigrate;
 
     /**
-     * Called before an entity is converted to a MongoDB document for saving.
+     * Called before an entity is saved to MongoDB.
      * Adds the "_schema" field with the version from the {@link ActualSchemaVersion} annotation.
      *
-     * @param event the before convert event containing the entity and document
+     * This uses BeforeSaveEvent instead of BeforeConvertEvent to ensure the document is fully
+     * prepared and available for modification.
+     *
+     * @param event the before save event containing the entity and document
      */
     @Override
-    public void onBeforeConvert(BeforeConvertEvent<Object> event) {
+    public void onBeforeSave(BeforeSaveEvent<Object> event) {
         Object source = event.getSource();
         Document document = event.getDocument();
 

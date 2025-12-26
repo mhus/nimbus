@@ -8,7 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -24,7 +24,7 @@ class SchemaVersionEventListenerTest {
     private SchemaVersionEventListener listener;
 
     @Mock
-    private BeforeConvertEvent<Object> beforeConvertEvent;
+    private BeforeSaveEvent<Object> beforeSaveEvent;
 
     @Mock
     private AfterConvertEvent<Object> afterConvertEvent;
@@ -69,12 +69,12 @@ class SchemaVersionEventListenerTest {
     void shouldAddSchemaVersionWhenEntityHasAnnotation() {
         // Given
         TestEntityWithSchema entity = new TestEntityWithSchema();
-        when(beforeConvertEvent.getSource()).thenReturn(entity);
-        when(beforeConvertEvent.getDocument()).thenReturn(document);
-        when(beforeConvertEvent.getCollectionName()).thenReturn("test_entities");
+        when(beforeSaveEvent.getSource()).thenReturn(entity);
+        when(beforeSaveEvent.getDocument()).thenReturn(document);
+        when(beforeSaveEvent.getCollectionName()).thenReturn("test_entities");
 
         // When
-        listener.onBeforeConvert(beforeConvertEvent);
+        listener.onBeforeSave(beforeSaveEvent);
 
         // Then
         assertThat(document.getString("_schema"))
@@ -86,11 +86,11 @@ class SchemaVersionEventListenerTest {
     void shouldNotAddSchemaVersionWhenEntityHasNoAnnotation() {
         // Given
         TestEntityWithoutSchema entity = new TestEntityWithoutSchema();
-        when(beforeConvertEvent.getSource()).thenReturn(entity);
-        when(beforeConvertEvent.getDocument()).thenReturn(document);
+        when(beforeSaveEvent.getSource()).thenReturn(entity);
+        when(beforeSaveEvent.getDocument()).thenReturn(document);
 
         // When
-        listener.onBeforeConvert(beforeConvertEvent);
+        listener.onBeforeSave(beforeSaveEvent);
 
         // Then
         assertThat(document.getString("_schema")).isNull();
@@ -100,21 +100,21 @@ class SchemaVersionEventListenerTest {
     void shouldNotFailWhenDocumentIsNull() {
         // Given
         TestEntityWithSchema entity = new TestEntityWithSchema();
-        when(beforeConvertEvent.getSource()).thenReturn(entity);
-        when(beforeConvertEvent.getDocument()).thenReturn(null);
+        when(beforeSaveEvent.getSource()).thenReturn(entity);
+        when(beforeSaveEvent.getDocument()).thenReturn(null);
 
         // When/Then - should not throw exception
-        listener.onBeforeConvert(beforeConvertEvent);
+        listener.onBeforeSave(beforeSaveEvent);
     }
 
     @Test
     void shouldNotFailWhenSourceIsNull() {
         // Given
-        when(beforeConvertEvent.getSource()).thenReturn(null);
-        when(beforeConvertEvent.getDocument()).thenReturn(document);
+        when(beforeSaveEvent.getSource()).thenReturn(null);
+        when(beforeSaveEvent.getDocument()).thenReturn(document);
 
         // When/Then - should not throw exception
-        listener.onBeforeConvert(beforeConvertEvent);
+        listener.onBeforeSave(beforeSaveEvent);
         assertThat(document.getString("_schema")).isNull();
     }
 
@@ -184,16 +184,16 @@ class SchemaVersionEventListenerTest {
         TestEntityWithSchema entity1 = new TestEntityWithSchema();
         TestEntityWithSchema entity2 = new TestEntityWithSchema();
 
-        when(beforeConvertEvent.getSource()).thenReturn(entity1, entity2);
-        when(beforeConvertEvent.getDocument()).thenReturn(new org.bson.Document(), new org.bson.Document());
-        when(beforeConvertEvent.getCollectionName()).thenReturn("test_entities");
+        when(beforeSaveEvent.getSource()).thenReturn(entity1, entity2);
+        when(beforeSaveEvent.getDocument()).thenReturn(new org.bson.Document(), new org.bson.Document());
+        when(beforeSaveEvent.getCollectionName()).thenReturn("test_entities");
 
         // When - call twice with same entity class
-        listener.onBeforeConvert(beforeConvertEvent);
+        listener.onBeforeSave(beforeSaveEvent);
         org.bson.Document doc2 = new org.bson.Document();
-        when(beforeConvertEvent.getDocument()).thenReturn(doc2);
-        when(beforeConvertEvent.getSource()).thenReturn(entity2);
-        listener.onBeforeConvert(beforeConvertEvent);
+        when(beforeSaveEvent.getDocument()).thenReturn(doc2);
+        when(beforeSaveEvent.getSource()).thenReturn(entity2);
+        listener.onBeforeSave(beforeSaveEvent);
 
         // Then - both should have schema version (cache is working)
         assertThat(doc2.getString("_schema")).isEqualTo("1.0.0");
@@ -209,15 +209,15 @@ class SchemaVersionEventListenerTest {
         org.bson.Document doc2 = new org.bson.Document();
 
         // When - add schema to first entity
-        when(beforeConvertEvent.getSource()).thenReturn(entity1);
-        when(beforeConvertEvent.getDocument()).thenReturn(doc1);
-        when(beforeConvertEvent.getCollectionName()).thenReturn("test_entities");
-        listener.onBeforeConvert(beforeConvertEvent);
+        when(beforeSaveEvent.getSource()).thenReturn(entity1);
+        when(beforeSaveEvent.getDocument()).thenReturn(doc1);
+        when(beforeSaveEvent.getCollectionName()).thenReturn("test_entities");
+        listener.onBeforeSave(beforeSaveEvent);
 
         // When - add schema to second entity
-        when(beforeConvertEvent.getSource()).thenReturn(entity2);
-        when(beforeConvertEvent.getDocument()).thenReturn(doc2);
-        listener.onBeforeConvert(beforeConvertEvent);
+        when(beforeSaveEvent.getSource()).thenReturn(entity2);
+        when(beforeSaveEvent.getDocument()).thenReturn(doc2);
+        listener.onBeforeSave(beforeSaveEvent);
 
         // Then
         assertThat(doc1.getString("_schema")).isEqualTo("1.0.0");
