@@ -8,6 +8,10 @@ spring:
       database: world
       auto-index-creation: true
 
+nimbus:
+  encryption:
+    password: ${NIMBUS_ENCRYPTION_PASSWORD}
+
 server:
   port: 9045
   error:

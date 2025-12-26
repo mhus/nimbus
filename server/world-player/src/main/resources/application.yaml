@@ -11,7 +11,7 @@ spring:
 
 nimbus:
   encryption:
-    password: ${NIMBUS_ENCRYPTION_PASSWORD:changeThisPasswordInProduction}
+    password: ${NIMBUS_ENCRYPTION_PASSWORD}
   chunk:
     compression:
       enabled: ${CHUNK_COMPRESSION_ENABLED:true}
