@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.shared.redis;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -9,10 +10,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 @Configuration
+@EnableConfigurationProperties(WorldRedisProperties.class)
 public class WorldRedisConfig {
 
     @Bean
-    public LettuceConnectionFactory worldRedisConnectionFactory(WorldRedisSettings props) {
+    public LettuceConnectionFactory worldRedisConnectionFactory(WorldRedisProperties props) {
         RedisStandaloneConfiguration conf = new RedisStandaloneConfiguration();
         conf.setHostName(props.getHost());
         conf.setPort(props.getPort());
