@@ -187,6 +187,198 @@
                   </div>
                 </div>
 
+                <!-- On Success Job -->
+                <div class="form-control">
+                  <div class="collapse collapse-arrow bg-base-200">
+                    <input type="checkbox" v-model="showOnSuccess" />
+                    <div class="collapse-title font-medium">
+                      On Success Job (Optional)
+                      <span v-if="onSuccessData.executor" class="badge badge-success badge-sm ml-2">
+                        {{ onSuccessData.executor }}
+                      </span>
+                    </div>
+                    <div class="collapse-content">
+                      <div class="space-y-3 pt-3">
+                        <div class="form-control">
+                          <label class="label">
+                            <span class="label-text text-sm">Executor</span>
+                          </label>
+                          <input
+                            v-model="onSuccessData.executor"
+                            type="text"
+                            class="input input-sm input-bordered"
+                            placeholder="e.g., cleanup-executor"
+                          />
+                        </div>
+                        <div class="form-control">
+                          <label class="label">
+                            <span class="label-text text-sm">Type</span>
+                          </label>
+                          <input
+                            v-model="onSuccessData.type"
+                            type="text"
+                            class="input input-sm input-bordered"
+                            placeholder="e.g., cleanup-job"
+                          />
+                        </div>
+                        <div class="form-control">
+                          <label class="label">
+                            <span class="label-text text-sm">Parameters</span>
+                            <button
+                              type="button"
+                              class="btn btn-xs btn-outline"
+                              @click="addOnSuccessParameter"
+                            >
+                              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                              </svg>
+                              Add
+                            </button>
+                          </label>
+                          <div v-if="onSuccessParameters.length > 0" class="overflow-x-auto border border-base-300 rounded">
+                            <table class="table table-xs w-full">
+                              <thead>
+                                <tr>
+                                  <th class="w-1/3">Key</th>
+                                  <th class="w-1/2">Value</th>
+                                  <th class="w-16">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="(param, index) in onSuccessParameters" :key="index">
+                                  <td>
+                                    <input
+                                      v-model="param.key"
+                                      type="text"
+                                      class="input input-xs input-bordered w-full"
+                                      placeholder="Key"
+                                    />
+                                  </td>
+                                  <td>
+                                    <input
+                                      v-model="param.value"
+                                      type="text"
+                                      class="input input-xs input-bordered w-full"
+                                      placeholder="Value"
+                                    />
+                                  </td>
+                                  <td>
+                                    <button
+                                      type="button"
+                                      class="btn btn-xs btn-ghost text-error"
+                                      @click="removeOnSuccessParameter(index)"
+                                    >
+                                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- On Error Job -->
+                <div class="form-control">
+                  <div class="collapse collapse-arrow bg-base-200">
+                    <input type="checkbox" v-model="showOnError" />
+                    <div class="collapse-title font-medium">
+                      On Error Job (Optional)
+                      <span v-if="onErrorData.executor" class="badge badge-error badge-sm ml-2">
+                        {{ onErrorData.executor }}
+                      </span>
+                    </div>
+                    <div class="collapse-content">
+                      <div class="space-y-3 pt-3">
+                        <div class="form-control">
+                          <label class="label">
+                            <span class="label-text text-sm">Executor</span>
+                          </label>
+                          <input
+                            v-model="onErrorData.executor"
+                            type="text"
+                            class="input input-sm input-bordered"
+                            placeholder="e.g., rollback-executor"
+                          />
+                        </div>
+                        <div class="form-control">
+                          <label class="label">
+                            <span class="label-text text-sm">Type</span>
+                          </label>
+                          <input
+                            v-model="onErrorData.type"
+                            type="text"
+                            class="input input-sm input-bordered"
+                            placeholder="e.g., rollback-job"
+                          />
+                        </div>
+                        <div class="form-control">
+                          <label class="label">
+                            <span class="label-text text-sm">Parameters</span>
+                            <button
+                              type="button"
+                              class="btn btn-xs btn-outline"
+                              @click="addOnErrorParameter"
+                            >
+                              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                              </svg>
+                              Add
+                            </button>
+                          </label>
+                          <div v-if="onErrorParameters.length > 0" class="overflow-x-auto border border-base-300 rounded">
+                            <table class="table table-xs w-full">
+                              <thead>
+                                <tr>
+                                  <th class="w-1/3">Key</th>
+                                  <th class="w-1/2">Value</th>
+                                  <th class="w-16">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr v-for="(param, index) in onErrorParameters" :key="index">
+                                  <td>
+                                    <input
+                                      v-model="param.key"
+                                      type="text"
+                                      class="input input-xs input-bordered w-full"
+                                      placeholder="Key"
+                                    />
+                                  </td>
+                                  <td>
+                                    <input
+                                      v-model="param.value"
+                                      type="text"
+                                      class="input input-xs input-bordered w-full"
+                                      placeholder="Value"
+                                    />
+                                  </td>
+                                  <td>
+                                    <button
+                                      type="button"
+                                      class="btn btn-xs btn-ghost text-error"
+                                      @click="removeOnErrorParameter(index)"
+                                    >
+                                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Error Display -->
                 <ErrorAlert v-if="saveError" :message="saveError" />
 
@@ -221,7 +413,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
-import { useJobs, type JobCreateRequest } from '@/composables/useJobs';
+import { useJobs, type JobCreateRequest, type NextJob } from '@/composables/useJobs';
 import ErrorAlert from '@components/ErrorAlert.vue';
 
 const props = defineProps<{
@@ -245,6 +437,22 @@ const formData = ref({
 
 // Parameter list (key-value pairs)
 const parameterList = ref<Array<{ key: string; value: string }>>([]);
+
+// On Success Job
+const showOnSuccess = ref(false);
+const onSuccessData = ref({
+  executor: '',
+  type: '',
+});
+const onSuccessParameters = ref<Array<{ key: string; value: string }>>([]);
+
+// On Error Job
+const showOnError = ref(false);
+const onErrorData = ref({
+  executor: '',
+  type: '',
+});
+const onErrorParameters = ref<Array<{ key: string; value: string }>>([]);
 
 const saving = ref(false);
 const saveError = ref<string | null>(null);
@@ -273,6 +481,34 @@ const addParameter = () => {
  */
 const removeParameter = (index: number) => {
   parameterList.value.splice(index, 1);
+};
+
+/**
+ * Add onSuccess parameter row
+ */
+const addOnSuccessParameter = () => {
+  onSuccessParameters.value.push({ key: '', value: '' });
+};
+
+/**
+ * Remove onSuccess parameter row
+ */
+const removeOnSuccessParameter = (index: number) => {
+  onSuccessParameters.value.splice(index, 1);
+};
+
+/**
+ * Add onError parameter row
+ */
+const addOnErrorParameter = () => {
+  onErrorParameters.value.push({ key: '', value: '' });
+};
+
+/**
+ * Remove onError parameter row
+ */
+const removeOnErrorParameter = (index: number) => {
+  onErrorParameters.value.splice(index, 1);
 };
 
 /**
@@ -344,6 +580,50 @@ const buildParameters = (): Record<string, string> => {
 };
 
 /**
+ * Build NextJob object from onSuccess data
+ */
+const buildOnSuccessJob = (): NextJob | undefined => {
+  if (!showOnSuccess.value || !onSuccessData.value.executor.trim()) {
+    return undefined;
+  }
+
+  const parameters: Record<string, string> = {};
+  onSuccessParameters.value.forEach(param => {
+    if (param.key.trim() && param.value.trim()) {
+      parameters[param.key.trim()] = param.value.trim();
+    }
+  });
+
+  return {
+    executor: onSuccessData.value.executor.trim(),
+    type: onSuccessData.value.type.trim() || undefined,
+    parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
+  };
+};
+
+/**
+ * Build NextJob object from onError data
+ */
+const buildOnErrorJob = (): NextJob | undefined => {
+  if (!showOnError.value || !onErrorData.value.executor.trim()) {
+    return undefined;
+  }
+
+  const parameters: Record<string, string> = {};
+  onErrorParameters.value.forEach(param => {
+    if (param.key.trim() && param.value.trim()) {
+      parameters[param.key.trim()] = param.value.trim();
+    }
+  });
+
+  return {
+    executor: onErrorData.value.executor.trim(),
+    type: onErrorData.value.type.trim() || undefined,
+    parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
+  };
+};
+
+/**
  * Handle create
  */
 const handleCreate = async () => {
@@ -361,6 +641,8 @@ const handleCreate = async () => {
       parameters: buildParameters(),
       priority: formData.value.priority,
       maxRetries: formData.value.maxRetries,
+      onSuccess: buildOnSuccessJob(),
+      onError: buildOnErrorJob(),
     };
 
     await createJob(request);

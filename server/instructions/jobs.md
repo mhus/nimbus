@@ -17,7 +17,7 @@ Im neuen job wird die id, result und errorMessage des letzten jobs als
 parameter autoatich hinterlegt. Als worldId wird die gleiche id verwendet wie der letzte job.
 - Siehe auch JobProcessingScheduler
 
-[ ] Auch im job-editor sollen die neuen Parameter bearbeitbar sein
+[?] Auch im job-editor sollen die neuen Parameter bearbeitbar sein
 - ../client/packages/controls
  onSuccess und onError sind optional, d.h. es soll einen aufklappbaren Bereich geben in dem die Parameter gesetzt werden können.
 

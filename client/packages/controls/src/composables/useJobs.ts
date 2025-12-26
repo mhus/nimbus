@@ -11,6 +11,12 @@ const logger = getLogger('useJobs');
 
 export type JobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
 
+export interface NextJob {
+  executor: string;
+  type?: string;
+  parameters?: Record<string, string>;
+}
+
 export interface Job {
   id: string;
   worldId: string;
@@ -23,6 +29,8 @@ export interface Job {
   retryCount: number;
   resultData?: string;
   errorMessage?: string;
+  onSuccess?: NextJob;
+  onError?: NextJob;
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
@@ -43,6 +51,8 @@ export interface JobCreateRequest {
   parameters: Record<string, string>;
   priority?: number;
   maxRetries?: number;
+  onSuccess?: NextJob;
+  onError?: NextJob;
 }
 
 export interface UseJobsReturn {
