@@ -345,3 +345,20 @@ Zu ersetzende keys:
 [x] Exportiere auf die geliche weise wie WBlockType auch WEntityModel
 
 [x] Exportiere auf die gleiche weise wie WBackdrop auch WItemType
+
+[x] Exportiere auf die gleiche weise wie WBackdrop auch WAnything
+- siehe ResourceSyncService und ResourceSyncType
+- exportiere nur WAnything, die die richtige worldId haben
+- Auch import implementieren, WAnythig ist eindeutig mit worldId+collection+name
+- Implementiert in AnythingResourceSyncType
+- Struktur: anything/{collection}/{name}.yaml
+- Registriert in ResourceSyncService unter type "anything"
+
+[x] Exportiere auf die gleiche weise wie WBackdrop auch WHexGrid
+- bei hexgrid ist worldId+position eindeutig
+- siehe ResourceSyncService und ResourceSyncType
+- exportiere nur WHexGrid, die die richtige worldId haben
+- Auch import implementieren, WHexGrid ist eindeutig mit worldId+position
+- Implementiert in HexGridResourceSyncType
+- Struktur: hexgrids/{position}.yaml (position "q:r" wird zu "q_r" im Dateinamen umgewandelt)
+- Registriert in ResourceSyncService unter type "hexgrid"

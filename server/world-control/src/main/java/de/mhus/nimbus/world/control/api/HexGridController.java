@@ -3,7 +3,7 @@ package de.mhus.nimbus.world.control.api;
 import de.mhus.nimbus.generated.types.HexGrid;
 import de.mhus.nimbus.generated.types.HexVector2;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
-import de.mhus.nimbus.world.shared.world.WHexGridEntity;
+import de.mhus.nimbus.world.shared.world.WHexGrid;
 import de.mhus.nimbus.world.shared.world.WHexGridService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -53,7 +53,7 @@ public class HexGridController extends BaseEditorController {
             boolean enabled
     ) {}
 
-    private HexGridResponse toResponse(WHexGridEntity hexGrid) {
+    private HexGridResponse toResponse(WHexGrid hexGrid) {
         return new HexGridResponse(
                 hexGrid.getId(),
                 hexGrid.getWorldId(),
@@ -146,7 +146,7 @@ public class HexGridController extends BaseEditorController {
         }
 
         try {
-            WHexGridEntity created = hexGridService.create(
+            WHexGrid created = hexGridService.create(
                     worldId,
                     request.publicData(),
                     request.generatorParameters()
@@ -358,7 +358,7 @@ public class HexGridController extends BaseEditorController {
                 return notFound("Hex grid not found at position: " + q + ":" + r);
             }
 
-            WHexGridEntity hexGrid = hexGridOpt.get();
+            WHexGrid hexGrid = hexGridOpt.get();
 
             // Get world entity for chunk size calculation
             var world = worldService.getByWorldId(worldId).orElseThrow(

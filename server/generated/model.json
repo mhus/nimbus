@@ -1,22 +1,5 @@
 {
   "files" : [ {
-    "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/generated/LayerType.ts",
-    "imports" : [ ],
-    "interfaces" : [ ],
-    "enums" : [ {
-      "name" : "LayerType",
-      "values" : [ "GROUND", "MODEL" ],
-      "enumValues" : [ {
-        "name" : "GROUND",
-        "value" : "GROUND"
-      }, {
-        "name" : "MODEL",
-        "value" : "MODEL"
-      } ]
-    } ],
-    "classes" : [ ],
-    "typeAliases" : [ ]
-  }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/dto/SKeyDto.ts",
     "imports" : [ ],
     "interfaces" : [ {
@@ -3153,6 +3136,20 @@
         "comment" : null
       }, {
         "name" : "icon",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "splashScreen",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "splashScreenAudio",
         "type" : "string",
         "optional" : true,
         "visibility" : null,

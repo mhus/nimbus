@@ -11,7 +11,7 @@ import java.util.Optional;
  * Provides standard CRUD operations and custom queries for hex grid management.
  */
 @Repository
-public interface WHexGridRepository extends MongoRepository<WHexGridEntity, String> {
+public interface WHexGridRepository extends MongoRepository<WHexGrid, String> {
 
     /**
      * Finds a hex grid by world ID and position.
@@ -20,7 +20,7 @@ public interface WHexGridRepository extends MongoRepository<WHexGridEntity, Stri
      * @param position The position key in format "q:r"
      * @return Optional containing the hex grid if found
      */
-    Optional<WHexGridEntity> findByWorldIdAndPosition(String worldId, String position);
+    Optional<WHexGrid> findByWorldIdAndPosition(String worldId, String position);
 
     /**
      * Finds all hex grids in a world.
@@ -28,7 +28,7 @@ public interface WHexGridRepository extends MongoRepository<WHexGridEntity, Stri
      * @param worldId The world identifier
      * @return List of all hex grids in the world
      */
-    List<WHexGridEntity> findByWorldId(String worldId);
+    List<WHexGrid> findByWorldId(String worldId);
 
     /**
      * Finds hex grids in a world filtered by enabled status.
@@ -37,7 +37,7 @@ public interface WHexGridRepository extends MongoRepository<WHexGridEntity, Stri
      * @param enabled The enabled status to filter by
      * @return List of hex grids matching the criteria
      */
-    List<WHexGridEntity> findByWorldIdAndEnabled(String worldId, boolean enabled);
+    List<WHexGrid> findByWorldIdAndEnabled(String worldId, boolean enabled);
 
     /**
      * Checks if a hex grid exists at the given world and position.

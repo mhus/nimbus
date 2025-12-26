@@ -27,7 +27,7 @@ public class ResourceSyncService {
 
     private static final List<String> ALL_TYPES = Arrays.asList(
             "asset", "backdrop", "blocktype", "item", "itemtype", "itemposition",
-            "entity", "entitymodel", "model", "ground"
+            "entity", "entitymodel", "model", "ground", "anything", "hexgrid"
     );
 
     private final List<ResourceSyncType> syncTypes;

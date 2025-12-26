@@ -4,7 +4,7 @@ import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.world.shared.job.JobExecutionException;
 import de.mhus.nimbus.world.shared.layer.LayerBlock;
 import de.mhus.nimbus.world.shared.world.FlatPosition;
-import de.mhus.nimbus.world.shared.world.WHexGridEntity;
+import de.mhus.nimbus.world.shared.world.WHexGrid;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -53,7 +53,7 @@ public class FlatWorldGenerator extends AbstractTerrainGenerator {
     }
 
     @Override
-    protected int generateTerrain(WWorld world, WHexGridEntity hexGrid, GeneratorContext context)
+    protected int generateTerrain(WWorld world, WHexGrid hexGrid, GeneratorContext context)
             throws JobExecutionException {
 
         Map<String, List<LayerBlock>> chunkBlocks = new HashMap<>();

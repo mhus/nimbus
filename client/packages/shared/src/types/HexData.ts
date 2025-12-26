@@ -8,4 +8,6 @@ export interface HexGrid {
   name: string;
   description: string;
   icon?: string;
+  splashScreen?: string;
+  splashScreenAudio?: string;
 }

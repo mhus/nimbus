@@ -39,7 +39,7 @@ public class WHexGridService {
      * @return Optional containing the hex grid if found
      */
     @Transactional(readOnly = true)
-    public Optional<WHexGridEntity> findByWorldIdAndPosition(String worldId, HexVector2 hexPos) {
+    public Optional<WHexGrid> findByWorldIdAndPosition(String worldId, HexVector2 hexPos) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -75,7 +75,7 @@ public class WHexGridService {
      * @return List of all hex grids in the world
      */
     @Transactional(readOnly = true)
-    public List<WHexGridEntity> findByWorldId(String worldId) {
+    public List<WHexGrid> findByWorldId(String worldId) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -94,7 +94,7 @@ public class WHexGridService {
      * @return List of enabled hex grids in the world
      */
     @Transactional(readOnly = true)
-    public List<WHexGridEntity> findAllEnabled(String worldId) {
+    public List<WHexGrid> findAllEnabled(String worldId) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -114,7 +114,7 @@ public class WHexGridService {
      * @throws IllegalStateException if position cannot be synchronized
      */
     @Transactional
-    public WHexGridEntity save(WHexGridEntity entity) {
+    public WHexGrid save(WHexGrid entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity required");
         }
@@ -132,7 +132,7 @@ public class WHexGridService {
             entity.touchUpdate();
         }
 
-        WHexGridEntity saved = repository.save(entity);
+        WHexGrid saved = repository.save(entity);
         log.debug("Saved WHexGrid: worldId={}, position={}", saved.getWorldId(), saved.getPosition());
         return saved;
     }
@@ -148,7 +148,7 @@ public class WHexGridService {
      * @throws IllegalStateException if a hex grid already exists at this position
      */
     @Transactional
-    public WHexGridEntity create(String worldId, HexGrid publicData, Map<String, String> generatorParams) {
+    public WHexGrid create(String worldId, HexGrid publicData, Map<String, String> generatorParams) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -166,7 +166,7 @@ public class WHexGridService {
             throw new IllegalStateException("Hex grid already exists at worldId=" + lookupWorld.getId() + ", position=" + positionKey);
         }
 
-        WHexGridEntity entity = WHexGridEntity.builder()
+        WHexGrid entity = WHexGrid.builder()
                 .worldId(lookupWorld.getId())
                 .publicData(publicData)
                 .position(positionKey)
@@ -176,7 +176,7 @@ public class WHexGridService {
 
         entity.touchCreate();
 
-        WHexGridEntity saved = repository.save(entity);
+        WHexGrid saved = repository.save(entity);
         log.info("Created WHexGrid: worldId={}, position={}", lookupWorld.getId(), positionKey);
         return saved;
     }
@@ -191,7 +191,7 @@ public class WHexGridService {
      * @return Optional containing the updated entity if found
      */
     @Transactional
-    public Optional<WHexGridEntity> update(String worldId, HexVector2 hexPos, Consumer<WHexGridEntity> updater) {
+    public Optional<WHexGrid> update(String worldId, HexVector2 hexPos, Consumer<WHexGrid> updater) {
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId required");
         }
@@ -212,7 +212,7 @@ public class WHexGridService {
             entity.syncPositionKey();
             entity.touchUpdate();
 
-            WHexGridEntity saved = repository.save(entity);
+            WHexGrid saved = repository.save(entity);
             log.debug("Updated WHexGrid: worldId={}, position={}", lookupWorld.getId(), positionKey);
             return saved;
         });

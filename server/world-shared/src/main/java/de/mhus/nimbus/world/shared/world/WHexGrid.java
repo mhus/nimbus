@@ -32,7 +32,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WHexGridEntity implements Identifiable {
+public class WHexGrid implements Identifiable {
 
     public enum NEIGHBOR {
         TOP_RIGHT,

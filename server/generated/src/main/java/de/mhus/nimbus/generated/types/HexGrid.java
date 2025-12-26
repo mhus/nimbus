@@ -19,4 +19,10 @@ public class HexGrid {
     private String description;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String icon;
+    @com.fasterxml.jackson.annotation.JsonProperty("splashScreen")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String splashScreen;
+    @com.fasterxml.jackson.annotation.JsonProperty("splashScreenAudio")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String splashScreenAudio;
 }
