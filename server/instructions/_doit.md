@@ -172,9 +172,19 @@ at _boundRenderFunction (http://localhost:3001/node_modules/.vite/deps/chunk-N75
 - Suche mal nach 16, das wurde auch manchmal hard coded eingebaut.
 - WordInfo.name muss eigentlich 'title' sein.
 
-[ ] Beim speichern im MongoDB gibt es einen Listener der das schema prüft.
+[x] Beim speichern im MongoDB gibt es einen Listener der das schema prüft.
 - scheinbar wird das chema bei neuen entities nicht gespeichert. bzw. nicht immer.
 - wenn das schema fehlt, wird automatisch das aktuelle angehaengt, nicht mehr '0'
 - schemas sollen automatisch migriert werden. Steuerbar ueber eine application.yaml property.
   - siehe auch: schon in tools/world-import wurde migriert
   - wenn migratoren nicht verfuegbar sind, dann nicht.
+
+[ ] Der block-editor.html macht einige probleme.
+- Values lassen sich nicht immer clicken
+Problem ist vermutlich, dass values immer als optional definiert sind und es teilweise eigentlich drei zustaender für booleans gibt, on, off und undefined.
+Folgende Idee:
+- verwalte immer die komplette liste von properties
+- fuehre zuseatzlich parametr '_defined' oder '_solidDefined' wenn der boolean 'solid' gesetzt sein soll true oder false.
+- Gibt es checkboxen die drei zustaende haben? Dann nutze diese um auch den _solidDefined zu definieren.
+- Am anfanbg beim laden solle die komplette struktur aus, incl. _defined ...
+- Beim speichern reduziere die struktur auf das noetigste. Entferne alle _defined ...

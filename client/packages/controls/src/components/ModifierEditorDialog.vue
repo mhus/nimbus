@@ -74,7 +74,7 @@
             Cancel
           </button>
           <button class="btn btn-primary" @click="handleSave">
-            Save
+            Back
           </button>
         </div>
       </div>
@@ -106,7 +106,7 @@ const emit = defineEmits<{
   (e: 'save', modifier: BlockModifier): void;
 }>();
 
-// Working copy of modifier
+// Working copy of modifier - keep undefined values as undefined
 const modifierData = ref<BlockModifier>(JSON.parse(JSON.stringify(props.modifier)));
 
 // Toggle functions for each section
@@ -165,6 +165,7 @@ const handleSave = () => {
   if (modifierData.value.audio && modifierData.value.audio.length === 0) {
     modifierData.value.audio = undefined;
   }
+
   emit('save', modifierData.value);
 };
 </script>

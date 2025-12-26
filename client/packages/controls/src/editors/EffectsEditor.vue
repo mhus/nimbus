@@ -1,14 +1,9 @@
 <template>
   <div class="space-y-3 pt-2">
     <div class="form-control">
-      <label class="label cursor-pointer justify-start gap-2">
-        <input
-          v-model="localValue.forceEgoView"
-          type="checkbox"
-          class="checkbox checkbox-sm"
-        />
-        <span class="label-text">Force Ego/First-Person View</span>
-      </label>
+      <TriStateCheckboxSimple v-model="localValue.forceEgoView">
+        Force Ego/First-Person View
+      </TriStateCheckboxSimple>
     </div>
 
     <!-- Sky Effect (nested) -->
@@ -51,6 +46,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import type { EffectsModifier } from '@nimbus/shared';
+import TriStateCheckboxSimple from '@components/TriStateCheckboxSimple.vue';
 
 interface Props {
   modelValue?: EffectsModifier;
@@ -62,6 +58,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: EffectsModifier | undefined): void;
 }>();
 
+// Initialize localValue - keep undefined values as undefined
 const localValue = ref<EffectsModifier>(
   props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : {}
 );
@@ -77,6 +74,7 @@ const skyEffect = computed({
   }
 });
 
+// Watch for changes in localValue and emit
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);
 }, { deep: true });

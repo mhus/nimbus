@@ -3,44 +3,24 @@
     <!-- Checkboxes Row -->
     <div class="grid grid-cols-2 gap-3">
       <div class="form-control">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input
-            v-model="localValue.solid"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-          />
-          <span class="label-text text-xs">Solid (collision)</span>
-        </label>
+        <TriStateCheckboxSimple v-model="localValue.solid">
+          Solid (collision)
+        </TriStateCheckboxSimple>
       </div>
       <div class="form-control">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input
-            v-model="localValue.interactive"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-          />
-          <span class="label-text text-xs">Interactive</span>
-        </label>
+        <TriStateCheckboxSimple v-model="localValue.interactive">
+          Interactive
+        </TriStateCheckboxSimple>
       </div>
       <div class="form-control">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input
-            v-model="localValue.collisionEvent"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-          />
-          <span class="label-text text-xs">Collision Event</span>
-        </label>
+        <TriStateCheckboxSimple v-model="localValue.collisionEvent">
+          Collision Event
+        </TriStateCheckboxSimple>
       </div>
       <div class="form-control">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input
-            v-model="localValue.autoClimbable"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-          />
-          <span class="label-text text-xs">Auto Climbable</span>
-        </label>
+        <TriStateCheckboxSimple v-model="localValue.autoClimbable">
+          Auto Climbable
+        </TriStateCheckboxSimple>
       </div>
       <div class="form-control">
         <label class="label cursor-pointer justify-start gap-2">
@@ -270,6 +250,7 @@ import { ref, watch, computed } from 'vue';
 import type { PhysicsModifier } from '@nimbus/shared';
 import { Direction, DirectionHelper } from '@nimbus/shared';
 import CollapsibleSection from '@components/CollapsibleSection.vue';
+import TriStateCheckboxSimple from '@components/TriStateCheckboxSimple.vue';
 
 interface Props {
   modelValue?: PhysicsModifier;
@@ -281,6 +262,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: PhysicsModifier | undefined): void;
 }>();
 
+// Initialize localValue - keep undefined values as undefined
 const localValue = ref<PhysicsModifier>(
   props.modelValue ? JSON.parse(JSON.stringify(props.modelValue)) : {}
 );
@@ -451,6 +433,7 @@ const autoJumpValue = computed({
   }
 });
 
+// Watch for changes in localValue and emit
 watch(localValue, (newValue) => {
   emit('update:modelValue', newValue);
 }, { deep: true });

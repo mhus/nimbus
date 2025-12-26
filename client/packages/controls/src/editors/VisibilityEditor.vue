@@ -434,10 +434,11 @@
                   <span class="label-text text-xs">wrapU</span>
                 </label>
                 <select
-                  :value="getTextureDefValue(key, 'uvMapping.wrapU') ?? 1"
-                  @change="setTextureDefValue(key, 'uvMapping.wrapU', parseInt(($event.target as HTMLSelectElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.wrapU') ?? ''"
+                  @change="handleWrapChange(key, 'wrapU', ($event.target as HTMLSelectElement).value)"
                   class="select select-bordered select-xs"
                 >
+                  <option value="">undefined (CLAMP)</option>
                   <option :value="0">CLAMP</option>
                   <option :value="1">REPEAT</option>
                   <option :value="2">MIRROR</option>
@@ -448,10 +449,11 @@
                   <span class="label-text text-xs">wrapV</span>
                 </label>
                 <select
-                  :value="getTextureDefValue(key, 'uvMapping.wrapV') ?? 1"
-                  @change="setTextureDefValue(key, 'uvMapping.wrapV', parseInt(($event.target as HTMLSelectElement).value))"
+                  :value="getTextureDefValue(key, 'uvMapping.wrapV') ?? ''"
+                  @change="handleWrapChange(key, 'wrapV', ($event.target as HTMLSelectElement).value)"
                   class="select select-bordered select-xs"
                 >
+                  <option value="">undefined (CLAMP)</option>
                   <option :value="0">CLAMP</option>
                   <option :value="1">REPEAT</option>
                   <option :value="2">MIRROR</option>
@@ -921,6 +923,17 @@ const setTextureDefValue = (key: number, path: string, value: any) => {
   }
 };
 
+// Special handler for wrap mode dropdowns to handle undefined
+const handleWrapChange = (key: number, property: 'wrapU' | 'wrapV', value: string) => {
+  if (value === '' || value === 'undefined') {
+    // Set to undefined (will be deleted)
+    setTextureDefValue(key, `uvMapping.${property}`, undefined);
+  } else {
+    // Set to numeric value
+    setTextureDefValue(key, `uvMapping.${property}`, parseInt(value));
+  }
+};
+
 // ============================================
 // Degrees ↔ Radians Conversion
 // ============================================
@@ -950,33 +963,58 @@ const loadTextureImage = async (texturePath: string): Promise<HTMLImageElement> 
     throw textureErrorCache.value.get(texturePath)!;
   }
 
-  // Load image
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
+  // Load image using fetch with credentials, then convert to Image
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Use AssetService to construct correct URL
+      if (!props.worldId) {
+        const error = new Error('World ID not provided');
+        textureErrorCache.value.set(texturePath, error);
+        reject(error);
+        return;
+      }
+      const assetUrl = assetService.getAssetUrl(props.worldId, texturePath);
 
-    img.onload = () => {
-      // Cache successful load
-      textureImageCache.value.set(texturePath, img);
-      resolve(img);
-    };
+      // Fetch with credentials
+      const response = await fetch(assetUrl, {
+        credentials: 'include',
+        mode: 'cors'
+      });
 
-    img.onerror = () => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Convert to blob and create object URL
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      // Create image from blob URL
+      const img = new Image();
+
+      img.onload = () => {
+        // Cache successful load
+        textureImageCache.value.set(texturePath, img);
+        resolve(img);
+        // Clean up object URL after image is loaded
+        URL.revokeObjectURL(objectUrl);
+      };
+
+      img.onerror = () => {
+        const error = new Error(`Failed to create image from blob: ${texturePath}`);
+        textureErrorCache.value.set(texturePath, error);
+        URL.revokeObjectURL(objectUrl);
+        reject(error);
+      };
+
+      img.src = objectUrl;
+
+    } catch (error) {
       // Cache error to prevent retry loops
-      const error = new Error(`Failed to load texture: ${texturePath}`);
-      textureErrorCache.value.set(texturePath, error);
-      reject(error);
-    };
-
-    // Use AssetService to construct correct URL
-    if (!props.worldId) {
-      const error = new Error('World ID not provided');
-      textureErrorCache.value.set(texturePath, error);
-      reject(error);
-      return;
+      const err = error instanceof Error ? error : new Error(`Failed to load texture: ${texturePath}`);
+      textureErrorCache.value.set(texturePath, err);
+      reject(err);
     }
-    const assetUrl = assetService.getAssetUrl(props.worldId, texturePath);
-    img.src = assetUrl;
   });
 };
 
@@ -1019,8 +1057,8 @@ const renderTexturePreview = async (key: number) => {
       uOffset: getTextureDefValue(key, 'uvMapping.uOffset') ?? 0,
       vOffset: getTextureDefValue(key, 'uvMapping.vOffset') ?? 0,
       wAng: getTextureDefValue(key, 'uvMapping.wAng') ?? 0,
-      wrapU: getTextureDefValue(key, 'uvMapping.wrapU') ?? 1,
-      wrapV: getTextureDefValue(key, 'uvMapping.wrapV') ?? 1,
+      wrapU: getTextureDefValue(key, 'uvMapping.wrapU') ?? 0, // Default: CLAMP
+      wrapV: getTextureDefValue(key, 'uvMapping.wrapV') ?? 0, // Default: CLAMP
       uRotationCenter: getTextureDefValue(key, 'uvMapping.uRotationCenter') ?? 0.5,
       vRotationCenter: getTextureDefValue(key, 'uvMapping.vRotationCenter') ?? 0.5,
     };
@@ -1094,24 +1132,49 @@ const applyUVTransformations = (
   ctx.translate(offsetX, offsetY);
 
   // Handle wrap modes
-  if (uv.wrapU === 1 && uv.wrapV === 1) {
-    // REPEAT mode - create pattern
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = sourceW;
-    tempCanvas.height = sourceH;
-    const tempCtx = tempCanvas.getContext('2d')!;
-    tempCtx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, sourceW, sourceH);
+  if (uv.wrapU === 1 || uv.wrapV === 1) {
+    // REPEAT mode - draw max 3x3 tiles
+    const repeatU = uv.wrapU === 1 ? 3 : 1;
+    const repeatV = uv.wrapV === 1 ? 3 : 1;
 
-    const pattern = ctx.createPattern(tempCanvas, 'repeat');
-    if (pattern) {
-      ctx.fillStyle = pattern;
-      ctx.fillRect(0, 0, 256, 256);
+    // Calculate tile size
+    const tileWidth = 256 / repeatU;
+    const tileHeight = 256 / repeatV;
+
+    // Draw tiles
+    for (let row = 0; row < repeatV; row++) {
+      for (let col = 0; col < repeatU; col++) {
+        const x = col * tileWidth;
+        const y = row * tileHeight;
+        ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, x, y, tileWidth, tileHeight);
+      }
     }
   } else if (uv.wrapU === 2 || uv.wrapV === 2) {
-    // MIRROR mode - draw mirrored copies (simplified)
-    ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 256, 256);
+    // MIRROR mode - draw mirrored copies (max 3x3)
+    const repeatU = uv.wrapU === 2 ? 3 : 1;
+    const repeatV = uv.wrapV === 2 ? 3 : 1;
+
+    const tileWidth = 256 / repeatU;
+    const tileHeight = 256 / repeatV;
+
+    for (let row = 0; row < repeatV; row++) {
+      for (let col = 0; col < repeatU; col++) {
+        const x = col * tileWidth;
+        const y = row * tileHeight;
+
+        ctx.save();
+        ctx.translate(x + tileWidth / 2, y + tileHeight / 2);
+
+        // Mirror alternating tiles
+        if (col % 2 === 1) ctx.scale(-1, 1);
+        if (row % 2 === 1) ctx.scale(1, -1);
+
+        ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, -tileWidth / 2, -tileHeight / 2, tileWidth, tileHeight);
+        ctx.restore();
+      }
+    }
   } else {
-    // CLAMP mode - single draw
+    // CLAMP mode (0) or undefined - single draw
     ctx.drawImage(img, sourceX, sourceY, sourceW, sourceH, 0, 0, 256, 256);
   }
 
