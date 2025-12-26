@@ -16,7 +16,7 @@ import java.util.Map;
  * Service for AI-powered world generation using LangChain4j.
  * Provides intelligent terrain generation, biome suggestions, and world description generation.
  */
-@Service
+//@Service
 @Slf4j
 @RequiredArgsConstructor
 public class AiWorldGeneratorService {
