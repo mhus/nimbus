@@ -585,8 +585,10 @@ export class AudioService {
     // Create loading promise and cache it
     const loadingPromise = (async () => {
       try {
-        // Get audio URL
-        const audioUrl = networkService.getAssetUrl(path);
+        // Get audio URL with cache-busting timestamp
+        const baseUrl = networkService.getAssetUrl(path);
+        const timestamp = Date.now();
+        const audioUrl = `${baseUrl}?t=${timestamp}`;
         logger.debug('Loading sound into pool', { path, audioUrl, initialPoolSize });
 
         // Load audio URL with credentials (once for all instances)
@@ -595,9 +597,32 @@ export class AudioService {
         // Load initial sound instances
         const initialSounds: any[] = [];
         for (let i = 0; i < initialPoolSize; i++) {
-          const sound = await CreateSoundAsync(path, blobUrl);
-          initialSounds.push(sound);
-          logger.debug('Sound instance created', { path, instance: i + 1, total: initialPoolSize });
+          try {
+            const sound = await CreateSoundAsync(path, blobUrl);
+            initialSounds.push(sound);
+          } catch (soundError) {
+            // Decoding failed - try one more time with a fresh fetch (cache-busting)
+            logger.info('Audio decode failed, retrying with cache-busting', { path });
+            try {
+              const retryTimestamp = Date.now();
+              const retryUrl = `${audioUrl}?retry=${retryTimestamp}`;
+              const retryBlobUrl = await loadAudioUrlWithCredentials(retryUrl);
+              const retrySound = await CreateSoundAsync(path, retryBlobUrl);
+
+              logger.info('Retry successful', { path });
+              initialSounds.push(retrySound);
+              // Continue with next instance
+              continue;
+            } catch (retryError) {
+              logger.error('Failed to load sound after retry', {
+                path,
+                audioUrl,
+                error: (soundError as Error).message,
+                retryError: (retryError as Error).message
+              }, soundError as Error);
+              throw soundError;
+            }
+          }
         }
 
         // Create AudioPool with pre-loaded sounds
@@ -606,8 +631,10 @@ export class AudioService {
 
         logger.debug('Sound loaded into pool', { path, initialPoolSize });
       } catch (error) {
+        const audioUrl = networkService.getAssetUrl(path);
         logger.error('Failed to load sound into pool', {
           path,
+          audioUrl,
           error: (error as Error).message,
           stack: (error as Error).stack
         });

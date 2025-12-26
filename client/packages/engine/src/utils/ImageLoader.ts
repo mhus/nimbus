@@ -117,11 +117,44 @@ export async function loadAudioUrlWithCredentials(url: string): Promise<string> 
     });
 
     if (!response.ok) {
+      logger.error('Failed to fetch audio - HTTP error', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers.get('content-type')
+      });
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    // Convert response to blob
-    const blob = await response.blob();
+    const contentType = response.headers.get('content-type');
+
+    // Convert response to blob - preserve content type if available
+    const arrayBuffer = await response.arrayBuffer();
+
+    // Check if response is actually HTML (common error)
+    const firstBytes = new Uint8Array(arrayBuffer.slice(0, 100));
+    const firstChars = new TextDecoder().decode(firstBytes);
+    const isHtml = firstChars.toLowerCase().includes('<html') ||
+                   firstChars.toLowerCase().includes('<!doctype');
+
+    if (isHtml) {
+      logger.error('Server returned HTML instead of audio file!', {
+        url,
+        contentType,
+        firstChars: firstChars.substring(0, 200)
+      });
+      throw new Error('Server returned HTML instead of audio file - check authentication or file path');
+    }
+
+    const blob = contentType
+      ? new Blob([arrayBuffer], { type: contentType })
+      : new Blob([arrayBuffer]);
+
+    // Validate blob
+    if (blob.size === 0) {
+      logger.error('Audio blob is empty', { url });
+      throw new Error('Downloaded audio file is empty');
+    }
 
     // Create and return object URL from blob
     // Browser handles cleanup when audio is disposed
