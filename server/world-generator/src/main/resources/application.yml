@@ -11,6 +11,8 @@ spring:
 nimbus:
   encryption:
     password: ${NIMBUS_ENCRYPTION_PASSWORD}
+  schema:
+    auto-migrate: ${NIMBUS_SCHEMA_AUTO_MIGRATE:true}
 
 server:
   port: 9045

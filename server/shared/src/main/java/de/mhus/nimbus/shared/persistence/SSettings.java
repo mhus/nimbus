@@ -1,5 +1,6 @@
 package de.mhus.nimbus.shared.persistence;
 
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SSettings {
+public class SSettings implements Identifiable {
 
     @Id
     private String id;

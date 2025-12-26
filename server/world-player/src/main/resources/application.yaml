@@ -22,6 +22,8 @@ nimbus:
   asset:
     compression:
       enabled: ${ASSET_COMPRESSION_ENABLED:true}
+  schema:
+    auto-migrate: ${NIMBUS_SCHEMA_AUTO_MIGRATE:false}
 
 world:
   player:

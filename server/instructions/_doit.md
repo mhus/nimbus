@@ -171,3 +171,10 @@ at _boundRenderFunction (http://localhost:3001/node_modules/.vite/deps/chunk-N75
 - durchsuche alles nach 'main' das wurde dauernd als default oder hard coded eingebaut, muss aber dynamisch sein. Gibt es aber nicht mehr.
 - Suche mal nach 16, das wurde auch manchmal hard coded eingebaut.
 - WordInfo.name muss eigentlich 'title' sein.
+
+[ ] Beim speichern im MongoDB gibt es einen Listener der das schema prüft.
+- scheinbar wird das chema bei neuen entities nicht gespeichert. bzw. nicht immer.
+- wenn das schema fehlt, wird automatisch das aktuelle angehaengt, nicht mehr '0'
+- schemas sollen automatisch migriert werden. Steuerbar ueber eine application.yaml property.
+  - siehe auch: schon in tools/world-import wurde migriert
+  - wenn migratoren nicht verfuegbar sind, dann nicht.
