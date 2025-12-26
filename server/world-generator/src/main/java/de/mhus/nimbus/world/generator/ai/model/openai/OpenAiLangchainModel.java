@@ -5,8 +5,8 @@ import de.mhus.nimbus.world.generator.ai.model.AiChatOptions;
 import de.mhus.nimbus.world.generator.ai.model.LangchainModel;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -17,13 +17,13 @@ import java.util.Optional;
  * Supports GPT models (gpt-3.5-turbo, gpt-4, gpt-4-turbo, etc.)
  */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class OpenAiLangchainModel implements LangchainModel {
 
     private static final String PROVIDER_NAME = "openai";
 
-    @Value("${langchain4j.openai.api-key:}")
-    private String apiKey;
+    private final OpenAiSettings settings;
 
     @Override
     public String getName() {
@@ -39,7 +39,7 @@ public class OpenAiLangchainModel implements LangchainModel {
 
         try {
             ChatLanguageModel chatModel = OpenAiChatModel.builder()
-                    .apiKey(apiKey)
+                    .apiKey(settings.getApiKey())
                     .modelName(modelName)
                     .temperature(options.getTemperature())
                     .maxTokens(options.getMaxTokens())
@@ -62,6 +62,6 @@ public class OpenAiLangchainModel implements LangchainModel {
 
     @Override
     public boolean isAvailable() {
-        return apiKey != null && !apiKey.isBlank();
+        return settings.isAvailable();
     }
 }

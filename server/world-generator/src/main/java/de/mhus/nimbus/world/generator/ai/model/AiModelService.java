@@ -1,10 +1,9 @@
 package de.mhus.nimbus.world.generator.ai.model;
 
+import de.mhus.nimbus.shared.service.SSettingsService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,19 +12,22 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Service for managing AI models and their providers.
  * Maintains a lazy-loaded list of LangchainModel implementations
- * and provides model name mapping through configuration.
+ * and provides model name mapping through SSettingsService.
  */
 @Service
 @Slf4j
 public class AiModelService {
 
+    private static final String MAPPING_PREFIX = "ai.model.mapping.";
+
     private final List<LangchainModel> modelProviders;
-    private final Map<String, String> modelMappings = new ConcurrentHashMap<>();
+    private final SSettingsService settingsService;
     private final Map<String, LangchainModel> providerCache = new ConcurrentHashMap<>();
 
     public AiModelService(List<LangchainModel> modelProviders,
-                          @Value("${ai.model.mappings:}") String mappingsConfig) {
+                          SSettingsService settingsService) {
         this.modelProviders = modelProviders;
+        this.settingsService = settingsService;
 
         log.info("Initializing AiModelService with {} providers", modelProviders.size());
 
@@ -35,9 +37,6 @@ public class AiModelService {
             log.info("Registered AI provider: {} (available: {})",
                     provider.getName(), provider.isAvailable());
         }
-
-        // Parse model mappings from configuration
-        parseMappings(mappingsConfig);
     }
 
     /**
@@ -105,16 +104,16 @@ public class AiModelService {
     }
 
     /**
-     * Register a model mapping.
+     * Register a model mapping in SSettingsService.
      * Maps "default:name" to a specific "provider:model".
      *
      * @param alias Alias name (without "default:" prefix)
      * @param targetModel Target model name (e.g., "openai:gpt-4")
      */
     public void registerMapping(String alias, String targetModel) {
-        String key = "default:" + alias;
-        modelMappings.put(key, targetModel);
-        log.info("Registered model mapping: {} -> {}", key, targetModel);
+        String settingKey = MAPPING_PREFIX + alias;
+        settingsService.setStringValue(settingKey, targetModel);
+        log.info("Registered model mapping: default:{} -> {}", alias, targetModel);
     }
 
     /**
@@ -151,40 +150,43 @@ public class AiModelService {
     }
 
     /**
-     * Get all registered model mappings.
+     * Get all registered model mappings from SSettingsService.
      *
      * @return Map of alias to target model
      */
     public Map<String, String> getMappings() {
-        return new HashMap<>(modelMappings);
+        Map<String, String> mappings = new ConcurrentHashMap<>();
+
+        // Load all settings with prefix "ai.model.mapping."
+        List<de.mhus.nimbus.shared.persistence.SSettings> settings =
+                settingsService.getSettingsByType("string");
+
+        for (var setting : settings) {
+            if (setting.getKey().startsWith(MAPPING_PREFIX)) {
+                String alias = setting.getKey().substring(MAPPING_PREFIX.length());
+                String targetModel = setting.getValue();
+                if (targetModel != null && !targetModel.isBlank()) {
+                    mappings.put("default:" + alias, targetModel);
+                }
+            }
+        }
+
+        return mappings;
     }
 
     private String resolveModelName(String fullModelName) {
         // Check if it's a default: mapping
         if (fullModelName.startsWith("default:")) {
-            String resolved = modelMappings.get(fullModelName);
-            if (resolved != null) {
+            String alias = fullModelName.substring("default:".length());
+            String settingKey = MAPPING_PREFIX + alias;
+            String resolved = settingsService.getStringValue(settingKey);
+
+            if (resolved != null && !resolved.isBlank()) {
                 log.debug("Resolved model mapping: {} -> {}", fullModelName, resolved);
                 return resolved;
             }
-            log.warn("No mapping found for: {}", fullModelName);
+            log.warn("No mapping found for: {} (key: {})", fullModelName, settingKey);
         }
         return fullModelName;
-    }
-
-    private void parseMappings(String mappingsConfig) {
-        if (mappingsConfig == null || mappingsConfig.isBlank()) {
-            log.debug("No model mappings configured");
-            return;
-        }
-
-        // Format: "chat=openai:gpt-4,generate=gemini:gemini-pro"
-        String[] mappings = mappingsConfig.split(",");
-        for (String mapping : mappings) {
-            String[] parts = mapping.split("=", 2);
-            if (parts.length == 2) {
-                registerMapping(parts[0].trim(), parts[1].trim());
-            }
-        }
     }
 }

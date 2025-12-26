@@ -6,8 +6,8 @@ import de.mhus.nimbus.world.generator.ai.model.LangchainModel;
 import de.mhus.nimbus.world.generator.ai.model.SimpleRateLimiter;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -20,17 +20,13 @@ import java.util.Optional;
  * Rate limiter is shared across all chats from this provider instance.
  */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class GeminiLangchainModel implements LangchainModel {
 
     private static final String PROVIDER_NAME = "gemini";
-    private static final int DEFAULT_FLASH_RATE_LIMIT = 15; // Gemini Flash free tier: 15 RPM
 
-    @Value("${langchain4j.gemini.api-key:}")
-    private String apiKey;
-
-    @Value("${langchain4j.gemini.flash-rate-limit:15}")
-    private int flashRateLimit;
+    private final GeminiSettings settings;
 
     // Global rate limiter shared across all Flash model chats
     private SimpleRateLimiter flashRateLimiter;
@@ -49,7 +45,7 @@ public class GeminiLangchainModel implements LangchainModel {
 
         try {
             ChatLanguageModel chatModel = GoogleAiGeminiChatModel.builder()
-                    .apiKey(apiKey)
+                    .apiKey(settings.getApiKey())
                     .modelName(modelName)
                     .temperature(options.getTemperature())
                     .maxOutputTokens(options.getMaxTokens())
@@ -66,13 +62,13 @@ public class GeminiLangchainModel implements LangchainModel {
                 if (flashRateLimiter == null) {
                     synchronized (this) {
                         if (flashRateLimiter == null) {
-                            flashRateLimiter = new SimpleRateLimiter(flashRateLimit);
-                            log.info("Initialized global Flash rate limiter: {} RPM", flashRateLimit);
+                            flashRateLimiter = new SimpleRateLimiter(settings.getFlashRateLimit());
+                            log.info("Initialized global Flash rate limiter: {} RPM", settings.getFlashRateLimit());
                         }
                     }
                 }
                 rateLimiter = flashRateLimiter;
-                log.info("Created Gemini chat: model={}, rateLimit={} RPM (shared)", modelName, flashRateLimit);
+                log.info("Created Gemini chat: model={}, rateLimit={} RPM (shared)", modelName, settings.getFlashRateLimit());
             } else {
                 log.info("Created Gemini chat: model={}, no rate limit", modelName);
             }
@@ -97,6 +93,6 @@ public class GeminiLangchainModel implements LangchainModel {
 
     @Override
     public boolean isAvailable() {
-        return apiKey != null && !apiKey.isBlank();
+        return settings.isAvailable();
     }
 }
