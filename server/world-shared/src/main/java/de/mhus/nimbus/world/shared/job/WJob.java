@@ -112,6 +112,16 @@ public class WJob implements Identifiable {
     private boolean enabled = true;
 
     /**
+     * Configuration for the next job to start on successful completion.
+     */
+    private NextJob onSuccess;
+
+    /**
+     * Configuration for the next job to start on failure.
+     */
+    private NextJob onError;
+
+    /**
      * Initialize timestamps for new job.
      */
     public void touchCreate() {
