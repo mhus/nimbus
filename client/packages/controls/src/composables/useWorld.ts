@@ -27,7 +27,7 @@ const getWorldIdFromUrl = (): string | null => {
 
 // Shared state across all instances
 const currentWorldId = ref<string>(
-  getWorldIdFromUrl() || '?'
+  getWorldIdFromUrl() || ''
 );
 const worlds = ref<WorldInfo[]>([]);
 const loading = ref(false);

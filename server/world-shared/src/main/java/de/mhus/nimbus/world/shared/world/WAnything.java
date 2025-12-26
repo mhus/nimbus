@@ -38,6 +38,7 @@ import java.util.Optional;
 @Slf4j
 public class WAnything implements Identifiable {
 
+    @TypeScript(ignore = true)
     private static volatile ObjectMapper objectMapper;
 
     @Id

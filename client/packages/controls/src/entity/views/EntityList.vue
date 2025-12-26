@@ -182,7 +182,7 @@ const hasNextPage = computed(() => currentPage.value < totalPages.value);
 const hasPreviousPage = computed(() => currentPage.value > 1);
 
 const loadEntities = async () => {
-  if (!currentWorldId.value) {
+  if (!currentWorldId.value || currentWorldId.value === '?') {
     entities.value = [];
     return;
   }

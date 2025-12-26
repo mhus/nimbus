@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.layer;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +28,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WDirtyChunk {
+public class WDirtyChunk implements Identifiable {
 
     @Id
     private String id;

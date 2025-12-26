@@ -3,6 +3,8 @@
  Source: de.mhus.nimbus.world.shared.dto.DevSessionLoginRequest
 */
 
+import { ActorRoles } from './ActorRoles';
+
 export interface DevSessionLoginRequest {
   worldId: string;
   userId: string;

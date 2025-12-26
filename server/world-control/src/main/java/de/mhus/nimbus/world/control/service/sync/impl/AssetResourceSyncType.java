@@ -191,44 +191,51 @@ public class AssetResourceSyncType implements ResourceSyncType {
                     // Transform document (worldId replacement + prefix mapping)
                     migratedDoc = documentTransformer.transformForImport(migratedDoc, definition);
 
+                    // Find existing asset by worldId + path (unique constraint)
+                    String targetWorldId = migratedDoc.getString("worldId");
+                    String targetPath = migratedDoc.getString("path");
+
+                    Query findQuery = new Query(
+                            Criteria.where("worldId").is(targetWorldId)
+                                    .and("path").is(targetPath)
+                    );
+                    Document existing = mongoTemplate.findOne(findQuery, Document.class, COLLECTION_NAME);
+
                     // Check if should import metadata
-                    if (!force) {
-                        Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
-                        if (existing != null) {
-                            Object fileCreatedAt = migratedDoc.get("createdAt");
-                            Object dbCreatedAt = existing.get("createdAt");
-                            if (fileCreatedAt != null && dbCreatedAt != null) {
-                                if (dbCreatedAt.toString().compareTo(fileCreatedAt.toString()) > 0) {
-                                    log.debug("Skipping asset {} (DB is newer)", path);
-                                    continue;
-                                }
+                    if (!force && existing != null) {
+                        Object fileCreatedAt = migratedDoc.get("createdAt");
+                        Object dbCreatedAt = existing.get("createdAt");
+                        if (fileCreatedAt != null && dbCreatedAt != null) {
+                            if (dbCreatedAt.toString().compareTo(fileCreatedAt.toString()) > 0) {
+                                log.debug("Skipping asset {} (DB is newer)", path);
+                                continue;
                             }
                         }
                     }
 
-                    // Check if asset exists - need to update binary content
-                    Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
+                    // Always remove _id from imported document first (may be serialized incorrectly)
+                    migratedDoc.remove("_id");
 
                     if (existing != null) {
-                        // Asset exists, update content and metadata
-                        SAsset asset = assetService.findByPath(worldId, path).orElse(null);
-                        if (asset != null) {
-                            try (InputStream stream = Files.newInputStream(binaryFile)) {
-                                assetService.updateContent(asset, stream);
-                            }
-                        }
-                        // Update metadata in MongoDB
-                        mongoTemplate.save(migratedDoc, COLLECTION_NAME);
-                    } else {
-                        // New asset - save metadata first, then update content
-                        mongoTemplate.save(migratedDoc, COLLECTION_NAME);
+                        // Asset exists - use existing _id (ObjectId) to update in place
+                        migratedDoc.put("_id", existing.get("_id"));
 
-                        // Now update with binary content
-                        SAsset asset = assetService.findByPath(worldId, path).orElse(null);
-                        if (asset != null) {
-                            try (InputStream stream = Files.newInputStream(binaryFile)) {
-                                assetService.updateContent(asset, stream);
-                            }
+                        // Preserve existing storageId if present (will be updated by updateContent)
+                        String existingStorageId = existing.getString("storageId");
+                        if (existingStorageId != null) {
+                            migratedDoc.put("storageId", existingStorageId);
+                        }
+                    }
+                    // else: _id is removed, MongoDB will generate a new ObjectId
+
+                    // Save metadata
+                    mongoTemplate.save(migratedDoc, COLLECTION_NAME);
+
+                    // Update binary content
+                    SAsset asset = assetService.findByPath(worldId, path).orElse(null);
+                    if (asset != null) {
+                        try (InputStream stream = Files.newInputStream(binaryFile)) {
+                            assetService.updateContent(asset, stream);
                         }
                     }
 

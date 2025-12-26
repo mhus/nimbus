@@ -65,7 +65,8 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
 
         for (Document doc : documents) {
             try {
-                String blockId = doc.getString("blockId");
+                // Handle legacy integer blockId or string blockId
+                String blockId = getBlockIdAsString(doc);
                 if (blockId == null) {
                     log.warn("BlockType without blockId, skipping");
                     continue;
@@ -94,7 +95,8 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
                 for (Path file : files.filter(f -> f.toString().endsWith(".yaml")).toList()) {
                     try {
                         Document doc = yamlMapper.readValue(file.toFile(), Document.class);
-                        String blockId = doc.getString("blockId");
+                        // Handle legacy integer blockId or string blockId
+                        String blockId = getBlockIdAsString(doc);
 
                         if (!dbBlockIds.contains(blockId)) {
                             Files.delete(file);
@@ -128,7 +130,9 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
                 try {
                     // Read YAML and convert to JSON for migration
                     Document doc = yamlMapper.readValue(file.toFile(), Document.class);
-                    String blockId = doc.getString("blockId");
+
+                    // Handle legacy integer blockId or string blockId
+                    String blockId = getBlockIdAsString(doc);
                     filesystemBlockIds.add(blockId);
 
                     String json = objectMapper.writeValueAsString(doc);
@@ -145,20 +149,33 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
                     // Transform document (worldId replacement + prefix mapping)
                     migratedDoc = documentTransformer.transformForImport(migratedDoc, definition);
 
+                    // Find existing by unique constraint (worldId + blockId)
+                    Query findQuery = new Query(
+                            Criteria.where("worldId").is(migratedDoc.getString("worldId"))
+                                    .and("blockId").is(getBlockIdAsString(migratedDoc))
+                    );
+                    Document existing = mongoTemplate.findOne(findQuery, Document.class, COLLECTION_NAME);
+
                     // Check if should import
-                    if (!force) {
-                        Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
-                        if (existing != null) {
-                            Object fileUpdatedAt = migratedDoc.get("updatedAt");
-                            Object dbUpdatedAt = existing.get("updatedAt");
-                            if (fileUpdatedAt != null && dbUpdatedAt != null) {
-                                if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
-                                    log.debug("Skipping blocktype {} (DB is newer)", blockId);
-                                    continue;
-                                }
+                    if (!force && existing != null) {
+                        Object fileUpdatedAt = migratedDoc.get("updatedAt");
+                        Object dbUpdatedAt = existing.get("updatedAt");
+                        if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                            if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                log.debug("Skipping blocktype {} (DB is newer)", blockId);
+                                continue;
                             }
                         }
                     }
+
+                    // Always remove _id from imported document first (may be serialized incorrectly)
+                    migratedDoc.remove("_id");
+
+                    // If existing, use its ObjectId to update in place
+                    if (existing != null) {
+                        migratedDoc.put("_id", existing.get("_id"));
+                    }
+                    // else: _id is removed, MongoDB will generate a new ObjectId
 
                     // Save to MongoDB
                     mongoTemplate.save(migratedDoc, COLLECTION_NAME);
@@ -186,5 +203,24 @@ public class BlockTypeResourceSyncType implements ResourceSyncType {
         }
 
         return ResourceSyncType.ImportResult.of(imported, deleted);
+    }
+
+    /**
+     * Get blockId as String, handling legacy integer values.
+     * Legacy documents may have blockId as Integer, newer ones as String.
+     */
+    private String getBlockIdAsString(Document doc) {
+        Object blockIdObj = doc.get("blockId");
+        if (blockIdObj == null) {
+            return null;
+        }
+        if (blockIdObj instanceof String) {
+            return (String) blockIdObj;
+        }
+        if (blockIdObj instanceof Integer) {
+            return String.valueOf(blockIdObj);
+        }
+        // Fallback for other numeric types
+        return blockIdObj.toString();
     }
 }

@@ -215,20 +215,36 @@ public class GroundLayerResourceSyncType implements ResourceSyncType {
                     // Transform document (worldId replacement + prefix mapping)
                     migratedLayerDoc = documentTransformer.transformForImport(migratedLayerDoc, definition);
 
+                    // Find existing layer by unique constraint (worldId + name)
+                    String targetWorldId = migratedLayerDoc.getString("worldId");
+                    String targetName = migratedLayerDoc.getString("name");
+
+                    Query findLayerQuery = new Query(
+                            Criteria.where("worldId").is(targetWorldId)
+                                    .and("name").is(targetName)
+                    );
+                    Document existingLayer = mongoTemplate.findOne(findLayerQuery, Document.class, LAYER_COLLECTION);
+
                     // Check if should import
-                    if (!force) {
-                        Document existing = mongoTemplate.findById(migratedLayerDoc.get("_id"), Document.class, LAYER_COLLECTION);
-                        if (existing != null) {
-                            Object fileUpdatedAt = migratedLayerDoc.get("updatedAt");
-                            Object dbUpdatedAt = existing.get("updatedAt");
-                            if (fileUpdatedAt != null && dbUpdatedAt != null) {
-                                if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
-                                    log.debug("Skipping layer {} (DB is newer)", layerName);
-                                    continue;
-                                }
+                    if (!force && existingLayer != null) {
+                        Object fileUpdatedAt = migratedLayerDoc.get("updatedAt");
+                        Object dbUpdatedAt = existingLayer.get("updatedAt");
+                        if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                            if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                log.debug("Skipping layer {} (DB is newer)", layerName);
+                                continue;
                             }
                         }
                     }
+
+                    // Always remove _id from imported document first (may be serialized incorrectly)
+                    migratedLayerDoc.remove("_id");
+
+                    // If existing, use its ObjectId to update in place
+                    if (existingLayer != null) {
+                        migratedLayerDoc.put("_id", existingLayer.get("_id"));
+                    }
+                    // else: _id is removed, MongoDB will generate a new ObjectId
 
                     mongoTemplate.save(migratedLayerDoc, LAYER_COLLECTION);
                     imported++;

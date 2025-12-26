@@ -145,20 +145,33 @@ public class EntityResourceSyncType implements ResourceSyncType {
                     // Transform document (worldId replacement + prefix mapping)
                     migratedDoc = documentTransformer.transformForImport(migratedDoc, definition);
 
+                    // Find existing by unique constraint (worldId + entityId)
+                    Query findQuery = new Query(
+                            Criteria.where("worldId").is(migratedDoc.getString("worldId"))
+                                    .and("entityId").is(migratedDoc.getString("entityId"))
+                    );
+                    Document existing = mongoTemplate.findOne(findQuery, Document.class, COLLECTION_NAME);
+
                     // Check if should import
-                    if (!force) {
-                        Document existing = mongoTemplate.findById(migratedDoc.get("_id"), Document.class, COLLECTION_NAME);
-                        if (existing != null) {
-                            Object fileUpdatedAt = migratedDoc.get("updatedAt");
-                            Object dbUpdatedAt = existing.get("updatedAt");
-                            if (fileUpdatedAt != null && dbUpdatedAt != null) {
-                                if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
-                                    log.debug("Skipping entity {} (DB is newer)", entityId);
-                                    continue;
-                                }
+                    if (!force && existing != null) {
+                        Object fileUpdatedAt = migratedDoc.get("updatedAt");
+                        Object dbUpdatedAt = existing.get("updatedAt");
+                        if (fileUpdatedAt != null && dbUpdatedAt != null) {
+                            if (dbUpdatedAt.toString().compareTo(fileUpdatedAt.toString()) > 0) {
+                                log.debug("Skipping entity {} (DB is newer)", entityId);
+                                continue;
                             }
                         }
                     }
+
+                    // Always remove _id from imported document first (may be serialized incorrectly)
+                    migratedDoc.remove("_id");
+
+                    // If existing, use its ObjectId to update in place
+                    if (existing != null) {
+                        migratedDoc.put("_id", existing.get("_id"));
+                    }
+                    // else: _id is removed, MongoDB will generate a new ObjectId
 
                     // Save to MongoDB
                     mongoTemplate.save(migratedDoc, COLLECTION_NAME);

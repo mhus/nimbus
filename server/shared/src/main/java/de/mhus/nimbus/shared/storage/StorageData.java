@@ -1,6 +1,7 @@
 package de.mhus.nimbus.shared.storage;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ import java.util.Date;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StorageData {
+public class StorageData implements Identifiable {
 
     /**
      * MongoDB document ID (auto-generated ObjectId).

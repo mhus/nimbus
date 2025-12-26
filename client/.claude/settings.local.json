@@ -83,7 +83,8 @@
       "Bash(mvn compile:*)",
       "Bash(egrep:*)",
       "Bash(grep:*)",
-      "Bash(pnpm vite build:*)"
+      "Bash(pnpm vite build:*)",
+      "Bash(pnpm --filter @nimbus/controls build:controls:*)"
     ],
     "deny": [],
     "ask": []

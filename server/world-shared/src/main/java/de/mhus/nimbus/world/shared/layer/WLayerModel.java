@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.shared.layer;
 import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
 import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +37,7 @@ import java.util.stream.Stream;
 @NoArgsConstructor
 @AllArgsConstructor
 @GenerateTypeScript("entities")
-public class WLayerModel {
+public class WLayerModel implements Identifiable {
 
     @Id
     @TypeScript(ignore = true)
