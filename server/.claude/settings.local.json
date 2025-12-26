@@ -38,7 +38,8 @@
       "Bash(while read file)",
       "Bash(do if ! grep -q \"DocumentTransformer\" \"$file\")",
       "Bash(npm run)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

@@ -95,7 +95,7 @@ public class AssetController {
         if (asset.getSize() > 0) {
             headers.setContentLength(asset.getSize());
         }
-
+        //XXX
         headers.setCacheControl("public, max-age=86400"); // 24 hours cache
 
         // Set filename for download (use asset name from DB)

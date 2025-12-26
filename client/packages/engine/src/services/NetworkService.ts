@@ -664,7 +664,7 @@ export class NetworkService {
     const worldId = this.appContext.worldInfo?.worldId;
     const worldAssetPath = `/player/worlds/${worldId}/assets`;
 
-    return `${this.apiUrl}${worldAssetPath}/${assetPath}?t=${Date.now()}`; // XXX
+    return `${this.apiUrl}${worldAssetPath}/${assetPath}`;
   }
 
   /**
