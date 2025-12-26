@@ -344,6 +344,34 @@
         </EditorCard>
       </div>
     </main>
+
+    <!-- Footer with License Info -->
+    <footer class="bg-gray-800 text-gray-300 py-6 mt-auto">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div class="text-sm">
+            <p class="font-semibold text-white mb-1">Nimbus – NOTICE</p>
+            <p>This software is provided free of charge under a restrictive license.</p>
+            <p>Permitted use: <span class="text-blue-300">non-commercial, non-production, testing/evaluation/research only</span></p>
+            <p class="mt-1 text-xs text-gray-400">Production, operational, or commercial use is NOT permitted.</p>
+          </div>
+          <div class="text-sm text-center md:text-right">
+            <a
+              href="https://github.com/mhus/nimbus/blob/main/LICENSE.txt"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              View Full License
+            </a>
+            <p class="mt-2 text-xs text-gray-400">Any modifications must be released under the same license.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -421,6 +449,21 @@ const loadAuthStatus = async () => {
 };
 
 onMounted(() => {
+  // Display license notice on console
+  console.log('\n' + '='.repeat(70));
+  console.log('Nimbus – NOTICE');
+  console.log('='.repeat(70));
+  console.log('\nThis software is provided free of charge under a restrictive license.\n');
+  console.log('Permitted use:');
+  console.log('  - non-commercial');
+  console.log('  - non-production');
+  console.log('  - testing, evaluation, research only\n');
+  console.log('Production, operational, or commercial use is NOT permitted.\n');
+  console.log('Any modifications must be released under the same license.\n');
+  console.log('See LICENSE for full terms.');
+  console.log('https://github.com/mhus/nimbus/blob/main/LICENSE.txt');
+  console.log('='.repeat(70) + '\n');
+
   loadAuthStatus();
 });
 </script>

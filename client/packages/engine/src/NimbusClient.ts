@@ -62,6 +62,21 @@ async function initializeApp(): Promise<AppContext> {
     logger.debug(`Shared Library v${SHARED_VERSION}`);
     logger.debug(`Build Mode: ${__BUILD_MODE__}`);
 
+    // Display license notice
+    console.log('\n' + '='.repeat(70));
+    console.log('Nimbus – NOTICE');
+    console.log('='.repeat(70));
+    console.log('\nThis software is provided free of charge under a restrictive license.\n');
+    console.log('Permitted use:');
+    console.log('  - non-commercial');
+    console.log('  - non-production');
+    console.log('  - testing, evaluation, research only\n');
+    console.log('Production, operational, or commercial use is NOT permitted.\n');
+    console.log('Any modifications must be released under the same license.\n');
+    console.log('See LICENSE for full terms.');
+    console.log('https://github.com/mhus/nimbus/blob/main/LICENSE.txt');
+    console.log('='.repeat(70) + '\n');
+
     // Load client configuration
     logger.debug('Loading client configuration...');
     const config = loadClientConfig();
