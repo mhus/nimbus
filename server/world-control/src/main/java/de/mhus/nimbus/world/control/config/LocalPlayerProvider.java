@@ -115,7 +115,7 @@ public class LocalPlayerProvider {
             var playerData = objectMapper.readValue(content, PlayerData.class);
             return Optional.of(playerData);
         } catch (IOException e) {
-            log.warn("Player data not found for id: {} and client: {} at path: {}", playerId, clientType, pathStr);
+            log.warn("Player data not found for id: {} and client: {} at path: {}", playerId, clientType, pathStr, e);
             return Optional.empty();
         }
     }

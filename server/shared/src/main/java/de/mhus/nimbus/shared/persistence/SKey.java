@@ -3,6 +3,7 @@ package de.mhus.nimbus.shared.persistence;
 import de.mhus.nimbus.shared.security.KeyId;
 import de.mhus.nimbus.shared.security.KeyKind;
 import de.mhus.nimbus.shared.security.KeyType;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -20,7 +21,7 @@ import java.util.Base64;
 @Document(collection = "s_keys")
 @ActualSchemaVersion("1.0.0")
 @Data
-public class SKey {
+public class SKey implements Identifiable {
 
     @Id
     private String id;

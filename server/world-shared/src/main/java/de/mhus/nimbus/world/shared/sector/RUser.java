@@ -14,6 +14,7 @@ import de.mhus.nimbus.generated.configs.Settings;
 import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
 import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import de.mhus.nimbus.shared.types.PlayerUser;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.shared.user.SectorRoles;
@@ -35,7 +36,7 @@ import de.mhus.nimbus.shared.user.RegionRoles;
 @Builder
 @AllArgsConstructor
 @GenerateTypeScript("entities")
-public class RUser {
+public class RUser implements Identifiable {
 
     public static final String DEFAULT_REGION_ROLE = "PLAYER";
 
