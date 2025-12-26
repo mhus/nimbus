@@ -235,35 +235,35 @@ public class WAnythingService {
      * Create a new entity with minimal scoping (collection and name only).
      */
     @Transactional
-    public WAnything create(String collection, String name, String description, String type, Object data) {
+    public WAnything create(String collection, String name, String title, String description, String type, Object data) {
         if (repository.existsByCollectionAndName(collection, name)) {
             throw new IllegalStateException("Entity already exists: collection=" + collection + ", name=" + name);
         }
-        return saveNew(null, null, collection, name, description, type, data);
+        return saveNew(null, null, collection, name, title, description, type, data);
     }
 
     /**
      * Create a new entity scoped by world.
      */
     @Transactional
-    public WAnything createWithWorldId(String worldId, String collection, String name, String description, String type, Object data) {
+    public WAnything createWithWorldId(String worldId, String collection, String name, String title, String description, String type, Object data) {
         if (repository.existsByWorldIdAndCollectionAndName(worldId, collection, name)) {
             throw new IllegalStateException("Entity already exists: worldId=" + worldId +
                     ", collection=" + collection + ", name=" + name);
         }
-        return saveNew(null, worldId, collection, name, description, type, data);
+        return saveNew(null, worldId, collection, name, title, description, type, data);
     }
 
     /**
      * Create a new entity scoped by region.
      */
     @Transactional
-    public WAnything createWithRegionId(String regionId, String collection, String name, String description, String type, Object data) {
+    public WAnything createWithRegionId(String regionId, String collection, String name, String title, String description, String type, Object data) {
         if (repository.existsByRegionIdAndCollectionAndName(regionId, collection, name)) {
             throw new IllegalStateException("Entity already exists: regionId=" + regionId +
                     ", collection=" + collection + ", name=" + name);
         }
-        return saveNew(regionId, null, collection, name, description, type, data);
+        return saveNew(regionId, null, collection, name, title, description, type, data);
     }
 
     /**
@@ -271,12 +271,12 @@ public class WAnythingService {
      */
     @Transactional
     public WAnything createWithRegionIdAndWorldId(
-            String regionId, String worldId, String collection, String name, String description, String type, Object data) {
+            String regionId, String worldId, String collection, String name, String title, String description, String type, Object data) {
         if (repository.existsByRegionIdAndWorldIdAndCollectionAndName(regionId, worldId, collection, name)) {
             throw new IllegalStateException("Entity already exists: regionId=" + regionId +
                     ", worldId=" + worldId + ", collection=" + collection + ", name=" + name);
         }
-        return saveNew(regionId, worldId, collection, name, description, type, data);
+        return saveNew(regionId, worldId, collection, name, title, description, type, data);
     }
 
     /**
@@ -379,20 +379,21 @@ public class WAnythingService {
     /**
      * Internal helper to create and save a new entity.
      */
-    private WAnything saveNew(String regionId, String worldId, String collection, String name, String description, String type, Object data) {
+    private WAnything saveNew(String regionId, String worldId, String collection, String name, String title, String description, String type, Object data) {
         WAnything entity = WAnything.builder()
                 .regionId(regionId)
                 .worldId(worldId)
                 .collection(collection)
                 .name(name)
+                .title(title)
                 .description(description)
                 .type(type)
                 .data(data)
                 .build();
         entity.touchCreate();
         repository.save(entity);
-        log.debug("WAnythingEntity created: regionId={}, worldId={}, collection={}, name={}, type={}",
-                regionId, worldId, collection, name, type);
+        log.debug("WAnythingEntity created: regionId={}, worldId={}, collection={}, name={}, title={}, type={}",
+                regionId, worldId, collection, name, title, type);
         return entity;
     }
 

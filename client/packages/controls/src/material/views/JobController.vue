@@ -54,6 +54,19 @@
       </div>
 
       <div class="flex gap-2">
+        <!-- Preset Selector -->
+        <select
+          v-if="presets.length > 0"
+          class="select select-bordered"
+          @change="handlePresetSelect"
+          v-model="selectedPresetId"
+        >
+          <option value="">Load from Preset...</option>
+          <option v-for="preset in presets" :key="preset.id" :value="preset.id">
+            {{ preset.title || preset.name }}
+          </option>
+        </select>
+
         <button
           class="btn btn-primary"
           @click="openCreateDialog"
@@ -84,6 +97,7 @@
       :jobs="jobs"
       :loading="loading"
       @view="openDetailsDialog"
+      @clone="handleClone"
       @retry="handleRetry"
       @cancel="handleCancel"
       @delete="handleDelete"
@@ -93,6 +107,8 @@
     <JobCreatePanel
       v-if="isCreateDialogOpen"
       :world-id="currentWorldId!"
+      :initial-job="cloneSourceJob"
+      :preset-data="presetData"
       @close="closeCreateDialog"
       @created="handleCreated"
     />
@@ -103,6 +119,7 @@
       :job="selectedJob"
       :world-id="currentWorldId!"
       @close="closeDetailsDialog"
+      @clone="handleClone"
       @retry="handleRetry"
       @cancel="handleCancel"
       @delete="handleDelete"
@@ -114,6 +131,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useWorld } from '@/composables/useWorld';
 import { useJobs, type Job, type JobStatus } from '@/composables/useJobs';
+import { useJobPresets, type JobPreset } from '@/composables/useJobPresets';
 import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import JobList from '@material/components/JobList.vue';
@@ -121,6 +139,8 @@ import JobCreatePanel from '@material/components/JobCreatePanel.vue';
 import JobDetailsPanel from '@material/components/JobDetailsPanel.vue';
 
 const { currentWorldId, loadWorlds } = useWorld();
+
+const { presets, loadPresets } = useJobPresets();
 
 const jobsComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -136,6 +156,9 @@ const statusFilter = ref<JobStatus | ''>('');
 const isCreateDialogOpen = ref(false);
 const isDetailsDialogOpen = ref(false);
 const selectedJob = ref<Job | null>(null);
+const cloneSourceJob = ref<Job | null>(null);
+const selectedPresetId = ref<string>('');
+const presetData = ref<any>(null);
 
 /**
  * Load jobs and summary
@@ -148,10 +171,11 @@ const loadData = async () => {
   ]);
 };
 
-// Load jobs and summary when world changes
+// Load jobs, summary, and presets when world changes
 watch(currentWorldId, () => {
   if (currentWorldId.value && currentWorldId.value !== '?') {
     loadData();
+    loadPresets(currentWorldId.value);
   }
 }, { immediate: true });
 
@@ -174,6 +198,9 @@ const handleRefresh = () => {
  * Open create dialog
  */
 const openCreateDialog = () => {
+  cloneSourceJob.value = null;
+  presetData.value = null;
+  selectedPresetId.value = '';
   isCreateDialogOpen.value = true;
 };
 
@@ -182,6 +209,9 @@ const openCreateDialog = () => {
  */
 const closeCreateDialog = () => {
   isCreateDialogOpen.value = false;
+  cloneSourceJob.value = null;
+  presetData.value = null;
+  selectedPresetId.value = '';
 };
 
 /**
@@ -205,6 +235,35 @@ const openDetailsDialog = (job: Job) => {
 const closeDetailsDialog = () => {
   isDetailsDialogOpen.value = false;
   selectedJob.value = null;
+};
+
+/**
+ * Handle clone
+ */
+const handleClone = (job: Job) => {
+  cloneSourceJob.value = job;
+  presetData.value = null;
+  selectedPresetId.value = '';
+  closeDetailsDialog();
+  isCreateDialogOpen.value = true;
+};
+
+/**
+ * Handle preset selection
+ */
+const handlePresetSelect = () => {
+  if (!selectedPresetId.value) {
+    return;
+  }
+
+  const preset = presets.value.find((p: JobPreset) => p.id === selectedPresetId.value);
+  if (!preset) {
+    return;
+  }
+
+  presetData.value = preset.data;
+  cloneSourceJob.value = null;
+  isCreateDialogOpen.value = true;
 };
 
 /**

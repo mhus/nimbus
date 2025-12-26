@@ -26,7 +26,7 @@
           >
             <DialogPanel class="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
               <DialogTitle class="text-2xl font-bold mb-4">
-                Create New Job
+                {{ initialJob ? 'Clone Job' : (presetData ? 'Create Job from Preset' : 'Create New Job') }}
               </DialogTitle>
 
               <!-- Form -->
@@ -411,13 +411,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
-import { useJobs, type JobCreateRequest, type NextJob } from '@/composables/useJobs';
+import { useJobs, type Job, type JobCreateRequest, type NextJob } from '@/composables/useJobs';
 import ErrorAlert from '@components/ErrorAlert.vue';
 
 const props = defineProps<{
   worldId: string;
+  initialJob?: Job | null;
+  presetData?: any;
 }>();
 
 const emit = defineEmits<{
@@ -456,6 +458,118 @@ const onErrorParameters = ref<Array<{ key: string; value: string }>>([]);
 
 const saving = ref(false);
 const saveError = ref<string | null>(null);
+
+/**
+ * Load initial values from a job (for cloning)
+ */
+const loadFromJob = (job: Job) => {
+  // Set basic form data
+  formData.value.executor = job.executor;
+  formData.value.type = job.type;
+  formData.value.priority = job.priority;
+  formData.value.maxRetries = job.maxRetries;
+
+  // Load parameters
+  parameterList.value = Object.entries(job.parameters).map(([key, value]) => ({
+    key,
+    value,
+  }));
+
+  // Load onSuccess if exists
+  if (job.onSuccess) {
+    showOnSuccess.value = true;
+    onSuccessData.value.executor = job.onSuccess.executor;
+    onSuccessData.value.type = job.onSuccess.type || '';
+    onSuccessParameters.value = job.onSuccess.parameters
+      ? Object.entries(job.onSuccess.parameters).map(([key, value]) => ({
+          key,
+          value,
+        }))
+      : [];
+  }
+
+  // Load onError if exists
+  if (job.onError) {
+    showOnError.value = true;
+    onErrorData.value.executor = job.onError.executor;
+    onErrorData.value.type = job.onError.type || '';
+    onErrorParameters.value = job.onError.parameters
+      ? Object.entries(job.onError.parameters).map(([key, value]) => ({
+          key,
+          value,
+        }))
+      : [];
+  }
+};
+
+/**
+ * Load initial values from preset data
+ */
+const loadFromPreset = (data: any) => {
+  if (!data) return;
+
+  // Set basic form data from preset
+  if (data.executor) formData.value.executor = data.executor;
+  if (data.type) formData.value.type = data.type;
+  if (data.priority !== undefined) formData.value.priority = data.priority;
+  if (data.maxRetries !== undefined) formData.value.maxRetries = data.maxRetries;
+
+  // Load parameters from preset
+  if (data.parameters && typeof data.parameters === 'object') {
+    parameterList.value = Object.entries(data.parameters).map(([key, value]) => ({
+      key,
+      value: String(value),
+    }));
+  }
+
+  // Load onSuccess if exists in preset
+  if (data.onSuccess) {
+    showOnSuccess.value = true;
+    onSuccessData.value.executor = data.onSuccess.executor || '';
+    onSuccessData.value.type = data.onSuccess.type || '';
+    onSuccessParameters.value = data.onSuccess.parameters
+      ? Object.entries(data.onSuccess.parameters).map(([key, value]) => ({
+          key,
+          value: String(value),
+        }))
+      : [];
+  }
+
+  // Load onError if exists in preset
+  if (data.onError) {
+    showOnError.value = true;
+    onErrorData.value.executor = data.onError.executor || '';
+    onErrorData.value.type = data.onError.type || '';
+    onErrorParameters.value = data.onError.parameters
+      ? Object.entries(data.onError.parameters).map(([key, value]) => ({
+          key,
+          value: String(value),
+        }))
+      : [];
+  }
+};
+
+// Watch for initialJob changes
+watch(
+  () => props.initialJob,
+  (newJob) => {
+    if (newJob) {
+      loadFromJob(newJob);
+    }
+  },
+  { immediate: true }
+);
+
+// Watch for presetData changes
+watch(
+  () => props.presetData,
+  (newPreset) => {
+    if (newPreset) {
+      loadFromPreset(newPreset);
+    }
+  },
+  { immediate: true }
+);
 
 /**
  * Validate form

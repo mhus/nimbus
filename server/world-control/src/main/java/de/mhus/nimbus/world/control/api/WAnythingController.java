@@ -48,6 +48,7 @@ public class WAnythingController extends BaseEditorController {
             String worldId,
             String collection,
             String name,
+            String title,
             String description,
             String type,
             Object data,
@@ -62,6 +63,7 @@ public class WAnythingController extends BaseEditorController {
             String worldId,
             String collection,
             String name,
+            String title,
             String description,
             String type,
             Object data
@@ -69,6 +71,7 @@ public class WAnythingController extends BaseEditorController {
     }
 
     public record UpdateAnythingRequest(
+            String title,
             String description,
             String type,
             Object data,
@@ -309,19 +312,19 @@ public class WAnythingController extends BaseEditorController {
             if (request.regionId() != null && request.worldId() != null) {
                 saved = anythingService.createWithRegionIdAndWorldId(
                         request.regionId(), request.worldId(), request.collection(),
-                        request.name(), request.description(), request.type(), request.data());
+                        request.name(), request.title(), request.description(), request.type(), request.data());
             } else if (request.regionId() != null) {
                 saved = anythingService.createWithRegionId(
                         request.regionId(), request.collection(),
-                        request.name(), request.description(), request.type(), request.data());
+                        request.name(), request.title(), request.description(), request.type(), request.data());
             } else if (request.worldId() != null) {
                 saved = anythingService.createWithWorldId(
                         request.worldId(), request.collection(),
-                        request.name(), request.description(), request.type(), request.data());
+                        request.name(), request.title(), request.description(), request.type(), request.data());
             } else {
                 saved = anythingService.create(
                         request.collection(), request.name(),
-                        request.description(), request.type(), request.data());
+                        request.title(), request.description(), request.type(), request.data());
             }
 
             log.info("Created entity: collection={}, name={}", request.collection(), request.name());
@@ -356,12 +359,15 @@ public class WAnythingController extends BaseEditorController {
 
         if (blank(id)) return bad("id required");
 
-        if (request.description() == null && request.type() == null &&
+        if (request.title() == null && request.description() == null && request.type() == null &&
                 request.data() == null && request.enabled() == null) {
             return bad("at least one field required for update");
         }
 
         Optional<WAnything> updated = anythingService.update(id, entity -> {
+            if (request.title() != null) {
+                entity.setTitle(request.title());
+            }
             if (request.description() != null) {
                 entity.setDescription(request.description());
             }
@@ -470,6 +476,7 @@ public class WAnythingController extends BaseEditorController {
                 entity.getWorldId(),
                 entity.getCollection(),
                 entity.getName(),
+                entity.getTitle(),
                 entity.getDescription(),
                 entity.getType(),
                 entity.getData(),

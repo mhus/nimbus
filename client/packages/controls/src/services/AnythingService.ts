@@ -31,12 +31,14 @@ export interface CreateAnythingRequest {
   worldId?: string;
   collection: string;
   name: string;
+  title?: string;
   description?: string;
   type?: string;
   data?: any;
 }
 
 export interface UpdateAnythingRequest {
+  title?: string;
   description?: string;
   type?: string;
   data?: any;

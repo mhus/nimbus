@@ -23,4 +23,8 @@ parameter autoatich hinterlegt. Als worldId wird die gleiche id verwendet wie de
 
 ## Job Editor
 
-[ ] Im job Editor soll es moegluch sein einen job zu clonen (copy). dabei geht der 'neuer job' editor auf mit den werten des alten jobs.
+[x] Im job Editor soll es moegluch sein einen job zu clonen (copy). dabei geht der 'neuer job' editor auf mit den werten des alten jobs.
+
+[?] In WAnything können unter der Collection jobPreset gespeicherte jobs vordefiniert werden. Diese sollen im job editor als auswahl zur verfuegung stehen.
+- filterung nach collection: jobPreset - Controller sollte schon existieren
+- Daten aus data werden 'neuer Job' Dialog uebernommen.
