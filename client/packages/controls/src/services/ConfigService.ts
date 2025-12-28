@@ -38,17 +38,23 @@ class ConfigService {
    */
   private async fetchConfig(): Promise<RuntimeConfig> {
     try {
-      const response = await fetch('/config.json');
+      const configPath = `${import.meta.env.BASE_URL}config.json`;
+      console.log('[ConfigService] Attempting to load config from:', configPath);
+      console.log('[ConfigService] BASE_URL:', import.meta.env.BASE_URL);
+
+      const response = await fetch(configPath);
 
       if (!response.ok) {
+        console.error('[ConfigService] Config fetch failed:', response.status, response.statusText);
         throw new Error(`Failed to load config: ${response.status} ${response.statusText}`);
       }
 
       const config = await response.json();
-      console.log('[ConfigService] Loaded runtime config:', config);
+      console.log('[ConfigService] Successfully loaded runtime config:', config);
       return config;
     } catch (error) {
       console.error('[ConfigService] Failed to load config, using fallback', error);
+      console.error('[ConfigService] Fallback apiUrl:', import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043');
 
       // Fallback to .env value if config.json fails to load
       return {

@@ -5,6 +5,10 @@
 import { createApp } from 'vue';
 import ScrawlApp from './ScrawlApp.vue';
 import '../style.css';
+import { initializeApp } from '@/utils/initApp';
 
-const app = createApp(ScrawlApp);
-app.mount('#app');
+// Initialize app with runtime config before mounting
+initializeApp().then(() => {
+  const app = createApp(ScrawlApp);
+  app.mount('#app');
+});

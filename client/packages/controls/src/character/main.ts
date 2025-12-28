@@ -1,6 +1,10 @@
 import { createApp } from 'vue';
 import CharacterApp from './CharacterApp.vue';
 import '../style.css';
+import { initializeApp } from '@/utils/initApp';
 
-const app = createApp(CharacterApp);
-app.mount('#app');
+// Initialize app with runtime config before mounting
+initializeApp().then(() => {
+  const app = createApp(CharacterApp);
+  app.mount('#app');
+});

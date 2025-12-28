@@ -1,6 +1,10 @@
 import { createApp } from 'vue';
 import UserApp from './UserApp.vue';
 import '../style.css';
+import { initializeApp } from '@/utils/initApp';
 
-const app = createApp(UserApp);
-app.mount('#app');
+// Initialize app with runtime config before mounting
+initializeApp().then(() => {
+  const app = createApp(UserApp);
+  app.mount('#app');
+});

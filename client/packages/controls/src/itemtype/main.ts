@@ -5,6 +5,10 @@
 import { createApp } from 'vue';
 import ItemTypeApp from './ItemTypeApp.vue';
 import '../style.css';
+import { initializeApp } from '@/utils/initApp';
 
-const app = createApp(ItemTypeApp);
-app.mount('#app');
+// Initialize app with runtime config before mounting
+initializeApp().then(() => {
+  const app = createApp(ItemTypeApp);
+  app.mount('#app');
+});

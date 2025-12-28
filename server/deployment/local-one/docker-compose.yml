@@ -195,7 +195,7 @@ services:
     expose:
       - "3002"
     environment:
-      - VITE_CONTROL_API_URL=http://localhost:8080/control
+      - VITE_CONTROL_API_URL=http://localhost:8080/
     networks:
       - nimbus-network
     restart: unless-stopped
