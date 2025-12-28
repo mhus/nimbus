@@ -144,6 +144,7 @@ services:
       - "3000:3000"
     environment:
       - VITE_SERVER_API_URL=${VITE_SERVER_API_URL:-http://localhost:9042}
+      - VITE_EXIT_URL=${VITE_EXIT_URL:-http://localhost:3002/dev-login.html}
     networks:
       - nimbus-network
     restart: unless-stopped
@@ -160,6 +161,7 @@ services:
       - "3001:3001"
     environment:
       - VITE_SERVER_API_URL=${VITE_SERVER_API_URL:-http://localhost:9042}
+      - VITE_EXIT_URL=${VITE_EXIT_URL:-http://localhost:3002/dev-login.html}
     networks:
       - nimbus-network
     restart: unless-stopped
