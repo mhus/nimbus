@@ -3,10 +3,11 @@ import vue from '@vitejs/plugin-vue';
 import { resolve } from 'path';
 
 export default defineConfig({
+  base: '/controls/',
   plugins: [vue()],
   server: {
     port: 3002,
-    open: '/material-editor.html',
+    open: '/controls/',
   },
   resolve: {
     alias: {
@@ -29,6 +30,7 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
+        'redirect': resolve(__dirname, 'redirect.html'),
         'index': resolve(__dirname, 'index.html'),
         'material-editor': resolve(__dirname, 'material-editor.html'),
         'blocktype-editor': resolve(__dirname, 'blocktype-editor.html'),

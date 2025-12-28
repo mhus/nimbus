@@ -76,7 +76,7 @@ function showSuccess() {
  * Redirect to login page
  */
 function redirectToLogin(loginUrl?: string) {
-  const url = loginUrl || 'dev-login.html';
+  const url = loginUrl || '/controls/dev-login.html';
   logger.info('Redirecting to login', { url });
   window.location.href = url;
 }
