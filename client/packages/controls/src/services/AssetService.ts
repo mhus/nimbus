@@ -4,7 +4,7 @@
  */
 
 import { apiService } from './ApiService';
-import type { FolderInfo } from '@shared/generated/entities/FolderInfo';
+import type { FolderInfo } from '@nimbus/shared/generated/entities/FolderInfo';
 
 export interface Asset {
   path: string;

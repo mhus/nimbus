@@ -5,8 +5,8 @@
 
 import { ref, type Ref } from 'vue';
 import { anythingService } from '../services/AnythingService';
-import type { WAnything } from '@shared/generated/entities/WAnything';
 import { getLogger } from '@nimbus/shared';
+import {WAnything} from "@nimbus/shared/generated/entities/WAnything";
 
 const logger = getLogger('useJobPresets');
 
@@ -48,7 +48,7 @@ export function useJobPresets(worldId?: string): UseJobPresetsReturn {
       });
 
       presets.value = response.entities.map((entity: WAnything) => ({
-        id: entity.id!,
+        id: entity.name!,
         name: entity.name!,
         title: entity.title,
         description: entity.description,

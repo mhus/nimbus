@@ -17,6 +17,7 @@ export * from './BlockModifier';
 // Item types
 export * from './Item';
 export * from './ItemBlockRef';
+export * from './ItemRef';
 export * from './ItemType';
 export * from './ItemModifier';
 export * from './TargetingTypes';
@@ -40,6 +41,7 @@ export * from '../generated/dto/UpdateLayerRequest';
 export * from '../generated/dto/LayerModelDto';
 export * from '../generated/dto/CreateLayerModelRequest';
 export * from '../generated/dto/UpdateLayerModelRequest';
+export * from '../generated/dto/BlockOriginDto';
 
 // Animation and effects
 export * from './AnimationData';

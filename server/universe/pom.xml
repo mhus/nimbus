@@ -94,11 +94,6 @@
         </dependency>
         <dependency>
             <groupId>de.mhus.nimbus</groupId>
-            <artifactId>region</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.mhus.nimbus</groupId>
             <artifactId>generated</artifactId>
             <version>${project.version}</version>
         </dependency>

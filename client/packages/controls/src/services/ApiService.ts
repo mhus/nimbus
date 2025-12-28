@@ -6,15 +6,18 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import { getLogger } from '@nimbus/shared';
 import { showErrorToast } from '@/utils/toast';
+import { configService } from './ConfigService';
 
 const logger = getLogger('ApiService');
 
 export class ApiService {
   private client: AxiosInstance;
   private apiUrl: string;
+  private initialized: boolean = false;
 
-  constructor() {
-    this.apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+  constructor(apiUrl?: string) {
+    // Use provided URL or fallback to .env (will be updated after config loads)
+    this.apiUrl = apiUrl || import.meta.env.VITE_CONTROL_API_URL || 'http://localhost:9043';
 
     this.client = axios.create({
       baseURL: this.apiUrl,
@@ -116,6 +119,31 @@ export class ApiService {
     );
 
     logger.info('ApiService initialized', { apiUrl: this.apiUrl });
+  }
+
+  /**
+   * Initialize with runtime config
+   * Call this after loading config.json
+   */
+  async initialize(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
+
+    try {
+      const config = await configService.loadConfig();
+      this.apiUrl = config.apiUrl;
+
+      // Update axios baseURL
+      this.client.defaults.baseURL = this.apiUrl;
+
+      this.initialized = true;
+      logger.info('ApiService initialized with runtime config', { apiUrl: this.apiUrl });
+    } catch (error) {
+      logger.error('Failed to initialize ApiService with runtime config', {}, error as Error);
+      // Continue with fallback URL from constructor
+      this.initialized = true;
+    }
   }
 
   /**

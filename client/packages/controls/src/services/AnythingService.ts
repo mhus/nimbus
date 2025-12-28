@@ -4,7 +4,7 @@
  */
 
 import { ApiService } from './ApiService';
-import type { WAnything } from '@shared/generated/entities/WAnything';
+import type { WAnything } from '@nimbus/shared/generated/entities/WAnything';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('AnythingService');
@@ -101,7 +101,7 @@ export class AnythingService extends ApiService {
     queryParams.append('name', name);
 
     const response = await this.get<WAnything>(`/control/anything/by-collection?${queryParams.toString()}`);
-    logger.debug('Got entity', { id: response.id });
+    logger.debug('Got entity', { name: response.name, collection: response.collection });
     return response;
   }
 
@@ -117,7 +117,7 @@ export class AnythingService extends ApiService {
     queryParams.append('name', name);
 
     const response = await this.get<WAnything>(`/control/anything/by-world?${queryParams.toString()}`);
-    logger.debug('Got entity', { id: response.id });
+    logger.debug('Got entity', { name: response.name, collection: response.collection });
     return response;
   }
 
@@ -133,7 +133,7 @@ export class AnythingService extends ApiService {
     queryParams.append('name', name);
 
     const response = await this.get<WAnything>(`/control/anything/by-region?${queryParams.toString()}`);
-    logger.debug('Got entity', { id: response.id });
+    logger.debug('Got entity', { name: response.name, collection: response.collection });
     return response;
   }
 
@@ -144,7 +144,7 @@ export class AnythingService extends ApiService {
     logger.debug('Creating entity', { request });
 
     const response = await this.post<WAnything>('/control/anything', request);
-    logger.info('Created entity', { id: response.id, collection: response.collection, name: response.name });
+    logger.info('Created entity', { collection: response.collection, name: response.name });
     return response;
   }
 
@@ -155,7 +155,7 @@ export class AnythingService extends ApiService {
     logger.debug('Updating entity', { id, request });
 
     const response = await this.put<WAnything>(`/control/anything/${id}`, request);
-    logger.info('Updated entity', { id: response.id });
+    logger.info('Updated entity', { id, name: response.name });
     return response;
   }
 

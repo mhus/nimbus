@@ -4,14 +4,14 @@
  */
 
 import { ref, computed } from 'vue';
-import type { WLayer } from '@nimbus/shared';
+import type { LayerDto, CreateLayerRequest, UpdateLayerRequest } from '@nimbus/shared';
 import { layerService } from '../services/LayerService';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('useLayers');
 
 export function useLayers(worldId: string) {
-  const layers = ref<WLayer[]>([]);
+  const layers = ref<LayerDto[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
   const searchQuery = ref('');
@@ -99,7 +99,7 @@ export function useLayers(worldId: string) {
   /**
    * Get single layer
    */
-  const getLayer = async (id: string): Promise<WLayer | null> => {
+  const getLayer = async (id: string): Promise<LayerDto | null> => {
     try {
       return await layerService.getLayer(worldId, id);
     } catch (err) {
@@ -112,7 +112,7 @@ export function useLayers(worldId: string) {
   /**
    * Create layer
    */
-  const createLayer = async (layer: Partial<WLayer>): Promise<string | null> => {
+  const createLayer = async (layer: CreateLayerRequest): Promise<string | null> => {
     try {
       const id = await layerService.createLayer(worldId, layer);
       logger.info('Created layer', { worldId, id });
@@ -128,7 +128,7 @@ export function useLayers(worldId: string) {
   /**
    * Update layer
    */
-  const updateLayer = async (id: string, layer: Partial<WLayer>): Promise<boolean> => {
+  const updateLayer = async (id: string, layer: UpdateLayerRequest): Promise<boolean> => {
     try {
       await layerService.updateLayer(worldId, id, layer);
       logger.info('Updated layer', { worldId, id });

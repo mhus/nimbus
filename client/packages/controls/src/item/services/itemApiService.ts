@@ -3,8 +3,7 @@
  * Handles all HTTP requests to the item REST API
  */
 
-import type { Item } from '@nimbus/shared';
-import type { WItem } from '@shared/generated/entities/WItem';
+import type { WItem } from '@nimbus/shared/generated/entities/WItem';
 import { ApiService } from '../../services/ApiService';
 
 // Use WItem as primary type (includes metadata)

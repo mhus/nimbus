@@ -1,6 +1,6 @@
 import { apiService } from '@/services/ApiService';
 import type { RUser } from '@nimbus/shared/generated/entities/RUser';
-import type { Settings } from '@nimbus/shared/generated/configs';
+import type { Settings } from '@nimbus/shared';
 import { SectorRoles } from '@nimbus/shared/generated/entities/SectorRoles';
 import type { RegionRoles } from '@nimbus/shared/generated/entities/RegionRoles';
 

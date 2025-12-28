@@ -5,7 +5,7 @@
 
 import { ref, Ref } from 'vue';
 import { assetService } from '@/services/AssetService';
-import type { FolderInfo } from '@shared/generated/entities/FolderInfo';
+import type { FolderInfo } from '@nimbus/shared/generated/entities/FolderInfo';
 
 export interface PseudoFolder {
   path: string;

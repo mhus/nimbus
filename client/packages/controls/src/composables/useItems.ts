@@ -4,7 +4,7 @@
  */
 
 import { ref } from 'vue';
-import type { WItem } from '@shared/generated/entities/WItem';
+import type { WItem } from '@nimbus/shared/generated/entities/WItem';
 import { apiService } from '../services/ApiService';
 import { getLogger } from '@nimbus/shared';
 
@@ -16,7 +16,17 @@ export interface ItemSearchResult {
   texture?: string;
 }
 
-export function useItems(worldId: string) {
+export interface UseItemsReturn {
+  items: ReturnType<typeof ref<WItem[]>>;
+  searchResults: ReturnType<typeof ref<ItemSearchResult[]>>;
+  loading: ReturnType<typeof ref<boolean>>;
+  error: ReturnType<typeof ref<string | null>>;
+  searchItems: (query?: string) => Promise<void>;
+  loadItem: (itemId: string) => Promise<WItem | null>;
+  loadItems: (itemIds: string[]) => Promise<WItem[]>;
+}
+
+export function useItems(worldId: string): UseItemsReturn {
   const items = ref<WItem[]>([]);
   const searchResults = ref<ItemSearchResult[]>([]);
   const loading = ref(false);

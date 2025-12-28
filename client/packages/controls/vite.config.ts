@@ -21,6 +21,7 @@ export default defineConfig({
       '@editconfig': resolve(__dirname, './src/editconfig'),
       '@devlogin': resolve(__dirname, './src/devlogin'),
       '@nimbus/shared': resolve(__dirname, '../shared/src'),
+      '@shared': resolve(__dirname, '../shared/src'),
     },
   },
   build: {

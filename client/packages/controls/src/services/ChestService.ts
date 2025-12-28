@@ -4,8 +4,8 @@
  */
 
 import { apiService } from './ApiService';
-import type { WChest, ChestType } from '@shared/generated/entities/WChest';
-import type { ItemRef } from '@shared/generated/types/ItemRef';
+import type { WChest, ChestType } from '@nimbus/shared/generated/entities/WChest';
+import type { ItemRef } from '@nimbus/shared';
 
 export interface ChestListParams {
   type?: ChestType;

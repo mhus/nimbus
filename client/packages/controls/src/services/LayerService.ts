@@ -3,7 +3,7 @@
  * Manages layer CRUD operations
  */
 
-import type { WLayer, CreateLayerRequest, UpdateLayerRequest, LayerDto } from '@nimbus/shared';
+import type { CreateLayerRequest, UpdateLayerRequest, LayerDto } from '@nimbus/shared';
 import { apiService } from './ApiService';
 
 export interface LayerListResponse {

@@ -3,10 +3,10 @@
  * Manages chest list and operations
  */
 
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { chestService, type ChestRequest } from '../services/ChestService';
-import type { WChest, ChestType } from '@shared/generated/entities/WChest';
-import type { ItemRef } from '@shared/generated/types/ItemRef';
+import type { WChest, ChestType } from '@nimbus/shared/generated/entities/WChest';
+import type { ItemRef } from '@nimbus/shared';
 import { getLogger } from '@nimbus/shared';
 
 const logger = getLogger('useChests');
