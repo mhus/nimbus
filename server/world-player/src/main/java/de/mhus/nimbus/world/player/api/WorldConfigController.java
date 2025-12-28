@@ -90,7 +90,6 @@ public class WorldConfigController {
         // Build ServerInfo from ServerSettings
         ServerInfo serverInfo = ServerInfo.builder()
                 .websocketUrl(serverSettings.getWebsocketUrl())
-                .exitUrl(serverSettings.getExitUrl())
                 .build();
 
         // Build complete configuration

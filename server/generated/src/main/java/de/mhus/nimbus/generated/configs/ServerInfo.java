@@ -13,6 +13,4 @@ package de.mhus.nimbus.generated.configs;
 public class ServerInfo {
     @com.fasterxml.jackson.annotation.JsonProperty("websocketUrl")
     private String websocketUrl;
-    @com.fasterxml.jackson.annotation.JsonProperty("exitUrl")
-    private String exitUrl;
 }

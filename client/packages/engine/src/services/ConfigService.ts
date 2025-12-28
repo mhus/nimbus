@@ -93,12 +93,11 @@ export class ConfigService {
         this.appContext.playerInfo = config.playerInfo;
       }
 
-      // Update client config with server-provided connection info
+      // Update client config with server-provided websocketUrl
       if (config.serverInfo && this.appContext.config) {
         updateConfigFromServer(
           this.appContext.config,
-          config.serverInfo.websocketUrl,
-          config.serverInfo.exitUrl
+          config.serverInfo.websocketUrl
         );
 
         // Update NetworkService with new websocketUrl

@@ -10,6 +10,7 @@ const logger = getLogger('RuntimeConfig');
 
 export interface RuntimeConfig {
   apiUrl: string;
+  exitUrl: string;
 }
 
 class RuntimeConfigService {
@@ -57,6 +58,7 @@ class RuntimeConfigService {
       // Fallback to .env values if config.json fails to load
       return {
         apiUrl: import.meta.env.VITE_SERVER_API_URL || 'http://localhost:9042',
+        exitUrl: import.meta.env.VITE_EXIT_URL || '/login',
       };
     }
   }

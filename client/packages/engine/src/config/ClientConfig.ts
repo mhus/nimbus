@@ -40,14 +40,28 @@ export interface ClientConfig {
 
   /**
    * Exit URL to redirect to when connection fails permanently
-   * (will be set after loading server config)
+   * Loaded from config.json or .env
    */
-  exitUrl?: string;
+  exitUrl: string;
+}
+
+/**
+ * Get exit URL from runtime config
+ * Used for error handling before full config is loaded
+ */
+export async function getExitUrl(): Promise<string> {
+  try {
+    const runtimeConfig = await runtimeConfigService.loadConfig();
+    return runtimeConfig.exitUrl;
+  } catch (error) {
+    logger.warn('Failed to load exitUrl from config, using default', error);
+    return '/login';
+  }
 }
 
 /**
  * Load initial client configuration (before server config is loaded)
- * Only loads apiUrl and worldId - websocketUrl and exitUrl will come from server
+ * Loads apiUrl, exitUrl, and worldId - websocketUrl will come from server
  * @returns Initial client configuration
  * @throws Error if required parameters are missing
  */
@@ -73,15 +87,26 @@ export async function loadClientConfig(): Promise<ClientConfig> {
 
   // Load required variables (from runtime config)
   const apiUrl = runtimeConfig.apiUrl;
+  const exitUrl = runtimeConfig.exitUrl;
 
   // Validate required fields
   const missing: string[] = [];
   if (!apiUrl) missing.push('apiUrl (config.json or .env)');
+  if (!exitUrl) missing.push('exitUrl (config.json or .env)');
   if (!worldId) missing.push('worldId (URL parameter)');
 
   if (missing.length > 0) {
     const error = `Missing required configuration: ${missing.join(', ')}`;
     logger.error(error);
+
+    // Redirect to exitUrl if available, otherwise throw
+    if (exitUrl) {
+      logger.info('Redirecting to exitUrl due to configuration error', { exitUrl });
+      window.location.href = exitUrl;
+      // Wait a bit to allow redirect
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
     throw new Error(error);
   }
 
@@ -89,33 +114,33 @@ export async function loadClientConfig(): Promise<ClientConfig> {
   const logToConsole = env.LOG_TO_CONSOLE === 'true';
 
   const config: ClientConfig = {
-    // websocketUrl and exitUrl will be set after loading server config
+    // websocketUrl will be set after loading server config
     apiUrl: apiUrl!,
     worldId: worldId!,
+    exitUrl: exitUrl!,
     logToConsole,
   };
 
   logger.info('Initial client configuration loaded', {
     apiUrl,
     worldId,
+    exitUrl,
     logToConsole,
-    note: 'websocketUrl and exitUrl will be loaded from server config',
+    note: 'websocketUrl will be loaded from server config',
   });
 
   return config;
 }
 
 /**
- * Update client config with server-provided connection info
+ * Update client config with server-provided websocketUrl
  * Called after EngineConfiguration is loaded from server
  */
-export function updateConfigFromServer(config: ClientConfig, websocketUrl: string, exitUrl: string): void {
+export function updateConfigFromServer(config: ClientConfig, websocketUrl: string): void {
   config.websocketUrl = websocketUrl + "/world/" + config.worldId;
-  config.exitUrl = exitUrl;
 
-  logger.info('Client configuration updated with server info', {
+  logger.info('Client configuration updated with server websocketUrl', {
     websocketUrl: config.websocketUrl,
-    exitUrl,
   });
 }
 

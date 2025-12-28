@@ -8191,13 +8191,6 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
-      }, {
-        "name" : "exitUrl",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
       } ],
       "methods" : [ ]
     }, {
