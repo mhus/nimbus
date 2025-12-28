@@ -97,8 +97,8 @@ FROM nginx:alpine AS controls
 # Install wget for healthchecks
 RUN apk add --no-cache wget
 
-# Copy built controls files
-COPY --from=build /build/packages/controls/dist /usr/share/nginx/html
+# Copy built controls files to /controls/ subdirectory
+COPY --from=build /build/packages/controls/dist /usr/share/nginx/html/controls
 
 # Copy entrypoint script from controls package
 COPY client/packages/controls/docker-entrypoint.sh /docker-entrypoint.sh
