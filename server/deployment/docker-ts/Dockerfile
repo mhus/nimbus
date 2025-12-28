@@ -44,6 +44,9 @@ RUN cd packages/controls && pnpm build
 # Runtime stage for viewer
 FROM nginx:alpine AS viewer
 
+# Install wget for healthchecks
+RUN apk add --no-cache wget
+
 # Copy built viewer files
 COPY --from=build /build/packages/engine/dist/viewer /usr/share/nginx/html
 
@@ -66,6 +69,9 @@ CMD ["nginx", "-g", "daemon off;"]
 # Runtime stage for editor
 FROM nginx:alpine AS editor
 
+# Install wget for healthchecks
+RUN apk add --no-cache wget
+
 # Copy built editor files
 COPY --from=build /build/packages/engine/dist/editor /usr/share/nginx/html
 
@@ -87,6 +93,9 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # Runtime stage for controls
 FROM nginx:alpine AS controls
+
+# Install wget for healthchecks
+RUN apk add --no-cache wget
 
 # Copy built controls files
 COPY --from=build /build/packages/controls/dist /usr/share/nginx/html

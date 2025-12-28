@@ -4,9 +4,9 @@ spring:
     host: localhost
   data:
     mongodb:
-      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      uri: ${MONGODB_URI:mongodb://root:example@localhost:27017/world?authSource=admin}
       database: world
-      auto-index-creation: true
+#      auto-index-creation: true
 
 nimbus:
   encryption:
@@ -30,6 +30,11 @@ management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
 
 logging:
   level:
@@ -73,6 +78,12 @@ asset:
     ai-model: default:generate
 
 world:
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DATABASE:0}
+    password: ${REDIS_PASSWORD:}
+    ssl: ${REDIS_SSL:false}
   job:
     processing-enabled: true
     processing-interval-ms: 5000

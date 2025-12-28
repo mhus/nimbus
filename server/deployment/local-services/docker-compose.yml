@@ -1,5 +1,8 @@
 version: '3.8'
 
+# All world services and client services.
+# Infrastructyre services are not included and are used from local host.
+
 services:
   # Backend Services
 
@@ -9,9 +12,11 @@ services:
     ports:
       - "9042:9042"
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
-      - REDIS_HOST=${REDIS_HOST:-redis}
+      - NIMBUS_EXTERNAL_URL=${NIMBUS_EXTERNAL_URL:-http://localhost:9042}
+      - NIMBUS_SERVER_IP=${NIMBUS_SERVER_IP:-world-player}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://root:example@host.docker.internal:27017/world?authSource=admin}
+      - REDIS_URL=${REDIS_URL:-redis://host.docker.internal:6379}
+      - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_DATABASE=${REDIS_DATABASE:-0}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -26,9 +31,6 @@ services:
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-false}
     networks:
       - nimbus-network
-    depends_on:
-      - mongodb
-      - redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9042/actuator/health"]
@@ -43,8 +45,10 @@ services:
     ports:
       - "9043:9043"
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_HOST=${REDIS_HOST:-redis}
+      - NIMBUS_EXTERNAL_URL=${NIMBUS_EXTERNAL_URL:-http://localhost:9043}
+      - NIMBUS_SERVER_IP=${NIMBUS_SERVER_IP:-world-control}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://root:example@host.docker.internal:27017/world?authSource=admin}
+      - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_DATABASE=${REDIS_DATABASE:-0}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -59,9 +63,6 @@ services:
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-true}
     networks:
       - nimbus-network
-    depends_on:
-      - mongodb
-      - redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9043/actuator/health"]
@@ -76,8 +77,10 @@ services:
     ports:
       - "9044:9044"
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_HOST=${REDIS_HOST:-redis}
+      - NIMBUS_EXTERNAL_URL=${NIMBUS_EXTERNAL_URL:-http://localhost:9044}
+      - NIMBUS_SERVER_IP=${NIMBUS_SERVER_IP:-world-life}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://root:example@host.docker.internal:27017/world?authSource=admin}
+      - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_DATABASE=${REDIS_DATABASE:-0}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -92,9 +95,6 @@ services:
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-false}
     networks:
       - nimbus-network
-    depends_on:
-      - mongodb
-      - redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9044/actuator/health"]
@@ -109,8 +109,10 @@ services:
     ports:
       - "9045:9045"
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_HOST=${REDIS_HOST:-redis}
+      - NIMBUS_EXTERNAL_URL=${NIMBUS_EXTERNAL_URL:-http://localhost:9045}
+      - NIMBUS_SERVER_IP=${NIMBUS_SERVER_IP:-world-generator}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://root:example@host.docker.internal:27017/world?authSource=admin}
+      - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_DATABASE=${REDIS_DATABASE:-0}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -125,9 +127,6 @@ services:
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-false}
     networks:
       - nimbus-network
-    depends_on:
-      - mongodb
-      - redis
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9045/actuator/health"]
@@ -186,53 +185,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # Infrastructure Services
-
-  mongodb:
-    image: mongo:7
-    container_name: nimbus-mongodb
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-root}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-example}
-      - MONGO_INITDB_DATABASE=world
-    volumes:
-      - mongodb-data:/data/db
-      - mongodb-config:/data/configdb
-    networks:
-      - nimbus-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: nimbus-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - nimbus-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 networks:
   nimbus-network:
     driver: bridge
-
-volumes:
-  mongodb-data:
-    driver: local
-  mongodb-config:
-    driver: local
-  redis-data:
-    driver: local

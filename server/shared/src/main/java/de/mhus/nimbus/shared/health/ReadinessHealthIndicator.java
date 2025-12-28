@@ -1,44 +1,41 @@
 package de.mhus.nimbus.shared.health;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.availability.AvailabilityChangeEvent;
+import org.springframework.boot.availability.ReadinessState;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
- * ReadinessHealthIndicator signalisiert, ob die Anwendung bereit ist Anfragen zu bedienen.
- * Bedingungen:
- *  - Wird erst nach vollständigem Bootstrapping (ContextRefreshedEvent) auf READY gesetzt.
- *  - Wechselt sofort auf NOT_READY sobald der Shutdown beginnt (ContextClosedEvent).
+ * Manages application readiness state using Spring Boot's Availability API.
+ *
+ * The readiness state indicates whether the application is ready to accept traffic.
+ * It integrates with Spring Boot Actuator's /actuator/health/readiness endpoint.
+ *
+ * Behavior:
+ *  - Sets ACCEPTING_TRAFFIC after application context is fully initialized (ContextRefreshedEvent)
+ *  - Sets REFUSING_TRAFFIC when shutdown begins (ContextClosedEvent)
  */
 @Slf4j
-@Component("startupReadiness") // Bean-Name für /actuator/health/readiness
-public class ReadinessHealthIndicator implements HealthIndicator, ApplicationListener<ApplicationEvent> {
+@Component
+@RequiredArgsConstructor
+public class ReadinessHealthIndicator implements ApplicationListener<ApplicationEvent> {
 
-    private final AtomicBoolean ready = new AtomicBoolean(false);
+    private final ApplicationContext applicationContext;
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ContextRefreshedEvent) {
-            ready.set(true);
-            log.info("Readiness set to READY (context refreshed)");
+            AvailabilityChangeEvent.publish(applicationContext, ReadinessState.ACCEPTING_TRAFFIC);
+            log.info("Application readiness state: ACCEPTING_TRAFFIC (context refreshed)");
         } else if (event instanceof ContextClosedEvent) {
-            ready.set(false);
-            log.info("Readiness set to NOT_READY (context closing)");
+            AvailabilityChangeEvent.publish(applicationContext, ReadinessState.REFUSING_TRAFFIC);
+            log.info("Application readiness state: REFUSING_TRAFFIC (context closing)");
         }
-    }
-
-    @Override
-    public Health health() {
-        if (ready.get()) {
-            return Health.up().withDetail("readiness", "READY").build();
-        }
-        return Health.down().withDetail("readiness", "NOT_READY").build();
     }
 }

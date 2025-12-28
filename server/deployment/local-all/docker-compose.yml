@@ -1,5 +1,8 @@
 version: '3.8'
 
+# All world services and client services and infrastructure services.
+# Espose all ports separately.
+
 services:
   # Nginx Reverse Proxy
   nginx:

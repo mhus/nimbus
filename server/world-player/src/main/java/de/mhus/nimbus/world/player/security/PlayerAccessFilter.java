@@ -37,6 +37,11 @@ public class PlayerAccessFilter extends AccessFilterBase {
             return false;
         }
 
+        // Allow access to actuator health endpoint
+        if (requestUri.startsWith("/actuator/health")) {
+            return false;
+        }
+
         // All other endpoints require authentication
         return true;
     }

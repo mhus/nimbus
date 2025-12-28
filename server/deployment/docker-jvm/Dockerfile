@@ -29,6 +29,9 @@ FROM eclipse-temurin:25-jre AS world-player
 
 WORKDIR /app
 
+# Install wget for healthchecks
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 # Create a non-root user
 RUN groupadd -r spring && useradd -r -g spring spring
 
@@ -55,6 +58,9 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 FROM eclipse-temurin:25-jre AS world-control
 
 WORKDIR /app
+
+# Install wget for healthchecks
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
 RUN groupadd -r spring && useradd -r -g spring spring
@@ -83,6 +89,9 @@ FROM eclipse-temurin:25-jre AS world-life
 
 WORKDIR /app
 
+# Install wget for healthchecks
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 # Create a non-root user
 RUN groupadd -r spring && useradd -r -g spring spring
 
@@ -109,6 +118,9 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 FROM eclipse-temurin:25-jre AS world-generator
 
 WORKDIR /app
+
+# Install wget for healthchecks
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 # Create a non-root user
 RUN groupadd -r spring && useradd -r -g spring spring

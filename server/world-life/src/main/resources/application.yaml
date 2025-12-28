@@ -4,7 +4,7 @@ spring:
     host: localhost
   data:
     mongodb:
-      uri: mongodb://root:example@localhost:27017/world?authSource=admin
+      uri: ${MONGODB_URI:mongodb://root:example@localhost:27017/world?authSource=admin}
       database: world
 
 nimbus:
@@ -38,6 +38,12 @@ world:
     life-base-url: http://localhost:9044
     control-base-url: http://localhost:9043
     command-timeout-ms: 5000
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DATABASE:0}
+    password: ${REDIS_PASSWORD:}
+    ssl: ${REDIS_SSL:false}
 
 server:
   port: 9044
@@ -60,7 +66,11 @@ management:
     health:
       probes:
         enabled: true
+      show-details: always
   endpoints:
     web:
       exposure:
         include: health,info
+  health:
+    readinessstate:
+      enabled: true
