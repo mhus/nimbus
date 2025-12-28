@@ -11,6 +11,11 @@ CONTAINER_PORT="3001"
 DETACH=""
 EXTRA_ARGS=""
 
+# Default environment variables
+DEFAULT_ENV=(
+    "VITE_SERVER_API_URL=http://host.docker.internal:9042"
+)
+
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -30,6 +35,10 @@ while [[ $# -gt 0 ]]; do
             DETACH="-d"
             shift
             ;;
+        -e|--env)
+            EXTRA_ARGS="${EXTRA_ARGS} -e $2"
+            shift 2
+            ;;
         --network)
             EXTRA_ARGS="${EXTRA_ARGS} --network $2"
             shift 2
@@ -42,13 +51,18 @@ while [[ $# -gt 0 ]]; do
             echo "  --name NAME         Container name (default: nimbus-editor)"
             echo "  --port PORT         Host port to bind (default: 3001)"
             echo "  -d, --detach        Run container in background"
+            echo "  -e, --env VAR=VAL   Set environment variable (overrides defaults)"
             echo "  --network NETWORK   Connect to network"
             echo "  --help              Show this help message"
             echo ""
+            echo "Default environment variables:"
+            echo "  VITE_SERVER_API_URL=http://host.docker.internal:9042"
+            echo ""
             echo "Examples:"
-            echo "  $0                    # Run interactively on port 3001"
-            echo "  $0 -d                 # Run in background"
-            echo "  $0 --port 8001        # Run on port 8001"
+            echo "  $0                                          # Run interactively on port 3001"
+            echo "  $0 -d                                       # Run in background"
+            echo "  $0 --port 8001                              # Run on port 8001"
+            echo "  $0 -e VITE_SERVER_API_URL=http://api:9042  # Custom API URL"
             exit 0
             ;;
         *)
@@ -77,11 +91,18 @@ else
 fi
 echo ""
 
+# Build environment arguments
+ENV_ARGS=""
+for env_var in "${DEFAULT_ENV[@]}"; do
+    ENV_ARGS="${ENV_ARGS} -e ${env_var}"
+done
+
 # Run Docker container
 docker run \
     ${DETACH} \
     --name "${CONTAINER_NAME}" \
     -p "${HOST_PORT}:${CONTAINER_PORT}" \
+    ${ENV_ARGS} \
     ${EXTRA_ARGS} \
     "${IMAGE_NAME}:${IMAGE_TAG}"
 

@@ -1,9 +1,10 @@
 /**
  * Client configuration
- * Loads configuration from environment variables
+ * Loads configuration from runtime config and environment variables
  */
 
 import { getLogger } from '@nimbus/shared';
+import { runtimeConfigService } from './RuntimeConfig';
 
 const logger = getLogger('ClientConfig');
 
@@ -11,8 +12,8 @@ const logger = getLogger('ClientConfig');
  * Client configuration interface
  */
 export interface ClientConfig {
-  /** WebSocket server URL */
-  websocketUrl: string;
+  /** WebSocket server URL (will be set after loading server config) */
+  websocketUrl?: string;
 
   /**
    * REST API server URL
@@ -39,67 +40,83 @@ export interface ClientConfig {
 
   /**
    * Exit URL to redirect to when connection fails permanently
-   * Default: '/login'
+   * (will be set after loading server config)
    */
-  exitUrl: string;
+  exitUrl?: string;
 }
 
 /**
- * Load client configuration from environment variables
- * @returns Client configuration
- * @throws Error if required environment variables are missing
+ * Load initial client configuration (before server config is loaded)
+ * Only loads apiUrl and worldId - websocketUrl and exitUrl will come from server
+ * @returns Initial client configuration
+ * @throws Error if required parameters are missing
  */
-export function loadClientConfig(): ClientConfig {
-  logger.debug('Loading client configuration from environment');
+export async function loadClientConfig(): Promise<ClientConfig> {
+  logger.debug('Loading initial client configuration');
 
-  // Get environment based on build tool
+  // Load runtime config (from /config.json or fallback to .env)
+  const runtimeConfig = await runtimeConfigService.loadConfig();
+
+  // Get environment based on build tool (for optional settings)
   const env = getEnvironment();
 
-  // Check for username in URL query parameter (overrides env)
+  // Get URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const usernameFromUrl = urlParams.get('username');
 
-  // Load required variables
-  const websocketUrl = env.SERVER_WEBSOCKET_URL;
-  const apiUrl = env.SERVER_API_URL;
-  const worldId = env.WORLD_ID || 'main'; // Default to 'main' if not specified
+  // Get worldId from URL parameter (required)
+  const worldId = urlParams.get('worldId');
 
   if (usernameFromUrl) {
     logger.info('Username overridden by URL query parameter', { username: usernameFromUrl });
   }
 
+  // Load required variables (from runtime config)
+  const apiUrl = runtimeConfig.apiUrl;
+
   // Validate required fields
   const missing: string[] = [];
-  if (!websocketUrl) missing.push('SERVER_WEBSOCKET_URL');
-  if (!apiUrl) missing.push('SERVER_API_URL');
+  if (!apiUrl) missing.push('apiUrl (config.json or .env)');
+  if (!worldId) missing.push('worldId (URL parameter)');
 
   if (missing.length > 0) {
-    const error = `Missing required environment variables: ${missing.join(', ')}`;
+    const error = `Missing required configuration: ${missing.join(', ')}`;
     logger.error(error);
     throw new Error(error);
   }
 
   // Load optional variables
   const logToConsole = env.LOG_TO_CONSOLE === 'true';
-  const exitUrl = env.EXIT_URL || '/login'; // Default to '/login' if not specified
 
   const config: ClientConfig = {
-    websocketUrl: websocketUrl + "/world/" + worldId,
+    // websocketUrl and exitUrl will be set after loading server config
     apiUrl: apiUrl!,
-    worldId,
+    worldId: worldId!,
     logToConsole,
-    exitUrl,
   };
 
-  logger.debug('Client configuration loaded', {
-    websocketUrl,
+  logger.info('Initial client configuration loaded', {
     apiUrl,
     worldId,
     logToConsole,
-    exitUrl,
+    note: 'websocketUrl and exitUrl will be loaded from server config',
   });
 
   return config;
+}
+
+/**
+ * Update client config with server-provided connection info
+ * Called after EngineConfiguration is loaded from server
+ */
+export function updateConfigFromServer(config: ClientConfig, websocketUrl: string, exitUrl: string): void {
+  config.websocketUrl = websocketUrl + "/world/" + config.worldId;
+  config.exitUrl = exitUrl;
+
+  logger.info('Client configuration updated with server info', {
+    websocketUrl: config.websocketUrl,
+    exitUrl,
+  });
 }
 
 /**
@@ -120,7 +137,6 @@ function getEnvironment(): Record<string, string | undefined> {
       CLIENT_PASSWORD: env.VITE_CLIENT_PASSWORD,
       SERVER_WEBSOCKET_URL: env.VITE_SERVER_WEBSOCKET_URL,
       SERVER_API_URL: env.VITE_SERVER_API_URL,
-      WORLD_ID: env.VITE_WORLD_ID,
       LOG_TO_CONSOLE: env.VITE_LOG_TO_CONSOLE,
       EXIT_URL: env.VITE_EXIT_URL,
     };

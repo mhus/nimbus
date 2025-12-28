@@ -2,6 +2,7 @@ package de.mhus.nimbus.world.player.api;
 
 import de.mhus.nimbus.generated.configs.EngineConfiguration;
 import de.mhus.nimbus.generated.configs.PlayerBackpack;
+import de.mhus.nimbus.generated.configs.ServerInfo;
 import de.mhus.nimbus.generated.configs.Settings;
 import de.mhus.nimbus.generated.network.ClientType;
 import de.mhus.nimbus.generated.types.MovementStateDomensions;
@@ -10,6 +11,7 @@ import de.mhus.nimbus.generated.types.PlayerInfo;
 import de.mhus.nimbus.generated.types.WorldInfo;
 import de.mhus.nimbus.shared.types.PlayerData;
 import de.mhus.nimbus.shared.types.PlayerId;
+import de.mhus.nimbus.world.player.config.ServerSettings;
 import de.mhus.nimbus.world.player.service.PlayerService;
 import de.mhus.nimbus.world.shared.access.AccessValidator;
 import de.mhus.nimbus.world.shared.world.WWorld;
@@ -40,6 +42,7 @@ public class WorldConfigController {
     private final WWorldService worldService;
     private final PlayerService playerService;
     private final AccessValidator accessUtil;
+    private final ServerSettings serverSettings;
 
     @GetMapping("/config")
     @Operation(summary = "Get complete EngineConfiguration",
@@ -84,8 +87,15 @@ public class WorldConfigController {
         setPlayerBackpackDefaults(playerBackpack);
         setSettingsDefaults(settings);
 
+        // Build ServerInfo from ServerSettings
+        ServerInfo serverInfo = ServerInfo.builder()
+                .websocketUrl(serverSettings.getWebsocketUrl())
+                .exitUrl(serverSettings.getExitUrl())
+                .build();
+
         // Build complete configuration
         EngineConfiguration config = EngineConfiguration.builder()
+                .serverInfo(serverInfo)
                 .worldInfo(worldInfo)
                 .playerInfo(playerInfo)
                 .playerBackpack(playerBackpack)

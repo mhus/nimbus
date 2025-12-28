@@ -78,13 +78,27 @@ export class NetworkService {
   private authToken: string = '';
 
   constructor(private appContext: AppContext) {
-    this.websocketUrl = appContext.config.websocketUrl;
+    // websocketUrl will be set after server config is loaded
+    this.websocketUrl = appContext.config.websocketUrl || '';
     this.apiUrl = appContext.config.apiUrl;
 
     logger.debug('NetworkService initialized', {
-      websocketUrl: this.websocketUrl,
+      websocketUrl: this.websocketUrl || '(will be set from server config)',
       apiUrl: this.apiUrl,
     });
+  }
+
+  /**
+   * Update WebSocket URL after server config is loaded
+   * Called by ConfigService after loading EngineConfiguration
+   */
+  updateWebSocketUrl(): void {
+    if (this.appContext.config.websocketUrl) {
+      this.websocketUrl = this.appContext.config.websocketUrl;
+      logger.info('WebSocket URL updated from server config', {
+        websocketUrl: this.websocketUrl,
+      });
+    }
   }
 
   /**

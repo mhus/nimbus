@@ -79,7 +79,7 @@ async function initializeApp(): Promise<AppContext> {
 
     // Load client configuration
     logger.debug('Loading client configuration...');
-    const config = loadClientConfig();
+    const config = await loadClientConfig();
 
     // Create ClientService
     logger.debug('Initializing ClientService...');

@@ -14,6 +14,7 @@ import type {
   Settings,
 } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
+import { updateConfigFromServer } from '../config/ClientConfig';
 
 const logger = getLogger('ConfigService');
 
@@ -92,11 +93,26 @@ export class ConfigService {
         this.appContext.playerInfo = config.playerInfo;
       }
 
+      // Update client config with server-provided connection info
+      if (config.serverInfo && this.appContext.config) {
+        updateConfigFromServer(
+          this.appContext.config,
+          config.serverInfo.websocketUrl,
+          config.serverInfo.exitUrl
+        );
+
+        // Update NetworkService with new websocketUrl
+        if (this.appContext.services.network) {
+          this.appContext.services.network.updateWebSocketUrl();
+        }
+      }
+
       logger.debug('Configuration loaded successfully', {
         hasWorldInfo: !!config.worldInfo,
         hasPlayerInfo: !!config.playerInfo,
         hasBackpack: !!config.playerBackpack,
         hasSettings: !!config.settings,
+        hasServerInfo: !!config.serverInfo,
       });
 
       // If reloading and status/season changed, recalculate modifiers

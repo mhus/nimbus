@@ -8182,9 +8182,35 @@
       } ],
       "methods" : [ ]
     }, {
+      "name" : "ServerInfo",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "websocketUrl",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "exitUrl",
+        "type" : "string",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
       "name" : "EngineConfiguration",
       "extendsList" : [ ],
       "properties" : [ {
+        "name" : "serverInfo",
+        "type" : "ServerInfo",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
         "name" : "worldInfo",
         "type" : "WorldInfo",
         "optional" : false,

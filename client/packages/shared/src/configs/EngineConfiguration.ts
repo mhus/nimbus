@@ -26,7 +26,22 @@ export interface Settings {
     inputMappings: Record<string, string>;
 }
 
+/**
+ * Server connection information
+ * Provides URLs for WebSocket connection and logout/exit
+ */
+export interface ServerInfo {
+    /** WebSocket URL for game server connection (e.g., "ws://game-server:9042/ws") */
+    websocketUrl: string;
+
+    /** Exit/Logout URL to redirect to when disconnecting (e.g., "http://control-panel/dev-login.html") */
+    exitUrl: string;
+}
+
 export interface EngineConfiguration {
+
+    /** Server connection information */
+    serverInfo: ServerInfo;
 
     worldInfo: WorldInfo;
 

@@ -22,6 +22,10 @@ COPY client/packages/shared/ ./packages/shared/
 COPY client/packages/engine/ ./packages/engine/
 COPY client/packages/controls/ ./packages/controls/
 
+# Copy .env.docker as .env for each package
+RUN if [ -f packages/engine/.env.docker ]; then cp packages/engine/.env.docker packages/engine/.env; fi
+RUN if [ -f packages/controls/.env.docker ]; then cp packages/controls/.env.docker packages/controls/.env; fi
+
 # Set NODE_ENV to production
 ENV NODE_ENV=production
 
@@ -43,11 +47,20 @@ FROM nginx:alpine AS viewer
 # Copy built viewer files
 COPY --from=build /build/packages/engine/dist/viewer /usr/share/nginx/html
 
+# Copy entrypoint script from engine package
+COPY client/packages/engine/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Copy custom nginx config
 COPY server/deployment/docker-ts/nginx-viewer.conf /etc/nginx/conf.d/default.conf
 
+# Set default environment variable
+ENV VITE_SERVER_API_URL=http://localhost:9042
+
 EXPOSE 3000
 
+# Use custom entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
 # Runtime stage for editor
@@ -56,11 +69,20 @@ FROM nginx:alpine AS editor
 # Copy built editor files
 COPY --from=build /build/packages/engine/dist/editor /usr/share/nginx/html
 
+# Copy entrypoint script from engine package
+COPY client/packages/engine/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Copy custom nginx config
 COPY server/deployment/docker-ts/nginx-editor.conf /etc/nginx/conf.d/default.conf
 
+# Set default environment variable
+ENV VITE_SERVER_API_URL=http://localhost:9042
+
 EXPOSE 3001
 
+# Use custom entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 
 # Runtime stage for controls
