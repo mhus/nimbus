@@ -157,8 +157,12 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
             authenticated = false;
         }
 
-        // Check if authentication is required for this path
+        // Allow access to actuator health endpoint
+        if (request.getRequestURI().startsWith("/actuator/")) {
+            logger.debug("Allowing access to /actuator/ endpoint");
+        } else
         if (!authenticated && shouldRequireAuthentication(request.getRequestURI(), request.getMethod())) {
+            // Check if authentication is required for this path
             log.warn("Access denied - authentication required for: {} {}", request.getMethod(), request.getRequestURI());
             handleUnauthorized(request, response);
             return;
