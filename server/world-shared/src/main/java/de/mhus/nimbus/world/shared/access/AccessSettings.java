@@ -6,6 +6,8 @@ import de.mhus.nimbus.shared.settings.SettingInteger;
 import de.mhus.nimbus.shared.settings.SettingString;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -24,13 +26,27 @@ public class AccessSettings {
     private SettingInteger tokenExpirationSeconds;
     private SettingString accessUrls;
     private SettingString jumpUrlAgent;
-    private SettingString jumpUrlSession;
+    private SettingString jumpUrlEditor;
+    private SettingString jumpUrlViewer;
     private SettingInteger sessionTokenTtlSeconds;
     private SettingInteger agentTokenTtlSeconds;
     private SettingBoolean secureCookies;
     private SettingString cookieDomain;
     private SettingString loginUrl;
     private SettingString logoutUrl;
+
+    @Value( "${nimbus.access.accessUrls:}")
+    private String accessUrlsProperty;
+    @Value( "${nimbus.access.jumpUrlAgent:}")
+    private String jumpUrlAgentProperty;
+    @Value( "${nimbus.access.jumpUrlEditor:}")
+    private String jumpUrlEditorProperty;
+    @Value( "${nimbus.access.jumpUrlViewer:}")
+    private String jumpUrlViewerProperty;
+    @Value( "${nimbus.access.loginUrl:}")
+    private String loginUrlProperty;
+    @Value( "${nimbus.access.logoutUrl:}")
+    private String logoutUrlProperty;
 
     @PostConstruct
     private void init() {
@@ -46,9 +62,13 @@ public class AccessSettings {
                 "access.jumpUrlAgent",
                 "http://localhost:3002?worldId={worldId}"
         );
-        jumpUrlSession = settingsService.getString(
-                "access.jumpUrlSession",
+        jumpUrlEditor = settingsService.getString(
+                "access.jumpUrlEditor",
                 "http://localhost:3001?worldId={worldId}&session={session}"
+        );
+        jumpUrlViewer = settingsService.getString(
+                "access.jumpUrlViewer",
+                "http://localhost:3000?worldId={worldId}&session={session}"
         );
         sessionTokenTtlSeconds = settingsService.getInteger(
                 "access.sessionTokenTtlSeconds",
@@ -88,6 +108,8 @@ public class AccessSettings {
      * Cookie URLs for multi-domain cookie setup.
      */
     public List<String> getAccessUrls() {
+        if (Strings.isNotBlank(accessUrlsProperty))
+            return Arrays.asList(accessUrlsProperty.split(","));
         String urls = accessUrls.get();
         if (urls == null || urls.isBlank()) {
             return List.of();
@@ -103,6 +125,7 @@ public class AccessSettings {
      * {worldId} placeholder will be replaced with actual worldId.
      */
     public String getJumpUrlAgent() {
+        if (Strings.isNotBlank(jumpUrlAgentProperty)) return jumpUrlAgentProperty;
         return jumpUrlAgent.get();
     }
 
@@ -110,8 +133,18 @@ public class AccessSettings {
      * Jump URL to redirect after login (session mode).
      * {worldId} and {session} placeholders will be replaced.
      */
-    public String getJumpUrlSession() {
-        return jumpUrlSession.get();
+    public String getJumpUrlEditor() {
+        if (Strings.isNotBlank(jumpUrlEditorProperty)) return jumpUrlEditorProperty;
+        return jumpUrlEditor.get();
+    }
+
+    /**
+     * Jump URL to redirect after login (session mode).
+     * {worldId} and {session} placeholders will be replaced.
+     */
+    public String getJumpUrlViewer() {
+        if (Strings.isNotBlank(jumpUrlViewerProperty)) return jumpUrlViewerProperty;
+        return jumpUrlViewer.get();
     }
 
     /**
@@ -149,10 +182,12 @@ public class AccessSettings {
     }
 
     public String getLoginUrl() {
+        if (Strings.isNotBlank(loginUrlProperty)) return loginUrlProperty;
         return loginUrl.get();
     }
 
     public String getLogoutUrl() {
+        if (Strings.isNotBlank(logoutUrlProperty)) return logoutUrlProperty;
         return logoutUrl.get();
     }
 }

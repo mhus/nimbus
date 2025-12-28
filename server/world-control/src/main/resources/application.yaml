@@ -22,6 +22,15 @@ nimbus:
       enabled: ${ASSET_COMPRESSION_ENABLED:true}
   schema:
     auto-migrate: ${NIMBUS_SCHEMA_AUTO_MIGRATE:true}
+  access:
+    accessUrls: ${NIMBUS_ACCESS_URLS_PROPERTY:}
+    jumpUrlAgent: ${NIMBUS_JUMP_URL_AGENT:}
+    jumpUrlEditor: ${NIMBUS_JUMP_URL_EDITOR:}
+    jumpUrlViewer: ${NIMBUS_JUMP_URL_VIEWER:}
+    loginUrl: ${NIMBUS_LOGIN_URL:}
+    logoutUrl: ${NIMBUS_LOGOUT_URL:}
+
+
 
 world:
   client:

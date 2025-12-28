@@ -7,6 +7,7 @@ import de.mhus.nimbus.shared.security.KeyType;
 import de.mhus.nimbus.shared.types.PlayerId;
 import de.mhus.nimbus.shared.types.UserId;
 import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.shared.user.ActorRoles;
 import de.mhus.nimbus.shared.user.WorldRoles;
 import de.mhus.nimbus.world.shared.dto.*;
 import de.mhus.nimbus.world.shared.region.RCharacter;
@@ -284,7 +285,7 @@ public class AccessService {
     }
 
     private String findJumpUrl(AccessSettings properties, DevSessionLoginRequest request, String sessionId) {
-        var url = properties.getJumpUrlSession();
+        var url = request.getActor() == ActorRoles.EDITOR ? properties.getJumpUrlEditor() : properties.getJumpUrlViewer();
         url = url.replace("{worldId}", request.getWorldId());
         url = url.replace("{session}", sessionId);
         url = url.replace("{userId}", request.getUserId());
