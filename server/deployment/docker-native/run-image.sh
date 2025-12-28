@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+cd $(dirname "$0")
+cd ../..
+
 # Setze Default-URLs für Zugriff auf Host-Dienste (host.docker.internal)
 PLAYER_BASE_URL="${PLAYER_BASE_URL:-http://host.docker.internal:9042}"
 LIFE_BASE_URL="${LIFE_BASE_URL:-http://host.docker.internal:9044}"
