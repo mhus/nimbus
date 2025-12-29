@@ -15,21 +15,31 @@ services:
     networks:
       - nimbus-network
     depends_on:
-      - world-player
-      - world-control
-      - world-life
-      - world-generator
-      - viewer
-      - editor
-      - controls
-      - mongo-express
-      - redis-commander
+      world-player:
+        condition: service_healthy
+      world-control:
+        condition: service_healthy
+      world-life:
+        condition: service_healthy
+      world-generator:
+        condition: service_healthy
+      viewer:
+        condition: service_healthy
+      editor:
+        condition: service_healthy
+      controls:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "pidof","nginx"]
       interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 10s
 
   # Backend Services
 
@@ -54,11 +64,14 @@ services:
       - LAYER_TERRAIN_COMPRESSION_ENABLED=${LAYER_TERRAIN_COMPRESSION_ENABLED:-true}
       - ASSET_COMPRESSION_ENABLED=${ASSET_COMPRESSION_ENABLED:-true}
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-false}
+      - NIMBUS_WEBSOCKET_URL=ws://localhost:8080/player/ws
     networks:
       - nimbus-network
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9042/actuator/health"]
@@ -73,6 +86,12 @@ services:
     expose:
       - "9043"
     environment:
+      - NIMBUS_ACCESS_URLS=/player/aaa/authorize,/control/aaa/authorize
+      - NIMBUS_JUMP_URL_AGENT=/controls
+      - NIMBUS_JUMP_URL_EDITOR=/editor?worldId={worldId}&session={session}
+      - NIMBUS_JUMP_URL_VIEWER=/viewer?worldId={worldId}&session={session}
+      - NIMBUS_LOGIN_URL=/control/dev-login.html
+      - NIMBUS_LOGOUT_URL=/control/dev-login.html
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
@@ -90,8 +109,10 @@ services:
     networks:
       - nimbus-network
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9043/actuator/health"]
@@ -123,8 +144,10 @@ services:
     networks:
       - nimbus-network
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9044/actuator/health"]
@@ -156,8 +179,10 @@ services:
     networks:
       - nimbus-network
     depends_on:
-      - mongodb
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9045/actuator/health"]
@@ -174,7 +199,8 @@ services:
     expose:
       - "3000"
     environment:
-      - VITE_SERVER_API_URL=http://localhost:8080/player
+      - VITE_SERVER_API_URL=http://localhost:8080
+      - VITE_EXIT_URL=http://localhost:8080/controls/dev-login.html
     networks:
       - nimbus-network
     restart: unless-stopped
@@ -190,7 +216,8 @@ services:
     expose:
       - "3001"
     environment:
-      - VITE_SERVER_API_URL=http://localhost:8080/player
+      - VITE_SERVER_API_URL=http://localhost:8080
+      - VITE_EXIT_URL=http://localhost:8080/controls/dev-login.html
     networks:
       - nimbus-network
     restart: unless-stopped
@@ -206,7 +233,7 @@ services:
     expose:
       - "3002"
     environment:
-      - VITE_CONTROL_API_URL=http://localhost:8080/control
+      - VITE_CONTROL_API_URL=http://localhost:8080/
     networks:
       - nimbus-network
     restart: unless-stopped
