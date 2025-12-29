@@ -297,7 +297,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import {
   devLoginService,
   type World,
@@ -441,15 +441,18 @@ const loadFromLocalStorage = async () => {
             const foundChar = characters.value.find(c => c.id === character.id);
             if (foundChar) {
               selectedCharacter.value = foundChar;
+
+              // Load actor AFTER character is selected (so the select element exists in DOM)
+              // Use setTimeout to ensure DOM is fully rendered before setting actor value
+              const savedActor = localStorage.getItem(STORAGE_KEY_ACTOR);
+              if (savedActor) {
+                setTimeout(() => {
+                  selectedActor.value = savedActor as ActorType;
+                }, 100);
+              }
             }
           }
         }
-      }
-
-      // Load actor
-      const savedActor = localStorage.getItem(STORAGE_KEY_ACTOR);
-      if (savedActor) {
-        selectedActor.value = savedActor as ActorType;
       }
     }
 
@@ -457,12 +460,17 @@ const loadFromLocalStorage = async () => {
     if (loginType.value === 'agent') {
       const savedAgentUser = localStorage.getItem(STORAGE_KEY_AGENT_USER);
       if (savedAgentUser) {
-        selectedAgentUser.value = JSON.parse(savedAgentUser) as User;
+        const agentUser = JSON.parse(savedAgentUser) as User;
 
         // Load agent users list if empty (needed to show in UI)
         if (agentUsers.value.length === 0) {
           await loadAgentUsers();
         }
+
+        // Set selected user after list is loaded (with timeout to ensure DOM is ready)
+        setTimeout(() => {
+          selectedAgentUser.value = agentUser;
+        }, 100);
       }
     }
   } catch (e) {
@@ -533,13 +541,11 @@ const handleSessionUserSearch = () => {
  * Load session users
  */
 const loadSessionUsers = async () => {
-  console.log('[DevLogin] Loading session users with query:', sessionUserSearchQuery.value);
   loadingSessionUsers.value = true;
   sessionUsersError.value = null;
 
   try {
     sessionUsers.value = await devLoginService.getUsers(sessionUserSearchQuery.value || undefined, 100);
-    console.log('[DevLogin] Loaded session users:', sessionUsers.value.length, sessionUsers.value);
   } catch (e) {
     sessionUsersError.value = e instanceof Error ? e.message : 'Failed to load users';
     console.error('[DevLogin] Failed to load users:', e);
@@ -615,6 +621,9 @@ const loadAgentUsers = async () => {
 const handleLogin = async () => {
   if (!canLogin.value || !selectedWorld.value) return;
 
+  // Save current selection to localStorage before login
+  saveToLocalStorage();
+
   loggingIn.value = true;
   loginError.value = null;
 
@@ -649,16 +658,12 @@ const handleLogin = async () => {
     // Perform login
     const response = await devLoginService.login(request);
 
-    console.log('[DevLogin] Login successful:', response);
-
     // Authorize with cookie URLs
     if (response.accessUrls && response.accessUrls.length > 0) {
-      console.log('[DevLogin] Authorizing cookies:', response.accessUrls);
       await devLoginService.authorize(response.accessUrls, response.accessToken);
     }
 
     // Redirect to jump URL
-    console.log('[DevLogin] Redirecting to:', response.jumpUrl);
     window.location.href = response.jumpUrl;
   } catch (e) {
     loginError.value = e instanceof Error ? e.message : 'Login failed';
@@ -688,11 +693,6 @@ watch(loginType, (newType, oldType) => {
   } else if (newType === 'agent' && agentUsers.value.length === 0) {
     loadAgentUsers();
   }
-
-  // Save to localStorage (only if not initial load)
-  if (oldType !== undefined) {
-    saveToLocalStorage();
-  }
 });
 
 /**
@@ -702,31 +702,6 @@ watch(selectedWorld, (newWorld) => {
   if (newWorld && loginType.value === 'session' && sessionUsers.value.length === 0) {
     loadSessionUsers();
   }
-
-  // Save to localStorage
-  saveToLocalStorage();
-});
-
-/**
- * Watch and save session selections
- */
-watch(selectedSessionUser, () => {
-  saveToLocalStorage();
-});
-
-watch(selectedCharacter, () => {
-  saveToLocalStorage();
-});
-
-watch(selectedActor, () => {
-  saveToLocalStorage();
-});
-
-/**
- * Watch and save agent selections
- */
-watch(selectedAgentUser, () => {
-  saveToLocalStorage();
 });
 
 // ===== LIFECYCLE =====
