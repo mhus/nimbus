@@ -21,7 +21,7 @@ public class ServerSettings {
     private void init() {
         websocketUrl = settingsService.getString(
                 "server.websocketUrl",
-                "ws://localhost:9042/ws",
+                "ws://localhost:9042/player/ws",
                 websocketUrlOverwrite
         );
     }
