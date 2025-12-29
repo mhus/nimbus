@@ -71,6 +71,16 @@ services:
     expose:
       - "9043"
     environment:
+#      - NIMBUS_EXTERNAL_URL=${NIMBUS_EXTERNAL_URL:-http://localhost:9043}
+#      - NIMBUS_SERVER_IP=${NIMBUS_SERVER_IP:-world-control}
+#      - NIMBUS_ACCESS_URLS=http://localhost:9042/player/aaa/authorize,http://localhost:9043/control/aaa/authorize
+      - NIMBUS_ACCESS_URLS=/player/aaa/authorize,/control/aaa/authorize
+      - NIMBUS_JUMP_URL_AGENT=/controls
+      - NIMBUS_JUMP_URL_EDITOR=/editor
+      - NIMBUS_JUMP_URL_VIEWER=/viewer
+      - NIMBUS_LOGIN_URL=/control/dev-login.html
+      - NIMBUS_LOGOUT_URL=/control/dev-login.html
+      - NIMBUS_WEBSOCKET_URL=ws://localhost:8080/player/ws
       - MONGODB_URI=${MONGODB_URI:-mongodb://root:example@host.docker.internal:27017/world?authSource=admin}
       - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
       - REDIS_PORT=${REDIS_PORT:-6379}

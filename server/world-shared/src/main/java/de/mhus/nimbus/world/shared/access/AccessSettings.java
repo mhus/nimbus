@@ -94,12 +94,12 @@ public class AccessSettings {
         );
         loginUrl = settingsService.getString(
                 "access.loginUrl",
-                "http://localhost:3002/dev-login.html",
+                "http://localhost:3002/controls/dev-login.html",
                 loginUrlOverwrite
         );
         logoutUrl = settingsService.getString(
                 "access.logoutUrl",
-                "http://localhost:3002/dev-login.html",
+                "http://localhost:3002/controls/dev-login.html",
                 logoutUrlOverwrite
         );
     }

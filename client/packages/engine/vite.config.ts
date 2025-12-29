@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     root: '.',
+    base: isEditor ? '/editor/' : '/viewer/',
     build: {
       outDir: isEditor ? 'dist/editor' : 'dist/viewer',
       emptyOutDir: true,
