@@ -13,6 +13,8 @@ public class SettingOptions implements SettingValue {
   private final List<String> options;
   private final String key;
   private final SSettingsService service;
+  private long lastAccess;
+  private String value;
 
   public SettingOptions(String key, SSettingsService service, String defaultValue, String... options) {
     this.key = key;
@@ -26,14 +28,18 @@ public class SettingOptions implements SettingValue {
     if (service == null || key == null) {
       return defaultValue;
     }
-    String value = service.getStringValue(key, defaultValue);
+    if (value != null && System.currentTimeMillis() - lastAccess < CACHE_TIMEOUT) {
+      return value;
+    }
+    value = service.getStringValue(key, defaultValue);
 
     // Validate that the value is one of the valid options
     if (value != null && !options.isEmpty() && !options.contains(value)) {
       service.setStringValue(key, defaultValue);
-      return defaultValue;
+      value = defaultValue;
     }
 
+    lastAccess = System.currentTimeMillis();
     return value;
   }
 

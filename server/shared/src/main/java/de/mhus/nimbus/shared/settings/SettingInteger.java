@@ -7,6 +7,8 @@ public class SettingInteger implements SettingValue {
   private final int defaultValue;
   private final String key;
   private final SSettingsService service;
+  private long lastAccess;
+  private Integer value;
 
   public SettingInteger(String key, SSettingsService service, int defaultValue) {
     this.key = key;
@@ -19,7 +21,12 @@ public class SettingInteger implements SettingValue {
     if (service == null || key == null) {
       return defaultValue;
     }
-    return service.getOrCreateIntValue(key, defaultValue);
+    if (value != null && System.currentTimeMillis() - lastAccess < CACHE_TIMEOUT) {
+      return value;
+    }
+    value = service.getOrCreateIntValue(key, defaultValue);
+    lastAccess = System.currentTimeMillis();
+    return value;
   }
 
   public void set(int value) {

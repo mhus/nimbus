@@ -29,7 +29,8 @@ nimbus:
     jumpUrlViewer: ${NIMBUS_JUMP_URL_VIEWER:}
     loginUrl: ${NIMBUS_LOGIN_URL:}
     logoutUrl: ${NIMBUS_LOGOUT_URL:}
-
+  server:
+    websocketUrl: ${NIMBUS_WEBSOCKET_URL:}
 
 
 world:

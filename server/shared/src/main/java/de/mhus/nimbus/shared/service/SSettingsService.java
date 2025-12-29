@@ -315,7 +315,11 @@ public class SSettingsService {
     }
 
     public SettingString getString(String key, String defaultValue) {
-        return new SettingString(key, this, defaultValue);
+        return new SettingString(key, this, defaultValue, null);
+    }
+
+    public SettingString getString(String key, String defaultValue, String overwriteValue) {
+        return new SettingString(key, this, defaultValue, overwriteValue);
     }
 
     public SettingPassword getPassword(String key) {

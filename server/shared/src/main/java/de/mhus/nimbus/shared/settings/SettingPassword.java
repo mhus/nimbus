@@ -7,6 +7,8 @@ public class SettingPassword implements SettingValue {
   private final String defaultValue;
   private final String key;
   private final SSettingsService service;
+  private long lastAccess;
+  private String value;
 
   public SettingPassword(String key, SSettingsService service, String defaultValue) {
     this.key = key;
@@ -22,13 +24,19 @@ public class SettingPassword implements SettingValue {
     if (service == null || key == null) {
       return defaultValue;
     }
+    if (value != null && System.currentTimeMillis() - lastAccess < CACHE_TIMEOUT) {
+      return value;
+    }
     String decrypted = service.getDecryptedPassword(key);
     if (decrypted == null) {
       // create with default
       service.setEncryptedPassword(key, defaultValue);
-      return defaultValue;
+      value = defaultValue;
+    } else {
+      value = decrypted;
     }
-    return decrypted;
+    lastAccess = System.currentTimeMillis();
+    return value;
   }
 
   /**

@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.service.SSettingsService;
 import de.mhus.nimbus.shared.settings.SettingString;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,12 +14,15 @@ public class ServerSettings {
     private final SSettingsService settingsService;
 
     private SettingString websocketUrl;
+    @Value("${nimbus.server.websocketUrl:}")
+    private String websocketUrlOverwrite;
 
     @PostConstruct
     private void init() {
         websocketUrl = settingsService.getString(
                 "server.websocketUrl",
-                "ws://localhost:9042/ws"
+                "ws://localhost:9042/ws",
+                websocketUrlOverwrite
         );
     }
 
