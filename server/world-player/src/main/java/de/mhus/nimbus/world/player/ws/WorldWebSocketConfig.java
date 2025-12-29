@@ -17,6 +17,6 @@ public class WorldWebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(handler, "/ws/world/*").setAllowedOrigins("*");
+        registry.addHandler(handler, "/player/ws/world/*").setAllowedOrigins("*");
     }
 }

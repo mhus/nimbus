@@ -88,12 +88,12 @@ public class WorldWebSocketHandler extends TextWebSocketHandler {
     }
 
     private String extractWorldId(WebSocketSession session) {
-        // Expected path: /ws/world/{worldId}
+        // Expected path: /player/ws/world/{worldId}
         if (session.getUri() == null) return "";
         String path = session.getUri().getPath();
         if (path == null) return "";
         String[] parts = path.split("/");
-        if (parts.length >= 4) return parts[3];
+        if (parts.length >= 5) return parts[4];
         return "";
     }
 }

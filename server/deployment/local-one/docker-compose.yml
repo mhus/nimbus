@@ -55,6 +55,7 @@ services:
       - LAYER_TERRAIN_COMPRESSION_ENABLED=${LAYER_TERRAIN_COMPRESSION_ENABLED:-true}
       - ASSET_COMPRESSION_ENABLED=${ASSET_COMPRESSION_ENABLED:-true}
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-false}
+      - NIMBUS_WEBSOCKET_URL=ws://localhost:8080/player/ws
     networks:
       - nimbus-network
     restart: unless-stopped
@@ -70,17 +71,18 @@ services:
     container_name: nimbus-world-control
     expose:
       - "9043"
+#    ports:
+#      - "9043:9043"
     environment:
 #      - NIMBUS_EXTERNAL_URL=${NIMBUS_EXTERNAL_URL:-http://localhost:9043}
 #      - NIMBUS_SERVER_IP=${NIMBUS_SERVER_IP:-world-control}
 #      - NIMBUS_ACCESS_URLS=http://localhost:9042/player/aaa/authorize,http://localhost:9043/control/aaa/authorize
       - NIMBUS_ACCESS_URLS=/player/aaa/authorize,/control/aaa/authorize
       - NIMBUS_JUMP_URL_AGENT=/controls
-      - NIMBUS_JUMP_URL_EDITOR=/editor
-      - NIMBUS_JUMP_URL_VIEWER=/viewer
+      - NIMBUS_JUMP_URL_EDITOR=/editor?worldId={worldId}&session={session}
+      - NIMBUS_JUMP_URL_VIEWER=/viewer?worldId={worldId}&session={session}
       - NIMBUS_LOGIN_URL=/control/dev-login.html
       - NIMBUS_LOGOUT_URL=/control/dev-login.html
-      - NIMBUS_WEBSOCKET_URL=ws://localhost:8080/player/ws
       - MONGODB_URI=${MONGODB_URI:-mongodb://root:example@host.docker.internal:27017/world?authSource=admin}
       - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
       - REDIS_PORT=${REDIS_PORT:-6379}
@@ -173,7 +175,8 @@ services:
     expose:
       - "3000"
     environment:
-      - VITE_SERVER_API_URL=http://localhost:8080/player
+      - VITE_SERVER_API_URL=http://localhost:8080
+      - VITE_EXIT_URL=http://localhost:8080/controls/dev-login.html
     networks:
       - nimbus-network
     restart: unless-stopped
@@ -188,8 +191,11 @@ services:
     container_name: nimbus-editor
     expose:
       - "3001"
+#    ports:
+#      - "3001:3001"
     environment:
-      - VITE_SERVER_API_URL=http://localhost:8080/player
+      - VITE_SERVER_API_URL=http://localhost:8080
+      - VITE_EXIT_URL=http://localhost:8080/controls/dev-login.html
     networks:
       - nimbus-network
     restart: unless-stopped

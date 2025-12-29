@@ -24,6 +24,8 @@ nimbus:
       enabled: ${ASSET_COMPRESSION_ENABLED:true}
   schema:
     auto-migrate: ${NIMBUS_SCHEMA_AUTO_MIGRATE:false}
+  server:
+    websocketUrl: ${NIMBUS_WEBSOCKET_URL:}
 
 world:
   player:

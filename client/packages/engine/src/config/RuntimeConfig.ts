@@ -1,7 +1,8 @@
 /**
  * Runtime Configuration Service
- * Loads configuration from /config.json at runtime (not build time)
+ * Loads configuration from ./config.json at runtime (not build time)
  * This allows Docker containers to override config without rebuilding
+ * Uses relative path to support different base paths (/editor/, /viewer/, etc.)
  */
 
 import { getLogger } from '@nimbus/shared';
@@ -18,7 +19,7 @@ class RuntimeConfigService {
   private loadPromise: Promise<RuntimeConfig> | null = null;
 
   /**
-   * Load configuration from /config.json
+   * Load configuration from ./config.json (relative to base path)
    * Returns cached config if already loaded
    */
   async loadConfig(): Promise<RuntimeConfig> {
@@ -43,17 +44,18 @@ class RuntimeConfigService {
    */
   private async fetchConfig(): Promise<RuntimeConfig> {
     try {
-      const response = await fetch('/config.json');
+      // Use relative path to support different base paths (/editor/, /viewer/, etc.)
+      const response = await fetch('./config.json');
 
       if (!response.ok) {
         throw new Error(`Failed to load config: ${response.status} ${response.statusText}`);
       }
 
       const config = await response.json();
-      logger.info('Loaded runtime config from /config.json', config);
+      logger.info('Loaded runtime config from ./config.json', config);
       return config;
     } catch (error) {
-      logger.warn('Failed to load /config.json, using fallback from .env', error);
+      logger.warn('Failed to load ./config.json, using fallback from .env', error);
 
       // Fallback to .env values if config.json fails to load
       return {

@@ -47,8 +47,11 @@ FROM nginx:alpine AS viewer
 # Install wget for healthchecks
 RUN apk add --no-cache wget
 
-# Copy built viewer files
-COPY --from=build /build/packages/engine/dist/viewer /usr/share/nginx/html
+# Copy built viewer files to /viewer/ subdirectory
+COPY --from=build /build/packages/engine/dist/viewer /usr/share/nginx/html/viewer
+
+# Create empty index.html in root
+RUN echo '<!DOCTYPE html><html><head><title>Nimbus Viewer</title></head><body></body></html>' > /usr/share/nginx/html/index.html
 
 # Copy entrypoint script from engine package
 COPY client/packages/engine/docker-entrypoint.sh /docker-entrypoint.sh
@@ -72,8 +75,11 @@ FROM nginx:alpine AS editor
 # Install wget for healthchecks
 RUN apk add --no-cache wget
 
-# Copy built editor files
-COPY --from=build /build/packages/engine/dist/editor /usr/share/nginx/html
+# Copy built editor files to /editor/ subdirectory
+COPY --from=build /build/packages/engine/dist/editor /usr/share/nginx/html/editor
+
+# Create empty index.html in root
+RUN echo '<!DOCTYPE html><html><head><title>Nimbus Editor</title></head><body></body></html>' > /usr/share/nginx/html/index.html
 
 # Copy entrypoint script from engine package
 COPY client/packages/engine/docker-entrypoint.sh /docker-entrypoint.sh
@@ -99,6 +105,9 @@ RUN apk add --no-cache wget
 
 # Copy built controls files to /controls/ subdirectory
 COPY --from=build /build/packages/controls/dist /usr/share/nginx/html/controls
+
+# Create empty index.html in root
+RUN echo '<!DOCTYPE html><html><head><title>Nimbus Controls</title></head><body></body></html>' > /usr/share/nginx/html/index.html
 
 # Copy entrypoint script from controls package
 COPY client/packages/controls/docker-entrypoint.sh /docker-entrypoint.sh
