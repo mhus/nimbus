@@ -33,7 +33,7 @@
     "@babylonjs/gui": "^8.41.2",
     "@babylonjs/loaders": "^8.41.2",
     "@babylonjs/materials": "^8.41.2",
-    "dotenv": "^16.4.0"
+    "dotenv": "^17.2.3"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
