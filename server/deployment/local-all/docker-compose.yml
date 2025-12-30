@@ -49,22 +49,22 @@ services:
     expose:
       - "9042"
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_DATABASE=${REDIS_DATABASE:-0}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - REDIS_SSL=${REDIS_SSL:-false}
-      - PLAYER_BASE_URL=${PLAYER_BASE_URL:-http://world-player:9042}
-      - LIFE_BASE_URL=${LIFE_BASE_URL:-http://world-life:9044}
-      - CONTROL_BASE_URL=${CONTROL_BASE_URL:-http://world-control:9043}
+      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DATABASE=0
+      - REDIS_PASSWORD=
+      - REDIS_SSL=false
+      - PLAYER_BASE_URL=http://world-player:9042
+      - LIFE_BASE_URL=http://world-life:9044
+      - CONTROL_BASE_URL=http://world-control:9043
       - NIMBUS_ENCRYPTION_PASSWORD=${NIMBUS_ENCRYPTION_PASSWORD:-changeme}
       - CHUNK_COMPRESSION_ENABLED=${CHUNK_COMPRESSION_ENABLED:-true}
       - LAYER_TERRAIN_COMPRESSION_ENABLED=${LAYER_TERRAIN_COMPRESSION_ENABLED:-true}
       - ASSET_COMPRESSION_ENABLED=${ASSET_COMPRESSION_ENABLED:-true}
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-false}
-      - NIMBUS_WEBSOCKET_URL=ws://localhost:8080/player/ws
+      - NIMBUS_WEBSOCKET_URL=ws://${NIMBUS_PUBLIC_HOST:-localhost:8080}/player/ws
     networks:
       - nimbus-network
     depends_on:
@@ -92,15 +92,15 @@ services:
       - NIMBUS_JUMP_URL_VIEWER=/viewer?worldId={worldId}&session={session}
       - NIMBUS_LOGIN_URL=/control/dev-login.html
       - NIMBUS_LOGOUT_URL=/control/dev-login.html
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_DATABASE=${REDIS_DATABASE:-0}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - REDIS_SSL=${REDIS_SSL:-false}
-      - PLAYER_BASE_URL=${PLAYER_BASE_URL:-http://world-player:9042}
-      - LIFE_BASE_URL=${LIFE_BASE_URL:-http://world-life:9044}
-      - CONTROL_BASE_URL=${CONTROL_BASE_URL:-http://world-control:9043}
+      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DATABASE=0
+      - REDIS_PASSWORD=
+      - REDIS_SSL=false
+      - PLAYER_BASE_URL=http://world-player:9042
+      - LIFE_BASE_URL=http://world-life:9044
+      - CONTROL_BASE_URL=http://world-control:9043
       - NIMBUS_ENCRYPTION_PASSWORD=${NIMBUS_ENCRYPTION_PASSWORD:-changeme}
       - CHUNK_COMPRESSION_ENABLED=${CHUNK_COMPRESSION_ENABLED:-true}
       - LAYER_TERRAIN_COMPRESSION_ENABLED=${LAYER_TERRAIN_COMPRESSION_ENABLED:-true}
@@ -127,12 +127,12 @@ services:
     expose:
       - "9044"
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_DATABASE=${REDIS_DATABASE:-0}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - REDIS_SSL=${REDIS_SSL:-false}
+      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DATABASE=0
+      - REDIS_PASSWORD=
+      - REDIS_SSL=false
       - PLAYER_BASE_URL=${PLAYER_BASE_URL:-http://world-player:9042}
       - LIFE_BASE_URL=${LIFE_BASE_URL:-http://world-life:9044}
       - CONTROL_BASE_URL=${CONTROL_BASE_URL:-http://world-control:9043}
@@ -162,12 +162,12 @@ services:
     expose:
       - "9045"
     environment:
-      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/world?authSource=admin}
-      - REDIS_HOST=${REDIS_HOST:-redis}
-      - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_DATABASE=${REDIS_DATABASE:-0}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - REDIS_SSL=${REDIS_SSL:-false}
+      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DATABASE=0
+      - REDIS_PASSWORD=
+      - REDIS_SSL=false
       - PLAYER_BASE_URL=${PLAYER_BASE_URL:-http://world-player:9042}
       - LIFE_BASE_URL=${LIFE_BASE_URL:-http://world-life:9044}
       - CONTROL_BASE_URL=${CONTROL_BASE_URL:-http://world-control:9043}
@@ -199,8 +199,8 @@ services:
     expose:
       - "3000"
     environment:
-      - VITE_SERVER_API_URL=http://localhost:8080
-      - VITE_EXIT_URL=http://localhost:8080/controls/dev-login.html
+      - VITE_SERVER_API_URL=http://${NIMBUS_PUBLIC_HOST:-localhost:8080}
+      - VITE_EXIT_URL=http://${NIMBUS_PUBLIC_HOST:-localhost:8080}/controls/dev-login.html
     networks:
       - nimbus-network
     restart: unless-stopped
@@ -216,8 +216,8 @@ services:
     expose:
       - "3001"
     environment:
-      - VITE_SERVER_API_URL=http://localhost:8080
-      - VITE_EXIT_URL=http://localhost:8080/controls/dev-login.html
+      - VITE_SERVER_API_URL=http://${NIMBUS_PUBLIC_HOST:-localhost:8080}
+      - VITE_EXIT_URL=http://${NIMBUS_PUBLIC_HOST:-localhost:8080}/controls/dev-login.html
     networks:
       - nimbus-network
     restart: unless-stopped
@@ -233,7 +233,7 @@ services:
     expose:
       - "3002"
     environment:
-      - VITE_CONTROL_API_URL=http://localhost:8080/
+      - VITE_CONTROL_API_URL=http://${NIMBUS_PUBLIC_HOST:-localhost:8080}/
     networks:
       - nimbus-network
     restart: unless-stopped
