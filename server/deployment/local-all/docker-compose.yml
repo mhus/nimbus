@@ -49,7 +49,7 @@ services:
     expose:
       - "9042"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - MONGODB_URI=mongodb://root:${MONGO_ROOT_PASSWORD:-example}@mongodb:27017/world?authSource=admin
       - REDIS_URL=redis://redis:6379
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -92,7 +92,7 @@ services:
       - NIMBUS_JUMP_URL_VIEWER=/viewer?worldId={worldId}&session={session}
       - NIMBUS_LOGIN_URL=/control/dev-login.html
       - NIMBUS_LOGOUT_URL=/control/dev-login.html
-      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - MONGODB_URI=mongodb://root:${MONGO_ROOT_PASSWORD:-example}@mongodb:27017/world?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DATABASE=0
@@ -127,7 +127,7 @@ services:
     expose:
       - "9044"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - MONGODB_URI=mongodb://root:${MONGO_ROOT_PASSWORD:-example}@mongodb:27017/world?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DATABASE=0
@@ -162,7 +162,7 @@ services:
     expose:
       - "9045"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/world?authSource=admin
+      - MONGODB_URI=mongodb://root:${MONGO_ROOT_PASSWORD:-example}@mongodb:27017/world?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DATABASE=0
@@ -246,14 +246,14 @@ services:
   # Infrastructure Services
 
   mongodb:
-    image: mongo:4.4.18 # 7: WARNING: MongoDB 5.0+ requires a CPU with AVX support, and your current system does not appear to have that!
+    image: l33tlamer/mongodb-without-avx:latest # mongo:latest -> WARNING: MongoDB 5.0+ requires a CPU with AVX support, and your current system does not appear to have that!
     container_name: nimbus-mongodb
     expose:
       - "27017"
     ports:
         - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-root}
+      - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-example}
       - MONGO_INITDB_DATABASE=world
     volumes:
@@ -263,7 +263,7 @@ services:
       - nimbus-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -292,9 +292,10 @@ services:
     expose:
       - "8081"
     environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USER:-root}
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
       - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_PASSWORD:-example}
-      - ME_CONFIG_MONGODB_URL=mongodb://mongodb:27017
+      - ME_CONFIG_MONGODB_URL=mongodb://mongodb:27017/world?authSource=admin
+      - ME_CONFIG_MONGODB_SERVER=mongodb
       - ME_CONFIG_BASICAUTH=false
       - ME_CONFIG_SITE_BASEURL=/mongo/
     networks:
