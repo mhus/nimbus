@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface SSettingsRepository extends MongoRepository<SSettings, String> {
 
-    Optional<SSettings> findByKey(String key);
+    List<SSettings> findByKey(String key);
 
     boolean existsByKey(String key);
 

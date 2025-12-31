@@ -33,7 +33,7 @@ public class SSettingsService {
         if (key == null || key.isBlank()) {
             throw new IllegalArgumentException("key is blank");
         }
-        return repository.findByKey(key);
+        return repository.findByKey(key).stream().findFirst();
     }
 
     /**
@@ -74,11 +74,11 @@ public class SSettingsService {
             throw new IllegalArgumentException("key is blank");
         }
 
-        Optional<SSettings> existingOpt = repository.findByKey(key);
+        List<SSettings> existingOpt = repository.findByKey(key);
         SSettings setting;
 
-        if (existingOpt.isPresent()) {
-            setting = existingOpt.get();
+        if (!existingOpt.isEmpty()) {
+            setting = existingOpt.getFirst();
             setting.setValue(value);
             if (type != null) {
                 setting.setType(type);
@@ -102,11 +102,11 @@ public class SSettingsService {
             throw new IllegalArgumentException("key is blank");
         }
 
-        Optional<SSettings> existingOpt = repository.findByKey(key);
+        List<SSettings> existingOpt = repository.findByKey(key);
         SSettings setting;
 
-        if (existingOpt.isPresent()) {
-            setting = existingOpt.get();
+        if (!existingOpt.isEmpty()) {
+            setting = existingOpt.getFirst();
             setting.setValue(value);
             if (type != null) {
                 setting.setType(type);
