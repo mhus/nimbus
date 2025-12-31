@@ -86,8 +86,12 @@ public class SSettingsService {
         } else {
             setting = new SSettings(key, value, type != null ? type : "string");
         }
-
-        return repository.save(setting);
+        try {
+            return repository.save(setting);
+        } catch (Exception e) {
+            log.info("Failed to set setting '{}': {}", key, e.getMessage());
+            return null;
+        }
     }
 
     /**
