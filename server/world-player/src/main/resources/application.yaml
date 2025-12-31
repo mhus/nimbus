@@ -49,7 +49,7 @@ world:
     password: ${REDIS_PASSWORD:}
     ssl: ${REDIS_SSL:false}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGIN:}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
 server:
   port: 9042

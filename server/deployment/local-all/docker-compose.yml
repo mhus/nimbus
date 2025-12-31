@@ -48,6 +48,8 @@ services:
     container_name: nimbus-world-player
     expose:
       - "9042"
+    ports:
+      - "9042:9042"
     environment:
       - MONGODB_URI=mongodb://root:${MONGO_ROOT_PASSWORD:-example}@mongodb:27017/world?authSource=admin
       - REDIS_URL=redis://redis:6379
@@ -86,6 +88,8 @@ services:
     container_name: nimbus-world-control
     expose:
       - "9043"
+    ports:
+      - "9043:9043"
     environment:
       - NIMBUS_ACCESS_URLS=/player/aaa/authorize,/control/aaa/authorize
       - NIMBUS_JUMP_URL_AGENT=/controls
@@ -311,6 +315,8 @@ services:
     container_name: nimbus-redis-commander
     expose:
       - "8081"
+    ports:
+      - "8082:8081"
     environment:
       - REDIS_HOSTS=local:redis:6379
       - URL_PREFIX=/redis
