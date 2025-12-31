@@ -48,6 +48,8 @@ world:
     database: ${REDIS_DATABASE:0}
     password: ${REDIS_PASSWORD:}
     ssl: ${REDIS_SSL:false}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGIN:}
 
 server:
   port: 9042
