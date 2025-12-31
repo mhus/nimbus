@@ -259,7 +259,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-example}
       - MONGO_INITDB_DATABASE=world
     volumes:
-      - mongodb-data:/data/db
+      - ./tmp/mongodb:/data/db
       - mongodb-config:/data/configdb
     networks:
       - nimbus-network
@@ -325,8 +325,6 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb-data:
-    driver: local
   mongodb-config:
     driver: local
   redis-data:
