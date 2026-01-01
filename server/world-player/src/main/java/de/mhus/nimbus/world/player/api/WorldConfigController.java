@@ -107,7 +107,7 @@ public class WorldConfigController {
 
     private void patchWorldInfo(WorldInfo worldInfo) {
         worldInfo.setEditorUrl(
-                serverSettings.getControlsBaseUrl()
+                serverSettings.getControlsBaseUrl() + "/"
         );
         // TODO set splashScreen and splashScreenAudio for specific enrtry point
     }
