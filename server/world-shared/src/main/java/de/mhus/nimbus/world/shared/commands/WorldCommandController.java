@@ -1,9 +1,7 @@
-package de.mhus.nimbus.world.life.api;
+package de.mhus.nimbus.world.shared.commands;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.world.shared.commands.Command;
-import de.mhus.nimbus.world.shared.commands.CommandContext;
-import de.mhus.nimbus.world.shared.commands.CommandService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -34,13 +32,14 @@ public class WorldCommandController {
     /**
      * Command request DTO.
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record CommandRequest(
             String cmd,
             List<String> args,
             String worldId,
             String sessionId,
             String userId,
-            String displayName,
+            String title,
             String originServer,
             Map<String, Object> metadata
     ) {}
@@ -82,7 +81,7 @@ public class WorldCommandController {
                 .worldId(request.worldId())
                 .sessionId(request.sessionId())
                 .userId(request.userId())
-                .title(request.displayName())
+                .title(request.title())
                 .originServer(request.originServer())
                 .requestTime(Instant.now())
                 .metadata(request.metadata() != null ? request.metadata() : new HashMap<>())

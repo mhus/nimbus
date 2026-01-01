@@ -5,6 +5,8 @@ import de.mhus.nimbus.shared.utils.LocationService;
 import de.mhus.nimbus.shared.utils.LocationService.SERVER;
 import de.mhus.nimbus.world.shared.access.AccessService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
+import de.mhus.nimbus.world.shared.commands.WorldCommandController;
+import de.mhus.nimbus.world.shared.commands.WorldCommandController.CommandRequest;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,20 +44,6 @@ public class WorldClientService {
     private final ObjectMapper objectMapper;
     private final LocationService locationService;
     private final AccessService accessService;
-
-    /**
-     * Command request DTO.
-     */
-    public record CommandRequest(
-            String cmd,
-            List<String> args,
-            String worldId,
-            String sessionId,
-            String userId,
-            String title,
-            String originServer,
-            Map<String, Object> metadata
-    ) {}
 
     /**
      * Command response DTO.
