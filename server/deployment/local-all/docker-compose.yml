@@ -67,6 +67,7 @@ services:
       - ASSET_COMPRESSION_ENABLED=${ASSET_COMPRESSION_ENABLED:-true}
       - NIMBUS_SCHEMA_AUTO_MIGRATE=${NIMBUS_SCHEMA_AUTO_MIGRATE:-false}
       - NIMBUS_WEBSOCKET_URL=ws://${NIMBUS_PUBLIC_HOST:-localhost:8081}/player/ws
+      - NIMBUS_CONTROLS_BASE_URL=http://${NIMBUS_PUBLIC_HOST:-localhost:3002}/controls
       - CORS_ALLOWED_ORIGINS=http://${NIMBUS_PUBLIC_HOST:-localhost:8081}
     networks:
       - nimbus-network

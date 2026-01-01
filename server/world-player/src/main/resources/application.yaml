@@ -26,6 +26,7 @@ nimbus:
     auto-migrate: ${NIMBUS_SCHEMA_AUTO_MIGRATE:false}
   server:
     websocketUrl: ${NIMBUS_WEBSOCKET_URL:}
+    controlsBaseUrl: ${NIMBUS_CONTROLS_BASE_URL:}
 
 world:
   player:

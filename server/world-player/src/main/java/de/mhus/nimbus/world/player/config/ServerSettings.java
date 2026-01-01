@@ -1,9 +1,9 @@
 package de.mhus.nimbus.world.player.config;
 
 import de.mhus.nimbus.shared.service.SSettingsService;
-import de.mhus.nimbus.shared.settings.SettingString;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,17 +13,13 @@ public class ServerSettings {
 
     private final SSettingsService settingsService;
 
-    private SettingString websocketUrl;
     @Value("${nimbus.server.websocketUrl:}")
-    private String websocketUrlOverwrite;
+    private String websocketUrl;
+    @Value("${nimbus.server.controlsBaseUrl:}")
+    private String controlsBaseUrl;
 
     @PostConstruct
     private void init() {
-        websocketUrl = settingsService.getString(
-                "server.websocketUrl",
-                "ws://localhost:9042/player/ws",
-                websocketUrlOverwrite
-        );
     }
 
     /**
@@ -31,6 +27,16 @@ public class ServerSettings {
      * Default: ws://localhost:9042/ws
      */
     public String getWebsocketUrl() {
-        return websocketUrl.get();
+        return Strings.isBlank(websocketUrl) ?
+                "ws://localhost:9042/player/ws"
+                :
+                websocketUrl;
+    }
+
+    public String getControlsBaseUrl() {
+        return Strings.isBlank(controlsBaseUrl) ?
+                "http://localhost:3002/controls"
+                :
+                controlsBaseUrl;
     }
 }

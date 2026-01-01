@@ -70,6 +70,7 @@ public class WorldConfigController {
 
         WWorld world = worldOpt.get();
         WorldInfo worldInfo = world.getPublicData();
+        patchWorldInfo(worldInfo);
 
         // Load player data (always use WEB as ClientType for now)
         Optional<PlayerData> playerDataOpt = playerService.getPlayer(playerId, ClientType.WEB, worldId.getRegionId());
@@ -102,6 +103,13 @@ public class WorldConfigController {
                 .build();
 
         return ResponseEntity.ok(config);
+    }
+
+    private void patchWorldInfo(WorldInfo worldInfo) {
+        worldInfo.setEditorUrl(
+                serverSettings.getControlsBaseUrl()
+        );
+        // TODO set splashScreen and splashScreenAudio for specific enrtry point
     }
 
     @GetMapping("/config/worldinfo")
