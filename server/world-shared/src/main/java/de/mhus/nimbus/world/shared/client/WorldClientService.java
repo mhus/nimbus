@@ -154,7 +154,7 @@ public class WorldClientService {
 
         prepareContext(context, worldId);
         String baseUrl = properties.getGeneratorBaseUrl();
-        return sendCommand(baseUrl, commandName, args, context, SERVER.CONTROL);
+        return sendCommand(baseUrl, commandName, args, context, SERVER.GENERATOR);
     }
 
     /**

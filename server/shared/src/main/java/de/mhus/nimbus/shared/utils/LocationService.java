@@ -23,6 +23,7 @@ public class LocationService {
         PLAYER,
         LIFE,
         CONTROL,
+        GENERATOR,
         UNIVERSE,
         REGION
     }

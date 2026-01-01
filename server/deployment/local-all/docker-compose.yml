@@ -72,7 +72,8 @@ services:
       - NIMBUS_POD_CONTROL_BASE_URL=http://world-control:9043
       - NIMBUS_POD_PLAYER_BASE_URL=http://world-player:9042
       - NIMBUS_POD_LIFE_BASE_URL=http://world-life:9044
-      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-control:9045
+      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-generator:9045
+      - NIMBUS_SERVER_IP=world-player
     networks:
       - nimbus-network
     depends_on:
@@ -120,7 +121,8 @@ services:
       - NIMBUS_POD_CONTROL_BASE_URL=http://world-control:9043
       - NIMBUS_POD_PLAYER_BASE_URL=http://world-player:9042
       - NIMBUS_POD_LIFE_BASE_URL=http://world-life:9044
-      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-control:9045
+      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-generator:9045
+      - NIMBUS_SERVER_IP=world-control
     networks:
       - nimbus-network
     depends_on:
@@ -159,7 +161,8 @@ services:
       - NIMBUS_POD_CONTROL_BASE_URL=http://world-control:9043
       - NIMBUS_POD_PLAYER_BASE_URL=http://world-player:9042
       - NIMBUS_POD_LIFE_BASE_URL=http://world-life:9044
-      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-control:9045
+      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-generator:9045
+      - NIMBUS_SERVER_IP=world-life
     networks:
       - nimbus-network
     depends_on:
@@ -198,7 +201,8 @@ services:
       - NIMBUS_POD_CONTROL_BASE_URL=http://world-control:9043
       - NIMBUS_POD_PLAYER_BASE_URL=http://world-player:9042
       - NIMBUS_POD_LIFE_BASE_URL=http://world-life:9044
-      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-control:9045
+      - NIMBUS_POD_GENERATOR_BASE_URL=http://world-generator:9045
+      - NIMBUS_SERVER_IP=world-generator
     networks:
       - nimbus-network
     depends_on:
