@@ -245,7 +245,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import type { BlockType, BlockModifier } from '@nimbus/shared';
 import { useBlockTypes } from '@/composables/useBlockTypes';
-import { ApiService } from '@/services/ApiService';
+import { apiService } from '@/services/ApiService';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 import InputDialog from '@components/InputDialog.vue';
 
@@ -262,7 +262,6 @@ const emit = defineEmits<{
   (e: 'edit-modifier', data: { blockType: BlockType; status: number; modifier: BlockModifier }): void;
 }>();
 
-const apiService = new ApiService();
 const { createBlockType, updateBlockType, getNextAvailableId } = useBlockTypes(props.worldId);
 
 const isCreate = computed(() => !props.blockType);

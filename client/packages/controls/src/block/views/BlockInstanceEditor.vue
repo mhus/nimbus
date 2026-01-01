@@ -564,7 +564,7 @@ import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockCo
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 import { saveBlockAsBlockType, getBlockTypeEditorUrl as getBlockTypeEditorUrlHelper } from './BlockInstanceEditor_SaveAsBlockType';
 import { blockService } from '@/services/BlockService';
-import { ApiService } from '@/services/ApiService';
+import { apiService } from '@/services/ApiService';
 import type { BlockOriginDto } from '@nimbus/shared';
 
 // Parse URL parameters
@@ -606,9 +606,6 @@ const blockCoordinates = ref<{ x: number; y: number; z: number } | null>(parseBl
 // Get worldId from URL (once, not reactive - needed for composables)
 const params = new URLSearchParams(window.location.search);
 const worldId = params.get('world');
-
-// Initialize API service
-const apiService = new ApiService();
 
 // Modal composable
 const {

@@ -2,9 +2,7 @@
  * Additional functionality for BlockInstanceEditor to save custom blocks as BlockTypes
  */
 
-import { ApiService } from '@/services/ApiService';
-
-const apiService = new ApiService();
+import { apiService } from '@/services/ApiService';
 
 /**
  * Saves the current block as a new BlockType template

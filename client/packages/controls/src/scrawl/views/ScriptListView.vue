@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import type { ScrawlScript } from '@nimbus/shared';
-import { ApiService } from '../../services/ApiService';
+import { apiService } from '../../services/ApiService';
 import { useWorld } from '@/composables/useWorld';
 
 const emit = defineEmits<{
@@ -73,7 +73,6 @@ interface ScriptAsset {
   script: ScrawlScript;
 }
 
-const apiService = new ApiService();
 const { currentWorldId } = useWorld();
 const searchQuery = ref('');
 const scripts = ref<ScriptAsset[]>([]);

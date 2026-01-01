@@ -213,7 +213,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
-import { ApiService } from '@/services/ApiService';
+import { apiService } from '@/services/ApiService';
 
 interface Props {
   worldId: string;
@@ -228,9 +228,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   close: [];
 }>();
-
-// Initialize API service
-const apiService = new ApiService();
 
 // State
 const loading = ref(true);
