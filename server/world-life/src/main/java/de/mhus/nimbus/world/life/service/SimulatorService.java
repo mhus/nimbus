@@ -237,7 +237,7 @@ public class SimulatorService {
 
         // 4. Publish pathways to Redis
         if (!newPathways.isEmpty()) {
-            Set<ChunkCoordinate> affectedChunks = calculateAffectedChunks(newPathways);
+            Set<ChunkCoordinate> affectedChunks = calculateAffectedChunks(world, newPathways);
             pathwayPublisher.publishPathways(worldId, newPathways, affectedChunks);
 
             log.debug("World {}: Generated {} pathways, affecting {} chunks",
@@ -263,6 +263,7 @@ public class SimulatorService {
             log.warn("World {}: Behavior not found: {}, entity: {}", worldId, behaviorType, entity.getEntityId());
             return Optional.empty();
         }
+        var world = worldService.getByWorldId(worldId).orElseThrow();
 
         // Generate pathway
         EntityPathway pathway = behavior.update(entity, state, currentTime, worldId);
@@ -275,7 +276,7 @@ public class SimulatorService {
                 entity.setPosition(lastWaypoint.getTarget());
 
                 // Update chunk if entity moved to different chunk
-                updateEntityChunk(entity, worldId);
+                updateEntityChunk(world, entity);
             }
 
             // Update simulation state
@@ -312,7 +313,8 @@ public class SimulatorService {
      * @param pathways List of pathways
      * @return Set of chunk coordinates
      */
-    private Set<ChunkCoordinate> calculateAffectedChunks(List<EntityPathway> pathways) {
+    private Set<ChunkCoordinate> calculateAffectedChunks(WWorld world, List<EntityPathway> pathways) {
+        var chunkSize = world.getPublicData().getChunkSize();
         Set<ChunkCoordinate> chunks = new HashSet<>();
 
         for (EntityPathway pathway : pathways) {
@@ -326,8 +328,8 @@ public class SimulatorService {
                     continue;
                 }
 
-                int cx = (int) Math.floor(target.getX() / 16);
-                int cz = (int) Math.floor(target.getZ() / 16);
+                int cx = (int) Math.floor(target.getX() / chunkSize);
+                int cz = (int) Math.floor(target.getZ() / chunkSize);
                 chunks.add(new ChunkCoordinate(cx, cz));
             }
         }
@@ -416,13 +418,14 @@ public class SimulatorService {
      * @param entity Entity to update
      * @param worldId World ID
      */
-    private void updateEntityChunk(WEntity entity, WorldId worldId) {
+    private void updateEntityChunk(WWorld world, WEntity entity) {
         if (entity.getPosition() == null) {
             return;
         }
+        var chunkSize = world.getPublicData().getChunkSize();
 
-        int cx = (int) Math.floor(entity.getPosition().getX() / 16);
-        int cz = (int) Math.floor(entity.getPosition().getZ() / 16);
+        int cx = (int) Math.floor(entity.getPosition().getX() / chunkSize);
+        int cz = (int) Math.floor(entity.getPosition().getZ() / chunkSize);
         String newChunk = cx + ":" + cz;
 
     }

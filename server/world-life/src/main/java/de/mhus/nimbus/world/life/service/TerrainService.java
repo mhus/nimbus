@@ -5,6 +5,7 @@ import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WChunkService;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.Optional;
 public class TerrainService {
 
     private final WChunkService chunkService;
+    private final WWorldService worldService;
 
     /**
      * Get ground height at world position (x, z).
@@ -49,9 +51,10 @@ public class TerrainService {
      */
     public int getGroundHeight(WorldId worldId, int x, int z, int startY, boolean canWalkOnWater) {
         try {
+            var world = worldService.getByWorldId(worldId).orElseThrow();
             // Calculate chunk coordinates
-            int chunkX = Math.floorDiv(x, 16);
-            int chunkZ = Math.floorDiv(z, 16);
+            int chunkX = world.getChunkX(x);
+            int chunkZ = world.getChunkZ(z);
             String chunkKey = BlockUtil.toChunkKey(chunkX, chunkZ);
 
             // Load chunk from database (regionId = worldId for main world, create=false)
@@ -62,12 +65,13 @@ public class TerrainService {
                 return 64; // Default ground level
             }
 
+            var chunkSize = world.getPublicData().getChunkSize();
             ChunkData chunkData = chunkDataOpt.get();
 
             // Try to use HeightData first (if available) for better performance
             if (chunkData.getHeightData() != null) {
-                int localX = ((x % 16) + 16) % 16;
-                int localZ = ((z % 16) + 16) % 16;
+                int localX = ((x % chunkSize) + chunkSize) % chunkSize;
+                int localZ = ((z % chunkSize) + chunkSize) % chunkSize;
 
                 var heightDataDto = chunkService.getHeightDataForColumn(chunkData, localX, localZ);
                 if (heightDataDto != null) {
@@ -173,9 +177,10 @@ public class TerrainService {
      */
     public int getWaterPosition(WorldId worldId, int x, int z) {
         try {
+            var world = worldService.getByWorldId(worldId).orElseThrow();
             // Calculate chunk coordinates
-            int chunkX = Math.floorDiv(x, 16);
-            int chunkZ = Math.floorDiv(z, 16);
+            int chunkX = world.getChunkX(x);
+            int chunkZ = world.getChunkZ(z);
             String chunkKey = BlockUtil.toChunkKey(chunkX, chunkZ);
 
             // Load chunk from database
@@ -186,12 +191,13 @@ public class TerrainService {
                 return -1;
             }
 
+            var chunkSize = world.getPublicData().getChunkSize();
             ChunkData chunkData = chunkDataOpt.get();
 
             // Use HeightData to find water bounds
             if (chunkData.getHeightData() != null) {
-                int localX = ((x % 16) + 16) % 16;
-                int localZ = ((z % 16) + 16) % 16;
+                int localX = ((x % chunkSize) + chunkSize) % chunkSize;
+                int localZ = ((z % chunkSize) + chunkSize) % chunkSize;
 
                 var heightDataDto = chunkService.getHeightDataForColumn(chunkData, localX, localZ);
                 if (heightDataDto != null && heightDataDto.waterLevel() != null) {
