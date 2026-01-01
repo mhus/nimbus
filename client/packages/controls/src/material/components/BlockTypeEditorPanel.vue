@@ -245,6 +245,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import type { BlockType, BlockModifier } from '@nimbus/shared';
 import { useBlockTypes } from '@/composables/useBlockTypes';
+import { ApiService } from '@/services/ApiService';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 import InputDialog from '@components/InputDialog.vue';
 
@@ -261,6 +262,7 @@ const emit = defineEmits<{
   (e: 'edit-modifier', data: { blockType: BlockType; status: number; modifier: BlockModifier }): void;
 }>();
 
+const apiService = new ApiService();
 const { createBlockType, updateBlockType, getNextAvailableId } = useBlockTypes(props.worldId);
 
 const isCreate = computed(() => !props.blockType);
@@ -517,7 +519,7 @@ const handleDuplicate = async () => {
   duplicateError.value = null;
 
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
     const sourceBlockId = props.blockType.id;
     const url = `${apiUrl}/control/worlds/${props.worldId}/blocktypes/duplicate/${encodeURIComponent(sourceBlockId)}`;
 

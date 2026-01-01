@@ -213,6 +213,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue';
 import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockComponent.vue';
+import { ApiService } from '@/services/ApiService';
 
 interface Props {
   worldId: string;
@@ -227,6 +228,9 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   close: [];
 }>();
+
+// Initialize API service
+const apiService = new ApiService();
 
 // State
 const loading = ref(true);
@@ -559,7 +563,7 @@ async function loadBlockCoordinates() {
   error.value = null;
 
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
     let url: string;
 
     if (props.sourceType === 'terrain') {
@@ -714,7 +718,7 @@ async function loadBlockDetails(x: number, y: number, z: number) {
   blockDetails.value = null;
 
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
     let url: string;
 
     if (props.sourceType === 'terrain') {

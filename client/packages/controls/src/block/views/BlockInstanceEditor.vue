@@ -564,6 +564,7 @@ import NavigateSelectedBlockComponent from '@/components/NavigateSelectedBlockCo
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';
 import { saveBlockAsBlockType, getBlockTypeEditorUrl as getBlockTypeEditorUrlHelper } from './BlockInstanceEditor_SaveAsBlockType';
 import { blockService } from '@/services/BlockService';
+import { ApiService } from '@/services/ApiService';
 import type { BlockOriginDto } from '@nimbus/shared';
 
 // Parse URL parameters
@@ -605,6 +606,9 @@ const blockCoordinates = ref<{ x: number; y: number; z: number } | null>(parseBl
 // Get worldId from URL (once, not reactive - needed for composables)
 const params = new URLSearchParams(window.location.search);
 const worldId = params.get('world');
+
+// Initialize API service
+const apiService = new ApiService();
 
 // Modal composable
 const {
@@ -819,7 +823,7 @@ async function handleNavigate(position: { x: number; y: number; z: number }) {
   try {
     const sessionId = params.get('sessionId');
     if (sessionId) {
-      const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+      const apiUrl = apiService.getBaseUrl();
       const response = await fetch(
         `${apiUrl}/control/worlds/${worldId}/session/${sessionId}/selectedEditBlock/navigate`,
         {
@@ -931,7 +935,7 @@ async function loadBlockTypeDetails(blockTypeId: number) {
 // Set marker in world-control (async, non-blocking)
 async function setMarker(x: number, y: number, z: number, sessionId: string) {
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
     const url = `${apiUrl}/control/worlds/${worldId}/session/${sessionId}/marker/${x}/${y}/${z}`;
 
     // Fire and forget - don't wait for response
@@ -961,7 +965,7 @@ async function loadBlock() {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
 
     // Get sessionId from URL
     const params = new URLSearchParams(window.location.search);
@@ -1117,7 +1121,7 @@ async function saveBlock(closeAfter: boolean = false) {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
 
     // Get sessionId from URL
     const params = new URLSearchParams(window.location.search);
@@ -1208,7 +1212,7 @@ async function deleteBlock() {
 
   try {
     const { x, y, z } = blockCoordinates.value;
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
 
     // Get sessionId from URL
     const params = new URLSearchParams(window.location.search);

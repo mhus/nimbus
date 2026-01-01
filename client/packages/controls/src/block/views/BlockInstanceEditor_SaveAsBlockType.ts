@@ -2,6 +2,10 @@
  * Additional functionality for BlockInstanceEditor to save custom blocks as BlockTypes
  */
 
+import { ApiService } from '@/services/ApiService';
+
+const apiService = new ApiService();
+
 /**
  * Saves the current block as a new BlockType template
  */
@@ -11,7 +15,7 @@ export async function saveBlockAsBlockType(
   blockData: any
 ): Promise<{ success: boolean; error?: string; blockId?: string }> {
   try {
-    const apiUrl = import.meta.env.VITE_CONTROL_API_URL;
+    const apiUrl = apiService.getBaseUrl();
     const url = `${apiUrl}/control/worlds/${worldId}/blocktypes/fromBlock/${encodeURIComponent(newBlockTypeId)}`;
 
     // Send the block data as payload

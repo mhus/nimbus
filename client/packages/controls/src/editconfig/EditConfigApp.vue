@@ -438,6 +438,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useModal } from '@/composables/useModal';
 import { EditAction, type PaletteBlockDefinition, type Block, type BlockType } from '@nimbus/shared';
+import { ApiService } from '@/services/ApiService';
 
 // Get all edit actions from enum
 const editActions = Object.values(EditAction);
@@ -445,11 +446,14 @@ const editActions = Object.values(EditAction);
 // Modal composable for embedded detection
 const { isEmbedded } = useModal();
 
+// Initialize API service
+const apiService = new ApiService();
+
 // Get URL parameters
 const params = new URLSearchParams(window.location.search);
 const worldId = ref(params.get('worldId'));
 const sessionId = ref(params.get('sessionId') || '');
-const apiUrl = ref(import.meta.env.VITE_CONTROL_API_URL); // world-control
+const apiUrl = ref(apiService.getBaseUrl());
 
 // Edit State (unified)
 const editState = ref({
@@ -979,8 +983,7 @@ async function loadEditSettings() {
 
 // Get texture URL for block icon
 function getTextureUrl(icon: string): string {
-  const apiBaseUrl = import.meta.env.VITE_CONTROL_API_URL;
-  return `${apiBaseUrl}/control/worlds/${worldId.value}/assets/${icon}`;
+  return `${apiUrl.value}/control/worlds/${worldId.value}/assets/${icon}`;
 }
 
 // Handle image load error (fallback to placeholder)
