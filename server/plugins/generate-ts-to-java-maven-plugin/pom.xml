@@ -9,7 +9,7 @@
     <packaging>maven-plugin</packaging>
 
     <properties>
-        <maven.plugin.tools.version>3.13.1</maven.plugin.tools.version>
+        <maven.plugin.tools.version>3.15.2</maven.plugin.tools.version>
         <maven.api.version>3.9.9</maven.api.version>
         <java.version>21</java.version>
         <junit.jupiter.version>5.11.3</junit.jupiter.version>
