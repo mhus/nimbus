@@ -13,6 +13,11 @@ nimbus:
     password: ${NIMBUS_ENCRYPTION_PASSWORD}
   schema:
     auto-migrate: ${NIMBUS_SCHEMA_AUTO_MIGRATE:true}
+  pod:
+    controlBaseUrl: ${NIMBUS_POD_CONTROL_BASE_URL:}
+    playerBaseUrl: ${NIMBUS_POD_PLAYER_BASE_URL:}
+    lifeBaseUrl: ${NIMBUS_POD_LIFE_BASE_URL:}
+    generatorBaseUrl: ${NIMBUS_POD_GENERATOR_BASE_URL:}
 
 server:
   port: 9045

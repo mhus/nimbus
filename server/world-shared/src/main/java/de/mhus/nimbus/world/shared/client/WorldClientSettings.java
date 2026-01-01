@@ -5,6 +5,8 @@ import de.mhus.nimbus.shared.settings.SettingInteger;
 import de.mhus.nimbus.shared.settings.SettingString;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,25 +19,20 @@ public class WorldClientSettings {
 
     private final SSettingsService settingsService;
 
-    private SettingString playerBaseUrl;
-    private SettingString lifeBaseUrl;
-    private SettingString controlBaseUrl;
+
+    @Value("${nimbus.pod.playerBaseUrl:}")
+    private String playerBaseUrl;
+    @Value("${nimbus.pod.lifeBaseUrl:}")
+    private String lifeBaseUrl;
+    @Value("${nimbus.pod.controlBaseUrl:}")
+    private String controlBaseUrl;
+    @Value("${nimbus.pod.generatorBaseUrl:}")
+    private String generatorBaseUrl;
+
     private SettingInteger commandTimeoutMs;
 
     @PostConstruct
     private void init() {
-        playerBaseUrl = settingsService.getString(
-                "client.playerBaseUrl",
-                "http://localhost:9042"
-        );
-        lifeBaseUrl = settingsService.getString(
-                "client.lifeBaseUrl",
-                "http://localhost:9044"
-        );
-        controlBaseUrl = settingsService.getString(
-                "client.controlBaseUrl",
-                "http://localhost:9043"
-        );
         commandTimeoutMs = settingsService.getInteger(
                 "client.commandTimeoutMs",
                 5000
@@ -48,7 +45,10 @@ public class WorldClientSettings {
      * Default: http://localhost:9042
      */
     public String getPlayerBaseUrl() {
-        return playerBaseUrl.get();
+        return Strings.isBlank(playerBaseUrl) ?
+                "http://localhost:9042"
+                :
+                playerBaseUrl;
     }
 
     /**
@@ -57,7 +57,10 @@ public class WorldClientSettings {
      * Default: http://localhost:9044
      */
     public String getLifeBaseUrl() {
-        return lifeBaseUrl.get();
+        return Strings.isBlank(lifeBaseUrl) ?
+                "http://localhost:9044"
+                :
+                lifeBaseUrl;
     }
 
     /**
@@ -66,7 +69,22 @@ public class WorldClientSettings {
      * Default: http://localhost:9043
      */
     public String getControlBaseUrl() {
-        return controlBaseUrl.get();
+        return Strings.isBlank(controlBaseUrl) ?
+                "http://localhost:9043"
+                :
+                controlBaseUrl;
+    }
+
+    /**
+     * Base URL for world-control server.
+     * Example: http://world-generator:9045
+     * Default: http://localhost:9045
+     */
+    public String getGeneratorBaseUrl() {
+        return Strings.isBlank(generatorBaseUrl) ?
+                "http://localhost:9045"
+                :
+                generatorBaseUrl;
     }
 
     /**

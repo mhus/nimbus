@@ -217,6 +217,11 @@ public class ClientCommandHandler implements MessageHandler {
                         session.getWorldId().getId(), actualCommandName, args, context);
                 break;
 
+            case "world-generator":
+            case "generator":
+                future = worldClientService.sendGeneratorCommand(
+                        session.getWorldId().getId(), actualCommandName, args, context);
+                break;
             default:
                 log.error("Unknown target server: {}", targetServer);
                 if (!oneway && requestId != null) {

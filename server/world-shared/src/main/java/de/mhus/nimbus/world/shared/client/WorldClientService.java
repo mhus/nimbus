@@ -150,6 +150,26 @@ public class WorldClientService {
     }
 
     /**
+     * Send command to world-control server.
+     *
+     * @param worldId World identifier
+     * @param commandName Command name
+     * @param args Command arguments
+     * @param context Optional context
+     * @return CompletableFuture with CommandResponse
+     */
+    public CompletableFuture<CommandResponse> sendGeneratorCommand(
+            String worldId,
+            String commandName,
+            List<String> args,
+            CommandContext context) {
+
+        prepareContext(context, worldId);
+        String baseUrl = properties.getGeneratorBaseUrl();
+        return sendCommand(baseUrl, commandName, args, context, SERVER.CONTROL);
+    }
+
+    /**
      * Generic command sender.
      */
     private CompletableFuture<CommandResponse> sendCommand(
