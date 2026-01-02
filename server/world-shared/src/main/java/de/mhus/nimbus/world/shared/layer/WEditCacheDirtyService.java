@@ -322,6 +322,9 @@ public class WEditCacheDirtyService {
 
         log.debug("Merging blocks into {} models: total blocks={}", blocksByModel.size(), cachedBlocks.size());
 
+        // Track affected model IDs for terrain regeneration
+        Set<String> affectedModelIds = new HashSet<>();
+
         // Process each model group
         for (Map.Entry<String, List<WEditCache>> entry : blocksByModel.entrySet()) {
             String modelName = entry.getKey();
@@ -350,6 +353,17 @@ public class WEditCacheDirtyService {
 
             // Merge blocks into this model
             mergeBlocksIntoSingleModel(worldId, model, modelBlocks);
+
+            // Track this model for terrain regeneration
+            affectedModelIds.add(model.getId());
+        }
+
+        // Regenerate WLayerTerrain for affected models
+        if (!affectedModelIds.isEmpty()) {
+            log.info("Regenerating terrain for {} affected models: layerDataId={}", affectedModelIds.size(), layerDataId);
+            int chunksRegenerated = layerService.recreateTerrainForModels(layerDataId, affectedModelIds, true);
+            log.info("Terrain regeneration completed: layerDataId={} models={} chunks={}",
+                    layerDataId, affectedModelIds.size(), chunksRegenerated);
         }
     }
 

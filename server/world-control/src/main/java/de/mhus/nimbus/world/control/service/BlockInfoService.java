@@ -3,7 +3,6 @@ package de.mhus.nimbus.world.control.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
-import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.layer.WLayer;
@@ -263,7 +262,7 @@ public class BlockInfoService {
     private Block loadBlockFromModelLayer(String worldId, String layerDataId, WLayer layer, int x, int y, int z) {
         // Load model content
         Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
-                layerService.loadModel(layerDataId);
+                layerService.loadModelByMongoId(layerDataId);
 
         if (modelOpt.isEmpty()) {
             return null;

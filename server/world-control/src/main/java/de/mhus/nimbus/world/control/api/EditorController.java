@@ -438,7 +438,7 @@ public class EditorController extends BaseEditorController {
 
     /**
      * POST /control/editor/{worldId}/session/{sessionId}/discard
-     * Discards all overlays and deactivates edit mode.
+     * Discards cached changes for current layer and deactivates edit mode.
      */
     @PostMapping("/{worldId}/session/{sessionId}/discard")
     public ResponseEntity<?> discardOverlays(
@@ -458,7 +458,7 @@ public class EditorController extends BaseEditorController {
                 return bad("No layer selected");
             }
 
-            // 2. Discard changes (deletes cached blocks, marks chunks dirty for refresh)
+            // 2. Discard changes (deletes cached blocks for current layer, marks chunks dirty for refresh)
             long deletedCount = editService.discardChanges(worldId, sessionId);
 
             log.info("Discard changes completed: worldId={}, sessionId={}, layer={}, deleted={}",
@@ -475,6 +475,51 @@ public class EditorController extends BaseEditorController {
         } catch (Exception e) {
             log.error("Failed to discard changes: worldId={}, sessionId={}", worldId, sessionId, e);
             return bad("Failed to discard changes: " + e.getMessage());
+        }
+    }
+
+    /**
+     * POST /control/editor/{worldId}/session/{sessionId}/change
+     * Deactivates edit mode and clears layer/model selection.
+     * Preserves cached changes (WEditCache) so user can select a different layer.
+     */
+    @PostMapping("/{worldId}/session/{sessionId}/change")
+    public ResponseEntity<?> changeLayer(
+            @PathVariable String worldId,
+            @PathVariable String sessionId) {
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+        try {
+            // 1. Validate: editMode must be active
+            EditState state = editService.getEditState(worldId, sessionId);
+            if (!state.isEditMode()) {
+                return bad("Edit mode not active");
+            }
+
+            String previousLayer = state.getSelectedLayer();
+
+            // 2. Clear edit mode and layer/model selection (preserves WEditCache)
+            editService.updateEditState(worldId, sessionId, s -> {
+                s.setEditMode(false);
+                s.setSelectedLayer(null);
+                s.setSelectedModelId(null);
+            });
+
+            log.info("Change layer completed: worldId={}, sessionId={}, previousLayer={}",
+                    worldId, sessionId, previousLayer);
+
+            // 3. Return success
+            return ResponseEntity.ok().body(Map.of(
+                    "previousLayer", previousLayer != null ? previousLayer : "",
+                    "editMode", false,
+                    "message", "Edit mode deactivated, cached changes preserved"
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to change layer: worldId={}, sessionId={}", worldId, sessionId, e);
+            return bad("Failed to change layer: " + e.getMessage());
         }
     }
 

@@ -3,7 +3,6 @@ package de.mhus.nimbus.world.control.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.EditAction;
-import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
@@ -610,7 +609,7 @@ public class EditService {
             String selectedModelId = editState.getSelectedModelId();
             if (selectedModelId != null) {
                 Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
-                    layerService.loadModel(selectedModelId);
+                    layerService.loadModelByMongoId(selectedModelId);
                 if (modelOpt.isPresent()) {
                     modelName = modelOpt.get().getName();
                 }
@@ -1017,7 +1016,7 @@ public class EditService {
             if (selectedModelId != null) {
                 // Load model to get name
                 Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
-                    layerService.loadModel(selectedModelId);
+                    layerService.loadModelByMongoId(selectedModelId);
                 if (modelOpt.isPresent()) {
                     modelName = modelOpt.get().getName();
                 } else {

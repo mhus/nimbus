@@ -585,6 +585,107 @@ public class WLayerService {
     }
 
     /**
+     * Recreate WLayerTerrain for specific WLayerModels of a MODEL-based layer.
+     * Used after merging cached changes into WLayerModel to update the terrain representation.
+     *
+     * This method writes the complete affected models into WLayerTerrain:
+     * - Calculates all chunks affected by the given models
+     * - Deletes existing terrain data for those chunks
+     * - Regenerates terrain from ALL models in the layer (respecting order)
+     * - Marks chunks as dirty for client update
+     *
+     * @param layerDataId Layer data ID
+     * @param affectedModelIds Set of WLayerModel IDs that were modified
+     * @param markChunksDirty Whether to mark chunks as dirty after regeneration
+     * @return Number of chunks successfully regenerated
+     */
+    @Transactional
+    public int recreateTerrainForModels(String layerDataId, Set<String> affectedModelIds, boolean markChunksDirty) {
+        if (affectedModelIds == null || affectedModelIds.isEmpty()) {
+            log.debug("No models to regenerate terrain for: layerDataId={}", layerDataId);
+            return 0;
+        }
+
+        // Get the layer by layerDataId
+        Optional<WLayer> layerOpt = layerRepository.findByLayerDataId(layerDataId);
+        if (layerOpt.isEmpty()) {
+            log.warn("Layer not found for terrain regeneration: layerDataId={}", layerDataId);
+            return 0;
+        }
+
+        WLayer layer = layerOpt.get();
+
+        // Verify it's a MODEL layer
+        if (layer.getLayerType() != LayerType.MODEL) {
+            log.warn("Cannot regenerate terrain for non-MODEL layer: layerDataId={} type={}",
+                    layerDataId, layer.getLayerType());
+            return 0;
+        }
+
+        log.info("Starting terrain regeneration for MODEL layer: layerDataId={} affectedModels={}",
+                layerDataId, affectedModelIds.size());
+
+        // Load all WLayerModel for this layer (sorted by order)
+        List<WLayerModel> allModels = modelRepository.findByLayerDataIdOrderByOrder(layerDataId);
+
+        if (allModels.isEmpty()) {
+            log.info("No models found for terrain regeneration: layerDataId={}", layerDataId);
+            return 0;
+        }
+
+        // Calculate all chunks affected by the modified models
+        Set<String> affectedChunks = new HashSet<>();
+        for (WLayerModel model : allModels) {
+            if (affectedModelIds.contains(model.getId())) {
+                Set<String> modelChunks = calculateAffectedChunks(model);
+                affectedChunks.addAll(modelChunks);
+                log.debug("Model {} affects {} chunks", model.getName(), modelChunks.size());
+            }
+        }
+
+        if (affectedChunks.isEmpty()) {
+            log.info("No affected chunks calculated for terrain regeneration: layerDataId={}", layerDataId);
+            return 0;
+        }
+
+        log.info("Total affected chunks for terrain regeneration: {} (from {} models)",
+                affectedChunks.size(), affectedModelIds.size());
+
+        // Delete existing terrain data for affected chunks
+        for (String chunkKey : affectedChunks) {
+            try {
+                deleteTerrainChunk(layerDataId, chunkKey);
+            } catch (Exception e) {
+                log.warn("Failed to delete terrain chunk before regeneration: layerDataId={} chunkKey={}",
+                        layerDataId, chunkKey, e);
+            }
+        }
+
+        // Recreate terrain for each affected chunk (using ALL models, respecting order)
+        int chunksProcessed = 0;
+        for (String chunkKey : affectedChunks) {
+            try {
+                recreateTerrainChunk(layer.getWorldId(), allModels, layerDataId, chunkKey);
+                chunksProcessed++;
+            } catch (Exception e) {
+                log.error("Failed to recreate terrain chunk: layerDataId={} chunkKey={}",
+                        layerDataId, chunkKey, e);
+            }
+        }
+
+        log.info("Regenerated terrain for MODEL layer: layerDataId={} chunks={}/{}",
+                layerDataId, chunksProcessed, affectedChunks.size());
+
+        // Mark chunks as dirty if requested
+        if (markChunksDirty && chunksProcessed > 0) {
+            dirtyChunkService.markChunksDirty(layer.getWorldId(),
+                    new ArrayList<>(affectedChunks), "model_terrain_regenerated");
+        }
+
+        return chunksProcessed;
+    }
+
+    /**
      * Recreate a single terrain chunk from all models.
      * Models are already sorted by order.
      */
@@ -1432,10 +1533,9 @@ public class WLayerService {
      *
      * @deprecated Returns only the first model. Use getModelIds + loadModelById for new concept.
      */
-    @Deprecated
     @Transactional(readOnly = true)
-    public Optional<WLayerModel> loadModel(String layerDataId) {
-        return modelRepository.findFirstByLayerDataId(layerDataId);
+    public Optional<WLayerModel> loadModelByMongoId(String modelId) {
+        return modelRepository.findById(modelId);
     }
 
     /**

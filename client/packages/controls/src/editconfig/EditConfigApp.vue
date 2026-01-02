@@ -377,20 +377,19 @@
                   <span v-else>💾 Save to Layer</span>
                 </button>
 
+                <button @click="changeLayer"
+                        :disabled="changing"
+                        class="btn btn-warning btn-sm">
+                  <span v-if="changing" class="loading loading-spinner loading-xs"></span>
+                  <span v-else>🔄 Change Layer</span>
+                </button>
+
                 <button @click="openDiscardModal"
                         :disabled="discarding"
                         class="btn btn-error btn-sm">
                   <span v-if="discarding" class="loading loading-spinner loading-xs"></span>
-                  <span v-else>🗑️ Discard All</span>
+                  <span v-else>🗑️ Discard</span>
                 </button>
-              </div>
-
-              <!-- Layer Lock Info -->
-              <div v-if="editState.editMode" class="alert alert-warning text-xs mt-2 py-1 px-2">
-                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
-                </svg>
-                <span>Layer locked while active</span>
               </div>
             </div>
           </div>
@@ -409,21 +408,22 @@
     <!-- Discard Confirmation Modal -->
     <dialog ref="discardModal" class="modal">
       <div class="modal-box">
-        <h3 class="font-bold text-lg">⚠️ Discard All Changes?</h3>
+        <h3 class="font-bold text-lg">⚠️ Discard Changes?</h3>
         <div class="alert alert-warning my-4">
           <svg class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
           </svg>
           <div>
-            <p class="font-semibold">This will delete ALL overlay blocks!</p>
-            <p class="text-sm">This action cannot be undone.</p>
+            <p class="font-semibold">This will delete all cached changes for the current layer!</p>
+            <p class="text-sm">Layer: {{ editState.selectedLayer }}</p>
+            <p class="text-sm text-error">This action cannot be undone.</p>
           </div>
         </div>
         <div class="modal-action">
           <button @click="closeDiscardModal" class="btn btn-ghost">Cancel</button>
           <button @click="confirmDiscard" class="btn btn-error" :disabled="discarding">
             <span v-if="discarding" class="loading loading-spinner loading-xs"></span>
-            <span v-else>Discard All Changes</span>
+            <span v-else>Discard Changes</span>
           </button>
         </div>
       </div>
@@ -510,6 +510,7 @@ const discardModal = ref<HTMLDialogElement | null>(null);
 // Edit mode control state
 const activating = ref(false);
 const discarding = ref(false);
+const changing = ref(false);
 const loadingModels = ref(false);
 
 // Block Palette state
@@ -916,6 +917,30 @@ async function confirmDiscard() {
     error.value = err instanceof Error ? err.message : 'Unknown error';
   } finally {
     discarding.value = false;
+  }
+}
+
+async function changeLayer() {
+  changing.value = true;
+  error.value = null;
+
+  try {
+    const response = await fetch(
+      `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/change`,
+      { method: 'POST', credentials: 'include' }
+    );
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Change layer failed');
+    }
+
+    await fetchEditState(); // Refresh - edit mode will be false, layer/model cleared
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error';
+  } finally {
+    changing.value = false;
   }
 }
 
