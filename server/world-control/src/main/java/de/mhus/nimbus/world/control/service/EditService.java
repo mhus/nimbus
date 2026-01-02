@@ -604,6 +604,19 @@ public class EditService {
         WLayer layer = layerOpt.get();
         String layerDataId = layer.getLayerDataId();
 
+        // Determine modelName for MODEL layers
+        String modelName = null;
+        if (layer.getLayerType() == de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+            String selectedModelId = editState.getSelectedModelId();
+            if (selectedModelId != null) {
+                Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
+                    layerService.loadModel(selectedModelId);
+                if (modelOpt.isPresent()) {
+                    modelName = modelOpt.get().getName();
+                }
+            }
+        }
+
         // Calculate chunk coordinates
         de.mhus.nimbus.world.shared.world.WWorld world = worldService.getByWorldId(worldId)
                 .orElseThrow(() -> new IllegalStateException("World not found: " + worldId));
@@ -618,8 +631,8 @@ public class EditService {
                         .block(pastedBlock)
                         .build();
 
-        // Save to WEditCache
-        editCacheService.setBlock(worldId, layerDataId, x, z, chunk, layerBlock);
+        // Save to WEditCache with modelName
+        editCacheService.setBlock(worldId, layerDataId, modelName, x, z, chunk, layerBlock);
 
         log.debug("Saved block to WEditCache: session={} layer={} pos=({},{},{}) chunk={}",
                 sessionId, layer.getName(), x, y, z, chunk);
@@ -994,7 +1007,26 @@ public class EditService {
             return false;
         }
 
-        String layerDataId = layerOpt.get().getLayerDataId();
+        WLayer layer = layerOpt.get();
+        String layerDataId = layer.getLayerDataId();
+
+        // Determine modelName for MODEL layers
+        String modelName = null;
+        if (layer.getLayerType() == de.mhus.nimbus.world.shared.layer.LayerType.MODEL) {
+            String selectedModelId = editState.getSelectedModelId();
+            if (selectedModelId != null) {
+                // Load model to get name
+                Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
+                    layerService.loadModel(selectedModelId);
+                if (modelOpt.isPresent()) {
+                    modelName = modelOpt.get().getName();
+                } else {
+                    log.warn("Selected model not found: modelId={}, using null", selectedModelId);
+                }
+            } else {
+                log.warn("MODEL layer selected but no selectedModelId in edit state, using null");
+            }
+        }
 
         // Get world and calculate chunk key
         var world = worldService.getByWorldId(worldId)
@@ -1008,9 +1040,9 @@ public class EditService {
                 .group(0)
                 .build();
 
-        // Save to WEditCache
+        // Save to WEditCache with modelName
         try {
-            editCacheService.setBlock(worldId, layerDataId, x, z, chunkKey, layerBlock);
+            editCacheService.setBlock(worldId, layerDataId, modelName, x, z, chunkKey, layerBlock);
         } catch (Exception e) {
             log.error("Failed to save block to edit cache: worldId={}, pos=({},{},{})",
                     worldId, x, y, z, e);

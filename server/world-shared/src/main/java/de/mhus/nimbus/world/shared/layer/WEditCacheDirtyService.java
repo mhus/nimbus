@@ -206,12 +206,15 @@ public class WEditCacheDirtyService {
         WLayer layer = layerOpt.get();
         String layerName = layer.getName();
 
-        // Write blocks to WLayerModel (only for MODEL type layers)
+        // Write blocks based on layer type
         if (layer.getLayerType() == LayerType.MODEL) {
             mergeBlocksIntoLayerModel(worldId, layerDataId, cachedBlocks);
             log.info("Merged {} blocks into WLayerModel for layerDataId={}", cachedBlocks.size(), layerDataId);
+        } else if (layer.getLayerType() == LayerType.GROUND) {
+            mergeBlocksIntoLayerTerrain(worldId, layerDataId, cachedBlocks);
+            log.info("Merged {} blocks into WLayerTerrain for layerDataId={}", cachedBlocks.size(), layerDataId);
         } else {
-            log.info("Layer type is {}, skipping WLayerModel merge", layer.getLayerType());
+            log.warn("Unknown layer type {}, cannot merge blocks", layer.getLayerType());
         }
 
         // Delete cached blocks after successful merge
@@ -297,6 +300,7 @@ public class WEditCacheDirtyService {
      * Merge cached blocks into WLayerModel.
      * Transforms world coordinates to layer-relative coordinates (with inverse rotation).
      * Merges blocks into existing WLayerModel content.
+     * Groups blocks by modelName and merges them into the corresponding models.
      *
      * @param worldId World identifier
      * @param layerDataId Layer data identifier
@@ -311,13 +315,53 @@ public class WEditCacheDirtyService {
             return;
         }
 
-        // For now, we only support single-model layers
-        // Multi-model support would require determining which model each block belongs to
-        if (models.size() > 1) {
-            log.warn("Layer has multiple models ({}), using first model for merge", models.size());
-        }
+        // Group cached blocks by modelName
+        Map<String, List<WEditCache>> blocksByModel = cachedBlocks.stream()
+                .collect(Collectors.groupingBy(cache ->
+                    cache.getModelName() != null ? cache.getModelName() : ""));
 
-        WLayerModel model = models.get(0);
+        log.debug("Merging blocks into {} models: total blocks={}", blocksByModel.size(), cachedBlocks.size());
+
+        // Process each model group
+        for (Map.Entry<String, List<WEditCache>> entry : blocksByModel.entrySet()) {
+            String modelName = entry.getKey();
+            List<WEditCache> modelBlocks = entry.getValue();
+
+            // Find model by name
+            WLayerModel model = null;
+            if (modelName.isEmpty()) {
+                // Blocks without modelName - use first model as fallback
+                log.warn("Found {} blocks without modelName, using first model as fallback", modelBlocks.size());
+                model = models.get(0);
+            } else {
+                // Find model by name
+                for (WLayerModel m : models) {
+                    if (modelName.equals(m.getName())) {
+                        model = m;
+                        break;
+                    }
+                }
+
+                if (model == null) {
+                    log.error("Model not found for name '{}', skipping {} blocks", modelName, modelBlocks.size());
+                    continue;
+                }
+            }
+
+            // Merge blocks into this model
+            mergeBlocksIntoSingleModel(worldId, model, modelBlocks);
+        }
+    }
+
+    /**
+     * Merge cached blocks into a single WLayerModel.
+     *
+     * @param worldId World identifier
+     * @param model Target model
+     * @param cachedBlocks Blocks to merge
+     */
+    private void mergeBlocksIntoSingleModel(String worldId, WLayerModel model, List<WEditCache> cachedBlocks) {
+        WLayerModel finalModel = model;
         log.debug("Merging blocks into model: modelId={}, mountPoint=({},{},{}), rotation={}",
                 model.getId(), model.getMountX(), model.getMountY(), model.getMountZ(), model.getRotation());
 
@@ -472,5 +516,105 @@ public class WEditCacheDirtyService {
         cloned.setSource(original.getSource());
 
         return cloned;
+    }
+
+    /**
+     * Merge cached blocks into WLayerTerrain (for GROUND type layers).
+     * Groups blocks by chunk and merges them into existing terrain chunk data.
+     *
+     * @param worldId World identifier
+     * @param layerDataId Layer data identifier
+     * @param cachedBlocks List of cached blocks to merge
+     */
+    private void mergeBlocksIntoLayerTerrain(String worldId, String layerDataId, List<WEditCache> cachedBlocks) {
+        // Group cached blocks by chunk
+        Map<String, List<WEditCache>> blocksByChunk = cachedBlocks.stream()
+                .collect(Collectors.groupingBy(WEditCache::getChunk));
+
+        log.debug("Merging blocks into terrain: chunks={}, totalBlocks={}",
+                blocksByChunk.size(), cachedBlocks.size());
+
+        int chunksProcessed = 0;
+        int blocksAdded = 0;
+        int blocksUpdated = 0;
+        int blocksRemoved = 0;
+
+        for (Map.Entry<String, List<WEditCache>> entry : blocksByChunk.entrySet()) {
+            String chunkKey = entry.getKey();
+            List<WEditCache> chunkBlocks = entry.getValue();
+
+            // Load existing terrain chunk data
+            Optional<LayerChunkData> chunkDataOpt = layerService.loadTerrainChunk(layerDataId, chunkKey);
+
+            LayerChunkData chunkData;
+            if (chunkDataOpt.isPresent()) {
+                chunkData = chunkDataOpt.get();
+            } else {
+                // Create new chunk data if not exists
+                chunkData = new LayerChunkData();
+                chunkData.setBlocks(new ArrayList<>());
+            }
+
+            // Build position index of existing blocks
+            List<LayerBlock> blocks = chunkData.getBlocks();
+            if (blocks == null) {
+                blocks = new ArrayList<>();
+                chunkData.setBlocks(blocks);
+            }
+
+            Map<String, LayerBlock> blockIndex = new HashMap<>();
+            for (LayerBlock layerBlock : blocks) {
+                if (layerBlock.getBlock() != null && layerBlock.getBlock().getPosition() != null) {
+                    de.mhus.nimbus.generated.types.Vector3Int pos = layerBlock.getBlock().getPosition();
+                    String posKey = pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
+                    blockIndex.put(posKey, layerBlock);
+                }
+            }
+
+            // Merge cached blocks into chunk
+            for (WEditCache cache : chunkBlocks) {
+                de.mhus.nimbus.generated.types.Block block = cache.getBlock().getBlock();
+                de.mhus.nimbus.generated.types.Vector3Int pos = block.getPosition();
+                String posKey = pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
+
+                // Check if block is AIR (removal)
+                boolean isAir = de.mhus.nimbus.world.shared.world.BlockUtil.isAirType(block.getBlockTypeId());
+
+                if (isAir) {
+                    // Remove block if exists
+                    if (blockIndex.remove(posKey) != null) {
+                        blocksRemoved++;
+                        log.trace("Removed block at {}", posKey);
+                    }
+                } else {
+                    // Add or update block
+                    LayerBlock layerBlock = LayerBlock.builder()
+                            .block(block)
+                            .group(cache.getBlock().getGroup())
+                            .metadata(cache.getBlock().getMetadata())
+                            .build();
+
+                    if (blockIndex.containsKey(posKey)) {
+                        blocksUpdated++;
+                    } else {
+                        blocksAdded++;
+                    }
+                    blockIndex.put(posKey, layerBlock);
+                }
+            }
+
+            // Rebuild block list from index
+            List<LayerBlock> newBlocks = new ArrayList<>(blockIndex.values());
+            chunkData.setBlocks(newBlocks);
+
+            // Save terrain chunk data
+            layerService.saveTerrainChunk(worldId, layerDataId, chunkKey, chunkData);
+            chunksProcessed++;
+
+            log.trace("Merged chunk {}: blocks={}", chunkKey, newBlocks.size());
+        }
+
+        log.info("Merged blocks into terrain: layerDataId={}, chunks={}, added={}, updated={}, removed={}",
+                layerDataId, chunksProcessed, blocksAdded, blocksUpdated, blocksRemoved);
     }
 }

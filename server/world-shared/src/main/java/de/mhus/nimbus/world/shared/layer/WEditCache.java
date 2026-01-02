@@ -63,6 +63,12 @@ public class WEditCache implements Identifiable {
     private String layerDataId;
 
     /**
+     * Model name - references WLayerModel.name.
+     * Only set for MODEL type layers, null for GROUND layers.
+     */
+    private String modelName;
+
+    /**
      * Block data with layer-specific properties.
      */
     private LayerBlock block;

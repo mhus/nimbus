@@ -85,6 +85,7 @@ public class WEditCacheService {
      *
      * @param worldId World identifier
      * @param layerDataId Layer data identifier
+     * @param modelName Model name (null for GROUND layers)
      * @param x X coordinate
      * @param z Z coordinate
      * @param chunk Chunk identifier
@@ -92,7 +93,7 @@ public class WEditCacheService {
      * @return Saved cache entry
      */
     @Transactional
-    public WEditCache setBlock(String worldId, String layerDataId, int x, int z, String chunk, LayerBlock block) {
+    public WEditCache setBlock(String worldId, String layerDataId, String modelName, int x, int z, String chunk, LayerBlock block) {
         List<WEditCache> existing = repository.findByWorldIdAndLayerDataIdAndXAndZ(worldId, layerDataId, x, z);
 
         WEditCache cache;
@@ -101,22 +102,24 @@ public class WEditCacheService {
             cache = WEditCache.builder()
                     .worldId(worldId)
                     .layerDataId(layerDataId)
+                    .modelName(modelName)
                     .x(x)
                     .z(z)
                     .chunk(chunk)
                     .block(block)
                     .build();
             cache.touchCreate();
-            log.debug("Creating new cache entry: worldId={}, layerDataId={}, x={}, z={}, chunk={}",
-                    worldId, layerDataId, x, z, chunk);
+            log.debug("Creating new cache entry: worldId={}, layerDataId={}, modelName={}, x={}, z={}, chunk={}",
+                    worldId, layerDataId, modelName, x, z, chunk);
         } else {
             // Update existing entry (first one)
             cache = existing.get(0);
             cache.setBlock(block);
             cache.setChunk(chunk); // Update chunk in case it changed
+            cache.setModelName(modelName); // Update modelName in case it changed
             cache.touchUpdate();
-            log.debug("Updating existing cache entry: id={}, worldId={}, layerDataId={}, x={}, z={}, chunk={}",
-                    cache.getId(), worldId, layerDataId, x, z, chunk);
+            log.debug("Updating existing cache entry: id={}, worldId={}, layerDataId={}, modelName={}, x={}, z={}, chunk={}",
+                    cache.getId(), worldId, layerDataId, modelName, x, z, chunk);
 
             // Delete duplicates if any
             if (existing.size() > 1) {
