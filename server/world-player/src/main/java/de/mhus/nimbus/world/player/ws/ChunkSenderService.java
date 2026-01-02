@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
-import de.mhus.nimbus.world.player.service.EditModeService;
 import de.mhus.nimbus.world.player.service.ExecutionService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.shared.layer.WEditCache;
@@ -38,7 +37,6 @@ public class ChunkSenderService {
 
     private final WChunkService chunkService;
     private final WEditCacheService editCacheService;
-    private final EditModeService editModeService;
     private final ExecutionService executionService;
     private final ObjectMapper objectMapper;
 

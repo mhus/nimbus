@@ -45,7 +45,6 @@ public class EditorController extends BaseEditorController {
     private final EditService editService;
     private final WLayerService layerService;
     private final de.mhus.nimbus.world.control.service.BlockUpdateService blockUpdateService;
-    private final de.mhus.nimbus.world.shared.overlay.BlockOverlayService blockOverlayService;
     private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
     private final WorldRedisService redisService;
     private final WSessionService wSessionService;
@@ -312,21 +311,14 @@ public class EditorController extends BaseEditorController {
                 return bad("Block must have position");
             }
 
-            // Save complete block to Redis overlay
-            String blockJson = blockOverlayService.saveBlockOverlay(worldId, sessionId, block);
-
-            if (blockJson == null) {
-                return bad("Failed to save block overlay");
-            }
-
-            // Send block update to client
+            // Save block to WEditCache
             int x = (int) block.getPosition().getX();
             int y = (int) block.getPosition().getY();
             int z = (int) block.getPosition().getZ();
 
-            boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, null);
-            if (!sent) {
-                log.warn("Failed to send block update to client: session={}", sessionId);
+            boolean success = editService.updateBlock(state, sessionId, x, y, z, block);
+            if (!success) {
+                return bad("Failed to save block to edit cache");
             }
 
             // Mark chunk as dirty for later commit

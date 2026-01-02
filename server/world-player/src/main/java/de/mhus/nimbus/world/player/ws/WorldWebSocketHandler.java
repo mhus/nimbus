@@ -23,7 +23,6 @@ public class WorldWebSocketHandler extends TextWebSocketHandler {
     private final WebSocketSessionTracker tracker;
     private final SessionManager sessionManager;
     private final MessageRouter messageRouter;
-    private final de.mhus.nimbus.world.player.service.EditModeService editModeService;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
@@ -67,12 +66,6 @@ public class WorldWebSocketHandler extends TextWebSocketHandler {
         // Get player session BEFORE removal
         PlayerSession playerSession = sessionManager.getByWebSocketId(webSocketSession.getId())
                 .orElse(null);
-
-        // Cleanup overlays if session was in edit mode
-        if (playerSession != null && playerSession.isEditMode()) {
-            editModeService.cleanupOverlaysAsync(playerSession);
-        }
-
         // Mark session as deprecated first (allows reconnect with same sessionId)
         sessionManager.deprecateSession(webSocketSession.getId());
 

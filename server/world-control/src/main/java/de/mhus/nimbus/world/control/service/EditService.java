@@ -50,7 +50,6 @@ public class EditService {
     private final BlockInfoService blockInfoService;
     private final WWorldService worldService;
     private final ObjectMapper objectMapper;
-    private final de.mhus.nimbus.world.shared.overlay.BlockOverlayService blockOverlayService;
     private final BlockUpdateService blockUpdateService;
     private final de.mhus.nimbus.world.shared.layer.WEditCacheService editCacheService;
     private final de.mhus.nimbus.world.shared.layer.WEditCacheDirtyService editCacheDirtyService;
@@ -923,16 +922,52 @@ public class EditService {
                     .build());
         }
 
-        // Save to overlay using BlockOverlayService
-        String blockJson = blockOverlayService.saveBlockOverlay(worldId, sessionId, block);
+        // Get layerDataId from selected layer
+        String selectedLayer = editState.getSelectedLayer();
+        if (selectedLayer == null) {
+            log.error("No layer selected in edit state: worldId={}, sessionId={}", worldId, sessionId);
+            return false;
+        }
 
-        if (blockJson == null) {
-            log.error("Failed to save block to overlay: worldId={}, pos=({},{},{})",
-                    worldId, x, y, z);
+        Optional<WLayer> layerOpt = layerService.findLayer(worldId, selectedLayer);
+        if (layerOpt.isEmpty()) {
+            log.error("Selected layer not found: worldId={}, layer={}", worldId, selectedLayer);
+            return false;
+        }
+
+        String layerDataId = layerOpt.get().getLayerDataId();
+
+        // Calculate chunk coordinates and key
+        int chunkX = (int) Math.floor((double) x / 16);
+        int chunkZ = (int) Math.floor((double) z / 16);
+        String chunkKey = chunkX + ":" + chunkZ;
+
+        // Create LayerBlock wrapper
+        de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock =
+            de.mhus.nimbus.world.shared.layer.LayerBlock.builder()
+                .block(block)
+                .group(0)
+                .build();
+
+        // Save to WEditCache
+        try {
+            editCacheService.setBlock(worldId, layerDataId, x, z, chunkKey, layerBlock);
+        } catch (Exception e) {
+            log.error("Failed to save block to edit cache: worldId={}, pos=({},{},{})",
+                    worldId, x, y, z, e);
             return false;
         }
 
         // Send update to client
+        String blockJson;
+        try {
+            blockJson = objectMapper.writeValueAsString(block);
+        } catch (Exception e) {
+            log.error("Failed to serialize block: worldId={}, pos=({},{},{})",
+                    worldId, x, y, z, e);
+            return false;
+        }
+
         boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, null);
         if (!sent) {
             log.warn("Failed to send block update to client: session={}, pos=({},{},{})",

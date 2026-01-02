@@ -130,7 +130,7 @@
   - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Funktionalität in WEditCacheService.applyChanges() implementieren
   - Nur noch ein Eintrag in WEditCacheDirty machen
-[ ] Umstellen der 'discard changes' Mechanik - oder entfernen
+[?] Umstellen der 'discard changes' Mechanik - oder entfernen
   - siehe EditService
   - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Funktionalität in WEditCacheService.discardChanges() implementieren
@@ -138,7 +138,7 @@
   - Löschen aller einträge mit worldId + layerDataId
   - Für alle chunks ein Update senden (funktion gibt es schon) an die world-player dmait clients das overlay wieder entfernen
 
-[ ] Aufräumen (obsolate code entfernen): 
+[x] Aufräumen (obsolate code entfernen): 
   - Explizietes Edit Mode Flag an WebSocket Session kann weg
   - Overlay in redis entfernen (BlockOverlayService)
   - In PlayerSession isEditModer() weg

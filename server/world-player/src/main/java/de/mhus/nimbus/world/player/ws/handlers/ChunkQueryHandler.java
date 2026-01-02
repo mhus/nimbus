@@ -26,7 +26,6 @@ public class ChunkQueryHandler implements MessageHandler {
 
     private final ObjectMapper objectMapper;
     private final WChunkService chunkService;
-    private final de.mhus.nimbus.world.player.service.EditModeService editModeService;
 
     @Override
     public String getMessageType() {
@@ -67,16 +66,6 @@ public class ChunkQueryHandler implements MessageHandler {
             }
 
             var chunk = chunkOpt.get();
-
-            // Handle edit mode overlays (requires loading ChunkData)
-            if (session.isEditMode()) {
-                var chunkData = chunkService.loadChunkData(session.getWorldId(), chunkKey, false);
-                if (chunkData.isPresent()) {
-                    editModeService.applyOverlays(session, chunkData.get());
-                    // Save modified chunk and update entity
-                    chunk = chunkService.saveChunk(session.getWorldId(), chunkKey, chunkData.get());
-                }
-            }
 
             // Convert to transfer object (uses compressed storage if available)
             ChunkDataTransferObject dto = chunkService.toTransferObject(session.getWorldId(), chunk);

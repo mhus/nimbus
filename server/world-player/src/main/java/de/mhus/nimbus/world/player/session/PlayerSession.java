@@ -60,11 +60,6 @@ public class PlayerSession {
     private int pingInterval = 30;
 
     /**
-     * Edit mode flag - when true, session sees overlay blocks from Redis.
-     */
-    private boolean editMode = false;
-
-    /**
      * Entity position tracking for pathway generation.
      */
     private Vector3 lastPosition;
