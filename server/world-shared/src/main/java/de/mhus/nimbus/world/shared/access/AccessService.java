@@ -262,7 +262,7 @@ public class AccessService {
         PlayerId playerId = PlayerId.of(request.getUserId(), request.getCharacterId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid userId or characterId"));
 
-        WSession session = sessionService.create(worldId, playerId);
+        WSession session = sessionService.create(worldId, playerId, String.valueOf(request.getActor()));
 
         // Create JWT token
         String token = createSessionToken(

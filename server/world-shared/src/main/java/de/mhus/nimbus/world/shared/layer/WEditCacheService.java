@@ -199,4 +199,9 @@ public class WEditCacheService {
 
         return Optional.of(results.get(0));
     }
+
+    @Transactional(readOnly = true)
+    public boolean existsByWorldIdAndChunk(String id, String chunkKey) {
+        return repository.existsByWorldIdAndChunk(id, chunkKey);
+    }
 }

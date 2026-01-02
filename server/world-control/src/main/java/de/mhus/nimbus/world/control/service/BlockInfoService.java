@@ -41,6 +41,7 @@ public class BlockInfoService {
     private final WorldRedisService redisService;
     private final ObjectMapper objectMapper;
     private final WWorldService worldService;
+    private final de.mhus.nimbus.world.shared.layer.WEditCacheService editCacheService;
 
     /**
      * Load block info with layer metadata.
@@ -79,13 +80,21 @@ public class BlockInfoService {
         if (editMode && layerName != null && !layerName.isBlank()) {
             // EDIT MODE with selected layer
 
-            // 1. Check Redis overlay first
-            block = loadBlockFromRedisOverlay(worldId, sessionId, x, y, z);
+            // Get layerDataId for WEditCache lookup
+            Optional<WLayer> layerOpt = layerService.findLayer(worldId, layerName);
+            String layerDataId = layerOpt.map(WLayer::getLayerDataId).orElse(null);
 
-            if (block != null) {
-                log.debug("Loaded block from Redis overlay: pos=({},{},{})", x, y, z);
-                readOnly = false;
-            } else {
+            if (layerDataId != null) {
+                // 1. Check WEditCache first (edited but not committed)
+                block = loadBlockFromEditCache(worldId, layerDataId, x, y, z);
+
+                if (block != null) {
+                    log.debug("Loaded block from WEditCache: pos=({},{},{})", x, y, z);
+                    readOnly = false;
+                }
+            }
+
+            if (block == null) {
                 // 2. Load from selected layer
                 block = loadBlockFromLayer(worldId, layerName, x, y, z);
                 if (block != null) {
@@ -93,7 +102,6 @@ public class BlockInfoService {
                     readOnly = false;
 
                     // Get group name from WLayerModel (groups are now in model, not layer)
-                    Optional<WLayer> layerOpt = layerService.findLayer(worldId, layerName);
                     if (layerOpt.isPresent() && group != null && group > 0) {
                         WLayer layer = layerOpt.get();
                         // For MODEL layers, would need to load WLayerModel to get groups
@@ -128,44 +136,50 @@ public class BlockInfoService {
     }
 
     /**
-     * Load block from Redis overlay (edited but not committed).
+     * Load block from WEditCache (edited but not committed).
+     *
+     * @param worldId World identifier
+     * @param layerDataId Layer data identifier
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @param z Z coordinate
+     * @return Block from WEditCache or null if not found
      */
-    private Block loadBlockFromRedisOverlay(String worldId, String sessionId, int x, int y, int z) {
-        // Get world for chunk calculation
-        WWorld world = worldService.getByWorldId(worldId).orElse(null);
-        if (world == null) {
-            log.warn("World not found for overlay lookup: {}", worldId);
-            return null;
-        }
-
-        int cx = world.getChunkX(x);
-        int cz = world.getChunkZ(z);
-
-        // Get overlay blocks from Redis Hash (not String value!)
-        Map<Object, Object> overlays = redisService.getOverlayBlocks(worldId, sessionId, cx, cz);
-        if (overlays == null || overlays.isEmpty()) {
-            return null;
-        }
-
-        // Find block at specific position
-        String positionKey = x + ":" + y + ":" + z;
-        Object blockJsonObj = overlays.get(positionKey);
-
-        if (blockJsonObj == null) {
-            return null;
-        }
-
+    private Block loadBlockFromEditCache(String worldId, String layerDataId, int x, int y, int z) {
         try {
-            // Parse block JSON
-            String blockJson = blockJsonObj.toString();
-            Block block = objectMapper.readValue(blockJson, Block.class);
+            // Query WEditCache for this position
+            Optional<de.mhus.nimbus.world.shared.layer.WEditCache> cacheOpt =
+                    editCacheService.findByCoordinates(worldId, layerDataId, x, z);
 
-            log.debug("Found block in Redis overlay: pos=({},{},{}) blockTypeId={}",
+            if (cacheOpt.isEmpty()) {
+                return null;
+            }
+
+            de.mhus.nimbus.world.shared.layer.WEditCache cache = cacheOpt.get();
+            de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock = cache.getBlock();
+
+            if (layerBlock == null || layerBlock.getBlock() == null) {
+                log.warn("WEditCache entry has no block data: worldId={} layerDataId={} pos=({},{},{})",
+                        worldId, layerDataId, x, y, z);
+                return null;
+            }
+
+            Block block = layerBlock.getBlock();
+
+            // Verify Y coordinate matches (WEditCache uses X,Z as key, but block has full position)
+            if (block.getPosition() != null && block.getPosition().getY() != y) {
+                log.debug("WEditCache block Y coordinate mismatch: expected={} actual={}",
+                        y, block.getPosition().getY());
+                return null;
+            }
+
+            log.debug("Found block in WEditCache: pos=({},{},{}) blockTypeId={}",
                     x, y, z, block.getBlockTypeId());
             return block;
 
         } catch (Exception e) {
-            log.warn("Failed to parse overlay block at pos ({},{},{}): {}", x, y, z, e.getMessage());
+            log.warn("Failed to load block from WEditCache at pos ({},{},{}): {}",
+                    x, y, z, e.getMessage());
             return null;
         }
     }

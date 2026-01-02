@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.ChunkData;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.service.ExecutionService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.shared.layer.WEditCache;
@@ -91,22 +92,28 @@ public class ChunkSenderService {
 
                 var chunk = chunkOpt.get();
 
-                // Handle EDITOR overlays from WEditCache (requires loading ChunkData)
-                if (session.isEditActor()) {
-                    var chunkData = chunkService.loadChunkData(session.getWorldId(), chunkKey, false);
-                    if (chunkData.isPresent()) {
-                        // Apply WEditCache overlays (decompresses, merges, sets c=null)
-                        applyWEditCacheOverlays(session.getWorldId().getId(), chunkData.get());
-                        // Save modified chunk and update entity
-                        chunk = chunkService.saveChunk(session.getWorldId(), chunkKey, chunkData.get());
-                    }
-                }
-
                 // Convert to transfer object (uses compressed storage if available)
                 ChunkDataTransferObject dto = chunkService.toTransferObject(session.getWorldId(), chunk);
                 if (dto == null) {
                     log.warn("Failed to convert chunk to transfer object: chunkKey={}", chunkKey);
                     continue;
+                }
+
+                // Handle EDITOR overlays from WEditCache (requires loading ChunkData)
+                if (session.isEditActor() && hasOverlayData(session.getWorldId(), chunkKey)) {
+                    var chunkDataOpt = chunkService.loadChunkData(session.getWorldId(), chunkKey, false); // laod 2 times ... hmm
+                    if (chunkDataOpt.isPresent()) {
+                        var chunkData = chunkDataOpt.get();
+                        // Apply WEditCache overlays (decompresses, merges, sets c=null)
+                        applyWEditCacheOverlays(session.getWorldId().getId(), chunkData);
+                        // send as JSON (uncompressed)
+                        dto.setBackdrop(chunkService.convertBackdrop(chunkData.getBackdrop()));
+                        dto.setB(chunkData.getBlocks());
+                        dto.setH(chunkData.getHeightData());
+                        dto.setC(null);
+                        responseChunks.add(objectMapper.valueToTree(dto));
+                        continue;
+                    }
                 }
 
                 // Send as binary frame if compressed, otherwise add to JSON array
@@ -144,6 +151,10 @@ public class ChunkSenderService {
             log.error("Error sending chunks to session={}", session.getWebSocketSession().getId(), e);
             throw new RuntimeException("Failed to send chunks", e);
         }
+    }
+
+    private boolean hasOverlayData(WorldId worldId, String chunkKey) {
+        return editCacheService.existsByWorldIdAndChunk(worldId.getId(), chunkKey);
     }
 
     /**

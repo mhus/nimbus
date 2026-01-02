@@ -143,7 +143,7 @@
   - Overlay in redis entfernen (BlockOverlayService)
   - In PlayerSession isEditModer() weg
 
-[ ] Einen editcache-editor.html anlegen in ../client/packages/controls
+[?] Einen editcache-editor.html anlegen in ../client/packages/controls
   - Auswahl der Welt via world-selector im header
   - Liste aller WLayer für die es einträge gibt + anzahl Einträge (Blocks)
   - Erstes Block Datum
@@ -153,3 +153,7 @@
   - Keine weiteren Editier möglichkeiten benötigt!
   - Eintrag in HomeApp anlegen
 
+[ ] Wenn der block editor vie EditorService den Block aus dem aktuell bearbeiteten Layer holt, soll
+das Overlay aus WEditCache geprueft werden. Prüfen ob für diese X y z stelle und den layerDataId ein eintrag in WEditCache existiert,
+wenn ja, diesen zurück geben, sonst wie vorher.
+- Siehe auch EditService

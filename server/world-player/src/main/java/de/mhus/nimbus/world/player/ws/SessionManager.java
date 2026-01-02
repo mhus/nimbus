@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Synchronizes sessions with Redis via WSessionService.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class SessionManager {
 
@@ -35,7 +34,20 @@ public class SessionManager {
 
     @Autowired
     @Lazy
+    private de.mhus.nimbus.world.player.ws.redis.ChunkUpdateBroadcastListener chunkUpdateListener;
+
+    @Autowired
+    @Lazy
+    private de.mhus.nimbus.world.player.ws.redis.BlockUpdateBroadcastListener blockUpdateListener;
+
+    @Autowired
+    @Lazy
     private List<SessionClosedConsumer> sessionClosedConsumers;
+
+    public SessionManager(WSessionService wSessionService, LocationService locationService) {
+        this.wSessionService = wSessionService;
+        this.locationService = locationService;
+    }
 
     private final Map<String, PlayerSession> sessionsByWebSocketId = new ConcurrentHashMap<>();
     private final Map<String, PlayerSession> sessionsBySessionId = new ConcurrentHashMap<>();
@@ -195,7 +207,7 @@ public class SessionManager {
         return sessionsByWebSocketId.size();
     }
 
-    public void authenticateSession(PlayerSession session, String worldSessionId, WorldId worldId, PlayerData playerData, ClientType clientType) {
+    public void authenticateSession(PlayerSession session, String worldSessionId, WorldId worldId, PlayerData playerData, ClientType clientType, String actor) {
         var worldSessionX = wSessionService.get(worldSessionId);
         if (worldSessionX.isEmpty()) {
             log.warn("WSession not found for authentication: sessionId={}", worldSessionId);
@@ -215,6 +227,7 @@ public class SessionManager {
             return;
         }
         session.setPlayer(playerData);
+        session.setActor(actor);
         session.setTitle(playerData.character().getPublicData().getTitle());
         session.setWorldId(worldId);
         session.setClientType(clientType);
@@ -226,6 +239,14 @@ public class SessionManager {
         wSessionService.updatePlayerUrl(worldSessionId, locationService.getInternalServerUrl());
 
         sessionsBySessionId.put(worldSessionId, session);
+
+        // Subscribe to Redis broadcasts for this world (once per world, thread-safe)
+        // Only after authentication, when session is RUNNING
+        chunkUpdateListener.subscribeToWorld(worldId.getId());
+        blockUpdateListener.subscribeToWorld(worldId.getId());
+
+        log.debug("Session authenticated and subscribed to broadcasts: sessionId={}, worldId={}, actor={}",
+                worldSessionId, worldId.getId(), actor);
 
     }
 }

@@ -15,7 +15,6 @@ import java.util.List;
 @Slf4j
 public class InsertBlockCommand implements Command {
 
-    private final CommitLayerCommand commitCommand;
     private final EditService editService;
 
     @Override

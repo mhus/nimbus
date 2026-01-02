@@ -68,4 +68,12 @@ public interface WEditCacheRepository extends MongoRepository<WEditCache, String
      * @return Number of cached blocks
      */
     long countByWorldIdAndLayerDataId(String worldId, String layerDataId);
+
+    /**
+     * Check existence of cached blocks for a specific world and chunk.
+     * @param id
+     * @param chunkKey
+     * @return
+     */
+    boolean existsByWorldIdAndChunk(String id, String chunkKey);
 }

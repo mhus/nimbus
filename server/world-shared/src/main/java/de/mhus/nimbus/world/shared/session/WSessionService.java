@@ -26,6 +26,7 @@ public class WSessionService {
     private static final String FIELD_STATUS = "status";
     private static final String FIELD_WORLD = "world";
     private static final String FIELD_USER = "user";
+    private static final String FIELD_ACTOR = "actor";
     private static final String FIELD_PLAYER_URL = "playerUrl";
     private static final String FIELD_CREATED = "created";
     private static final String FIELD_UPDATED = "updated";
@@ -35,7 +36,7 @@ public class WSessionService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int ID_LENGTH = 60;
 
-    public WSession create(WorldId worldId, PlayerId playerId) {
+    public WSession create(WorldId worldId, PlayerId playerId, String actor) {
         String id = randomId();
         Instant now = Instant.now();
         Duration effectiveTtl = Duration.ofMinutes(props.getWaitingMinutes());
@@ -45,6 +46,7 @@ public class WSessionService {
                 .status(WSessionStatus.WAITING)
                 .worldId(worldId.getId())
                 .playerId(playerId.getId())
+                .actor(actor)
                 .createdAt(now)
                 .updatedAt(now)
                 .expireAt(expire)
@@ -65,6 +67,7 @@ public class WSessionService {
                     .worldId((String) map.get(FIELD_WORLD))
                     .playerId((String) map.get(FIELD_USER))
                     .playerUrl((String) map.get(FIELD_PLAYER_URL))
+                    .actor((String) map.get(FIELD_ACTOR))
                     .createdAt(Instant.parse((String) map.get(FIELD_CREATED)))
                     .updatedAt(Instant.parse((String) map.get(FIELD_UPDATED)))
                     .expireAt(Instant.parse((String) map.get(FIELD_EXPIRE)))
@@ -133,6 +136,7 @@ public class WSessionService {
         if (session.getPlayerUrl() != null) {
             ops.put(k, FIELD_PLAYER_URL, session.getPlayerUrl());
         }
+        ops.put(k, FIELD_ACTOR, session.getActor());
         ops.put(k, FIELD_CREATED, session.getCreatedAt().toString());
         ops.put(k, FIELD_UPDATED, session.getUpdatedAt().toString());
         ops.put(k, FIELD_EXPIRE, session.getExpireAt().toString());

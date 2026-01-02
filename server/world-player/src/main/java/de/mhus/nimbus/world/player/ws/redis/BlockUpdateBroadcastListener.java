@@ -136,13 +136,6 @@ public class BlockUpdateBroadcastListener {
                 // Skip if different world
                 if (session.getWorldId() == null || !worldId.equals(session.getWorldId().getId())) continue;
 
-                // Skip if originating session (avoid echo)
-                if (broadcast.getOriginatingSessionId() != null
-                    && broadcast.getOriginatingSessionId().equals(session.getSessionId())) {
-                    log.trace("Skipping originating session: {}", session.getSessionId());
-                    continue;
-                }
-
                 // Filter by audience: EDITOR only?
                 if (editorOnly && !"EDITOR".equals(session.getActor())) {
                     log.trace("Skipping non-editor session: {} (actor={})",
@@ -159,7 +152,7 @@ public class BlockUpdateBroadcastListener {
                     }
                 }
 
-                // Send to session
+                // Send to session (including originating session)
                 session.getWebSocketSession().sendMessage(textMessage);
                 sentCount++;
             }

@@ -519,7 +519,7 @@ public class WChunkService {
      * Just directly assigns the lists since both DTOs are structurally identical.
      * TODO: These DTOs are structurally identical - consider unifying them in the generator
      */
-    private de.mhus.nimbus.generated.network.messages.ChunkDataTransferObjectBackdropDTO convertBackdrop(
+    public de.mhus.nimbus.generated.network.messages.ChunkDataTransferObjectBackdropDTO convertBackdrop(
             de.mhus.nimbus.generated.types.ChunkDataBackdropDTO source) {
         if (source == null) return null;
 

@@ -4,7 +4,6 @@ import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.EditAction;
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.control.commands.CommitLayerCommand;
 import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.control.service.EditState;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
@@ -49,7 +48,6 @@ public class EditorController extends BaseEditorController {
     private final WorldRedisService redisService;
     private final WSessionService wSessionService;
     private final WorldClientService worldClientService;
-    private final CommitLayerCommand commitLayerCommand;
     private final EngineMapper engineMapper;
     private final WWorldService worldService;
 
@@ -319,15 +317,6 @@ public class EditorController extends BaseEditorController {
             boolean success = editService.updateBlock(state, sessionId, x, y, z, block);
             if (!success) {
                 return bad("Failed to save block to edit cache");
-            }
-
-            // Mark chunk as dirty for later commit
-            WWorld world = worldService.getByWorldId(worldId).orElse(null);
-            if (world != null) {
-                String chunkKey = world.getChunkKey(x, z);
-                dirtyChunkService.markChunkDirty(worldId, chunkKey, "block_overlay_edit");
-            } else {
-                log.warn("Could not mark chunk dirty - world not found: {}", worldId);
             }
 
             log.info("Block saved and update sent: session={} layer={} pos=({},{},{}) blockTypeId={}",

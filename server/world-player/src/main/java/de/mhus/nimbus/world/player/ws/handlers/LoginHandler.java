@@ -66,15 +66,16 @@ public class LoginHandler implements MessageHandler {
         var wSession = wSessionOpt.get();
         var worldIdOpt = WorldId.of(wSession.getWorldId());
         var playerId = PlayerId.of(wSession.getPlayerId());
+        var actor = wSession.getActor();
 
-        var clientType = ClientType.valueOf(clientTypeStr.trim().toUpperCase());
+        var webClientType = ClientType.valueOf(clientTypeStr.trim().toUpperCase());
 
         if (playerId.isEmpty()) {
             log.warn("Invalid player ID, login failed");
             sendLoginResponse(session, message.getI(), false, "Invalid player", null, null);
             return;
         }
-        var player = playerService.getPlayer(playerId.get(), clientType, worldIdOpt.get().getRegionId());
+        var player = playerService.getPlayer(playerId.get(), webClientType, worldIdOpt.get().getRegionId());
         if (player.isEmpty()) {
             log.warn("Player not found: {}, login failed", playerId.get());
             sendLoginResponse(session, message.getI(), false, "Player not found", null, null);
@@ -89,7 +90,7 @@ public class LoginHandler implements MessageHandler {
         }
         var world = worldOpt.get();
 
-        sessionManager.authenticateSession(session, existingSessionId, worldIdOpt.get(), player.get(), clientType);
+        sessionManager.authenticateSession(session, existingSessionId, worldIdOpt.get(), player.get(), webClientType, actor);
 
         if (!session.isAuthenticated()) {
             sendLoginResponse(session, message.getI(), false, "Invalid credentials", null, null);

@@ -313,7 +313,7 @@ public class EditService {
      * Update selected block coordinates.
      */
     @Transactional
-    private void setSelectedBlock(String worldId, String sessionId, int x, int y, int z) {
+    public void setSelectedBlock(String worldId, String sessionId, int x, int y, int z) {
         String key = editStateKey(sessionId);
         redisService.putValue(worldId, key + "selectedBlockX", String.valueOf(x), EDIT_STATE_TTL);
         redisService.putValue(worldId, key + "selectedBlockY", String.valueOf(y), EDIT_STATE_TTL);
@@ -326,7 +326,7 @@ public class EditService {
      * Store marked block coordinates for copy/move operations.
      */
     @Transactional
-    private void setMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
+    public void setMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
         String key = editStateKey(sessionId);
         redisService.putValue(worldId, key + "markedBlockX", String.valueOf(x), EDIT_STATE_TTL);
         redisService.putValue(worldId, key + "markedBlockY", String.valueOf(y), EDIT_STATE_TTL);
@@ -564,7 +564,7 @@ public class EditService {
      * Only the block content is used, not the original position.
      */
     @Transactional
-    private void pasteMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
+    public void pasteMarkedBlock(String worldId, String sessionId, int x, int y, int z) {
         // Get marked block data from Redis
         Optional<Block> originalBlockOpt = getRegisterBlockData(worldId, sessionId);
         if (originalBlockOpt.isEmpty()) {
@@ -643,7 +643,7 @@ public class EditService {
      * Delete block at position.
      */
     @Transactional
-    private void deleteBlock(String worldId, String sessionId, int x, int y, int z) {
+    public void deleteBlock(String worldId, String sessionId, int x, int y, int z) {
         log.debug("Delete block: session={} pos=({},{},{})", sessionId, x, y, z);
         setBlock(worldId, sessionId, AIR_BLOCK, x, y, z);
     }
@@ -654,7 +654,7 @@ public class EditService {
      * The block is read from the layer system and inserted into the current edit layer.
      */
     @Transactional
-    private void cloneBlock(String worldId, String sessionId, int x, int y, int z) {
+    public void cloneBlock(String worldId, String sessionId, int x, int y, int z) {
         log.debug("Clone block: session={} pos=({},{},{})", sessionId, x, y, z);
 
         // Get block info at this position from the layer system
@@ -996,10 +996,10 @@ public class EditService {
 
         String layerDataId = layerOpt.get().getLayerDataId();
 
-        // Calculate chunk coordinates and key
-        int chunkX = (int) Math.floor((double) x / 16);
-        int chunkZ = (int) Math.floor((double) z / 16);
-        String chunkKey = chunkX + ":" + chunkZ;
+        // Get world and calculate chunk key
+        var world = worldService.getByWorldId(worldId)
+                .orElseThrow(() -> new IllegalStateException("World not found: " + worldId));
+        String chunkKey = world.getChunkKey(x, z);
 
         // Create LayerBlock wrapper
         de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock =

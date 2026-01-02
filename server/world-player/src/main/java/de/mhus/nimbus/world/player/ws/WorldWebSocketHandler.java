@@ -36,9 +36,6 @@ public class WorldWebSocketHandler extends TextWebSocketHandler {
         PlayerSession playerSession = sessionManager.createSession(webSocketSession);
         playerSession.setWorldId(WorldId.of(worldId).get());
 
-        // Send connection confirmation (legacy format for compatibility)
-        webSocketSession.sendMessage(new TextMessage(
-                String.format("{\"t\":\"connected\",\"d\":{\"worldId\":\"%s\"}}", worldId)));
     }
 
     @Override

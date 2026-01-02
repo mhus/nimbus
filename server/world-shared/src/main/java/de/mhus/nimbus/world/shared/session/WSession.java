@@ -16,6 +16,7 @@ public class WSession {
     private WSessionStatus status;
     private String worldId;
     private String playerId;
+    private String actor;
     private String playerUrl; // Internal URL of the world-player service
     private Instant createdAt;
     private Instant updatedAt;
