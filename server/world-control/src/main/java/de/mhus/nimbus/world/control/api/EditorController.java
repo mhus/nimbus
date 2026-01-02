@@ -50,6 +50,8 @@ public class EditorController extends BaseEditorController {
     private final WorldClientService worldClientService;
     private final EngineMapper engineMapper;
     private final WWorldService worldService;
+    private final de.mhus.nimbus.world.shared.layer.WEditCacheDirtyService editCacheDirtyService;
+    private final de.mhus.nimbus.world.shared.layer.WEditCacheService editCacheService;
 
     // ===== EDIT STATE =====
 
@@ -587,6 +589,84 @@ public class EditorController extends BaseEditorController {
         } catch (Exception e) {
             log.error("Failed to get edit cache statistics: worldId={}", worldId, e);
             return bad("Failed to get edit cache statistics: " + e.getMessage());
+        }
+    }
+
+    /**
+     * POST /control/editor/{worldId}/editcache/{layerDataId}/discard
+     * Discards all cached changes for a specific layer.
+     * Used by EditCache-Editor to delete cached blocks without requiring active edit mode.
+     */
+    @PostMapping("/{worldId}/editcache/{layerDataId}/discard")
+    public ResponseEntity<?> discardEditCacheForLayer(
+            @PathVariable String worldId,
+            @PathVariable String layerDataId) {
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+
+        try {
+            // Discard all cached blocks for this layer
+            long deletedCount = editCacheDirtyService.discardChanges(worldId, layerDataId);
+
+            log.info("Discard edit cache completed: worldId={}, layerDataId={}, deleted={}",
+                    worldId, layerDataId, deletedCount);
+
+            return ResponseEntity.ok().body(Map.of(
+                    "deleted", deletedCount,
+                    "layerDataId", layerDataId,
+                    "message", "Discarded " + deletedCount + " cached blocks"
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to discard edit cache: worldId={}, layerDataId={}", worldId, layerDataId, e);
+            return bad("Failed to discard edit cache: " + e.getMessage());
+        }
+    }
+
+    /**
+     * POST /control/editor/{worldId}/editcache/{layerDataId}/apply
+     * Applies all cached changes for a specific layer.
+     * Used by EditCache-Editor to merge cached blocks into layer without requiring active edit mode.
+     */
+    @PostMapping("/{worldId}/editcache/{layerDataId}/apply")
+    public ResponseEntity<?> applyEditCacheForLayer(
+            @PathVariable String worldId,
+            @PathVariable String layerDataId) {
+
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+
+        try {
+            // Count cached blocks before applying
+            long blockCount = editCacheService.countByWorldIdAndLayerDataId(worldId, layerDataId);
+
+            if (blockCount == 0) {
+                log.debug("No cached blocks to apply: worldId={}, layerDataId={}", worldId, layerDataId);
+                return ResponseEntity.ok().body(Map.of(
+                        "applied", 0L,
+                        "layerDataId", layerDataId,
+                        "message", "No cached blocks to apply"
+                ));
+            }
+
+            // Apply changes immediately (marks dirty and processes)
+            editCacheDirtyService.applyChanges(worldId, layerDataId);
+
+            log.info("Apply edit cache completed: worldId={}, layerDataId={}, applied={}",
+                    worldId, layerDataId, blockCount);
+
+            return ResponseEntity.ok().body(Map.of(
+                    "applied", blockCount,
+                    "layerDataId", layerDataId,
+                    "message", "Applied " + blockCount + " cached blocks"
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to apply edit cache: worldId={}, layerDataId={}", worldId, layerDataId, e);
+            return bad("Failed to apply edit cache: " + e.getMessage());
         }
     }
 

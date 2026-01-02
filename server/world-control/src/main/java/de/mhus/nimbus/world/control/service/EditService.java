@@ -609,7 +609,7 @@ public class EditService {
             String selectedModelId = editState.getSelectedModelId();
             if (selectedModelId != null) {
                 Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
-                    layerService.loadModelByMongoId(selectedModelId);
+                    layerService.loadModelById(selectedModelId);
                 if (modelOpt.isPresent()) {
                     modelName = modelOpt.get().getName();
                 }
@@ -1016,7 +1016,7 @@ public class EditService {
             if (selectedModelId != null) {
                 // Load model to get name
                 Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
-                    layerService.loadModelByMongoId(selectedModelId);
+                    layerService.loadModelById(selectedModelId);
                 if (modelOpt.isPresent()) {
                     modelName = modelOpt.get().getName();
                 } else {

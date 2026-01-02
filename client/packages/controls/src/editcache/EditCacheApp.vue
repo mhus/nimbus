@@ -127,12 +127,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { useWorld } from '@/composables/useWorld';
 import AppHeader from '@material/components/AppHeader.vue';
 import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import axios from 'axios';
+import { apiService } from '@/services/ApiService';
 
 interface EditCacheStat {
   layerDataId: string;
@@ -142,7 +143,11 @@ interface EditCacheStat {
   lastDate: string | null;
 }
 
-const { currentWorldId, loadWorlds, currentSessionId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
+
+// Read sessionId from URL query parameter
+const params = new URLSearchParams(window.location.search);
+const sessionId = ref(params.get('sessionId') || '');
 
 const statistics = ref<EditCacheStat[]>([]);
 const loading = ref(false);
@@ -150,29 +155,47 @@ const error = ref<string | null>(null);
 const processingLayer = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 
+const apiUrl = computed(() => apiService.getBaseUrl());
+
 /**
  * Load edit cache statistics for current world
+ * @param silent If true, don't show loading spinner and errors
  */
-const loadStatistics = async () => {
+const loadStatistics = async (silent = false) => {
   if (!currentWorldId.value) {
     statistics.value = [];
     return;
   }
 
-  loading.value = true;
-  error.value = null;
+  if (!silent) {
+    loading.value = true;
+    error.value = null;
+  }
 
   try {
     const response = await axios.get(
-      `/api/control/editor/${currentWorldId.value}/editcache/statistics`
+      `${apiUrl.value}/control/editor/${currentWorldId.value}/editcache/statistics`,
+      { withCredentials: true }
     );
 
-    statistics.value = response.data;
+    // Only update if data has changed (compare JSON strings)
+    const newData = response.data;
+    const currentData = statistics.value;
+
+    const hasChanged = JSON.stringify(newData) !== JSON.stringify(currentData);
+
+    if (hasChanged || !silent) {
+      statistics.value = newData;
+    }
   } catch (err: any) {
-    console.error('Failed to load edit cache statistics:', err);
-    error.value = err.response?.data?.message || 'Failed to load statistics';
+    if (!silent) {
+      console.error('Failed to load edit cache statistics:', err);
+      error.value = err.response?.data?.message || 'Failed to load statistics';
+    }
   } finally {
-    loading.value = false;
+    if (!silent) {
+      loading.value = false;
+    }
   }
 };
 
@@ -180,7 +203,7 @@ const loadStatistics = async () => {
  * Apply changes for a layer
  */
 const handleApplyChanges = async (layerDataId: string, layerName: string) => {
-  if (!currentWorldId.value || !currentSessionId.value) return;
+  if (!currentWorldId.value) return;
 
   if (!confirm(`Apply all ${statistics.value.find(s => s.layerDataId === layerDataId)?.blockCount} pending changes to layer "${layerName}"?\n\nThis will merge the cached blocks into the layer.`)) {
     return;
@@ -191,7 +214,9 @@ const handleApplyChanges = async (layerDataId: string, layerName: string) => {
 
   try {
     await axios.post(
-      `/api/control/editor/${currentWorldId.value}/session/${currentSessionId.value}/save`
+      `${apiUrl.value}/control/editor/${currentWorldId.value}/editcache/${layerDataId}/apply`,
+      {},
+      { withCredentials: true }
     );
 
     showSuccess(`Changes applied to layer "${layerName}"`);
@@ -212,7 +237,7 @@ const handleApplyChanges = async (layerDataId: string, layerName: string) => {
  * Discard changes for a layer
  */
 const handleDiscardChanges = async (layerDataId: string, layerName: string) => {
-  if (!currentWorldId.value || !currentSessionId.value) return;
+  if (!currentWorldId.value) return;
 
   const blockCount = statistics.value.find(s => s.layerDataId === layerDataId)?.blockCount;
   if (!confirm(`Discard all ${blockCount} pending changes for layer "${layerName}"?\n\nThis action cannot be undone!`)) {
@@ -224,7 +249,9 @@ const handleDiscardChanges = async (layerDataId: string, layerName: string) => {
 
   try {
     const response = await axios.post(
-      `/api/control/editor/${currentWorldId.value}/session/${currentSessionId.value}/discard`
+      `${apiUrl.value}/control/editor/${currentWorldId.value}/editcache/${layerDataId}/discard`,
+      {},
+      { withCredentials: true }
     );
 
     const deleted = response.data.deleted || blockCount;
@@ -275,6 +302,9 @@ const showSuccess = (message: string) => {
   }, 3000);
 };
 
+// Auto-refresh interval
+let refreshInterval: number | null = null;
+
 // Watch for world changes
 watch(currentWorldId, () => {
   loadStatistics();
@@ -283,5 +313,17 @@ watch(currentWorldId, () => {
 onMounted(() => {
   // Load worlds with allWithoutInstances filter
   loadWorlds('allWithoutInstances');
+
+  // Setup auto-refresh every 5 seconds (silent mode)
+  refreshInterval = window.setInterval(() => {
+    loadStatistics(true); // Silent mode - only updates if data changed
+  }, 5000);
+});
+
+onUnmounted(() => {
+  // Clear interval on unmount
+  if (refreshInterval !== null) {
+    clearInterval(refreshInterval);
+  }
 });
 </script>

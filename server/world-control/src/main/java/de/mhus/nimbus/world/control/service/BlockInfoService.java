@@ -262,7 +262,7 @@ public class BlockInfoService {
     private Block loadBlockFromModelLayer(String worldId, String layerDataId, WLayer layer, int x, int y, int z) {
         // Load model content
         Optional<de.mhus.nimbus.world.shared.layer.WLayerModel> modelOpt =
-                layerService.loadModelByMongoId(layerDataId);
+                layerService.loadModelById(layerDataId);
 
         if (modelOpt.isEmpty()) {
             return null;

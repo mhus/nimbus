@@ -78,22 +78,22 @@
   - Es wird jeder Block einzeln gespeichert, so kann er schnell ausgetauscht werden (effektiv zum Editieren, nicht performant)
   - Beim Setzen prüfen ob es den eintrg schon gibt und ggf update
       - Es wird kein Lock auf die Tabelle gemacht, d.h. es können ausversehen doppelte einträge vorkommen, deshalb immer List<WEditCache> find...() machen und dann den ersten nehmen, rest löschen  
-[?] Erstelle WEditCacheDirty Entity, WEditCacheDirtyRepository und WEditCacheDirtyService, in world-shared
+[x] Erstelle WEditCacheDirty Entity, WEditCacheDirtyRepository und WEditCacheDirtyService, in world-shared
   - worldId
   - layerDataId
   - createdAt
-[?] Beim BlockUpdate ein 'source' anhängen, hier den layerDataId + WLayerModel.name mitgeben
+[x] Beim BlockUpdate ein 'source' anhängen, hier den layerDataId + WLayerModel.name mitgeben
   - Siehe BlockUpdateCommand, es gibt nun ein optionales feld 'source' am block.
   - In BlockUpdateCommand soll das DTO Block benutzt werden
-[?] In engine am Select-Model ein 'source' mitgeben damit neue Blocks nur mit dem gleichen source markiert werden 
+[x] In engine am Select-Model ein 'source' mitgeben damit neue Blocks nur mit dem gleichen source markiert werden 
   - in ../client/packages/engine
   - in SelektService.ts
   - Aktuell wird ein boolean modelSelectorWatchBlocks mitgegeben, der sull nun ein string werden, wenn null dann disabled, 
     wenn gesetzt, dann nur blocks mit dem source string markieren
   - Entsprechendes ModelSelectorCommand anpassen, string anstelle von boolean
-[?] Beim benutzen des ModelSelectorCommand in world-control den model layer source mitgeben anstelle von true für modelSelectorWatchBlocks
+[x] Beim benutzen des ModelSelectorCommand in world-control den model layer source mitgeben anstelle von true für modelSelectorWatchBlocks
   - siehe EditService
-[?] Umstellen beim senden von Block Updates von Command auf Broadcast via redis
+[x] Umstellen beim senden von Block Updates von Command auf Broadcast via redis
   - in EditService senden
   - in world-player empfangen und an Websocket Sessions weiter geben
   - Beim senden mitgeben ob ALLE oder nur Actor EDITOR die Änderung bekommen sollen
@@ -101,11 +101,11 @@
   - BlockUpdateCommand Funktionalität des senden der Message an zentraler stelle machen
   - BlockUpdateBroadcastMessage
   - Siehe BroadcastService in world-player
-[?] Speichern von editierten Blocks in WEditCache im EditService
+[x] Speichern von editierten Blocks in WEditCache im EditService
   - In EditService wird das gemacht, hier zusaetzlich via WEditCacheService daten speichern
   - Speichern in redis overlay kann gleich mit weg
   - layer und layer model daten sind ja im redis gespeichert und koenne hier genutzt werden
-[?] Umstellen der Chunk Overlay mechanik im world-player
+[x] Umstellen der Chunk Overlay mechanik im world-player
   - In world-player beim senden von chunks, wird aktuell aus redis geholt, 
   - redis overlay kann gleich weg
   - nicht mehr auf isEditMode(), sondern isEditActor() prüfen 
@@ -115,22 +115,22 @@
     - hier Overlay Blocks einpflegen
     - im originalen ChunkData blocks und backdrop und heighData übernehmen
     - versenden
-[?] Erstellen von WEditCacheDirty: merge WEditCache nach WLayer
+[x] Erstellen von WEditCacheDirty: merge WEditCache nach WLayer
   - Zum Lock mechanismus siehe auch WDirtyChunkService
   - Ein WEditCacheDirtyScheduler wird benötigt, wie auch schon für WDirtyChunkService
   - Immer ein einzelner WLayer wird gelockt und bearbeitet
   - Transform der WLayerModel nicht vergessen, hier aenderns sich Koordinaten und Rotation
   - Wird aktuell schon woanders gemacht - speichern von redis overlay in layers
-[?] Umstellen der 'start editing' Mechanik
+[x] Umstellen der 'start editing' Mechanik
   - Siehe EditService
   - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Eigentlich wie vorher. Kein Edit Mode im world-player mehr setzten, kein Lock auf den layer machen
-[?] Umstellen der 'apply changes' Mechanik
+[x] Umstellen der 'apply changes' Mechanik
   - siehe EditService
   - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Funktionalität in WEditCacheService.applyChanges() implementieren
   - Nur noch ein Eintrag in WEditCacheDirty machen
-[?] Umstellen der 'discard changes' Mechanik - oder entfernen
+[x] Umstellen der 'discard changes' Mechanik - oder entfernen
   - siehe EditService
   - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Funktionalität in WEditCacheService.discardChanges() implementieren
@@ -143,7 +143,7 @@
   - Overlay in redis entfernen (BlockOverlayService)
   - In PlayerSession isEditModer() weg
 
-[?] Einen editcache-editor.html anlegen in ../client/packages/controls
+[x] Einen editcache-editor.html anlegen in ../client/packages/controls
   - Auswahl der Welt via world-selector im header
   - Liste aller WLayer für die es einträge gibt + anzahl Einträge (Blocks)
   - Erstes Block Datum
@@ -153,7 +153,8 @@
   - Keine weiteren Editier möglichkeiten benötigt!
   - Eintrag in HomeApp anlegen
 
-[ ] Wenn der block editor vie EditorService den Block aus dem aktuell bearbeiteten Layer holt, soll
+[x] Wenn der block editor vie EditorService den Block aus dem aktuell bearbeiteten Layer holt, soll
 das Overlay aus WEditCache geprueft werden. Prüfen ob für diese X y z stelle und den layerDataId ein eintrag in WEditCache existiert,
 wenn ja, diesen zurück geben, sonst wie vorher.
 - Siehe auch EditService
+
