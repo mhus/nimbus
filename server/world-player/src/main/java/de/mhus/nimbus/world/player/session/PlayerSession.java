@@ -27,6 +27,7 @@ public class PlayerSession {
     private String title;
     private WorldId worldId;
     private ClientType clientType;
+    private String actor;
 
     private SessionStatus status = SessionStatus.CONNECTED;
 
@@ -37,6 +38,14 @@ public class PlayerSession {
 
     public boolean isAuthenticated() {
         return status == SessionStatus.AUTHENTICATED;
+    }
+
+    /**
+     * Check if session has EDITOR actor.
+     * EDITOR sessions receive WEditCache overlays in chunks.
+     */
+    public boolean isEditActor() {
+        return "EDITOR".equals(actor);
     }
 
     /**

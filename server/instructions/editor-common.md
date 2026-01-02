@@ -115,7 +115,7 @@
     - hier Overlay Blocks einpflegen
     - im originalen ChunkData blocks und backdrop und heighData übernehmen
     - versenden
-[ ] Erstellen von WEditCacheDirty merge in WLayer
+[ ] Erstellen von WEditCacheDirty: merge WEditCache nach WLayer
   - Zum Lock mechanismus siehe auch WDirtyChunkService
   - Ein WEditCacheDirtyScheduler wird benötigt, wie auch schon für WDirtyChunkService
   - Immer ein einzelner WLayer wird gelockt und bearbeitet
@@ -138,6 +138,7 @@
 [ ] Aufräumen:
   - Explizietes Edit Mode Flag an WebSocket Session kann weg
   - Overlay in redis entfernen (BlockOverlayService)
+  - In PlayerSession isEditModer() weg
 
 [ ] Einen editcache-editor.html anlegen in ../client/packages/controls
   - Auswahl der Welt via world-selector im header

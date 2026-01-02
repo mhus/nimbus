@@ -3,9 +3,14 @@ package de.mhus.nimbus.world.player.ws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import de.mhus.nimbus.generated.network.messages.ChunkDataTransferObject;
+import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.generated.types.ChunkData;
 import de.mhus.nimbus.world.player.service.EditModeService;
 import de.mhus.nimbus.world.player.service.ExecutionService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.shared.layer.WEditCache;
+import de.mhus.nimbus.world.shared.layer.WEditCacheService;
+import de.mhus.nimbus.world.shared.world.BlockUtil;
 import de.mhus.nimbus.world.shared.world.WChunkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +20,8 @@ import org.springframework.web.socket.TextMessage;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +37,7 @@ import java.util.concurrent.CompletableFuture;
 public class ChunkSenderService {
 
     private final WChunkService chunkService;
+    private final WEditCacheService editCacheService;
     private final EditModeService editModeService;
     private final ExecutionService executionService;
     private final ObjectMapper objectMapper;
@@ -85,11 +93,12 @@ public class ChunkSenderService {
 
                 var chunk = chunkOpt.get();
 
-                // Handle edit mode overlays (requires loading ChunkData)
-                if (session.isEditMode()) {
+                // Handle EDITOR overlays from WEditCache (requires loading ChunkData)
+                if (session.isEditActor()) {
                     var chunkData = chunkService.loadChunkData(session.getWorldId(), chunkKey, false);
                     if (chunkData.isPresent()) {
-                        editModeService.applyOverlays(session, chunkData.get());
+                        // Apply WEditCache overlays (decompresses, merges, sets c=null)
+                        applyWEditCacheOverlays(session.getWorldId().getId(), chunkData.get());
                         // Save modified chunk and update entity
                         chunk = chunkService.saveChunk(session.getWorldId(), chunkKey, chunkData.get());
                     }
@@ -166,6 +175,84 @@ public class ChunkSenderService {
 
         log.debug("Sent binary chunk: cx={}, cz={}, header={} bytes, compressed={} bytes, total={} bytes",
                 dto.getCx(), dto.getCz(), headerBytes.length, dto.getC().length, buffer.position());
+    }
+
+    /**
+     * Apply WEditCache overlays to chunk data for EDITOR sessions.
+     * Modifies the chunk data in-place by:
+     * 1. Decompressing chunk if compressed (ChunkData.c)
+     * 2. Overlaying blocks from WEditCache
+     * 3. Removing blocks marked as AIR in overlay
+     * 4. Setting ChunkData.c = null (send uncompressed)
+     *
+     * @param worldId World ID
+     * @param chunkData ChunkData to modify
+     */
+    private void applyWEditCacheOverlays(String worldId, ChunkData chunkData) {
+        try {
+            String chunkKey = chunkData.getCx() + ":" + chunkData.getCz();
+
+            // Get WEditCache overlays for this chunk
+            List<WEditCache> overlays = editCacheService.findByWorldIdAndChunk(worldId, chunkKey);
+
+            if (overlays.isEmpty()) {
+                log.trace("No WEditCache overlays for chunk: cx={}, cz={}, worldId={}",
+                        chunkData.getCx(), chunkData.getCz(), worldId);
+                return;
+            }
+
+            log.debug("Applying {} WEditCache overlays to chunk: cx={}, cz={}, worldId={}",
+                    overlays.size(), chunkData.getCx(), chunkData.getCz(), worldId);
+
+            // Ensure blocks are decompressed
+            // Note: ChunkData.c is compressed, ChunkData.blocks is uncompressed
+            // If c is set, we need to decompress it first (handled by chunkService.loadChunkData)
+            // Here we assume chunkData is already loaded via loadChunkData()
+
+            // Build position index of existing blocks
+            List<Block> blocks = chunkData.getBlocks();
+            if (blocks == null) {
+                blocks = new ArrayList<>();
+                chunkData.setBlocks(blocks);
+            }
+
+            Map<String, Block> blockIndex = new HashMap<>();
+            for (Block block : blocks) {
+                String posKey = BlockUtil.positionKey(block);
+                blockIndex.put(posKey, block);
+            }
+
+            // Apply overlays from WEditCache
+            for (WEditCache overlay : overlays) {
+                Block overlayBlock = overlay.getBlock().getBlock();
+                String posKey = BlockUtil.positionKey(overlayBlock);
+
+                if (BlockUtil.isAirType(overlayBlock.getBlockTypeId())) {
+                    // AIR overlay = remove block
+                    blockIndex.remove(posKey);
+                    log.trace("Removed block at {} (AIR overlay)", posKey);
+                } else {
+                    // Non-AIR overlay = add or replace block
+                    blockIndex.put(posKey, overlayBlock);
+                    log.trace("Overlayed block at {} with type {}",
+                            posKey, overlayBlock.getBlockTypeId());
+                }
+            }
+
+            // Rebuild block list
+            chunkData.setBlocks(new ArrayList<>(blockIndex.values()));
+
+            // IMPORTANT: Set c = null to send uncompressed
+            chunkData.setC(null);
+
+            log.debug("Applied WEditCache overlays: chunk={}:{}, original={}, overlay={}, final={}, uncompressed=true",
+                    chunkData.getCx(), chunkData.getCz(),
+                    blocks.size(), overlays.size(), chunkData.getBlocks().size());
+
+        } catch (Exception e) {
+            log.error("Failed to apply WEditCache overlays: chunk={}:{}, worldId={}",
+                    chunkData.getCx(), chunkData.getCz(), worldId, e);
+        }
     }
 
     /**
