@@ -57,6 +57,14 @@ public class BlockUpdateBroadcastMessage {
     private String worldId;
 
     /**
+     * Source identifier for the block update (optional).
+     * Format: "layerDataId:layerName" or "modelId:modelName"
+     * Used by modelselector to filter which blocks to display/update.
+     * If null, all clients receive the update regardless of source filter.
+     */
+    private String source;
+
+    /**
      * Target audience: ALL sessions.
      */
     public static final String AUDIENCE_ALL = "ALL";

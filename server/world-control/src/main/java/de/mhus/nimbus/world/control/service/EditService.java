@@ -640,8 +640,8 @@ public class EditService {
         String source = layerDataId + ":" + layer.getName();
         pastedBlock.setSource(source);
 
-        // Send block update to client
-        boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, pastedBlock, null);
+        // Send block update to client with source parameter
+        boolean sent = blockUpdateService.sendBlockUpdateWithSource(worldId, sessionId, x, y, z, pastedBlock, source, null);
         if (!sent) {
             log.warn("Failed to send block update to client: session={}", sessionId);
         }
@@ -1048,17 +1048,12 @@ public class EditService {
             return false;
         }
 
-        // Send update to client
-        String blockJson;
-        try {
-            blockJson = objectMapper.writeValueAsString(block);
-        } catch (Exception e) {
-            log.error("Failed to serialize block: worldId={}, pos=({},{},{})",
-                    worldId, x, y, z, e);
-            return false;
-        }
+        // Set source field for block update
+        String source = layerDataId + ":" + layer.getName();
+        block.setSource(source);
 
-        boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, null);
+        // Send update to client with source parameter
+        boolean sent = blockUpdateService.sendBlockUpdateWithSource(worldId, sessionId, x, y, z, block, source, null);
         if (!sent) {
             log.warn("Failed to send block update to client: session={}, pos=({},{},{})",
                     sessionId, x, y, z);

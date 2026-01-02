@@ -41,12 +41,12 @@ public class BlockUpdateService {
      * @return true if broadcast was sent successfully
      */
     public boolean sendBlockUpdateWithSource(String worldId, String sessionId, int x, int y, int z, Block block, String source, String meta) {
-        // Set source field if provided
+        // Set source field on block for legacy compatibility
         if (source != null && !source.isBlank()) {
             block.setSource(source);
         }
 
-        return sendBlockUpdate(worldId, sessionId, x, y, z, block, meta);
+        return sendBlockUpdate(worldId, sessionId, x, y, z, block, source, meta);
     }
 
     /**
@@ -54,10 +54,17 @@ public class BlockUpdateService {
      * Broadcasts to EDITOR actors only.
      */
     public boolean sendBlockUpdate(String worldId, String sessionId, int x, int y, int z, Block block, String meta) {
+        return sendBlockUpdate(worldId, sessionId, x, y, z, block, null, meta);
+    }
+
+    /**
+     * Send block update with optional source.
+     */
+    private boolean sendBlockUpdate(String worldId, String sessionId, int x, int y, int z, Block block, String source, String meta) {
         // Serialize block to JSON
         try {
             String blockJson = objectMapper.writeValueAsString(block);
-            return sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, meta);
+            return sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, source, meta);
         } catch (Exception e) {
             log.error("Failed to serialize block for update: session={} pos=({},{},{})", sessionId, x, y, z, e);
             return false;
@@ -74,10 +81,11 @@ public class BlockUpdateService {
      * @param y         Block Y coordinate
      * @param z         Block Z coordinate
      * @param blockJson Block data as JSON string
+     * @param source    Source information (e.g., "layerDataId:layerName", optional)
      * @param meta      Block metadata (optional, currently unused)
      * @return true if broadcast was published successfully
      */
-    public boolean sendBlockUpdate(String worldId, String sessionId, int x, int y, int z, String blockJson, String meta) {
+    private boolean sendBlockUpdate(String worldId, String sessionId, int x, int y, int z, String blockJson, String source, String meta) {
         try {
             // Get world to read chunk size
             WWorld world = worldService.getByWorldId(worldId)
@@ -98,6 +106,7 @@ public class BlockUpdateService {
                     .originatingSessionId(sessionId)
                     .cx(cx)
                     .cz(cz)
+                    .source(source)
                     .build();
 
             // Serialize and publish to Redis
