@@ -101,11 +101,13 @@ export class ModelSelectorCommand extends CommandHandler {
   private showStatus(selectService: any): any {
     const enabled = selectService.isModelSelectorEnabled();
     const visible = selectService.isModelSelectorVisible();
+    const watchBlocks = selectService.getModelSelectorWatchBlocks();
     const coordinates = selectService.getModelSelectorCoordinates();
 
     return {
       enabled,
       visible,
+      watchBlocks: watchBlocks || 'null',
       blockCount: coordinates.length,
       usage: 'modelselector [enable|disable|show|add|remove|move|list]',
       examples: [

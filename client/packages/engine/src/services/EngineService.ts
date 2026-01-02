@@ -317,11 +317,12 @@ export class EngineService {
           if (networkService) {
             networkService.on('newBlocks', (blocks: import('@nimbus/shared').Block[]) => {
               if (this.selectService) {
-                // Convert Block positions (SelectService will apply default color)
+                // Convert Block positions with source field (SelectService will apply default color)
                 const coordinates = blocks.map(b => ({
                   x: b.position.x,
                   y: b.position.y,
-                  z: b.position.z
+                  z: b.position.z,
+                  source: b.source
                 }));
                 this.selectService.onNewBlocks(coordinates);
               }

@@ -1217,6 +1217,15 @@ export class SelectService {
   }
 
   /**
+   * Get model selector watch blocks filter
+   *
+   * @returns Source filter string or null if disabled
+   */
+  getModelSelectorWatchBlocks(): string | null {
+    return this.modelSelectorWatchBlocks;
+  }
+
+  /**
    * Toggle model selector visibility
    *
    * Convenience method to toggle visibility state.
