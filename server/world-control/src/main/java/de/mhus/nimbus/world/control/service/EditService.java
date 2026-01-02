@@ -53,6 +53,7 @@ public class EditService {
     private final de.mhus.nimbus.world.shared.overlay.BlockOverlayService blockOverlayService;
     private final BlockUpdateService blockUpdateService;
     private final de.mhus.nimbus.world.shared.layer.WEditCacheService editCacheService;
+    private final de.mhus.nimbus.world.shared.layer.WEditCacheDirtyService editCacheDirtyService;
 
     private static final Duration EDIT_STATE_TTL = Duration.ofHours(24);
     private static final String EDIT_STATE_PREFIX = "edit:";
@@ -431,6 +432,72 @@ public class EditService {
         redisService.deleteValue(worldId, key + "playerPort");
 
         log.debug("Edit state deleted: session={}", sessionId);
+    }
+
+    /**
+     * Apply changes for the currently selected layer.
+     * Commits all cached edits to the layer by creating a WEditCacheDirty entry.
+     * The actual merge happens asynchronously via WEditCacheDirtyService scheduler.
+     *
+     * @param worldId World identifier
+     * @param sessionId Session identifier
+     * @throws IllegalStateException if no layer is selected or layer not found
+     */
+    public void applyChanges(String worldId, String sessionId) {
+        // Get current edit state
+        EditState state = getEditState(worldId, sessionId);
+        if (state.getSelectedLayer() == null) {
+            throw new IllegalStateException("No layer selected");
+        }
+
+        // Get layer to retrieve layerDataId
+        Optional<WLayer> layerOpt = layerService.findLayer(worldId, state.getSelectedLayer());
+        if (layerOpt.isEmpty()) {
+            throw new IllegalStateException("Layer not found: " + state.getSelectedLayer());
+        }
+
+        WLayer layer = layerOpt.get();
+        String layerDataId = layer.getLayerDataId();
+
+        // Trigger apply changes via WEditCacheDirtyService
+        editCacheDirtyService.applyChanges(worldId, layerDataId);
+
+        log.info("Apply changes triggered: worldId={}, layerDataId={}, layer={}",
+                worldId, layerDataId, state.getSelectedLayer());
+    }
+
+    /**
+     * Discard all changes for the currently selected layer.
+     * Deletes all cached edits and marks affected chunks dirty for refresh.
+     *
+     * @param worldId World identifier
+     * @param sessionId Session identifier
+     * @return Number of discarded blocks
+     * @throws IllegalStateException if no layer is selected or layer not found
+     */
+    public long discardChanges(String worldId, String sessionId) {
+        // Get current edit state
+        EditState state = getEditState(worldId, sessionId);
+        if (state.getSelectedLayer() == null) {
+            throw new IllegalStateException("No layer selected");
+        }
+
+        // Get layer to retrieve layerDataId
+        Optional<WLayer> layerOpt = layerService.findLayer(worldId, state.getSelectedLayer());
+        if (layerOpt.isEmpty()) {
+            throw new IllegalStateException("Layer not found: " + state.getSelectedLayer());
+        }
+
+        WLayer layer = layerOpt.get();
+        String layerDataId = layer.getLayerDataId();
+
+        // Discard changes via WEditCacheDirtyService
+        long deletedCount = editCacheDirtyService.discardChanges(worldId, layerDataId);
+
+        log.info("Discard changes completed: worldId={}, layerDataId={}, layer={}, deleted={}",
+                worldId, layerDataId, state.getSelectedLayer(), deletedCount);
+
+        return deletedCount;
     }
 
     /**

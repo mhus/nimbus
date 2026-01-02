@@ -121,23 +121,24 @@
   - Immer ein einzelner WLayer wird gelockt und bearbeitet
   - Transform der WLayerModel nicht vergessen, hier aenderns sich Koordinaten und Rotation
   - Wird aktuell schon woanders gemacht - speichern von redis overlay in layers
-[ ] Umstellen der 'start editing' Mechanik
+[?] Umstellen der 'start editing' Mechanik
   - Siehe EditService
   - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Eigentlich wie vorher. Kein Edit Mode im world-player mehr setzten, kein Lock auf den layer machen
-[ ] Umstellen der 'apply changes' Mechanik
+[?] Umstellen der 'apply changes' Mechanik
   - siehe EditService
   - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Funktionalität in WEditCacheService.applyChanges() implementieren
   - Nur noch ein Eintrag in WEditCacheDirty machen
 [ ] Umstellen der 'discard changes' Mechanik - oder entfernen
-  - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet EditService
+  - siehe EditService
+  - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Funktionalität in WEditCacheService.discardChanges() implementieren
   - Merken aller chunks
   - Löschen aller einträge mit worldId + layerDataId
-  - Für alle chunks ein Update senden (funktion gibt es schon) an die world-player
+  - Für alle chunks ein Update senden (funktion gibt es schon) an die world-player dmait clients das overlay wieder entfernen
 
-[ ] Aufräumen:
+[ ] Aufräumen (obsolate code entfernen): 
   - Explizietes Edit Mode Flag an WebSocket Session kann weg
   - Overlay in redis entfernen (BlockOverlayService)
   - In PlayerSession isEditModer() weg

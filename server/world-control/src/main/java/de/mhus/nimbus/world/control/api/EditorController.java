@@ -473,51 +473,27 @@ public class EditorController extends BaseEditorController {
             if (!state.isEditMode()) {
                 return bad("Edit mode not active");
             }
-
-            // 2. Delete all overlays from Redis
-            long deleted = redisService.deleteAllOverlays(worldId, sessionId);
-
-            log.info("Deleted {} overlay keys for session {}", deleted, sessionId);
-
-            // 3. Disable edit mode in Redis
-            editService.setEditMode(worldId, sessionId, false);
-
-            // 4. Send "edit false" command to world-player
-            Optional<WSession> session = wSessionService.getWithPlayerUrl(sessionId);
-            if (session.isPresent() && session.get().getPlayerUrl() != null) {
-                CommandContext ctx = CommandContext.builder()
-                        .worldId(worldId)
-                        .sessionId(sessionId)
-                        .originServer("world-control")
-                        .build();
-
-                try {
-                    worldClientService.sendPlayerCommand(
-                            worldId,
-                            sessionId,
-                            session.get().getPlayerUrl(),
-                            "edit",
-                            List.of("false"),
-                            ctx
-                    );
-                } catch (Exception e) {
-                    log.warn("Failed to send edit disable command to player: {}", e.getMessage());
-                }
+            if (state.getSelectedLayer() == null) {
+                return bad("No layer selected");
             }
 
-            log.info("Edit mode discarded: worldId={}, sessionId={}, deleted={}",
-                    worldId, sessionId, deleted);
+            // 2. Discard changes (deletes cached blocks, marks chunks dirty for refresh)
+            long deletedCount = editService.discardChanges(worldId, sessionId);
 
-            // 5. Return count
+            log.info("Discard changes completed: worldId={}, sessionId={}, layer={}, deleted={}",
+                    worldId, sessionId, state.getSelectedLayer(), deletedCount);
+
+            // 3. Return count
             return ResponseEntity.ok().body(Map.of(
-                    "deleted", deleted,
-                    "editMode", false,
-                    "message", "Discarded " + deleted + " overlay blocks"
+                    "deleted", deletedCount,
+                    "layer", state.getSelectedLayer(),
+                    "editMode", state.isEditMode(),
+                    "message", "Discarded " + deletedCount + " cached blocks"
             ));
 
         } catch (Exception e) {
-            log.error("Failed to discard overlays: worldId={}, sessionId={}", worldId, sessionId, e);
-            return bad("Failed to discard overlays: " + e.getMessage());
+            log.error("Failed to discard changes: worldId={}, sessionId={}", worldId, sessionId, e);
+            return bad("Failed to discard changes: " + e.getMessage());
         }
     }
 
@@ -543,36 +519,23 @@ public class EditorController extends BaseEditorController {
                 return bad("No layer selected");
             }
 
-            // 2. Fire-and-forget: Async commit
-            CompletableFuture.runAsync(() -> {
-                try {
-                    CommandContext ctx = CommandContext.builder()
-                            .worldId(worldId)
-                            .sessionId(sessionId)
-                            .originServer("world-control")
-                            .build();
+            // 2. Apply changes (creates WEditCacheDirty entry, processes asynchronously)
+            editService.applyChanges(worldId, sessionId);
 
-                    commitLayerCommand.execute(ctx, List.of());
-                    log.info("Layer commit completed: worldId={}, sessionId={}", worldId, sessionId);
-                } catch (Exception e) {
-                    log.error("Layer commit failed: worldId={}, sessionId={}", worldId, sessionId, e);
-                }
-            });
-
-            log.info("Layer save started: worldId={}, sessionId={}, layer={}",
+            log.info("Apply changes triggered: worldId={}, sessionId={}, layer={}",
                     worldId, sessionId, state.getSelectedLayer());
 
             // 3. Return 202 Accepted immediately
             return ResponseEntity.accepted()
                     .body(Map.of(
-                            "message", "Save operation started",
+                            "message", "Apply changes operation started",
                             "layer", state.getSelectedLayer(),
                             "editMode", true
                     ));
 
         } catch (Exception e) {
-            log.error("Failed to start save operation: worldId={}, sessionId={}", worldId, sessionId, e);
-            return bad("Failed to start save operation: " + e.getMessage());
+            log.error("Failed to start apply changes: worldId={}, sessionId={}", worldId, sessionId, e);
+            return bad("Failed to start apply changes: " + e.getMessage());
         }
     }
 
