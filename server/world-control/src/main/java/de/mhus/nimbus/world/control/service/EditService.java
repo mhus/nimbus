@@ -52,6 +52,7 @@ public class EditService {
     private final ObjectMapper objectMapper;
     private final de.mhus.nimbus.world.shared.overlay.BlockOverlayService blockOverlayService;
     private final BlockUpdateService blockUpdateService;
+    private final de.mhus.nimbus.world.shared.layer.WEditCacheService editCacheService;
 
     private static final Duration EDIT_STATE_TTL = Duration.ofHours(24);
     private static final String EDIT_STATE_PREFIX = "edit:";
@@ -461,22 +462,55 @@ public class EditService {
                 .z(z)
                 .build());
 
-        // Save to Redis overlay using BlockOverlayService
-        String blockJson = blockOverlayService.saveBlockOverlay(worldId, sessionId, pastedBlock);
-
-        if (blockJson == null) {
-            log.error("Failed to save pasted block: session={} to=({},{},{})",
-                    sessionId, x, y, z);
+        // Get edit state to determine layer
+        EditState editState = getEditState(worldId, sessionId);
+        if (editState.getSelectedLayer() == null) {
+            log.error("No layer selected for editing: session={}", sessionId);
             return;
         }
 
-        boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, blockJson, null);
+        // Get layer information
+        Optional<WLayer> layerOpt = layerService.findLayer(worldId, editState.getSelectedLayer());
+        if (layerOpt.isEmpty()) {
+            log.error("Selected layer not found: session={} layer={}", sessionId, editState.getSelectedLayer());
+            return;
+        }
+
+        WLayer layer = layerOpt.get();
+        String layerDataId = layer.getLayerDataId();
+
+        // Calculate chunk coordinates
+        de.mhus.nimbus.world.shared.world.WWorld world = worldService.getByWorldId(worldId)
+                .orElseThrow(() -> new IllegalStateException("World not found: " + worldId));
+        int chunkSize = world.getPublicData().getChunkSize();
+        int cx = Math.floorDiv(x, chunkSize);
+        int cz = Math.floorDiv(z, chunkSize);
+        String chunk = cx + ":" + cz;
+
+        // Create LayerBlock from Block
+        de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock =
+                de.mhus.nimbus.world.shared.layer.LayerBlock.builder()
+                        .block(pastedBlock)
+                        .build();
+
+        // Save to WEditCache
+        editCacheService.setBlock(worldId, layerDataId, x, z, chunk, layerBlock);
+
+        log.debug("Saved block to WEditCache: session={} layer={} pos=({},{},{}) chunk={}",
+                sessionId, layer.getName(), x, y, z, chunk);
+
+        // Set source field for block update
+        String source = layerDataId + ":" + layer.getName();
+        pastedBlock.setSource(source);
+
+        // Send block update to client
+        boolean sent = blockUpdateService.sendBlockUpdate(worldId, sessionId, x, y, z, pastedBlock, null);
         if (!sent) {
             log.warn("Failed to send block update to client: session={}", sessionId);
         }
 
-        log.info("Block pasted: session={} to=({},{},{}) type={}",
-                sessionId, x, y, z, pastedBlock.getBlockTypeId());
+        log.info("Block pasted: session={} layer={} to=({},{},{}) type={}",
+                sessionId, layer.getName(), x, y, z, pastedBlock.getBlockTypeId());
 
     }
 

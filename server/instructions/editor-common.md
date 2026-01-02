@@ -93,7 +93,7 @@
   - Entsprechendes ModelSelectorCommand anpassen, string anstelle von boolean
 [?] Beim benutzen des ModelSelectorCommand in world-control den model layer source mitgeben anstelle von true für modelSelectorWatchBlocks
   - siehe EditService
-[ ] Umstellen beim senden von Block Updates von Command auf Broadcast via redis
+[?] Umstellen beim senden von Block Updates von Command auf Broadcast via redis
   - in EditService senden
   - in world-player empfangen und an Websocket Sessions weiter geben
   - Beim senden mitgeben ob ALLE oder nur Actor EDITOR die Änderung bekommen sollen
@@ -101,9 +101,11 @@
   - BlockUpdateCommand Funktionalität des senden der Message an zentraler stelle machen
   - BlockUpdateBroadcastMessage
   - Siehe BroadcastService in world-player
-[ ] Speichern von editierten Blocks in WEditCache im EditService
+[?] Speichern von editierten Blocks in WEditCache im EditService
   - In EditService wird das gemacht, hier zusaetzlich via WEditCacheService daten speichern
-[ ] Umstellen der Chunk Overlay mechanik im world-player
+  - Speichern in redis overlay kann gleich mit weg
+  - layer und layer model daten sind ja im redis gespeichert und koenne hier genutzt werden
+[?] Umstellen der Chunk Overlay mechanik im world-player
   - In world-player beim senden von chunks, wird aktuell aus redis geholt, 
   - redis overlay kann gleich weg
   - nicht mehr auf isEditMode(), sondern isEditActor() prüfen 
