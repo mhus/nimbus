@@ -531,6 +531,31 @@ public class EditorController extends BaseEditorController {
         }
     }
 
+    /**
+     * GET /control/editor/{worldId}/editcache/statistics
+     * Returns edit cache statistics grouped by layer.
+     * Shows block count and timestamps for each layer with cached edits.
+     */
+    @GetMapping("/{worldId}/editcache/statistics")
+    public ResponseEntity<?> getEditCacheStatistics(@PathVariable String worldId) {
+        WorldId.of(worldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId: " + worldId)
+        );
+
+        try {
+            List<Map<String, Object>> statistics = editService.getEditCacheStatistics(worldId);
+
+            log.debug("Edit cache statistics retrieved: worldId={}, layerCount={}",
+                    worldId, statistics.size());
+
+            return ResponseEntity.ok(statistics);
+
+        } catch (Exception e) {
+            log.error("Failed to get edit cache statistics: worldId={}", worldId, e);
+            return bad("Failed to get edit cache statistics: " + e.getMessage());
+        }
+    }
+
     // ===== BLOCK PALETTE SUPPORT =====
 
     /**

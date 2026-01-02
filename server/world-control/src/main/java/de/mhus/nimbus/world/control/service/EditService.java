@@ -500,6 +500,65 @@ public class EditService {
     }
 
     /**
+     * Get edit cache statistics for a world.
+     * Returns grouped statistics per layer with block count and timestamps.
+     *
+     * @param worldId World identifier
+     * @return List of edit cache statistics per layer
+     */
+    public List<Map<String, Object>> getEditCacheStatistics(String worldId) {
+        // Get all layers for this world
+        List<WLayer> layers = layerService.findByWorldId(worldId);
+
+        // Build statistics per layer
+        List<Map<String, Object>> statistics = new ArrayList<>();
+
+        for (WLayer layer : layers) {
+            String layerDataId = layer.getLayerDataId();
+
+            // Get cached blocks for this layer
+            List<de.mhus.nimbus.world.shared.layer.WEditCache> caches =
+                editCacheService.findByWorldIdAndLayerDataId(worldId, layerDataId);
+
+            // Skip layers with no cache entries
+            if (caches.isEmpty()) {
+                continue;
+            }
+
+            // Calculate timestamps
+            Instant firstDate = caches.stream()
+                .map(de.mhus.nimbus.world.shared.layer.WEditCache::getCreatedAt)
+                .filter(d -> d != null)
+                .min(Instant::compareTo)
+                .orElse(null);
+
+            Instant lastDate = caches.stream()
+                .map(de.mhus.nimbus.world.shared.layer.WEditCache::getModifiedAt)
+                .filter(d -> d != null)
+                .max(Instant::compareTo)
+                .orElse(null);
+
+            Map<String, Object> stat = new HashMap<>();
+            stat.put("layerDataId", layerDataId);
+            stat.put("layerName", layer.getName());
+            stat.put("blockCount", caches.size());
+            stat.put("firstDate", firstDate);
+            stat.put("lastDate", lastDate);
+
+            statistics.add(stat);
+        }
+
+        // Sort by layer name
+        statistics.sort((a, b) -> {
+            String nameA = (String) a.get("layerName");
+            String nameB = (String) b.get("layerName");
+            return nameA.compareTo(nameB);
+        });
+
+        return statistics;
+    }
+
+    /**
      * Paste marked block to target position.
      * Uses stored block data from Redis to recreate the block at the new position.
      * Only the block content is used, not the original position.
