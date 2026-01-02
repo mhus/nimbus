@@ -82,10 +82,17 @@
   - worldId
   - layerDataId
   - createdAt
-[ ] An BlockUpdate ein 'source' anhängen, hier den layerDataId + WLayerModel.name mitgeben
+[?] Beim BlockUpdate ein 'source' anhängen, hier den layerDataId + WLayerModel.name mitgeben
   - Siehe BlockUpdateCommand, es gibt nun ein optionales feld 'source' am block.
   - In BlockUpdateCommand soll das DTO Block benutzt werden
-[ ] In engine am Selekt Model ein 'source' mitgeben damit neue Blocks nur mit dem gleichen source markiert werden 
+[?] In engine am Select-Model ein 'source' mitgeben damit neue Blocks nur mit dem gleichen source markiert werden 
+  - in ../client/packages/engine
+  - in SelektService.ts
+  - Aktuell wird ein boolean modelSelectorWatchBlocks mitgegeben, der sull nun ein string werden, wenn null dann disabled, 
+    wenn gesetzt, dann nur blocks mit dem source string markieren
+  - Entsprechendes ModelSelectorCommand anpassen, string anstelle von boolean
+[?] Beim benutzen des ModelSelectorCommand in world-control den model layer source mitgeben anstelle von true für modelSelectorWatchBlocks
+  - siehe EditService
 [ ] Umstellen beim senden von Block Updates von Command auf Broadcast via redis
   - in EditService senden
   - in world-player empfangen und an Websocket Sessions weiter geben

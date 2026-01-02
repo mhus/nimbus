@@ -27,6 +27,33 @@ public class BlockUpdateService {
     private final WorldClientService worldClientService;
     private final EngineMapper objectMapper;
 
+    /**
+     * Send block update with optional source information.
+     * Source is typically set to "layerDataId:layerName" for editor operations.
+     *
+     * @param worldId   World identifier
+     * @param sessionId Session identifier
+     * @param x         Block X coordinate
+     * @param y         Block Y coordinate
+     * @param z         Block Z coordinate
+     * @param block     Block data
+     * @param source    Source information (e.g., "layerDataId:layerName", optional)
+     * @param meta      Block metadata (optional)
+     * @return true if command was sent successfully
+     */
+    public boolean sendBlockUpdateWithSource(String worldId, String sessionId, int x, int y, int z, Block block, String source, String meta) {
+        // Set source field if provided
+        if (source != null && !source.isBlank()) {
+            block.setSource(source);
+        }
+
+        return sendBlockUpdate(worldId, sessionId, x, y, z, block, meta);
+    }
+
+    /**
+     * Send block update without source information.
+     * Kept for backward compatibility.
+     */
     public boolean sendBlockUpdate(String worldId, String sessionId, int x, int y, int z, Block block, String meta) {
         // Serialize block to JSON
         try {

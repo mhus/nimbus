@@ -92,7 +92,7 @@ export class SelectService {
   // Model selector (multi-block selection with custom color per element)
   private modelSelectorEnabled: boolean = false;
   private modelSelectorVisible: boolean = false;
-  private modelSelectorWatchBlocks: boolean = false;
+  private modelSelectorWatchBlocks: string | null = null; // Source filter: null = disabled, string = only blocks with matching source
   private modelSelectorDefaultColor: string = '#ffff00'; // Default color for new blocks from watchBlocks
   private modelSelectorCoordinates: Vector3Color[] = [];
   private modelSelectorMeshes: Map<string, { mesh: Mesh; material: StandardMaterial }> = new Map();
@@ -1029,13 +1029,13 @@ export class SelectService {
    * If already enabled, automatically disables and re-enables with new parameters.
    *
    * @param defaultColor Default color for new blocks added via watchBlocks (hex string)
-   * @param watchBlocks Automatically add new blocks from network
+   * @param watchBlocks Source filter: null = disabled, string = only add blocks with matching source
    * @param show Make visible immediately
    * @param selected Initial list of coordinates with colors to select
    */
   enableModelSelector(
     defaultColor: string,
-    watchBlocks: boolean,
+    watchBlocks: string | null,
     show: boolean,
     selected: Vector3Color[]
   ): void {
@@ -1083,7 +1083,7 @@ export class SelectService {
     try {
       this.modelSelectorEnabled = false;
       this.modelSelectorVisible = false;
-      this.modelSelectorWatchBlocks = false;
+      this.modelSelectorWatchBlocks = null;
       this.modelSelectorCoordinates = [];
 
       // Dispose all meshes and materials
@@ -1347,18 +1347,36 @@ export class SelectService {
    * Handle new block from network (for watchBlocks mode)
    *
    * Called by NetworkService when new blocks are received in EDITOR mode.
-   * Converts blocks to Vector3Color using the default color set in enableModelSelector.
+   * Filters blocks by source field and converts them to Vector3Color using the default color.
    *
-   * @param blocks List of new block positions (without color)
+   * @param blocks List of new blocks with position and optional source field
    */
-  onNewBlocks(blocks: { x: number; y: number; z: number }[]): void {
+  onNewBlocks(blocks: { x: number; y: number; z: number; source?: string }[]): void {
     try {
       if (!this.modelSelectorEnabled || !this.modelSelectorWatchBlocks) {
         return;
       }
 
+      // Filter blocks by source if watchBlocks is set
+      const filteredBlocks = blocks.filter(b => {
+        // If source filter is set, only include blocks with matching source
+        if (this.modelSelectorWatchBlocks) {
+          return b.source === this.modelSelectorWatchBlocks;
+        }
+        // If no source filter, include all blocks (backward compatibility)
+        return true;
+      });
+
+      if (filteredBlocks.length === 0) {
+        logger.debug('No blocks matched source filter', {
+          sourceFilter: this.modelSelectorWatchBlocks,
+          totalBlocks: blocks.length,
+        });
+        return;
+      }
+
       // Convert blocks to Vector3Color using default color
-      const coordinates: Vector3Color[] = blocks.map(b => ({
+      const coordinates: Vector3Color[] = filteredBlocks.map(b => ({
         x: b.x,
         y: b.y,
         z: b.z,
@@ -1369,7 +1387,9 @@ export class SelectService {
       this.addToModelSelector(coordinates);
 
       logger.debug('New blocks added to model selector', {
-        blockCount: blocks.length,
+        blockCount: filteredBlocks.length,
+        filteredOut: blocks.length - filteredBlocks.length,
+        sourceFilter: this.modelSelectorWatchBlocks,
         defaultColor: this.modelSelectorDefaultColor,
       });
     } catch (error) {

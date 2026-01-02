@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.player.commands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.session.PlayerSession;
 import de.mhus.nimbus.world.player.ws.SessionManager;
@@ -25,7 +26,7 @@ import java.util.Optional;
 public class BlockUpdateCommand implements Command {
 
     private final SessionManager sessionManager;
-    private final ObjectMapper objectMapper;
+    private final EngineMapper engineMapper;
 
     @Override
     public String getName() {
@@ -34,7 +35,7 @@ public class BlockUpdateCommand implements Command {
 
     @Override
     public CommandResult execute(CommandContext context, List<String> args) {
-        // Args: [x, y, z, blockDataObjectAsString, meta]
+        // Args: [blockDataObjectAsString]
         if (args.size() < 1) {
             return CommandResult.error(-3, "Usage: BlockUpdate <blockDataObjectAsString>");
         }
@@ -58,13 +59,19 @@ public class BlockUpdateCommand implements Command {
             }
             blockData = blockData.trim();
 
+            // Parse as single block or array of blocks
             if (blockData.startsWith("{") && blockData.endsWith("}")) {
                 blockData = "[" + blockData + "]";
             }
             if (!blockData.startsWith("[") || !blockData.endsWith("]")) {
                 return CommandResult.error(-5, "Block data corrupted");
             }
-            var blockJson = objectMapper.readTree(blockData);
+
+            // Deserialize to Block DTO array for validation and processing
+            Block[] blocks = engineMapper.readValue(blockData, Block[].class);
+
+            // Re-serialize validated blocks (includes source field if set)
+            var blockJson = engineMapper.valueToTree(blocks);
 
             PlayerSession session = sessionOpt.get();
 
@@ -74,14 +81,14 @@ public class BlockUpdateCommand implements Command {
                     .d(blockJson)
                     .build();
 
-            String json = objectMapper.writeValueAsString(message);
+            String json = engineMapper.writeValueAsString(message);
             TextMessage textMessage = new TextMessage(json);
 
             // Send via WebSocket
             session.getWebSocketSession().sendMessage(textMessage);
 
             log.debug("Sent block update to client: session={} blocks={}",
-                    sessionId, blockData);
+                    sessionId, blocks.length);
 
             return CommandResult.success("Block update sent to client");
 

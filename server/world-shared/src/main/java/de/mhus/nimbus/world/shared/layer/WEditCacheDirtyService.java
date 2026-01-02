@@ -195,14 +195,29 @@ public class WEditCacheDirtyService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
+        // Get layer information for source field
+        Optional<WLayer> layerOpt = layerService.findByWorldIdAndLayerDataId(worldId, layerDataId);
+        String layerName = layerOpt.map(WLayer::getName).orElse("unknown");
+
         // TODO: Write blocks to WLayerModel
         // This requires transformation of world coordinates to layer-local coordinates
         // and merging with existing WLayerModel content
         // For now, this is a placeholder - implementation will be added in next step
         log.info("TODO: Write {} blocks to WLayerModel for layerDataId={}", cachedBlocks.size(), layerDataId);
 
+        // TODO: Send block updates to clients with source information
+        // Example usage of BlockUpdateService with source field:
+        //
+        // String source = layerDataId + ":" + layerName;
+        // for (WEditCache cache : cachedBlocks) {
+        //     Block block = cache.getBlock().getBlock();
+        //     blockUpdateService.sendBlockUpdateWithSource(
+        //         worldId, sessionId, cache.getX(), 0, cache.getZ(),
+        //         block, source, null
+        //     );
+        // }
+
         // Check layer type - if MODEL, trigger transfer to WLayerTerrain
-        Optional<WLayer> layerOpt = layerService.findByWorldIdAndLayerDataId(worldId, layerDataId);
         if (layerOpt.isPresent() && layerOpt.get().getLayerType() == LayerType.MODEL) {
             log.info("Layer type is MODEL, will need terrain transfer after WLayerModel update");
             // TODO: Trigger WLayerModel to WLayerTerrain transfer

@@ -910,13 +910,15 @@ public class EditService {
                 .originServer("world-control")
                 .build();
 
-        // Build command arguments: modelselector, 'enable', '#00ff00', true, true, <positions+color>
+        // Build command arguments: modelselector, 'enable', '#dddd00', <source>, true, <positions+color>
+        // Source format: "layerDataId:layerName" - only blocks with this source will be watched
+        String source = layer.getLayerDataId() + ":" + layer.getName();
         List<String> args = new ArrayList<>();
         args.add("modelselector");
         args.add("enable");
         args.add("#dddd00"); // for modified blocks
-        args.add("true");
-        args.add("true");
+        args.add(source);    // Source filter for watchBlocks
+        args.add("true");    // Show immediately
         args.addAll(positionsList);
 
         // Send command to client

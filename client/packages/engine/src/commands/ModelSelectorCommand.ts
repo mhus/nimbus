@@ -14,9 +14,14 @@
  *   modelselector move <offsetX> <offsetY> <offsetZ>                         - Move all blocks by offset
  *   modelselector list                                                       - List all coordinates
  *
+ * watchBlocks parameter: Source filter string or "null"/"false" to disable
+ *   - If set to source string (e.g., "layerId:name"), only blocks with matching source are added
+ *   - If set to "null" or "false", watchBlocks is disabled
+ *
  * Examples:
- *   modelselector enable #ffff00 true true 10 20 30 #ff0000 11 20 30 #00ff00 - Enable, default yellow, 2 blocks
- *   modelselector enable #ff0000 false true                                   - Enable, default red, no coords
+ *   modelselector enable #ffff00 "abc123:GroundLayer" true 10 20 30 #ff0000  - Watch blocks from GroundLayer
+ *   modelselector enable #ff0000 null true                                    - Enable without watchBlocks
+ *   modelselector enable #ff0000 false true                                   - Enable without watchBlocks
  *   modelselector disable                                                     - Disable model selector
  *   modelselector show false                                                  - Hide without removing coordinates
  *   modelselector add 10 20 30 #ff0000 11 20 30 #00ff00                      - Add two blocks with colors
@@ -78,7 +83,7 @@ export class ModelSelectorCommand extends CommandHandler {
           error: `Unknown subcommand: ${subcommand}`,
           usage: 'modelselector [enable|disable|show|add|remove|move|list]',
           examples: [
-            'modelselector enable #ffff00 true true 10 20 30 #ff0000',
+            'modelselector enable #ffff00 "abc:Layer" true 10 20 30 #ff0000',
             'modelselector disable',
             'modelselector show false',
             'modelselector add 10 20 30 #ff0000 11 20 30 #00ff00',
@@ -104,12 +109,13 @@ export class ModelSelectorCommand extends CommandHandler {
       blockCount: coordinates.length,
       usage: 'modelselector [enable|disable|show|add|remove|move|list]',
       examples: [
-        'modelselector enable #ffff00 true true 10 20 30 #ff0000 - Default yellow, one red block',
-        'modelselector disable                                     - Disable',
-        'modelselector show false                                  - Hide',
-        'modelselector add 10 20 30 #ff0000                        - Add red block',
-        'modelselector move 5 0 0                                  - Move blocks',
-        'modelselector list                                        - List blocks',
+        'modelselector enable #ffff00 "abc:Layer" true 10 20 30 #ff0000 - Watch Layer source, one red block',
+        'modelselector enable #ffff00 null true                          - No source filter',
+        'modelselector disable                                           - Disable',
+        'modelselector show false                                        - Hide',
+        'modelselector add 10 20 30 #ff0000                              - Add red block',
+        'modelselector move 5 0 0                                        - Move blocks',
+        'modelselector list                                              - List blocks',
       ],
     };
   }
@@ -117,6 +123,7 @@ export class ModelSelectorCommand extends CommandHandler {
   /**
    * Enable model selector
    * Parameters: <defaultColor> <watchBlocks> <show> [<x1> <y1> <z1> <color1> ... <xn> <yn> <zn> <colorn>]
+   * watchBlocks: Source filter string or "null"/"false" to disable
    */
   private executeEnable(selectService: any, params: any[]): any {
     if (params.length < 3) {
@@ -124,15 +131,19 @@ export class ModelSelectorCommand extends CommandHandler {
         error: 'Missing required parameters',
         usage: 'modelselector enable <defaultColor> <watchBlocks> <show> [<x1> <y1> <z1> <color1> ...]',
         examples: [
-          'modelselector enable #ffff00 true true                                    - Default yellow, watch blocks, visible',
-          'modelselector enable #ff0000 false true 10 20 30 #00ff00                 - Default red, one green block',
-          'modelselector enable #ffff00 true true 10 20 30 #ff0000 11 20 30 #00ff00 - Default yellow, two blocks',
+          'modelselector enable #ffff00 "abc:Layer" true                            - Watch blocks from Layer, visible',
+          'modelselector enable #ff0000 null true 10 20 30 #00ff00                 - No watch, one green block',
+          'modelselector enable #ffff00 false true 10 20 30 #ff0000 11 20 30 #00ff00 - No watch, two blocks',
         ],
       };
     }
 
     const defaultColor = toString(params[0]);
-    const watchBlocks = toBoolean(params[1]);
+    const watchBlocksParam = toString(params[1]);
+    // Convert parameter: "null", "false", or "" -> null, otherwise use as string
+    const watchBlocks = (watchBlocksParam === 'null' || watchBlocksParam === 'false' || watchBlocksParam === '')
+      ? null
+      : watchBlocksParam;
     const show = toBoolean(params[2]);
 
     // Parse coordinates (groups of 4: x, y, z, color)
