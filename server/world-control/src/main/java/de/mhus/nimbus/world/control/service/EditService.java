@@ -1103,13 +1103,20 @@ public class EditService {
 
         // Get all block positions from all models via WLayerService
         List<int[]> positions = layerService.getModelBlockPositions(layer.getLayerDataId());
-        if (positions.isEmpty()) {
-            log.debug("No blocks found in models for layer {}", layer.getName());
+
+        // Also load blocks from WEditCache for this layer
+        List<de.mhus.nimbus.world.shared.layer.WEditCache> editCacheBlocks =
+            editCacheService.findByWorldIdAndLayerDataId(worldId, layer.getLayerDataId());
+
+        if (positions.isEmpty() && editCacheBlocks.isEmpty()) {
+            log.debug("No blocks found in models or edit cache for layer {}", layer.getName());
             return;
         }
 
         // Convert positions to string list
         List<String> positionsList = new ArrayList<>();
+
+        // Add model blocks
         for (int[] pos : positions) {
             positionsList.add(String.valueOf(pos[0]));
             positionsList.add(String.valueOf(pos[1]));
@@ -1121,6 +1128,18 @@ public class EditService {
                 positionsList.add("#ffff00"); // selected group
             } else {
                 positionsList.add("#00ff00"); // for existing blocks
+            }
+        }
+
+        // Add WEditCache blocks (modified/new blocks)
+        for (de.mhus.nimbus.world.shared.layer.WEditCache cache : editCacheBlocks) {
+            de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock = cache.getBlock();
+            if (layerBlock != null && layerBlock.getBlock() != null) {
+                var block = layerBlock.getBlock();
+                positionsList.add(String.valueOf(block.getPosition().getX()));
+                positionsList.add(String.valueOf(block.getPosition().getY()));
+                positionsList.add(String.valueOf(block.getPosition().getZ()));
+                positionsList.add("#dddd00"); // modified/cached blocks
             }
         }
 
@@ -1152,8 +1171,9 @@ public class EditService {
                 ctx
         );
 
-        log.info("Displayed model in client: layer={} session={} blocks={}",
-                layer.getName(), sessionId, positions.size());
+        log.info("Displayed model in client: layer={} session={} modelBlocks={} cachedBlocks={} total={}",
+                layer.getName(), sessionId, positions.size(), editCacheBlocks.size(),
+                positions.size() + editCacheBlocks.size());
     }
 
     /**
