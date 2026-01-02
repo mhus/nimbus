@@ -5,7 +5,7 @@
 
 export interface WLayerModel {
   worldId: string;
-  name?: string;
+  name: string;
   title?: string;
   layerDataId: string;
   mountX: number;

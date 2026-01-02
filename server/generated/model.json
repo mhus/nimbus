@@ -2818,6 +2818,20 @@
         "visibility" : null,
         "javaTypeHint" : null,
         "comment" : null
+      }, {
+        "name" : "level",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : "Integer",
+        "comment" : "// javaType: Integer"
+      }, {
+        "name" : "source",
+        "type" : "string",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     } ],

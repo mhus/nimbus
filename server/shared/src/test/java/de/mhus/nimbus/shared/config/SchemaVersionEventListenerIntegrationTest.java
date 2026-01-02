@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bson.Document;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -34,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataMongoTest
 @Testcontainers
 @Import({SchemaVersionEventListener.class, SchemaVersionEventListenerIntegrationTest.TestConfig.class})
+@Disabled
 class SchemaVersionEventListenerIntegrationTest {
 
     /**

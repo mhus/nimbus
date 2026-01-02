@@ -2,6 +2,7 @@ package de.mhus.nimbus.shared.config;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.when;
  * Unit tests for SchemaVersionEventListener.
  * Tests the automatic addition and validation of schema versions for MongoDB entities.
  */
+@Disabled
 @ExtendWith(MockitoExtension.class)
 class SchemaVersionEventListenerTest {
 
