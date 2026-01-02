@@ -62,7 +62,7 @@
 
 ## Vorgehen
 
-[ ] Erstelle WEditCache Entity, WEditCacheRepository und WEditCacheService, in world-shared
+[x] Erstelle WEditCache Entity, WEditCacheRepository und WEditCacheService, in world-shared
   - Felder:
     - worldId
     - X
@@ -78,7 +78,7 @@
   - Es wird jeder Block einzeln gespeichert, so kann er schnell ausgetauscht werden (effektiv zum Editieren, nicht performant)
   - Beim Setzen prüfen ob es den eintrg schon gibt und ggf update
       - Es wird kein Lock auf die Tabelle gemacht, d.h. es können ausversehen doppelte einträge vorkommen, deshalb immer List<WEditCache> find...() machen und dann den ersten nehmen, rest löschen  
-[ ] Erstelle WEditCacheDirty Entity, WEditCacheDirtyRepository und WEditCacheDirtyService, in world-shared
+[?] Erstelle WEditCacheDirty Entity, WEditCacheDirtyRepository und WEditCacheDirtyService, in world-shared
   - worldId
   - layerDataId
   - createdAt

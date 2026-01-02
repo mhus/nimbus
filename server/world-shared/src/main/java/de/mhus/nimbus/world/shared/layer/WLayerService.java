@@ -195,6 +195,15 @@ public class WLayerService {
     }
 
     /**
+     * Find a layer by world ID and layer data ID.
+     * This is the preferred method as only worldId + layerDataId is guaranteed unique.
+     */
+    @Transactional(readOnly = true)
+    public Optional<WLayer> findByWorldIdAndLayerDataId(String worldId, String layerDataId) {
+        return layerRepository.findByWorldIdAndLayerDataId(worldId, layerDataId);
+    }
+
+    /**
      * Find all layers for a world.
      * No fallback to parent world - returns only layers in this specific world.
      *
