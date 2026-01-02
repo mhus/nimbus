@@ -188,3 +188,7 @@ Folgende Idee:
 - Gibt es checkboxen die drei zustaende haben? Dann nutze diese um auch den _solidDefined zu definieren.
 - Am anfanbg beim laden solle die komplette struktur aus, incl. _defined ...
 - Beim speichern reduziere die struktur auf das noetigste. Entferne alle _defined ...
+
+[ ] WLayer.ts und WLayerModel.ts in generated/types muss weg
+[ ] Es gibt in BlockModifier den effekt WIND am Block und an Texture. Eins muss weg.
+[ ] Der effekt FLIPBOX an BlockModifier muss weg, ist jetzt shape

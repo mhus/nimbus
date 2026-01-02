@@ -410,4 +410,14 @@ export interface Block {
    * @see BlockMetadata
    */
   metadata?: BlockMetadata;
+
+  /**
+   * height level for wind calculation
+   */
+  level?: number; // javaType: Integer
+
+  /**
+   * Source - only for block updates
+   */
+  source?: string;
 }

@@ -47,9 +47,8 @@ public class WLayerModel implements Identifiable {
     private String worldId;
 
     /**
-     * A name if needed or empty if not
+     * A name is not optional, it's unique
      */
-    @TypeScript(optional = true)
     private String name;
 
     /**
