@@ -29,6 +29,7 @@ public class WEditCacheDirtyService {
     private final WDirtyChunkService dirtyChunkService;
     private final WorldRedisLockService lockService;
     private final WLayerService layerService;
+    private final WLayerModelRepository modelRepository;
 
     private static final Duration LOCK_TTL = Duration.ofMinutes(5);
     private static final int MAX_ENTRIES_PER_CYCLE = 10;
@@ -195,32 +196,22 @@ public class WEditCacheDirtyService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        // Get layer information for source field
+        // Get layer information
         Optional<WLayer> layerOpt = layerService.findByWorldIdAndLayerDataId(worldId, layerDataId);
-        String layerName = layerOpt.map(WLayer::getName).orElse("unknown");
+        if (layerOpt.isEmpty()) {
+            log.error("Layer not found: worldId={}, layerDataId={}", worldId, layerDataId);
+            clearDirty(worldId, layerDataId);
+            return;
+        }
+        WLayer layer = layerOpt.get();
+        String layerName = layer.getName();
 
-        // TODO: Write blocks to WLayerModel
-        // This requires transformation of world coordinates to layer-local coordinates
-        // and merging with existing WLayerModel content
-        // For now, this is a placeholder - implementation will be added in next step
-        log.info("TODO: Write {} blocks to WLayerModel for layerDataId={}", cachedBlocks.size(), layerDataId);
-
-        // TODO: Send block updates to clients with source information
-        // Example usage of BlockUpdateService with source field:
-        //
-        // String source = layerDataId + ":" + layerName;
-        // for (WEditCache cache : cachedBlocks) {
-        //     Block block = cache.getBlock().getBlock();
-        //     blockUpdateService.sendBlockUpdateWithSource(
-        //         worldId, sessionId, cache.getX(), 0, cache.getZ(),
-        //         block, source, null
-        //     );
-        // }
-
-        // Check layer type - if MODEL, trigger transfer to WLayerTerrain
-        if (layerOpt.isPresent() && layerOpt.get().getLayerType() == LayerType.MODEL) {
-            log.info("Layer type is MODEL, will need terrain transfer after WLayerModel update");
-            // TODO: Trigger WLayerModel to WLayerTerrain transfer
+        // Write blocks to WLayerModel (only for MODEL type layers)
+        if (layer.getLayerType() == LayerType.MODEL) {
+            mergeBlocksIntoLayerModel(worldId, layerDataId, cachedBlocks);
+            log.info("Merged {} blocks into WLayerModel for layerDataId={}", cachedBlocks.size(), layerDataId);
+        } else {
+            log.info("Layer type is {}, skipping WLayerModel merge", layer.getLayerType());
         }
 
         // Delete cached blocks after successful merge
@@ -300,5 +291,186 @@ public class WEditCacheDirtyService {
                 deletedCount, worldId, layerDataId, affectedChunks.size());
 
         return deletedCount;
+    }
+
+    /**
+     * Merge cached blocks into WLayerModel.
+     * Transforms world coordinates to layer-relative coordinates (with inverse rotation).
+     * Merges blocks into existing WLayerModel content.
+     *
+     * @param worldId World identifier
+     * @param layerDataId Layer data identifier
+     * @param cachedBlocks List of cached blocks to merge
+     */
+    private void mergeBlocksIntoLayerModel(String worldId, String layerDataId, List<WEditCache> cachedBlocks) {
+        // Get all models for this layer (ordered by overlay order)
+        List<WLayerModel> models = modelRepository.findByLayerDataIdOrderByOrder(layerDataId);
+
+        if (models.isEmpty()) {
+            log.warn("No models found for layer, cannot merge blocks: layerDataId={}", layerDataId);
+            return;
+        }
+
+        // For now, we only support single-model layers
+        // Multi-model support would require determining which model each block belongs to
+        if (models.size() > 1) {
+            log.warn("Layer has multiple models ({}), using first model for merge", models.size());
+        }
+
+        WLayerModel model = models.get(0);
+        log.debug("Merging blocks into model: modelId={}, mountPoint=({},{},{}), rotation={}",
+                model.getId(), model.getMountX(), model.getMountY(), model.getMountZ(), model.getRotation());
+
+        // Build position index of existing blocks
+        List<LayerBlock> content = model.getContent();
+        if (content == null) {
+            content = new ArrayList<>();
+            model.setContent(content);
+        }
+
+        Map<String, LayerBlock> blockIndex = new HashMap<>();
+        for (LayerBlock layerBlock : content) {
+            if (layerBlock.getBlock() != null && layerBlock.getBlock().getPosition() != null) {
+                de.mhus.nimbus.generated.types.Vector3Int pos = layerBlock.getBlock().getPosition();
+                String posKey = pos.getX() + ":" + pos.getY() + ":" + pos.getZ();
+                blockIndex.put(posKey, layerBlock);
+            }
+        }
+
+        log.debug("Existing blocks in model: {}", blockIndex.size());
+
+        // Transform and merge each cached block
+        int added = 0;
+        int updated = 0;
+        for (WEditCache cache : cachedBlocks) {
+            de.mhus.nimbus.generated.types.Block block = cache.getBlock().getBlock();
+
+            // Transform world coordinates to layer-relative coordinates
+            de.mhus.nimbus.generated.types.Vector3Int relativePos = worldToLayerCoordinates(
+                    cache.getX(),
+                    cache.getBlock().getBlock().getPosition().getY(), // Y from block, not cache
+                    cache.getZ(),
+                    model.getMountX(),
+                    model.getMountY(),
+                    model.getMountZ(),
+                    model.getRotation()
+            );
+
+            // Create new block with relative position
+            de.mhus.nimbus.generated.types.Block transformedBlock = cloneBlockWithPosition(block, relativePos);
+
+            // Create LayerBlock
+            LayerBlock layerBlock = LayerBlock.builder()
+                    .block(transformedBlock)
+                    .group(cache.getBlock().getGroup())
+                    .metadata(cache.getBlock().getMetadata())
+                    .build();
+
+            // Add or update in index
+            String posKey = relativePos.getX() + ":" + relativePos.getY() + ":" + relativePos.getZ();
+            if (blockIndex.containsKey(posKey)) {
+                updated++;
+            } else {
+                added++;
+            }
+            blockIndex.put(posKey, layerBlock);
+        }
+
+        // Rebuild content list from index
+        List<LayerBlock> newContent = new ArrayList<>(blockIndex.values());
+
+        // Update model using layerService
+        layerService.updateModel(model.getId(), m -> {
+            m.setContent(newContent);
+        });
+
+        log.info("Merged blocks into model: modelId={}, added={}, updated={}, total={}",
+                model.getId(), added, updated, newContent.size());
+    }
+
+    /**
+     * Transform world coordinates to layer-relative coordinates.
+     * Applies inverse rotation to account for layer model rotation.
+     *
+     * @param worldX World X coordinate
+     * @param worldY World Y coordinate
+     * @param worldZ World Z coordinate
+     * @param mountX Layer mount X coordinate
+     * @param mountY Layer mount Y coordinate
+     * @param mountZ Layer mount Z coordinate
+     * @param rotation Layer rotation (0-3, in 90-degree steps)
+     * @return Relative coordinates
+     */
+    private de.mhus.nimbus.generated.types.Vector3Int worldToLayerCoordinates(
+            int worldX, int worldY, int worldZ,
+            int mountX, int mountY, int mountZ,
+            int rotation) {
+
+        // 1. Subtract mount point to get offset from mount
+        int offsetX = worldX - mountX;
+        int offsetY = worldY - mountY;
+        int offsetZ = worldZ - mountZ;
+
+        // 2. Apply inverse rotation
+        int[] rotated = applyInverseRotation(offsetX, offsetZ, rotation);
+
+        // 3. Create relative position
+        de.mhus.nimbus.generated.types.Vector3Int relativePos = new de.mhus.nimbus.generated.types.Vector3Int();
+        relativePos.setX(rotated[0]);
+        relativePos.setY(offsetY); // Y is not affected by rotation
+        relativePos.setZ(rotated[1]);
+
+        return relativePos;
+    }
+
+    /**
+     * Apply inverse rotation to coordinates.
+     * Inverse of the rotation applied when rendering blocks.
+     *
+     * @param x X coordinate
+     * @param z Z coordinate
+     * @param rotation Rotation in 90-degree steps (0-3)
+     * @return Inverse rotated coordinates [x, z]
+     */
+    private int[] applyInverseRotation(int x, int z, int rotation) {
+        // Normalize rotation to 0-3
+        int rot = rotation % 4;
+        if (rot < 0) rot += 4;
+
+        // Inverse rotation: apply opposite rotation
+        return switch (rot) {
+            case 0 -> new int[]{x, z};          // No rotation
+            case 1 -> new int[]{z, -x};         // 90° counter-clockwise (inverse of 90° CW)
+            case 2 -> new int[]{-x, -z};        // 180° (inverse of 180°)
+            case 3 -> new int[]{-z, x};         // 270° counter-clockwise (inverse of 270° CW)
+            default -> new int[]{x, z};
+        };
+    }
+
+    /**
+     * Clone a block with a new position.
+     *
+     * @param original Original block
+     * @param newPosition New position
+     * @return Cloned block with new position
+     */
+    private de.mhus.nimbus.generated.types.Block cloneBlockWithPosition(
+            de.mhus.nimbus.generated.types.Block original,
+            de.mhus.nimbus.generated.types.Vector3Int newPosition) {
+
+        de.mhus.nimbus.generated.types.Block cloned = new de.mhus.nimbus.generated.types.Block();
+        cloned.setBlockTypeId(original.getBlockTypeId());
+        cloned.setPosition(newPosition);
+        cloned.setOffsets(original.getOffsets());
+        cloned.setRotation(original.getRotation());
+        cloned.setFaceVisibility(original.getFaceVisibility());
+        cloned.setCornerHeights(original.getCornerHeights());
+        cloned.setStatus(original.getStatus());
+        cloned.setModifiers(original.getModifiers());
+        cloned.setMetadata(original.getMetadata());
+        cloned.setLevel(original.getLevel());
+        cloned.setSource(original.getSource());
+
+        return cloned;
     }
 }

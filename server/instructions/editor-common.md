@@ -115,17 +115,19 @@
     - hier Overlay Blocks einpflegen
     - im originalen ChunkData blocks und backdrop und heighData übernehmen
     - versenden
-[ ] Erstellen von WEditCacheDirty: merge WEditCache nach WLayer
+[?] Erstellen von WEditCacheDirty: merge WEditCache nach WLayer
   - Zum Lock mechanismus siehe auch WDirtyChunkService
   - Ein WEditCacheDirtyScheduler wird benötigt, wie auch schon für WDirtyChunkService
   - Immer ein einzelner WLayer wird gelockt und bearbeitet
   - Transform der WLayerModel nicht vergessen, hier aenderns sich Koordinaten und Rotation
-  - Wird aktuell schon gemacht
+  - Wird aktuell schon woanders gemacht - speichern von redis overlay in layers
 [ ] Umstellen der 'start editing' Mechanik
-  - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet EditService
+  - Siehe EditService
+  - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Eigentlich wie vorher. Kein Edit Mode im world-player mehr setzten, kein Lock auf den layer machen
 [ ] Umstellen der 'apply changes' Mechanik
-  - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet EditService
+  - siehe EditService
+  - wird vom client 'controls' via REST an world-control versendet und hier verarbeitet in EditService
   - Funktionalität in WEditCacheService.applyChanges() implementieren
   - Nur noch ein Eintrag in WEditCacheDirty machen
 [ ] Umstellen der 'discard changes' Mechanik - oder entfernen
