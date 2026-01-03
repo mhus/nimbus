@@ -78,6 +78,9 @@ export class ShaderService {
     // Register thin instance wind shader
     this.registerThinInstanceWindShader();
 
+    // Register flipbox shader
+    this.registerFlipboxShader();
+
     logger.debug('ShaderService initialized with scene');
   }
 
@@ -821,26 +824,34 @@ export class ShaderService {
       uniform vec3 lightDirection;
       uniform int currentFrame;
       uniform int frameCount;
+      uniform int flipDirection; // 0 = horizontal, 1 = vertical
 
       void main(void) {
         // Calculate frame offset in UV space
         float frameWidth = 1.0 / float(frameCount);
         float frameOffset = float(currentFrame) * frameWidth;
 
-        // Adjust UV to sample current frame
-        vec2 frameUV = vec2(vUV.x * frameWidth + frameOffset, vUV.y);
+        // Adjust UV to sample current frame based on direction
+        vec2 frameUV;
+        if (flipDirection == 0) {
+          // Horizontal flip (default)
+          frameUV = vec2(vUV.x * frameWidth + frameOffset, vUV.y);
+        } else {
+          // Vertical flip
+          frameUV = vec2(vUV.x, vUV.y * frameWidth + frameOffset);
+        }
 
         // Sample texture
         vec4 texColor = texture2D(textureSampler, frameUV);
 
         // Alpha test: discard transparent pixels
-        if (texColor.a < 0.5) {
+        if (texColor.a < 0.1) {
           discard;
         }
 
         // Simple directional lighting
-        float lightIntensity = max(dot(vNormal, lightDirection), 0.3);
-        vec3 finalColor = texColor.rgb * lightIntensity;
+        float lightIntensity = max(dot(normalize(vNormal), normalize(lightDirection)), 0.4) + 0.3;
+        vec3 finalColor = texColor.rgb * clamp(lightIntensity, 0.7, 1.3);
 
         // Output final color
         gl_FragColor = vec4(finalColor, 1.0);
@@ -854,7 +865,7 @@ export class ShaderService {
    * Create flipbox shader material
    *
    * @param texture Original texture (not atlas) with sprite-sheet frames
-   * @param shaderParameters Format: "frameCount,delayMs[,mode]" (e.g., "4,100" or "4,100,bumerang")
+   * @param shaderParameters Format: "direction,frameCount,delayMs[,mode]" (e.g., "h,4,100" or "v,4,100,bumerang")
    * @param name Material name
    */
   private createFlipboxMaterial(
@@ -862,38 +873,57 @@ export class ShaderService {
     shaderParameters: string | undefined,
     name: string = 'flipboxMaterial'
   ): ShaderMaterial | null {
+    logger.info('createFlipboxMaterial called', { name, shaderParameters, hasTexture: !!texture, hasScene: !!this.scene });
+
     if (!this.scene) {
       logger.error('Cannot create flipbox material: Scene not initialized');
       return null;
     }
 
-    if (!shaderParameters) {
-      logger.error('Cannot create flipbox material: shaderParameters required (format: "frameCount,delayMs[,mode]")');
-      return null;
+    // Use defaults if no parameters provided (for debugging)
+    let flipDirection = 'h';
+    let frameCount = 1;
+    let delayMs = 100;
+    let mode = 'rotate';
+
+    if (shaderParameters) {
+      // Parse shader parameters: "direction,frameCount,delayMs[,mode]"
+      const parts = shaderParameters.split(',');
+      if (parts.length < 3 || parts.length > 4) {
+        logger.error('Invalid flipbox shaderParameters format (expected "direction,frameCount,delayMs[,mode]")', { shaderParameters });
+        logger.info('Using defaults: h,1,100,rotate');
+      } else {
+        flipDirection = parts[0]?.trim().toLowerCase() || 'h'; // Default: horizontal
+        frameCount = parseInt(parts[1], 10);
+        delayMs = parseInt(parts[2], 10);
+        mode = parts[3]?.trim().toLowerCase() || 'rotate'; // Default: rotate
+      }
+    } else {
+      logger.warn('No shaderParameters provided, using defaults: h,1,100,rotate');
     }
 
-    // Parse shader parameters: "frameCount,delayMs[,mode]"
-    const parts = shaderParameters.split(',');
-    if (parts.length < 2 || parts.length > 3) {
-      logger.error('Invalid flipbox shaderParameters format (expected "frameCount,delayMs[,mode]")', { shaderParameters });
+    if (flipDirection !== 'h' && flipDirection !== 'v') {
+      logger.error('Invalid flipbox direction (expected "h" or "v")', { flipDirection });
       return null;
     }
-
-    const frameCount = parseInt(parts[0], 10);
-    const delayMs = parseInt(parts[1], 10);
-    const mode = parts[2]?.trim().toLowerCase() || 'rotate'; // Default: rotate
 
     if (isNaN(frameCount) || isNaN(delayMs) || frameCount < 1 || delayMs < 1) {
       logger.error('Invalid flipbox shaderParameters values', { frameCount, delayMs });
       return null;
     }
 
-    if (mode !== 'rotate' && mode !== 'bumerang') {
-      logger.error('Invalid flipbox mode (expected "rotate" or "bumerang")', { mode });
-      return null;
+    // Normalize mode spelling (accept both "bumerang" and "boomerang")
+    if (mode === 'boomerang') {
+      mode = 'bumerang';
     }
 
-    logger.debug('Creating flipbox material', { name, frameCount, delayMs, mode });
+    // Default to rotate if mode is unknown
+    if (mode !== 'rotate' && mode !== 'bumerang') {
+      logger.warn('Unknown flipbox mode, defaulting to "rotate"', { mode });
+      mode = 'rotate';
+    }
+
+    logger.info('Creating flipbox material', { name, flipDirection, frameCount, delayMs, mode });
 
     const material = new ShaderMaterial(
       name,
@@ -909,6 +939,7 @@ export class ShaderService {
           'world',
           'currentFrame',
           'frameCount',
+          'flipDirection',
           'textureSampler',
           'lightDirection',
         ],
@@ -928,16 +959,22 @@ export class ShaderService {
     // Set texture if provided
     if (texture) {
       material.setTexture('textureSampler', texture);
+      // Enable alpha for transparency
+      texture.hasAlpha = true;
     }
 
     // Set frame count
     material.setInt('frameCount', frameCount);
 
+    // Set flip direction (0 = horizontal, 1 = vertical)
+    material.setInt('flipDirection', flipDirection === 'h' ? 0 : 1);
+
     // Set light direction (from above-front)
     material.setVector3('lightDirection', new Vector3(0.5, 1.0, 0.5));
 
-    // Configure material properties
-    material.backFaceCulling = true; // Default backface culling for flipbox
+    // Configure material properties for alpha test
+    material.backFaceCulling = false; // Show both sides
+    material.transparencyMode = Material.MATERIAL_ALPHATEST; // Use alpha test mode
 
     // Setup frame animation
     let currentFrame = 0;
@@ -968,6 +1005,7 @@ export class ShaderService {
       }
     });
 
+    logger.info('Flipbox material created successfully', { name, materialCreated: !!material });
     return material;
   }
 

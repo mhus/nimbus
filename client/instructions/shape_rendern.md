@@ -103,6 +103,13 @@ dem ShaderService verwendet.
   - z.b. |0|1|2|3| soll UVMapping den bereich fuer 0 angeben, also u=0,v=0,w=0.25,h=1 fuer 4 bilder nebeneinander.
 - Der Renderer definiert seinen eigenen Mesh, da sonst der Atlas die restlchen Bilder nicht uebernimmt.
 
+[ ] Erweitere den FlipboxRenderer so, das er auch vertical flippen kann. Dazu wird effectParameters erweitert um den ersten parameter 'h' oder 'v'.
+  - direction: 'h' oder 'v' (NEU!)
+  - anzahl (frameCount): anzahl der bilder
+  - milliseconds: wartezeit zwischen den flips - optional, default 100
+  - mode: bumerang:bilder gehen vor und zurueck (bumerang, reihenfolge: 0,1,2,3,2,1,0,1,2...), rotate: bilder rotieren durch (reihenfolge: 0,1,2,3,0,1,2,3...) - optional, default: rotate
+- Beispiel: 'v,4,200,bumerang' - vertical flip, 4 bilder, 200ms wartezeit, bumerang modus
+
 ## Billboard
 
 [?] Erstelle einen BillboardRenderer. Er rendert ein Billboard aus der ersten Textur in TextureDefinition.

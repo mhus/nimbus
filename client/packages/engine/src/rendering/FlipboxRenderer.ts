@@ -5,17 +5,20 @@
  * Each block gets its own separate mesh with original texture (not atlas).
  * This renderer is triggered by Shape.FLIPBOX, not by an effect.
  *
- * Animation Parameters (from visibility.effectParameters): "frameCount,delayMs[,mode]"
- * - frameCount: Number of frames in horizontal sprite-sheet (e.g., 4)
+ * Animation Parameters (from visibility.effectParameters): "direction,frameCount,delayMs[,mode]"
+ * - direction: 'h' (horizontal) or 'v' (vertical) - determines flip direction
+ * - frameCount: Number of frames in sprite-sheet (e.g., 4)
  * - delayMs: Milliseconds between frame transitions (e.g., 100)
  * - mode: "rotate" (default) or "bumerang" (optional)
  *   - rotate: 0,1,2,3,0,1,2,3...
  *   - bumerang: 0,1,2,3,2,1,0,1,2,3,2,1...
  *
- * Example: "4,100" or "4,100,bumerang"
+ * Examples:
+ * - "h,4,100" - horizontal flip, 4 frames, 100ms delay
+ * - "v,4,200,bumerang" - vertical flip, 4 frames, 200ms delay, bumerang mode
  */
 
-import { Vector3, Matrix, Mesh, VertexData } from '@babylonjs/core';
+import { Vector3, Matrix, Mesh, VertexData, Material } from '@babylonjs/core';
 import { getLogger, Shape } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
@@ -30,6 +33,7 @@ const logger = getLogger('FlipboxRenderer');
  * - Renders only TOP face (horizontal surface)
  * - Triggered by Shape.FLIPBOX
  * - Uses FLIPBOX shader from ShaderService for animation
+ * - Supports both horizontal and vertical sprite-sheet layouts
  * - Each block gets separate mesh with original texture
  * - Supports offset, scaling, rotation transformations
  */
@@ -74,12 +78,12 @@ export class FlipboxRenderer extends BlockRenderer {
     const rotationX = block.rotation?.x ?? 0;
     const rotationY = block.rotation?.y ?? 0;
 
-    // Block position
+    // Block position (offset by 0.5 in X and Z to center the face)
     const pos = block.position;
 
-    // Create TOP face geometry
+    // Create TOP face geometry (full UVs - shader will handle frames)
     const faceData = this.createTopFaceGeometry(
-      new Vector3(pos.x, pos.y, pos.z),
+      new Vector3(pos.x + 0.5, pos.y, pos.z + 0.5),
       scalingX,
       scalingY,
       scalingZ,
@@ -173,7 +177,7 @@ export class FlipboxRenderer extends BlockRenderer {
       0, 2, 3, // Second triangle
     ];
 
-    // UV coordinates (full texture, will be animated by shader)
+    // UV coordinates (full texture - shader will handle frame selection)
     const uvs = [
       0, 0, // Top-Left
       1, 0, // Top-Right
@@ -228,8 +232,8 @@ export class FlipboxRenderer extends BlockRenderer {
     vertexData.uvs = faceData.uvs;
     vertexData.normals = faceData.normals;
 
-    // Apply to mesh
-    vertexData.applyToMesh(mesh);
+    // Apply to mesh (not updatable - shader handles animation)
+    vertexData.applyToMesh(mesh, false);
 
     // Get FLIPBOX shader material directly from ShaderService
     const shaderService = renderContext.renderService.appContext.services.shader;
@@ -253,19 +257,30 @@ export class FlipboxRenderer extends BlockRenderer {
     // Get effect parameters
     const effectParameters = modifier.visibility?.effectParameters;
 
-    // Create FLIPBOX material
-    const material = shaderService.createMaterial('flipbox', {
-      texture,
+    logger.info('FlipboxRenderer: Creating material', {
+      texturePath,
       effectParameters,
+      textureLoaded: !!texture,
+      textureName: texture?.name,
+    });
+
+    // Create flipbox shader material (handles animation on GPU)
+    const flipboxMaterial = shaderService.createMaterial('flipbox', {
+      texture,
+      shaderParameters: effectParameters,
       name: meshName,
     });
 
-    if (!material) {
+    if (!flipboxMaterial) {
       logger.error('FlipboxRenderer: Failed to create flipbox material');
       return;
     }
 
-    mesh.material = material;
+    // Apply transparency settings
+    flipboxMaterial.backFaceCulling = false;
+    flipboxMaterial.transparencyMode = Material.MATERIAL_ALPHATEST;
+
+    mesh.material = flipboxMaterial;
 
     // Register mesh for illumination glow if block has illumination modifier
     const illuminationService = renderContext.renderService.appContext.services.illumination;
@@ -284,7 +299,7 @@ export class FlipboxRenderer extends BlockRenderer {
       meshName,
       position: block.position,
       vertices: faceData.positions.length / 3,
-      material: material.name,
+      material: flipboxMaterial.name,
     });
   }
 }
