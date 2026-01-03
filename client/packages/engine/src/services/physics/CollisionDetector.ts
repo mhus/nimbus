@@ -134,7 +134,25 @@ export class CollisionDetector {
         const context = this.contextAnalyzer.getContext(entity, dimensions);
 
         if (movingUp) {
-            // Check head collision
+            // Check WALL blocks with UP wall (moving up into block from below)
+            for (const blockInfo of context.headBlocks.blocks) {
+                const physics = blockInfo.block?.currentModifier.physics;
+                if (!physics) continue;
+
+                // Check if this is a WALL block with UP wall
+                const isWall = physics.solid !== true && physics.passableFrom !== undefined;
+                if (isWall && physics.passableFrom && (physics.passableFrom & Direction.UP)) {
+                    // UP wall blocks entry from below
+                    const ceilingY = blockInfo.y; // Bottom of the block
+                    if (wishY + dimensions.height > ceilingY) {
+                        entity.velocity.y = 0;
+                        this.triggerCollisionEvent(blockInfo);
+                        return ceilingY - dimensions.height;
+                    }
+                }
+            }
+
+            // Check head collision with solid blocks
             if (context.headBlocks.hasSolid) {
                 // Hit ceiling - clamp to block bottom
                 const ceilingY = context.headBlocks.maxY;
@@ -150,7 +168,26 @@ export class CollisionDetector {
                 }
             }
         } else {
-            // Check ground collision
+            // Check WALL blocks with DOWN wall (falling/moving down into block from above)
+            for (const blockInfo of context.groundBlocks.blocks) {
+                const physics = blockInfo.block?.currentModifier.physics;
+                if (!physics) continue;
+
+                // Check if this is a WALL block with DOWN wall
+                const isWall = physics.solid !== true && physics.passableFrom !== undefined;
+                if (isWall && physics.passableFrom && (physics.passableFrom & Direction.DOWN)) {
+                    // DOWN wall blocks entry from above
+                    const groundY = blockInfo.y + 1.0; // Top of the block
+                    if (wishY < groundY) {
+                        entity.velocity.y = 0;
+                        entity.grounded = true;
+                        this.triggerCollisionEvent(blockInfo);
+                        return groundY;
+                    }
+                }
+            }
+
+            // Check ground collision with solid blocks
             if (context.groundBlocks.hasGround) {
                 const groundY = context.groundBlocks.groundY + 1.0; // Top of ground block
                 if (wishY < groundY) {
@@ -292,7 +329,6 @@ export class CollisionDetector {
                 if (isCurrentWall) {
                     // Check if we can leave in ANY of the movement directions
                     let blocked = false;
-                    const movementDirNames = movementDirs.map(d => ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][d]).join('+');
 
                     for (const movementDir of movementDirs) {
                         if (!PhysicsUtils.canLeaveTo(physics.passableFrom, movementDir, false)) {
@@ -300,17 +336,6 @@ export class CollisionDetector {
                             break;
                         }
                     }
-
-                    logger.info('Fall 2 - Exit from WALL block', {
-                        currentPos: { x: currentBlockX, z: currentBlockZ },
-                        intendedPos: { x: intendedX, z: intendedZ },
-                        blockY,
-                        passableFrom: physics.passableFrom,
-                        movementDirs: movementDirNames,
-                        blocked,
-                        dx,
-                        dz
-                    });
 
                     if (blocked) {
                         // Cannot leave through at least one wall side - blocked
@@ -375,7 +400,6 @@ export class CollisionDetector {
                 // WALL block: Check if it blocks from ANY of the entry directions
                 if (isWall) {
                     let blocked = false;
-                    const entryDirNames = entryDirs.map(d => ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][d]).join('+');
 
                     for (const entryDir of entryDirs) {
                         if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, false)) {
@@ -383,16 +407,6 @@ export class CollisionDetector {
                             break;
                         }
                     }
-
-                    logger.info('Fall 1 - Enter WALL block', {
-                        position: { x: blockX, y: blockY, z: blockZ },
-                        currentPos: { x: currentBlockX, z: currentBlockZ },
-                        passableFrom: physics.passableFrom,
-                        entryDirs: entryDirNames,
-                        blocked,
-                        dx,
-                        dz
-                    });
 
                     if (blocked) {
                         // Wall blocks at least one entry direction - treat as solid
