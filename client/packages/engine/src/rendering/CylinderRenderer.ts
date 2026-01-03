@@ -195,49 +195,6 @@ export class CylinderRenderer extends BlockRenderer {
       }
     }
 
-    // Apply rotation if specified
-    const rotationX = block.block.rotation?.x ?? 0;
-    const rotationY = block.block.rotation?.y ?? 0;
-
-    if (rotationX !== 0 || rotationY !== 0) {
-      // Convert degrees to radians
-      const radX = rotationX * Math.PI / 180;
-      const radY = rotationY * Math.PI / 180;
-
-      // Create rotation matrix
-      const rotationMatrix = Matrix.RotationYawPitchRoll(radY, radX, 0);
-
-      // Rotation center (average of top and bottom centers)
-      const rotCenterX = (bottomCenterX + topCenterX) / 2;
-      const rotCenterY = (bottomCenterY + topCenterY) / 2;
-      const rotCenterZ = (bottomCenterZ + topCenterZ) / 2;
-
-      // Apply rotation to each vertex and normal
-      for (let i = 0; i < vertices.length; i++) {
-        // Translate to rotation center
-        const relativePos = new Vector3(
-          vertices[i].x - rotCenterX,
-          vertices[i].y - rotCenterY,
-          vertices[i].z - rotCenterZ
-        );
-
-        // Apply rotation
-        const rotatedPos = Vector3.TransformCoordinates(relativePos, rotationMatrix);
-
-        // Translate back
-        vertices[i].x = rotatedPos.x + rotCenterX;
-        vertices[i].y = rotatedPos.y + rotCenterY;
-        vertices[i].z = rotatedPos.z + rotCenterZ;
-
-        // Rotate normals
-        const normal = new Vector3(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
-        const rotatedNormal = Vector3.TransformNormal(normal, rotationMatrix);
-        normals[i * 3] = rotatedNormal.x;
-        normals[i * 3 + 1] = rotatedNormal.y;
-        normals[i * 3 + 2] = rotatedNormal.z;
-      }
-    }
-
     // Generate indices for cylinder sides (only if visible)
     if (isSideVisible) {
       for (let i = 0; i < segments; i++) {
@@ -319,6 +276,49 @@ export class CylinderRenderer extends BlockRenderer {
           topCapStartVertex + i + 1,
           topCapStartVertex + i + 2
         );
+      }
+    }
+
+    // Apply rotation if specified (after all vertices are created)
+    const rotationX = block.block.rotation?.x ?? 0;
+    const rotationY = block.block.rotation?.y ?? 0;
+
+    if (rotationX !== 0 || rotationY !== 0) {
+      // Convert degrees to radians
+      const radX = rotationX * Math.PI / 180;
+      const radY = rotationY * Math.PI / 180;
+
+      // Create rotation matrix
+      const rotationMatrix = Matrix.RotationYawPitchRoll(radY, radX, 0);
+
+      // Rotation center (average of top and bottom centers)
+      const rotCenterX = (bottomCenterX + topCenterX) / 2;
+      const rotCenterY = (bottomCenterY + topCenterY) / 2;
+      const rotCenterZ = (bottomCenterZ + topCenterZ) / 2;
+
+      // Apply rotation to each vertex and normal
+      for (let i = 0; i < vertices.length; i++) {
+        // Translate to rotation center
+        const relativePos = new Vector3(
+          vertices[i].x - rotCenterX,
+          vertices[i].y - rotCenterY,
+          vertices[i].z - rotCenterZ
+        );
+
+        // Apply rotation
+        const rotatedPos = Vector3.TransformCoordinates(relativePos, rotationMatrix);
+
+        // Translate back
+        vertices[i].x = rotatedPos.x + rotCenterX;
+        vertices[i].y = rotatedPos.y + rotCenterY;
+        vertices[i].z = rotatedPos.z + rotCenterZ;
+
+        // Rotate normals
+        const normal = new Vector3(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
+        const rotatedNormal = Vector3.TransformNormal(normal, rotationMatrix);
+        normals[i * 3] = rotatedNormal.x;
+        normals[i * 3 + 1] = rotatedNormal.y;
+        normals[i * 3 + 2] = rotatedNormal.z;
       }
     }
 
