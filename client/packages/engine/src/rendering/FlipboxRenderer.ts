@@ -65,18 +65,26 @@ export class FlipboxRenderer extends BlockRenderer {
     }
 
     // Get texture for TOP face (TextureKey.TOP = 1)
-    const topTexture = modifier.visibility.textures?.[1]; // TOP face
+    const topTexture = modifier.visibility.textures?.[1] || modifier.visibility.textures?.[0]; // TOP face
     if (!topTexture) {
       logger.warn('FlipboxRenderer: No TOP texture defined', { block });
       return;
     }
 
-    // Get transformations
+    // Get transformations (scaling from visibility modifier, rotation from block)
     const scalingX = modifier.visibility.scalingX ?? 1.0;
     const scalingY = modifier.visibility.scalingY ?? 1.0;
     const scalingZ = modifier.visibility.scalingZ ?? 1.0;
     const rotationX = block.rotation?.x ?? 0;
     const rotationY = block.rotation?.y ?? 0;
+
+    logger.info('FlipboxRenderer transformations', {
+      position: block.position,
+      scaling: { x: scalingX, y: scalingY, z: scalingZ },
+      rotation: { x: rotationX, y: rotationY },
+      blockRotationObject: block.rotation,
+      clientBlock: clientBlock
+    });
 
     // Block position (offset by 0.5 in X and Z to center the face)
     const pos = block.position;
@@ -146,14 +154,17 @@ export class FlipboxRenderer extends BlockRenderer {
       }
     }
 
-    // Apply scaling
+    // Face center (for scaling and rotation)
+    const faceCenter = [0, 0.5, 0]; // Center of top face in local space
+
+    // Apply scaling around face center
     const scaledVertices = baseVertices.map(([x, y, z]) => [
-      x * scalingX,
-      y * scalingY,
-      z * scalingZ,
+      (x - faceCenter[0]) * scalingX + faceCenter[0],
+      (y - faceCenter[1]) * scalingY + faceCenter[1],
+      (z - faceCenter[2]) * scalingZ + faceCenter[2],
     ]);
 
-    // Apply rotation
+    // Apply rotation around face center
     const rotationMatrix = Matrix.RotationYawPitchRoll(
       (rotationY * Math.PI) / 180, // Yaw (Y-axis)
       (rotationX * Math.PI) / 180, // Pitch (X-axis)
@@ -161,8 +172,22 @@ export class FlipboxRenderer extends BlockRenderer {
     );
 
     const transformedVertices = scaledVertices.map(([x, y, z]) => {
-      const vec = Vector3.TransformCoordinates(new Vector3(x, y, z), rotationMatrix);
-      return [vec.x, vec.y, vec.z];
+      // Translate to origin (relative to face center)
+      const relativePos = new Vector3(
+        x - faceCenter[0],
+        y - faceCenter[1],
+        z - faceCenter[2]
+      );
+
+      // Apply rotation
+      const rotatedPos = Vector3.TransformCoordinates(relativePos, rotationMatrix);
+
+      // Translate back
+      return [
+        rotatedPos.x + faceCenter[0],
+        rotatedPos.y + faceCenter[1],
+        rotatedPos.z + faceCenter[2]
+      ];
     });
 
     // Translate to world position

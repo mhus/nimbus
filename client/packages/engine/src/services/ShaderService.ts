@@ -829,16 +829,25 @@ export class ShaderService {
       void main(void) {
         // Calculate frame offset in UV space
         float frameWidth = 1.0 / float(frameCount);
-        float frameOffset = float(currentFrame) * frameWidth;
+
+        // Half-pixel offset to sample from pixel centers (prevents edge bleeding)
+        // Assuming texture height of 512 pixels, 1 pixel = 1/512 = 0.00195
+        float pixelSize = 1.0 / 512.0; // Adjust based on typical texture size
+        float halfPixel = pixelSize * 0.5;
 
         // Adjust UV to sample current frame based on direction
         vec2 frameUV;
         if (flipDirection == 0) {
           // Horizontal flip (default)
-          frameUV = vec2(vUV.x * frameWidth + frameOffset, vUV.y);
+          float frameOffset = float(currentFrame) * frameWidth;
+          float u = vUV.x * (frameWidth - pixelSize) + frameOffset + halfPixel;
+          frameUV = vec2(clamp(u, 0.0, 1.0), vUV.y);
         } else {
-          // Vertical flip
-          frameUV = vec2(vUV.x, vUV.y * frameWidth + frameOffset);
+          // Vertical flip - simple calculation with proper inset
+          float frameOffset = float(currentFrame) * frameWidth;
+          // Map vUV.y (0=top, 1=bottom) to frame range with inset
+          float v = vUV.y * (frameWidth - pixelSize) + frameOffset + halfPixel;
+          frameUV = vec2(vUV.x, clamp(v, 0.0, 1.0));
         }
 
         // Sample texture
@@ -961,6 +970,9 @@ export class ShaderService {
       material.setTexture('textureSampler', texture);
       // Enable alpha for transparency
       texture.hasAlpha = true;
+      // Clamp texture to prevent wrapping/bleeding
+      texture.wrapU = Texture.CLAMP_ADDRESSMODE;
+      texture.wrapV = Texture.CLAMP_ADDRESSMODE;
     }
 
     // Set frame count
