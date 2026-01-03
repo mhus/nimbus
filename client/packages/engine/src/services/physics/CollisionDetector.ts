@@ -270,12 +270,13 @@ export class CollisionDetector {
         const blockInfo = { x: blockX, y: blockY, z: blockZ, block };
 
         // Get movement direction for passableFrom checks
-        const dir = PhysicsUtils.getMovementDirection(dx, dz);
+        const entryDir = PhysicsUtils.getMovementDirection(dx, dz);
 
         // Check passableFrom (one-way gates for solid, walls for non-solid)
         if (physics.passableFrom !== undefined) {
           const isSolid = physics.solid === true;
-          if (!PhysicsUtils.canEnterFrom(physics.passableFrom, dir, isSolid)) {
+          // When ENTERING a block, use the actual movement direction (not inverted)
+          if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, isSolid)) {
             // Blocked by one-way gate (solid) or wall (non-solid)
             this.triggerCollisionEvent(blockInfo);
             return { blocked: true, blockingBlock: blockInfo };
@@ -325,15 +326,76 @@ export class CollisionDetector {
       }
     }
 
-    // Also check current block passableFrom (wall barriers)
-    const currentContext = this.contextAnalyzer.getContext(entity, dimensions);
-    if (currentContext.currentBlocks.passableFrom !== undefined) {
-      const exitDir = PhysicsUtils.getMovementDirection(dx, dz);
-      const isSolid = currentContext.currentBlocks.hasSolid;
+    // Check if current position has WALL blocks that prevent exit
+    // Must check each block individually, not aggregated context
+    const currentFootprint = dimensions.footprint;
+    const currentCorners = [
+      { x: entity.position.x - currentFootprint, z: entity.position.z - currentFootprint },
+      { x: entity.position.x + currentFootprint, z: entity.position.z - currentFootprint },
+      { x: entity.position.x + currentFootprint, z: entity.position.z + currentFootprint },
+      { x: entity.position.x - currentFootprint, z: entity.position.z + currentFootprint },
+    ];
 
-      if (!PhysicsUtils.canLeaveTo(currentContext.currentBlocks.passableFrom, exitDir, isSolid)) {
-        // Cannot leave in this direction (thin wall)
-        return { blocked: true, blockingBlock: undefined };
+    const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
+
+    // Invert direction: when moving SOUTH, we exit through NORTH side of current block
+    // This is needed because we're checking which SIDE of the current block we're leaving through
+    let exitDir: Direction;
+    if (movementDir === Direction.NORTH) {
+      exitDir = Direction.SOUTH;
+    } else if (movementDir === Direction.SOUTH) {
+      exitDir = Direction.NORTH;
+    } else if (movementDir === Direction.EAST) {
+      exitDir = Direction.WEST;
+    } else {
+      exitDir = Direction.EAST;
+    }
+
+    logger.info('🚪 Checking exit from current WALL blocks', {
+      entityPos: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
+      movement: { dx, dz },
+      movementDir: movementDir,
+      movementDirName: ['', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][movementDir],
+      exitDir: exitDir,
+      exitDirName: ['', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][exitDir],
+    });
+
+    // Check each block at current position for wall barriers
+    for (const corner of currentCorners) {
+      const blockX = Math.floor(corner.x);
+      const blockZ = Math.floor(corner.z);
+
+      for (let dy = 0; dy < numLevels; dy++) {
+        const blockY = feetY + dy;
+        const block = this.chunkService.getBlockAt(blockX, blockY, blockZ);
+        if (!block) continue;
+
+        const physics = block.currentModifier.physics;
+
+        // Check for WALL blocks (solid=false + passableFrom defined)
+        if (physics?.solid !== true && physics?.passableFrom !== undefined) {
+          logger.info('🧱 Found WALL block at current position', {
+            blockPos: { x: blockX, y: blockY, z: blockZ },
+            solid: physics?.solid,
+            passableFrom: physics.passableFrom,
+            exitDir: exitDir,
+          });
+
+          // This is a WALL block - check if we can exit through this side
+          // exitDir is inverted to represent which SIDE we're exiting through
+          const canLeave = PhysicsUtils.canLeaveTo(physics.passableFrom, exitDir, false);
+          logger.info('🔍 canLeaveTo result', {
+            canLeave,
+            passableFrom: physics.passableFrom,
+            exitDir: exitDir,
+          });
+
+          if (!canLeave) {
+            // Wall blocks this exit direction
+            logger.info('🛑 WALL blocked exit!');
+            return { blocked: true, blockingBlock: { x: blockX, y: blockY, z: blockZ, block } };
+          }
+        }
       }
     }
 
