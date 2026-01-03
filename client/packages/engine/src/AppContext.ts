@@ -39,6 +39,7 @@ import type { PrecipitationService } from './services/PrecipitationService';
 import type { TeamService } from './services/TeamService';
 import type { RenderService } from './services/RenderService';
 import type { EntityRenderService } from './services/EntityRenderService';
+import type { IlluminationService } from './services/IlluminationService';
 import type { WorldInfo, PlayerInfo } from '@nimbus/shared';
 import { getLogger } from '@nimbus/shared';
 
@@ -167,6 +168,9 @@ export interface Services {
 
   /** Entity render service for entity visualization */
   entityRender?: EntityRenderService;
+
+  /** Illumination service for block glow effects */
+  illumination?: IlluminationService;
 }
 
 /**

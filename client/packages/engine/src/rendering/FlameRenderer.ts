@@ -333,6 +333,16 @@ export class FlameRenderer extends BlockRenderer {
 
     plane.material = material;
 
+    // Register mesh for illumination glow if block has illumination modifier
+    const illuminationService = renderContext.renderService.appContext.services.illumination;
+    if (illuminationService && clientBlock.currentModifier.illumination?.color) {
+      illuminationService.registerMesh(
+        plane,
+        clientBlock.currentModifier.illumination.color,
+        clientBlock.currentModifier.illumination.strength ?? 1.0
+      );
+    }
+
     // Register mesh for automatic disposal when chunk is unloaded
     renderContext.resourcesToDispose.addMesh(plane);
 

@@ -153,6 +153,13 @@ export class MaterialService {
         parts.push(`c:${textureDef.color}`);
     }
 
+    // 7. Illumination (if defined)
+    if (modifier.illumination?.color || modifier.illumination?.strength) {
+      const color = modifier.illumination.color ?? '#ffffff';
+      const strength = modifier.illumination.strength ?? 1.0;
+      parts.push(`illum:${color}:${strength}`);
+    }
+
     // Note: Texture path is NOT part of the key (except for FLIPBOX) - UVs handle texture selection via atlas
     // Note: UV mapping is NOT part of the key - handled per-vertex in geometry
 
@@ -188,6 +195,9 @@ export class MaterialService {
     effect: number;
     effectParameters?: string;
     texturePath?: string;
+    color?: string;
+    illuminationColor?: string;
+    illuminationStrength?: number;
   } {
     const parts = materialKey.split('|');
     const props: any = {
@@ -224,6 +234,11 @@ export class MaterialService {
           break;
         case 'c':
           props.color = value;
+          break;
+        case 'illum':
+          const [_, illumColor, illumStrength] = part.split(':');
+          props.illuminationColor = illumColor;
+          props.illuminationStrength = parseFloat(illumStrength);
           break;
       }
     }
@@ -343,6 +358,8 @@ export class MaterialService {
       opacity: number;
       samplingMode: number;
       color?: string;
+      illuminationColor?: string;
+      illuminationStrength?: number;
     }
   ): StandardMaterial {
     const material = new StandardMaterial(name, this.scene);
@@ -412,6 +429,21 @@ export class MaterialService {
     } else {
       material.specularColor = new Color3(0, 0, 0);
     }
+
+    // Apply illumination (emissive color for glow effect)
+    if (props.illuminationColor) {
+      const strength = props.illuminationStrength ?? 1.0;
+      const baseColor = Color3.FromHexString(props.illuminationColor);
+
+      // Scale color by strength for intensity control
+      material.emissiveColor = baseColor.scale(strength);
+
+      // If using atlas texture, also set emissiveTexture
+      if (atlasTexture) {
+        material.emissiveTexture = atlasTexture;
+      }
+    }
+
     return material;
   }
 

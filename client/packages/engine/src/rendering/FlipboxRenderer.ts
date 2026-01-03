@@ -267,6 +267,16 @@ export class FlipboxRenderer extends BlockRenderer {
 
     mesh.material = material;
 
+    // Register mesh for illumination glow if block has illumination modifier
+    const illuminationService = renderContext.renderService.appContext.services.illumination;
+    if (illuminationService && modifier.illumination?.color) {
+      illuminationService.registerMesh(
+        mesh,
+        modifier.illumination.color,
+        modifier.illumination.strength ?? 1.0
+      );
+    }
+
     // Register mesh for automatic disposal when chunk is unloaded
     renderContext.resourcesToDispose.addMesh(mesh);
 

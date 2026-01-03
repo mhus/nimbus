@@ -251,6 +251,16 @@ export class BillboardRenderer extends BlockRenderer {
     // Apply material (already created above to get aspect ratio)
     mesh.material = material;
 
+    // Register mesh for illumination glow if block has illumination modifier
+    const illuminationService = renderContext.renderService.appContext.services.illumination;
+    if (illuminationService && clientBlock.currentModifier.illumination?.color) {
+      illuminationService.registerMesh(
+        mesh,
+        clientBlock.currentModifier.illumination.color,
+        clientBlock.currentModifier.illumination.strength ?? 1.0
+      );
+    }
+
     // Register mesh for automatic disposal when chunk is unloaded
     renderContext.resourcesToDispose.addMesh(mesh);
 

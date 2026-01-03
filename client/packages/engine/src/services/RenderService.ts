@@ -407,6 +407,13 @@ export class RenderService {
 
           meshMap.set(materialKey, mesh);
 
+          // Register mesh for illumination glow if block has illumination modifier
+          const illuminationService = this.appContext.services.illumination;
+          if (illuminationService && blocks[0].currentModifier.illumination?.color) {
+            const { color, strength } = blocks[0].currentModifier.illumination;
+            illuminationService.registerMesh(mesh, color, strength ?? 1.0);
+          }
+
           logger.debug('Material group mesh created', {
             cx: chunk.cx,
             cz: chunk.cz,
@@ -733,6 +740,14 @@ export class RenderService {
     let chunkMeshCount = 0;
 
     if (meshMap) {
+      // Unregister from illumination service before disposal
+      const illuminationService = this.appContext.services.illumination;
+      if (illuminationService) {
+        for (const mesh of meshMap.values()) {
+          illuminationService.unregisterMesh(mesh);
+        }
+      }
+
       for (const [materialKey, mesh] of meshMap) {
         mesh.dispose();
         chunkMeshCount++;

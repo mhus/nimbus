@@ -26,6 +26,7 @@ import { MoonService } from './MoonService';
 import { CloudsService } from './CloudsService';
 import { HorizonGradientService } from './HorizonGradientService';
 import { PrecipitationService } from './PrecipitationService';
+import { IlluminationService } from './IlluminationService';
 import { WebInputController } from '../input/WebInputController';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
 
@@ -63,6 +64,7 @@ export class EngineService {
   private horizonGradientService?: HorizonGradientService;
   private precipitationService?: PrecipitationService;
   private environmentService?: EnvironmentService;
+  private illuminationService?: IlluminationService;
   private renderService?: RenderService;
   private physicsService?: PhysicsService;
   private playerService?: PlayerService;
@@ -177,6 +179,11 @@ export class EngineService {
       // Initialize environment
       this.environmentService = new EnvironmentService(this.scene, this.appContext);
       logger.debug('EnvironmentService initialized');
+
+      // Initialize illumination service (for block glow effects)
+      this.illuminationService = new IlluminationService(this.scene, this.appContext);
+      this.appContext.services.illumination = this.illuminationService;
+      logger.debug('IlluminationService initialized');
 
       // Initialize ShaderService with scene and connect to EnvironmentService
       const shaderService = this.appContext.services.shader;
@@ -616,6 +623,7 @@ export class EngineService {
     this.playerService?.dispose();
     this.physicsService?.dispose();
     this.environmentService?.dispose();
+    this.illuminationService?.dispose();
     this.precipitationService?.dispose();
     this.horizonGradientService?.dispose();
     this.cloudsService?.dispose();

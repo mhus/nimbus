@@ -183,6 +183,16 @@ export class ModelRenderer extends BlockRenderer {
       modelMesh.isVisible = true;
       modelMesh.visibility = 1.0;
 
+      // Register mesh for illumination glow if block has illumination modifier
+      const illuminationService = renderContext.renderService.appContext.services.illumination;
+      if (illuminationService && modifier.illumination?.color) {
+        illuminationService.registerMesh(
+          modelMesh,
+          modifier.illumination.color,
+          modifier.illumination.strength ?? 1.0
+        );
+      }
+
       // Register mesh for automatic disposal when chunk is unloaded
       renderContext.resourcesToDispose.addMesh(modelMesh);
 

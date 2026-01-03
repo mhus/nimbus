@@ -33,7 +33,8 @@ public enum Shape implements de.mhus.nimbus.types.TsEnum {
     THIN_INSTANCES(25),
     WALL(26),
     FLIPBOX(27),
-    ITEM(28);
+    ITEM(28),
+    BUSH(29);
 
     @lombok.Getter
     private final int tsIndex;

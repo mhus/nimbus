@@ -134,6 +134,16 @@ export class FogRenderer extends BlockRenderer {
       fogMesh.isPickable = false;
       fogMesh.renderingGroupId = RENDERING_GROUPS.WORLD; // Same as blocks for proper depth testing
 
+      // Register mesh for illumination glow if block has illumination modifier
+      const illuminationService = renderContext.renderService.appContext.services.illumination;
+      if (illuminationService && modifier.illumination?.color) {
+        illuminationService.registerMesh(
+          fogMesh,
+          modifier.illumination.color,
+          modifier.illumination.strength ?? 1.0
+        );
+      }
+
       // Add to disposable resources
       renderContext.resourcesToDispose.addMesh(fogMesh);
 
