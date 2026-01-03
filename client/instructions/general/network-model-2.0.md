@@ -234,12 +234,12 @@ Der Server sendet Item-Block-Änderungen an den Client. Items sind spezielle Bil
 - Items mit `blockTypeId: 0` (AIR) werden entfernt, aber nur wenn ein Item an der Position existiert
 - Items mit `blockTypeId: 1` werden hinzugefügt/aktualisiert, aber nur wenn die Position AIR ist oder bereits ein Item enthält
 - Items können keine regulären Blöcke überschreiben
-- Jedes Item hat `metadata.id` (unique identifier) und optional `metadata.displayName`
+- Jedes Item hat `metadata.id` (unique identifier) und optional `metadata.title`
 
 ```json
 {"t": "b.iu", "d":
         [
-          Item,  // BlockData mit metadata.id und metadata.displayName
+          Item,  // BlockData mit metadata.id und metadata.title
           ...
       ]
 }

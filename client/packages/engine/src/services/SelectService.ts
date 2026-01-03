@@ -880,7 +880,7 @@ export class SelectService {
   /**
    * Show label for selected block
    *
-   * Only shows label if block has displayName metadata.
+   * Only shows label if block has title metadata.
    * Label is positioned above the block in screen space.
    *
    * @param clientBlock Block to show label for
@@ -890,16 +890,16 @@ export class SelectService {
       return;
     }
 
-    // Get display name from metadata
-    const displayName = clientBlock.block.metadata?.displayName;
-    if (!displayName) {
-      // No displayName - hide label
+    // Get title from metadata
+    const title = clientBlock.block.metadata?.title;
+    if (!title) {
+      // No title - hide label
       this.hideLabel();
       return;
     }
 
     // Set label text
-    this.labelTextBlock.text = displayName;
+    this.labelTextBlock.text = title;
 
     // Link label to block position (above the block)
     const blockCenter = this.highlightMesh.position.clone();
@@ -913,7 +913,7 @@ export class SelectService {
     this.labelTextBlock.isVisible = true;
 
     logger.debug('Label shown', {
-      displayName,
+      title,
       position: clientBlock.block.position,
     });
   }

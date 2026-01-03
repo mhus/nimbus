@@ -271,7 +271,7 @@ export class ItemRenderer extends BlockRenderer {
     logger.debug('Item mesh created', {
       meshName,
       itemId,
-      displayName: block.metadata?.displayName,
+      title: block.metadata?.title,
       position: centerPosition,
       aspectRatio,
     });

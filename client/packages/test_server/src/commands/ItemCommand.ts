@@ -2,8 +2,8 @@
  * ItemCommand - Manipulate items in the world
  *
  * Commands:
- * - /item add <displayName> <itemType> [texturePath] - Add item without position
- * - /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item with position
+ * - /item add <name> <itemType> [texturePath] - Add item without position
+ * - /item add <x> <y> <z> <name> <itemType> [texturePath] - Add item with position
  * - /item place <itemId> <x> <y> <z> - Place item at position
  * - /item remove <x> <y> <z> - Remove item from position
  * - /item list - List all items
@@ -38,7 +38,7 @@ export class ItemCommand extends CommandHandler {
     if (args.length === 0) {
       return {
         rc: 1,
-        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <displayName> <itemType> [texturePath] - Add item without position\n  add <x> <y> <z> <displayName> <itemType> [texturePath] - Add item with position\n  place <itemId> <x> <y> <z> - Place item at position\n  remove <x> <y> <z> - Remove item from position\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
+        message: `Usage: ${this.usage}\n\nSubcommands:\n  add <name> <itemType> [texturePath] - Add item without position\n  add <x> <y> <z> <name> <itemType> [texturePath] - Add item with position\n  place <itemId> <x> <y> <z> - Place item at position\n  remove <x> <y> <z> - Remove item from position\n  get <x> <y> <z> - Get item info at position\n  list - List all items`,
       };
     }
 
@@ -64,14 +64,14 @@ export class ItemCommand extends CommandHandler {
   }
 
   /**
-   * Handle /item add <displayName> <itemType> [texturePath]
-   * or /item add <x> <y> <z> <displayName> <itemType> [texturePath]
+   * Handle /item add <name> <itemType> [texturePath]
+   * or /item add <x> <y> <z> <name> <itemType> [texturePath]
    */
   private async handleAdd(args: any[], context: CommandContext): Promise<CommandResult> {
     if (args.length < 2) {
       return {
         rc: 1,
-        message: 'Usage:\n  /item add <displayName> <itemType> [texturePath] - Add without position\n  /item add <x> <y> <z> <displayName> <itemType> [texturePath] - Add with position',
+        message: 'Usage:\n  /item add <name> <itemType> [texturePath] - Add without position\n  /item add <x> <y> <z> <name> <itemType> [texturePath] - Add with position',
       };
     }
 
@@ -98,16 +98,16 @@ export class ItemCommand extends CommandHandler {
     const hasCoordinates = firstArgIsNumber && secondArgIsNumber && thirdArgIsNumber;
 
     let position: { x: number; y: number; z: number } | undefined;
-    let displayName: string;
+    let name: string;
     let itemType: string;
     let texturePath: string | undefined;
 
     if (hasCoordinates) {
-      // Format: /item add <x> <y> <z> <displayName> <itemType> [texturePath]
+      // Format: /item add <x> <y> <z> <name> <itemType> [texturePath]
       if (args.length < 5) {
         return {
           rc: 1,
-          message: 'Usage: /item add <x> <y> <z> <displayName> <itemType> [texturePath]',
+          message: 'Usage: /item add <x> <y> <z> <name> <itemType> [texturePath]',
         };
       }
 
@@ -116,19 +116,19 @@ export class ItemCommand extends CommandHandler {
         y: parseInt(String(args[1]), 10),
         z: parseInt(String(args[2]), 10),
       };
-      displayName = String(args[3]);
+      name = String(args[3]);
       itemType = String(args[4]);
       texturePath = args[5] ? String(args[5]) : undefined;
     } else {
-      // Format: /item add <displayName> <itemType> [texturePath]
-      displayName = String(args[0]);
+      // Format: /item add <name> <itemType> [texturePath]
+      name = String(args[0]);
       itemType = String(args[1]);
       texturePath = args[2] ? String(args[2]) : undefined;
     }
 
     try {
       // Add item to registry
-      const item = world.itemRegistry.addItem(displayName, itemType, position, texturePath);
+      const item = world.itemRegistry.addItem(name, itemType, position, texturePath);
 
       // Queue item update for broadcast (only if item has position)
       if (item.itemBlockRef) {
@@ -138,7 +138,7 @@ export class ItemCommand extends CommandHandler {
       logger.info('Item added via command', {
         worldId,
         position,
-        displayName,
+        name,
         itemType,
         texturePath,
         itemId: item.item.id,
@@ -147,7 +147,7 @@ export class ItemCommand extends CommandHandler {
       const posMsg = position ? ` at (${position.x}, ${position.y}, ${position.z})` : ' (no position)';
       return {
         rc: 0,
-        message: `Item "${displayName}" (${itemType}) added${posMsg}\nItem ID: ${item.item.id}`,
+        message: `Item "${name}" (${itemType}) added${posMsg}\nItem ID: ${item.item.id}`,
       };
     } catch (error) {
       logger.error('Failed to add item', { worldId, position }, error as Error);
@@ -332,7 +332,7 @@ export class ItemCommand extends CommandHandler {
         worldId,
         position: { x, y, z },
         itemId: item.item.id,
-        displayName: item.item.name,
+        name: item.item.name,
       });
 
       return {

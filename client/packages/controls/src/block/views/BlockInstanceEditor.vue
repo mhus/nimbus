@@ -383,23 +383,58 @@
           </CollapsibleSection>
 
           <!-- Metadata Section -->
-          <div class="divider">Metadata</div>
+          <CollapsibleSection
+            title="Metadata"
+            :model-value="hasMetadata"
+            :default-open="false"
+            @update:model-value="toggleMetadata"
+          >
+            <div class="space-y-3">
+              <!-- ID (full width) -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">ID</span>
+                  <span class="label-text-alt">Unique identifier</span>
+                </label>
+                <input
+                  v-model="blockData.metadata.id"
+                  type="text"
+                  class="input input-bordered input-sm"
+                  placeholder="Optional ID"
+                />
+              </div>
 
-          <div v-if="blockData.metadata" class="grid grid-cols-2 gap-4">
-            <!-- Group ID -->
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text">Group ID</span>
-              </label>
-              <input
-                v-model.number="blockData.metadata.groupId"
-                type="number"
-                class="input input-bordered input-sm"
-                placeholder="Optional"
-              />
+              <!-- Title (full width) -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Title</span>
+                  <span class="label-text-alt">Display name</span>
+                </label>
+                <input
+                  v-model="blockData.metadata.title"
+                  type="text"
+                  class="input input-bordered input-sm"
+                  placeholder="Optional title"
+                />
+              </div>
+
+              <!-- Group ID and other fields in grid -->
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Group ID -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Group ID</span>
+                  </label>
+                  <input
+                    v-model.number="blockData.metadata.groupId"
+                    type="number"
+                    class="input input-bordered input-sm"
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
             </div>
-
-          </div>
+          </CollapsibleSection>
 
           <!-- Modifiers Section -->
           <div class="divider">Modifiers (per Status)</div>
@@ -1366,6 +1401,19 @@ const toggleRotation = (enabled: boolean) => {
     blockData.value.rotation = undefined;
   } else if (!blockData.value.rotation) {
     blockData.value.rotation = { x: 0, y: 0 };
+  }
+};
+
+// Metadata state
+const hasMetadata = computed(() => {
+  return blockData.value.metadata !== undefined;
+});
+
+const toggleMetadata = (enabled: boolean) => {
+  if (!enabled) {
+    blockData.value.metadata = undefined;
+  } else if (!blockData.value.metadata) {
+    blockData.value.metadata = {};
   }
 };
 

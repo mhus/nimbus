@@ -124,13 +124,11 @@ Hier habe ich eine Verbesserung: canLeaveFrom kann canLeaveTo sein und das kehrt
 canLeaveTo(10,10, WEST) = FALSE (opposite von canLeaveFrom(10,10, EAST) )
 canEnterFrom(9,10, WEST) = ??? kenne ja den block nicht
 
-
-
-
-
 [ ] Support PhysicsModifier.passableFrom Top/Bottom bei solid = false
 - wenn solid = false und passableFrom !+ undefined und passableFrom != top , dann kann man in den Block nicht hinein fallen, d.h. gravitation hoert hier auf, man ist auf solidem grund
 - wenn solid = false und passableFrom !+ undefined und passableFrom != bottom, dann kann man aus dem Block nach unten nicht raus fallen, obwohl dronter eventuell AIR oder non solid ist.
+
+
 
 ## Editor
 

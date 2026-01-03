@@ -14,10 +14,12 @@ export interface BlockMetadata {
   id?: string;
 
   /**
-   * Display name for this block instance (e.g., "Hacke", "Schwert")
+   * Title for this block instance
+   * Additional descriptive text for the block
+   * Title for this block instance (e.g., "Hacke", "Schwert")
    * Used for items and special blocks that need custom names
    */
-  displayName?: string;
+  title?: string;
 
   /**
    * Group ID for organization/categorization

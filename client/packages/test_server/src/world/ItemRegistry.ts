@@ -72,7 +72,7 @@ export class ItemRegistry {
   /**
    * Add item to registry
    *
-   * @param displayName Display name for the item
+   * @param name Display name for the item
    * @param itemTypeId Item type identifier (e.g., 'sword', 'wand')
    * @param position World Position (X,Y,Z) coordinate (optional)
    * @param texturePath Optional texture path override
@@ -81,7 +81,7 @@ export class ItemRegistry {
    * @returns Created item
    */
   addItem(
-    displayName: string,
+    name: string,
     itemTypeId: string,
     position?: Vector3,
     texturePath?: string,
@@ -103,7 +103,7 @@ export class ItemRegistry {
     const item: Item = {
       id,
       itemType: itemTypeId,
-      name: displayName,
+      name: name,
       parameters,
     };
 
@@ -128,7 +128,7 @@ export class ItemRegistry {
     logger.info('Item added', {
       position,
       id,
-      name: displayName,
+      name: name,
       itemType,
       texturePath,
       hasParameters: !!parameters,
