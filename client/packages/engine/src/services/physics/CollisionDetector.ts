@@ -351,18 +351,27 @@ export class CollisionDetector {
                 if (!physics?.solid && !isWall) continue;
 
                 const blockInfo = { x: blockX, y: blockY, z: blockZ, block };
-                const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
-                // Entry side is opposite of movement direction (moving NORTH = entering from SOUTH)
-                const entryDir = PhysicsUtils.invertDirection(movementDir);
+
+                // Calculate which side of THIS specific block we're entering from
+                // Based on block position relative to current position, not movement direction
+                let entryDir: Direction;
+                if (blockX > currentBlockX) {
+                    entryDir = Direction.WEST;  // Block is east - entering from west side
+                } else if (blockX < currentBlockX) {
+                    entryDir = Direction.EAST;  // Block is west - entering from east side
+                } else if (blockZ > currentBlockZ) {
+                    entryDir = Direction.SOUTH; // Block is north - entering from south side
+                } else {
+                    entryDir = Direction.NORTH; // Block is south - entering from north side
+                }
 
                 // WALL block: Check if it blocks from this direction (acts as solid)
                 if (isWall) {
                     const canEnter = PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, false);
                     logger.info('Fall 1 - Enter WALL block', {
                         position: { x: blockX, y: blockY, z: blockZ },
+                        currentPos: { x: currentBlockX, z: currentBlockZ },
                         passableFrom: physics.passableFrom,
-                        movementDir,
-                        movementDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][movementDir],
                         entryDir,
                         entryDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][entryDir],
                         canEnter,
@@ -381,7 +390,7 @@ export class CollisionDetector {
 
                 // SOLID block: Check passableFrom for one-way gates
                 if (physics.passableFrom !== undefined) {
-                    // For solid blocks, entryDir is already inverted above (reuse the same variable)
+                    // entryDir is calculated above based on block position relative to current position
                     if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, true)) {
                         // Blocked by one-way gate
                         this.triggerCollisionEvent(blockInfo);
