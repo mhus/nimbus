@@ -245,40 +245,67 @@ export class CollisionDetector {
         const numLevels = Math.ceil(dimensions.height);
 
         // FALL 2: Check if trying to EXIT from a WALL block
-        // Check block at CURRENT position (where entity is standing)
+        // Check if we're close to the block boundary (0.2 units before crossing)
         const currentBlockX = Math.floor(entity.position.x);
         const currentBlockZ = Math.floor(entity.position.z);
+        const threshold = 0.2;
         const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
 
-        // Check all vertical levels at current position
-        for (let dy = 0; dy < numLevels; dy++) {
-            const blockY = feetY + dy;
-            const currentBlock = this.chunkService.getBlockAt(currentBlockX, blockY, currentBlockZ);
-            if (!currentBlock) continue;
+        // Determine if we're approaching a block boundary based on movement direction
+        let shouldCheckExit = false;
+        if (movementDir === Direction.NORTH) {
+            // Moving in positive Z direction
+            const boundary = currentBlockZ + 1.0;
+            shouldCheckExit = intendedZ >= boundary - threshold;
+        } else if (movementDir === Direction.SOUTH) {
+            // Moving in negative Z direction
+            const boundary = currentBlockZ;
+            shouldCheckExit = intendedZ <= boundary + threshold;
+        } else if (movementDir === Direction.EAST) {
+            // Moving in positive X direction
+            const boundary = currentBlockX + 1.0;
+            shouldCheckExit = intendedX >= boundary - threshold;
+        } else if (movementDir === Direction.WEST) {
+            // Moving in negative X direction
+            const boundary = currentBlockX;
+            shouldCheckExit = intendedX <= boundary + threshold;
+        }
 
-            const physics = currentBlock.currentModifier.physics;
+        // Only check Fall 2 if we're approaching block boundary
+        if (shouldCheckExit) {
 
-            // Check if current block is a WALL block
-            const isCurrentWall = physics?.solid !== true && physics?.passableFrom !== undefined;
+            // Check all vertical levels at current position
+            for (let dy = 0; dy < numLevels; dy++) {
+                const blockY = feetY + dy;
+                const currentBlock = this.chunkService.getBlockAt(currentBlockX, blockY, currentBlockZ);
+                if (!currentBlock) continue;
 
-            if (isCurrentWall) {
-                // Check if we can leave in this movement direction
-                const canLeave = PhysicsUtils.canLeaveTo(physics.passableFrom, movementDir, false);
-                logger.info('Fall 2 - Exit from WALL block', {
-                    position: { x: currentBlockX, y: blockY, z: currentBlockZ },
-                    passableFrom: physics.passableFrom,
-                    movementDir,
-                    movementDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][movementDir],
-                    canLeave,
-                    dx,
-                    dz
-                });
+                const physics = currentBlock.currentModifier.physics;
 
-                if (!canLeave) {
-                    // Cannot leave through this wall side - blocked
-                    const blockInfo = { x: currentBlockX, y: blockY, z: currentBlockZ, block: currentBlock };
-                    this.triggerCollisionEvent(blockInfo);
-                    return { blocked: true, blockingBlock: blockInfo };
+                // Check if current block is a WALL block
+                const isCurrentWall = physics?.solid !== true && physics?.passableFrom !== undefined;
+
+                if (isCurrentWall) {
+                    // Check if we can leave in this movement direction
+                    const canLeave = PhysicsUtils.canLeaveTo(physics.passableFrom, movementDir, false);
+                    logger.info('Fall 2 - Exit from WALL block', {
+                        currentPos: { x: currentBlockX, z: currentBlockZ },
+                        intendedPos: { x: intendedX, z: intendedZ },
+                        blockY,
+                        passableFrom: physics.passableFrom,
+                        movementDir,
+                        movementDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][movementDir],
+                        canLeave,
+                        dx,
+                        dz
+                    });
+
+                    if (!canLeave) {
+                        // Cannot leave through this wall side - blocked
+                        const blockInfo = { x: currentBlockX, y: blockY, z: currentBlockZ, block: currentBlock };
+                        this.triggerCollisionEvent(blockInfo);
+                        return { blocked: true, blockingBlock: blockInfo };
+                    }
                 }
             }
         }
@@ -295,6 +322,19 @@ export class CollisionDetector {
         for (const corner of intendedCorners) {
             const blockX = Math.floor(corner.x);
             const blockZ = Math.floor(corner.z);
+
+            // Skip Fall 1 if player is already standing on this block (Fall 2 handles exit from current block)
+            if (currentBlockX === blockX && currentBlockZ === blockZ) {
+                continue;
+            }
+
+            // Skip Fall 1 if block is not in movement direction (behind us)
+            // This prevents footprint corners from triggering Fall 1 for blocks we're moving away from
+            const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
+            if (movementDir === Direction.NORTH && blockZ <= currentBlockZ) continue; // Moving +Z, skip blocks at or behind current Z
+            if (movementDir === Direction.SOUTH && blockZ >= currentBlockZ) continue; // Moving -Z, skip blocks at or ahead current Z
+            if (movementDir === Direction.EAST && blockX <= currentBlockX) continue;  // Moving +X, skip blocks at or behind current X
+            if (movementDir === Direction.WEST && blockX >= currentBlockX) continue;  // Moving -X, skip blocks at or ahead current X
 
             // Check all vertical levels
             for (let dy = 0; dy < numLevels; dy++) {
