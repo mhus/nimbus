@@ -272,14 +272,15 @@ export class CollisionDetector {
         // Get movement direction for passableFrom checks
         const dir = PhysicsUtils.getMovementDirection(dx, dz);
 
-        // Check passableFrom (one-way gates)
+        // Check passableFrom (one-way gates for solid, walls for non-solid)
         if (physics.passableFrom !== undefined) {
-          if (!PhysicsUtils.canEnterFrom(physics.passableFrom, dir, true)) {
-            // Blocked by one-way gate
+          const isSolid = physics.solid === true;
+          if (!PhysicsUtils.canEnterFrom(physics.passableFrom, dir, isSolid)) {
+            // Blocked by one-way gate (solid) or wall (non-solid)
             this.triggerCollisionEvent(blockInfo);
             return { blocked: true, blockingBlock: blockInfo };
           }
-          // Can pass through one-way gate
+          // Can pass through (one-way gate or open side)
           continue;
         }
 

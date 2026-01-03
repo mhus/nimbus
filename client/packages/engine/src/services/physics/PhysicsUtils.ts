@@ -36,10 +36,12 @@ export function getMovementDirection(dx: number, dz: number): Direction {
  * - If entrySide is in passableFrom → allow entry (one-way gate)
  * - If entrySide not in passableFrom → block entry
  *
- * For non-solid blocks with passableFrom:
- * - passableFrom defines wall barriers on edges
+ * For non-solid blocks with passableFrom (WALLS):
+ * - passableFrom defines which sides are WALLS (barriers)
+ * - If entrySide is in passableFrom → blocked (wall exists on that side)
+ * - If entrySide not in passableFrom → allow (no wall on that side)
  *
- * @param passableFrom Direction bitfield from block (which sides are passable)
+ * @param passableFrom Direction bitfield from block (which sides are walls for non-solid, or passable for solid)
  * @param entrySide Which side of the block we're entering from
  * @param isSolid Whether the block is solid
  * @returns true if entry is allowed, false if blocked
@@ -54,21 +56,28 @@ export function canEnterFrom(
     return !isSolid; // Solid blocks block, non-solid blocks allow
   }
 
-  // Check if the entry side is passable
-  return DirectionHelper.hasDirection(passableFrom, entrySide);
+  // For solid blocks: passableFrom = sides you CAN enter (one-way gates)
+  if (isSolid) {
+    return DirectionHelper.hasDirection(passableFrom, entrySide);
+  }
+
+  // For non-solid blocks (WALLS): passableFrom = sides with WALLS (cannot enter)
+  // Inverted logic: if side is in passableFrom → it's a wall → blocked
+  return !DirectionHelper.hasDirection(passableFrom, entrySide);
 }
 
 /**
  * Check if we can leave a block towards a specific direction
  *
  * For solid blocks with passableFrom:
- * - Player inside can exit through any non-solid neighbor
+ * - Player inside can exit through any non-solid neighbor (one-way behavior)
  *
- * For non-solid blocks with passableFrom:
- * - passableFrom defines barriers that cannot be crossed
- * - If exitDir is NOT in passableFrom → blocked (wall barrier)
+ * For non-solid blocks with passableFrom (WALLS):
+ * - passableFrom defines which sides are WALLS (barriers)
+ * - If exitDir is in passableFrom → blocked (wall exists on that side)
+ * - If exitDir not in passableFrom → allow (no wall on that side)
  *
- * @param passableFrom Direction bitfield from block (which sides are passable)
+ * @param passableFrom Direction bitfield from block (which sides are walls for non-solid, or passable for solid)
  * @param exitDir Which direction we're moving towards (which side we're exiting through)
  * @param isSolid Whether the block is solid
  * @returns true if exit is allowed, false if blocked
@@ -83,14 +92,14 @@ export function canLeaveTo(
     return true;
   }
 
-  // For non-solid blocks: passableFrom are the ALLOWED exit directions
   // For solid blocks: always allow exit (one-way behavior)
   if (isSolid) {
     return true; // Can always exit solid blocks (from inside)
   }
 
-  // Check if the exit direction/side is passable
-  return DirectionHelper.hasDirection(passableFrom, exitDir);
+  // For non-solid blocks (WALLS): passableFrom = sides with WALLS (cannot exit)
+  // Inverted logic: if side is in passableFrom → it's a wall → blocked
+  return !DirectionHelper.hasDirection(passableFrom, exitDir);
 }
 
 /**
