@@ -292,20 +292,69 @@ Wenn er nicht gesetzt ist, oder kleiner 0, wird er als undefined gespeichert.
 
 ## Bush Shape and Renderer
 
-[ ] Erstelle einen BushRenderer der Blocks mit shape BUSH rendert.
+[?] Erstelle einen BushRenderer der Blocks mit shape BUSH rendert.
 - Ein Busch soll einen Busch, oder ein kleine gewächs darstellen, dafue werden mehrere flache Flächen genutzt die ineinander scheinbar 
   unstrukturiert verschraenkt sind.
 - Die grosse und anzahl der Flächen soll durch die Offset Eigenschaften am Block gesteuert werden.
   So kann der Busch 'wachsen' durch die aenderung der offsets.
 - Orientiere dich grob an CubeRenderer. - nicht Offsets
 - rotation und Wind sollen auch funktionieren - Wie bei CubeRenderer.
+```text
+  Implementierte Features
 
----
+  BushRenderer (packages/engine/src/rendering/BushRenderer.ts):
+  - Rendert Büsche mit mehreren verschränkten Flächen (4-8 Ebenen)
+  - Offset-Steuerung:
+    - offset[0]: Anzahl der Flächen (4-8, Standard: 6)
+    - offset[1]: Skalierungsfaktor (0.3-1.5, Standard: 1.0)
+    - offset[2]: Varianz/Unordnung (0.0-0.5, Standard: 0.3)
+  - Rotation: Unterstützt rotation.x und rotation.y wie beim CubeRenderer
+  - Wind: Nutzt addWindAttributesAndColors() für Wind-Animation
+  - Scaling: Unterstützt scalingX, scalingY, scalingZ aus dem Modifier
+  - Die Flächen werden gleichmäßig in verschiedenen Winkeln verteilt und mit deterministischer Pseudo-Zufälligkeit variiert
+
+  Shape Enum (packages/shared/src/types/Shape.ts):
+  - Shape.BUSH = 29 hinzugefügt
+  - ShapeNames aktualisiert mit 'bush'
+
+  RenderService (packages/engine/src/services/RenderService.ts):
+  - BushRenderer importiert und initialisiert
+  - Im getRenderer() switch-case für Shape.BUSH registriert
+
+  Verwendungsbeispiel
+
+  {
+    "visibility": {
+      "shape": 29,  // BUSH
+      "textures": {
+        "0": "textures/bush_leaves.png"
+      },
+      "scalingX": 1.0,
+      "scalingY": 1.0,
+      "scalingZ": 1.0
+    },
+    "wind": {
+      "leafiness": 0.8,
+      "stability": 0.3,
+      "leverUp": 0.5,
+      "leverDown": 0.3
+    }
+  }
+
+  Offsets am Block:
+  block.offsets = [
+    6,    // Anzahl der Flächen (4-8)
+    1.0,  // Skalierung (0.3-1.5)
+    0.3   // Varianz (0.0-0.5)
+  ];
+
+  Der Busch wird "wachsen", wenn du die Offsets über Zeit änderst - perfekt für animierte Wachstumseffekte!
+```
 
 ## Illumination
 
-Im BlockModifier gibt es eine Sektion Illumination.
-Blöcke sollen generell Licht emittieren können.
+Im BlockModifier gibt es eine Sektion Illumination (IlluminationModifier). Diese kann auch noch angepasst werden.
 
-???
+Blöcke sollen entweder licht emmitieren oder bei dunkelheit nicht dunkel werden.
+Welche möglichkeiten habe ich mit BabylonJs?
 

@@ -91,6 +91,9 @@ export enum Shape {
 
   /** Item billboard (Y-axis locked, optimized for pickable items) */
   ITEM = 28,
+
+  /** Bush (multiple intersecting planes for foliage) */
+  BUSH = 29,
 }
 
 /**
@@ -126,4 +129,5 @@ export const ShapeNames: Record<Shape, string> = {
   [Shape.THIN_INSTANCES]: 'thin_instances',
   [Shape.WALL]: 'wall',
   [Shape.ITEM]: 'item',
+  [Shape.BUSH]: 'bush',
 };
