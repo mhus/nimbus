@@ -34,16 +34,18 @@
                 <div class="form-control">
                   <label class="label">
                     <span class="label-text font-semibold">ID</span>
+                    <span class="label-text-alt text-error" v-if="isCreate && !formData.id">Required</span>
                   </label>
                   <input
-                    v-model.number="formData.id"
-                    type="number"
+                    v-model="formData.id"
+                    type="text"
                     class="input input-bordered"
                     :disabled="!isCreate"
-                    placeholder="0 = auto-generate"
+                    placeholder="e.g., w:123"
+                    required
                   />
                   <label v-if="isCreate" class="label">
-                    <span class="label-text-alt">Leave as 0 to auto-generate, or enter a specific ID</span>
+                    <span class="label-text-alt">Use format: group:name</span>
                   </label>
                 </div>
 
@@ -196,11 +198,11 @@
               v-model="newBlockTypeId"
               type="text"
               class="input input-bordered"
-              placeholder="e.g., custom:my-block or w/123"
+              placeholder="e.g., w:123"
               @keyup.enter="handleDuplicate"
             />
             <label class="label">
-              <span class="label-text-alt">Use format: group:name or group/name</span>
+              <span class="label-text-alt">Use format: group:name</span>
             </label>
           </div>
 
@@ -262,7 +264,7 @@ const emit = defineEmits<{
   (e: 'edit-modifier', data: { blockType: BlockType; status: number; modifier: BlockModifier }): void;
 }>();
 
-const { createBlockType, updateBlockType, getNextAvailableId } = useBlockTypes(props.worldId);
+const { createBlockType, updateBlockType } = useBlockTypes(props.worldId);
 
 const isCreate = computed(() => !props.blockType);
 const saving = ref(false);
@@ -308,7 +310,7 @@ const handleInputCancel = () => {
 
 // Form data
 const formData = ref<Partial<BlockType>>({
-  id: 0,
+  id: '',
   description: '',
   initialStatus: 0,
   modifiers: {},
@@ -333,7 +335,7 @@ const initializeForm = async () => {
     formData.value = JSON.parse(JSON.stringify(props.blockType));
   } else {
     formData.value = {
-      id: 0, // 0 means auto-generate
+      id: '', // Must be provided by user
       description: '',
       initialStatus: 0,
       modifiers: {
@@ -462,6 +464,11 @@ const editModifier = (status: number) => {
 
 // Handle save
 const handleSave = async () => {
+  if (isCreate.value && !formData.value.id) {
+    alert('ID is required');
+    return;
+  }
+
   if (!formData.value.modifiers || Object.keys(formData.value.modifiers).length === 0) {
     alert('At least one modifier (status 0) is required');
     return;

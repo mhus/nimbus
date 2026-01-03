@@ -293,8 +293,8 @@ const handlePreviousPage = () => {
 };
 
 onMounted(async () => {
-  // Load worlds with mainAndBranches filter for block type editor
-  loadWorlds('mainAndBranches');
+  // Load worlds with collections for block type editor
+  loadWorlds('withCollections');
 
   if (currentWorldId.value && blockTypesComposable.value) {
     await blockTypesComposable.value.loadBlockTypes();

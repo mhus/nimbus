@@ -68,3 +68,5 @@ packages/shared/types sollen entfernt werden.
   4. ✅ Manuelle WLayer.ts löschen (wird durch generierte ersetzt)
 ```
 
+[x] Im Block Type Editor wenn neu gedrückt wird, kommt ein Dialog "Create Block Type".
+Hier ist die ID ein Integer, aber die ID wurde auf String umgestellt. Das muss gefixt werden.

@@ -14,7 +14,7 @@ export interface BlockTypeListResponse {
 }
 
 export interface BlockTypeCreateResponse {
-  id: number;
+  id: string;
 }
 
 export interface BlockTypePagingParams {
@@ -58,7 +58,7 @@ export class BlockTypeService {
   /**
    * Create new block type
    */
-  async createBlockType(worldId: string, blockType: Partial<BlockType>): Promise<number> {
+  async createBlockType(worldId: string, blockType: Partial<BlockType>): Promise<string> {
     const response = await apiService.post<BlockTypeCreateResponse>(
       `/control/worlds/${worldId}/blocktypes/type`,
       blockType
@@ -86,20 +86,6 @@ export class BlockTypeService {
    */
   async deleteBlockType(worldId: string, id: number | string): Promise<void> {
     return apiService.delete<void>(`/control/worlds/${worldId}/blocktypes/type/${id}`);
-  }
-
-  /**
-   * Get next available block type ID
-   */
-  async getNextAvailableId(worldId: string): Promise<number> {
-    // The server automatically assigns IDs if not provided
-    // This is a helper to get next ID from existing block types
-    const response = await this.getBlockTypes(worldId);
-    if (response.blockTypes.length === 0) {
-      return 100; // Start at 100
-    }
-    const maxId = Math.max(...response.blockTypes.map(bt => Number(bt.id)));
-    return maxId + 1;
   }
 }
 

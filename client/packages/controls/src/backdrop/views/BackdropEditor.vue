@@ -412,8 +412,8 @@ const handleSaveJson = async () => {
 const handleBack = () => emit('back');
 
 onMounted(() => {
-  // Load worlds with mainOnly filter for backdrop editor
-  loadWorlds('mainOnly');
+  // Load worlds with collections for backdrop editor
+  loadWorlds('withCollections');
   loadBackdrop();
 });
 </script>

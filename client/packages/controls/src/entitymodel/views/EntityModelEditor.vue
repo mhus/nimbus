@@ -553,8 +553,8 @@ const handleBack = () => {
 };
 
 onMounted(() => {
-  // Load worlds with regionOnly filter for entity model editor
-  loadWorlds('regionOnly');
+  // Load worlds with collections for entity model editor
+  loadWorlds('withCollections');
   loadEntityModel();
 });
 </script>

@@ -112,7 +112,7 @@ export function useBlockTypes(worldId: string) {
   /**
    * Create block type
    */
-  const createBlockType = async (blockType: Partial<BlockType>): Promise<number | null> => {
+  const createBlockType = async (blockType: Partial<BlockType>): Promise<string | null> => {
     try {
       const id = await blockTypeService.createBlockType(worldId, blockType);
       logger.info('Created block type', { worldId, id });
@@ -157,18 +157,6 @@ export function useBlockTypes(worldId: string) {
     }
   };
 
-  /**
-   * Get next available ID
-   */
-  const getNextAvailableId = async (): Promise<number> => {
-    try {
-      return await blockTypeService.getNextAvailableId(worldId);
-    } catch (err) {
-      logger.error('Failed to get next available ID', { worldId }, err as Error);
-      return 100; // Fallback
-    }
-  };
-
   return {
     blockTypes,
     loading,
@@ -191,6 +179,5 @@ export function useBlockTypes(worldId: string) {
     createBlockType,
     updateBlockType,
     deleteBlockType,
-    getNextAvailableId,
   };
 }

@@ -182,9 +182,8 @@ const handlePreviousPage = () => {
 };
 
 onMounted(() => {
-  // Load worlds with mainOnly filter for asset editor
-  // Assets are only stored in main worlds (no branches, instances, zones)
-  loadWorlds('mainOnly');
+  // Load worlds with collections for asset editor
+  loadWorlds('withCollections');
 
   // Load assets if valid worldId is set
   if (currentWorldId.value && currentWorldId.value !== '?' && assetsComposable.value) {

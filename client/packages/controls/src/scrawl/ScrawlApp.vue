@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import type { ScrawlScript } from '@nimbus/shared';
 import ScriptListView from './views/ScriptListView.vue';
 import ScrawlAppEmbedded from './ScrawlAppEmbedded.vue';
@@ -62,7 +62,7 @@ const getIdFromUrl = (): string | null => {
 };
 
 const apiService = new ApiService();
-const { currentWorldId } = useWorld();
+const { currentWorldId, loadWorlds } = useWorld();
 const urlScriptId = getIdFromUrl();
 const selectedScript = ref<ScrawlScript | null>(null);
 const isNewScript = ref(false);
@@ -143,6 +143,11 @@ function closeEditor() {
   selectedScript.value = null;
   isNewScript.value = false;
 }
+
+onMounted(() => {
+  // Load worlds with collections for scrawl script editor
+  loadWorlds('withCollections');
+});
 
 async function deleteScript(scriptId: string) {
   if (!confirm(`Delete script "${scriptId}"?`)) {
