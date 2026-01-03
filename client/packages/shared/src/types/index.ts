@@ -31,8 +31,10 @@ export * from './Backdrop';
 // World types
 export * from './World';
 
-// Layer types
-export * from './WLayer';
+// Layer types (from generated)
+export * from '../generated/LayerType';
+export * from '../generated/entities/WLayer';
+export * from '../generated/entities/WLayerModel';
 
 // Generated DTOs
 export * from '../generated/dto/LayerDto';

@@ -35,7 +35,7 @@
         </div>
 
         <!-- Ground Badge -->
-        <div v-if="layer.ground" class="badge badge-warning badge-outline">
+        <div v-if="layer.baseGround" class="badge badge-warning badge-outline">
           Ground Level
         </div>
 

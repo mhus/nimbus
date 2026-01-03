@@ -128,6 +128,7 @@ canEnterFrom(9,10, WEST) = ??? kenne ja den block nicht
 - wenn solid = false und passableFrom !+ undefined und passableFrom != top , dann kann man in den Block nicht hinein fallen, d.h. gravitation hoert hier auf, man ist auf solidem grund
 - wenn solid = false und passableFrom !+ undefined und passableFrom != bottom, dann kann man aus dem Block nach unten nicht raus fallen, obwohl dronter eventuell AIR oder non solid ist.
 
+[ ] Wenn in PhysicsService ein Block die Bewegung verhindert, dann soll der Bewegungsvektor in dieser Richtung auf 0 gesetzt werden, anstelle die komplette Bewegung zu verhindern.
 
 
 ## Editor

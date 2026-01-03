@@ -55,7 +55,16 @@ Fazit:
   Empfehlung: Keine Änderung nötig - beide Parameter erfüllen ihren Zweck.
 ```
 
-[ ] Es gibt in packages/shared/types die Dateien WLayer.ts und WLayerModel.ts diese sollten nicht genutzt werden.
+[x] Es gibt in packages/shared/types die Dateien WLayer.ts und WLayerModel.ts diese sollten nicht genutzt werden.
 Bitte pruefe das.
-    [ ] Es sollen stadtdessen die Dateien in packages/shared/generated/types genutzt werden. Die Beiden Dateien in
-    packages/shared/types sollen entfernt werden.
+[x] Die Dateien sollten gleich denen in packages/shared/generated/types sein.
+[x] Es sollen stadtdessen die Dateien in packages/shared/generated/types genutzt werden. Die Beiden Dateien in
+packages/shared/types sollen entfernt werden.
+```text
+ Ich sollte:
+  1. ✅ Die generierten Versionen verwenden (Import von @nimbus/shared anpassen)
+  2. ✅ layer.ground → layer.baseGround ändern in LayerListItem.vue
+  3. ✅ LayerType Export in index.ts hinzufügen
+  4. ✅ Manuelle WLayer.ts löschen (wird durch generierte ersetzt)
+```
+
