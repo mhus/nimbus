@@ -40,16 +40,16 @@ public class WBlockTypeService {
 
         // Try branch first if this is a branch world
         if (collection.worldId().isBranch()) {
-            var blockType = repository.findByWorldIdAndBlockId(collection.worldId().getId(), blockId);
+            var blockType = repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
             if (blockType.isPresent()) {
                 return blockType;
             }
             // Fallback to parent world (COW)
             var parentWorld = collection.worldId().withoutBranchAndInstance();
-            return repository.findByWorldIdAndBlockId(parentWorld.getId(), blockId);
+            return repository.findByWorldIdAndBlockId(parentWorld.getId(), collection.path());
         }
 
-        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), blockId);
+        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
     }
 
     /**
@@ -98,7 +98,7 @@ public class WBlockTypeService {
         }
 
         var collection = WorldCollection.of(worldId.mainWorld(), blockId);
-        var entityOpt = repository.findByWorldIdAndBlockId(collection.worldId().getId(), blockId);
+        var entityOpt = repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
         WBlockType entity = null;
         if (entityOpt.isEmpty()) {
             entity = WBlockType.builder()
@@ -113,6 +113,11 @@ public class WBlockTypeService {
         }
 
         entity.setBlockId(collection.path()); // maybe update if group changed
+
+        // Ensure publicData.id has full blockId with prefix (e.g., "r:wfr" not just "wfr")
+        String fullBlockId = collection.typeString() + ":" + collection.path();
+        publicData.setId(fullBlockId);
+
         entity.setPublicData(publicData);
         entity.touchUpdate();
 
@@ -137,7 +142,7 @@ public class WBlockTypeService {
     @Transactional
     public Optional<WBlockType> update(WorldId worldId, String blockId, Consumer<WBlockType> updater) {
         var collection = WorldCollection.of(worldId.mainWorld(), blockId);
-        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), blockId).map(entity -> {
+        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path()).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
             WBlockType saved = repository.save(entity);
@@ -161,7 +166,7 @@ public class WBlockTypeService {
             throw new IllegalArgumentException("Block types cannot be deleted in branches: " + worldId.getId());
         }
 
-        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), blockId).map(entity -> {
+        return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path()).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WBlockType: {}", blockId);
             return true;

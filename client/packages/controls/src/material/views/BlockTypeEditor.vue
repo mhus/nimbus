@@ -187,10 +187,22 @@ const openCreateDialog = () => {
 
 /**
  * Open edit dialog
+ * Reloads the block type from server to get fresh data
  */
-const openEditDialog = (blockType: BlockType) => {
-  selectedBlockType.value = blockType;
-  isEditorOpen.value = true;
+const openEditDialog = async (blockType: BlockType) => {
+  if (!blockTypesComposable.value || !currentWorldId.value) return;
+
+  // Reload from server to get fresh data
+  const freshBlockType = await blockTypesComposable.value.getBlockType(blockType.id!);
+  if (freshBlockType) {
+    selectedBlockType.value = freshBlockType;
+    isEditorOpen.value = true;
+  } else {
+    console.error('Failed to load block type from server', blockType.id);
+    // Fallback to cached data
+    selectedBlockType.value = blockType;
+    isEditorOpen.value = true;
+  }
 };
 
 /**

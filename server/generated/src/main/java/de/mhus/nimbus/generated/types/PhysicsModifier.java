@@ -33,7 +33,7 @@ public class PhysicsModifier {
     private java.lang.Boolean collisionEvent;
     @com.fasterxml.jackson.annotation.JsonProperty("passableFrom")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private Direction passableFrom;
+    private Integer passableFrom;
     @com.fasterxml.jackson.annotation.JsonProperty("autoJump")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double autoJump;

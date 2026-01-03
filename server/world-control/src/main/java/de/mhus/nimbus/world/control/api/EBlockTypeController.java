@@ -41,7 +41,7 @@ import static de.mhus.nimbus.world.shared.world.BlockUtil.extractGroupFromBlockI
 public class EBlockTypeController extends BaseEditorController {
 
     private final WBlockTypeService blockTypeService;
-    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final de.mhus.nimbus.shared.engine.EngineMapper engineMapper;
 
     // DTOs
     public record BlockTypeDto(
@@ -104,8 +104,8 @@ public class EBlockTypeController extends BaseEditorController {
         }
 
         log.debug("Returning blocktype: blockId={}", blockId);
-        // Return publicData only (match test_server format)
-        return ResponseEntity.ok(opt.get().getPublicData());
+        // Return publicData with full ID (e.g., "r:wfr" not just "wfr")
+        return ResponseEntity.ok(opt.get().getPublicDataWithFullId());
     }
 
     /**
@@ -137,11 +137,11 @@ public class EBlockTypeController extends BaseEditorController {
 
         int totalCount = all.size();
 
-        // Apply pagination
+        // Apply pagination and return with full IDs (e.g., "r:wfr" not just "wfr")
         List<BlockType> publicDataList = all.stream()
                 .skip(offset)
                 .limit(limit)
-                .map(WBlockType::getPublicData)
+                .map(WBlockType::getPublicDataWithFullId)
                 .collect(Collectors.toList());
 
         log.debug("Returning {} blocktypes (total: {})", publicDataList.size(), totalCount);
@@ -188,9 +188,9 @@ public class EBlockTypeController extends BaseEditorController {
 
         List<WBlockType> blockTypes = blockTypeService.findByBlockTypeGroup(wid, groupName);
 
-        // Map to DTOs (publicData only for TypeScript compatibility)
+        // Map to DTOs with full IDs (e.g., "r:wfr" not just "wfr")
         List<BlockType> publicDataList = blockTypes.stream()
-                .map(WBlockType::getPublicData)
+                .map(WBlockType::getPublicDataWithFullId)
                 .collect(Collectors.toList());
 
         log.debug("Returning {} blocktypes for group: {}", publicDataList.size(), groupName);
@@ -296,14 +296,45 @@ public class EBlockTypeController extends BaseEditorController {
             return bad("at least one field required for update");
         }
 
-        Optional<WBlockType> updated = blockTypeService.update(wid, blockId, blockType -> {
+        // Find the BlockType first (with COW fallback for external collections)
+        Optional<WBlockType> existing = blockTypeService.findByBlockId(wid, blockId);
+        if (existing.isEmpty()) {
+            log.warn("BlockType not found for update: blockId={}", blockId);
+            return notFound("blocktype not found");
+        }
+
+        // Use the actual worldId from the existing entity (important for external collections)
+        String actualWorldId = existing.get().getWorldId();
+        WorldId actualWid = WorldId.of(actualWorldId).orElseThrow(
+                () -> new IllegalStateException("Invalid worldId in entity: " + actualWorldId)
+        );
+
+        final String finalBlockId = blockId;
+        Optional<WBlockType> updated = blockTypeService.update(actualWid, blockId, blockType -> {
             if (request.publicData() != null) {
-                blockType.setPublicData(request.publicData());
+                // Ensure publicData.id has full blockId with prefix (e.g., "r:wfr" not just "wfr")
+                BlockType publicData = request.publicData();
+                var collection = WorldCollection.of(actualWid, finalBlockId);
+                String fullBlockId = collection.typeString() + ":" + collection.path();
+
+                // Create a deep copy with corrected ID (important for MongoDB to detect change)
+                try {
+                    BlockType correctedPublicData = engineMapper.readValue(
+                        engineMapper.writeValueAsString(publicData),
+                        BlockType.class
+                    );
+                    correctedPublicData.setId(fullBlockId);
+                    blockType.setPublicData(correctedPublicData);
+                } catch (Exception e) {
+                    log.error("Failed to clone publicData", e);
+                    publicData.setId(fullBlockId);
+                    blockType.setPublicData(publicData);
+                }
             }
             if (request.enabled() != null) {
                 blockType.setEnabled(request.enabled());
             }
-            blockType.setWorldId(worldId);
+            // Note: Do NOT change worldId - it should remain the same
         });
 
         if (updated.isEmpty()) {
@@ -436,8 +467,8 @@ public class EBlockTypeController extends BaseEditorController {
 
             // Create a deep copy of the publicData
             BlockType sourcePublicData = source.getPublicData();
-            BlockType newPublicData = objectMapper.readValue(
-                objectMapper.writeValueAsString(sourcePublicData),
+            BlockType newPublicData = engineMapper.readValue(
+                engineMapper.writeValueAsString(sourcePublicData),
                 BlockType.class
             );
 
@@ -559,8 +590,8 @@ public class EBlockTypeController extends BaseEditorController {
     private BlockType convertBlockToBlockType(Map<String, Object> blockPayload) {
         try {
             // First, deserialize the blockPayload to a Block object to validate structure
-            de.mhus.nimbus.generated.types.Block block = objectMapper.convertValue(
-                    blockPayload,
+            de.mhus.nimbus.generated.types.Block block = engineMapper.readValue(
+                    engineMapper.writeValueAsString(blockPayload),
                     de.mhus.nimbus.generated.types.Block.class
             );
 
@@ -595,7 +626,7 @@ public class EBlockTypeController extends BaseEditorController {
     private BlockTypeDto toDto(WBlockType entity) {
         return new BlockTypeDto(
                 entity.getBlockId(),
-                entity.getPublicData(),
+                entity.getPublicDataWithFullId(),
                 entity.getWorldId(),
                 entity.isEnabled(),
                 entity.getCreatedAt(),

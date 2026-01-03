@@ -99,7 +99,7 @@ export function useBlockTypes(worldId: string) {
   /**
    * Get single block type
    */
-  const getBlockType = async (id: number): Promise<BlockType | null> => {
+  const getBlockType = async (id: number | string): Promise<BlockType | null> => {
     try {
       return await blockTypeService.getBlockType(worldId, id);
     } catch (err) {
@@ -128,7 +128,7 @@ export function useBlockTypes(worldId: string) {
   /**
    * Update block type
    */
-  const updateBlockType = async (id: number, blockType: Partial<BlockType>): Promise<boolean> => {
+  const updateBlockType = async (id: number | string, blockType: Partial<BlockType>): Promise<boolean> => {
     try {
       await blockTypeService.updateBlockType(worldId, id, blockType);
       logger.info('Updated block type', { worldId, id });
@@ -144,7 +144,7 @@ export function useBlockTypes(worldId: string) {
   /**
    * Delete block type
    */
-  const deleteBlockType = async (id: number): Promise<boolean> => {
+  const deleteBlockType = async (id: number | string): Promise<boolean> => {
     try {
       await blockTypeService.deleteBlockType(worldId, id);
       logger.info('Deleted block type', { worldId, id });

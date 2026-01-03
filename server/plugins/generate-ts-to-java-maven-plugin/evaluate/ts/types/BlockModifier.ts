@@ -571,7 +571,7 @@ export interface PhysicsModifier {
    * - If block is solid: Acts as one-way block - can enter from specified directions, block normal movement in other directions
    * - If block is not solid: Acts as wall on edges - can walk through but not exit where passableFrom is not set
    * Default: none (0) */
-  passableFrom?: Direction;
+  passableFrom?: Direction; // javaType: Integer
 
   /** Auto-jump when walking into the block - like fence gate, default: false */
   autoJump?: boolean;

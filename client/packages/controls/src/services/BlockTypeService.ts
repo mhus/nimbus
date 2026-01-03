@@ -51,7 +51,7 @@ export class BlockTypeService {
   /**
    * Get single block type by ID
    */
-  async getBlockType(worldId: string, id: number): Promise<BlockType> {
+  async getBlockType(worldId: string, id: number | string): Promise<BlockType> {
     return apiService.get<BlockType>(`/control/worlds/${worldId}/blocktypes/type/${id}`);
   }
 
@@ -69,7 +69,7 @@ export class BlockTypeService {
   /**
    * Update existing block type
    */
-  async updateBlockType(worldId: string, id: number, blockType: Partial<BlockType>): Promise<BlockType> {
+  async updateBlockType(worldId: string, id: number | string, blockType: Partial<BlockType>): Promise<BlockType> {
     // Server expects UpdateBlockTypeRequest format with publicData wrapper
     const updateRequest = {
       publicData: blockType
@@ -84,7 +84,7 @@ export class BlockTypeService {
   /**
    * Delete block type
    */
-  async deleteBlockType(worldId: string, id: number): Promise<void> {
+  async deleteBlockType(worldId: string, id: number | string): Promise<void> {
     return apiService.delete<void>(`/control/worlds/${worldId}/blocktypes/type/${id}`);
   }
 

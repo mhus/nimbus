@@ -218,17 +218,8 @@ export class CollisionDetector {
     }
 
     // Collision detected - stop movement completely
-    // Do NOT try to calculate "safe" position, just stop where we are
     entity.velocity.x = 0;
     entity.velocity.z = 0;
-
-    logger.info('🛑 Collision: Blocked movement', {
-      blockPos: collisionResult.blockingBlock,
-      entityPos: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
-      intended: { x: intendedX, z: intendedZ },
-      movement: { dx, dz },
-      footprint: dimensions.footprint,
-    });
 
     // Return current position (no movement)
     return { x: entity.position.x, z: entity.position.z };
@@ -316,11 +307,6 @@ export class CollisionDetector {
             return { blocked: true, blockingBlock: blockInfo };
           } else {
             // Can auto-climb this block
-            logger.info('⬆️ Auto-climb triggered (predictive)', {
-              blockPos: { x: blockX, y: blockY, z: blockZ },
-              entityPos: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
-              heightDiff,
-            });
             this.triggerCollisionEvent(blockInfo, 'climb');
             continue;
           }
@@ -363,32 +349,8 @@ export class CollisionDetector {
     if (context.currentBlocks.hasSolid && !context.currentBlocks.allNonSolid) {
       // Check if space above is clear
       if (!context.headBlocks.hasSolid) {
-        // Calculate corner positions to understand WHY we're inside a block
-        const footprint = dimensions.footprint;
-        const corners = [
-          { x: entity.position.x - footprint, z: entity.position.z - footprint, name: 'NW' },
-          { x: entity.position.x + footprint, z: entity.position.z - footprint, name: 'NE' },
-          { x: entity.position.x + footprint, z: entity.position.z + footprint, name: 'SE' },
-          { x: entity.position.x - footprint, z: entity.position.z + footprint, name: 'SW' },
-        ];
-
-        const cornerInfo = corners.map(c => ({
-          name: c.name,
-          pos: { x: c.x.toFixed(3), z: c.z.toFixed(3) },
-          blockX: Math.floor(c.x),
-          blockZ: Math.floor(c.z),
-        }));
-
         entity.position.y += 1.0;
         entity.velocity.y = 0;
-        logger.info('🔺 FLIP! Pushed entity up - was inside solid block', {
-          entityId: entity.entityId,
-          position: { x: entity.position.x, y: entity.position.y - 1.0, z: entity.position.z },
-          newY: entity.position.y,
-          velocity: { x: entity.velocity.x, y: entity.velocity.y, z: entity.velocity.z },
-          footprint: dimensions.footprint,
-          corners: cornerInfo,
-        });
         return true;
       }
     }
