@@ -143,6 +143,12 @@ import {getLogger} from "@nimbus/shared";
 import {ClearBlockTypeCacheCommand} from "./ClearBlockTypeCacheCommand";
 import {SetAutoSelectCommand} from "./SetAutoSelectCommand";
 import {ModelSelectorCommand} from "./ModelSelectorCommand";
+import {
+    CameraLightEnableCommand,
+    CameraLightIntensityCommand,
+    CameraLightRangeCommand,
+    CameraLightInfoCommand
+} from "./camera";
 
 // Initialize logger (basic setup before ClientService)
 const logger = getLogger('CommandsFactory');
@@ -338,6 +344,12 @@ export class CommandsFactory {
 
         // Register model selector command
         commandService.registerHandler(new ModelSelectorCommand(appContext));
+
+        // Register camera light commands
+        commandService.registerHandler(new CameraLightEnableCommand(appContext));
+        commandService.registerHandler(new CameraLightIntensityCommand(appContext));
+        commandService.registerHandler(new CameraLightRangeCommand(appContext));
+        commandService.registerHandler(new CameraLightInfoCommand(appContext));
 
         logger.debug('CommandService initialized with commands');
 

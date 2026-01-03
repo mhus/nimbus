@@ -15,6 +15,7 @@ import {
   Color4,
   Mesh,
   TransformNode,
+  SpotLight,
 } from '@babylonjs/core';
 import { getLogger, ExceptionHandler, getStateValues } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
@@ -66,6 +67,13 @@ export class CameraService {
 
   // Camera environment root XZ - follows only X/Z position (not Y) for horizon effects
   private cameraEnvironmentRootXZ?: TransformNode;
+
+  // Camera light (torch/flashlight)
+  private cameraLight?: SpotLight;
+  private cameraLightEnabled: boolean = false;
+  private cameraLightIntensity: number = 1.0;
+  private cameraLightRange: number = 15; // blocks
+  private cameraLightColor: Color3 = new Color3(1.0, 0.65, 0.0); // Warm torch color (#FFA500)
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -167,6 +175,14 @@ export class CameraService {
         minZ: this.camera.minZ,
         maxZ: this.camera.maxZ,
       });
+
+      // Load camera light settings from localStorage
+      this.loadCameraLightSettings();
+
+      // Create camera light if enabled
+      if (this.cameraLightEnabled) {
+        this.createCameraLight();
+      }
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'CameraService.initializeCamera');
     }
@@ -356,6 +372,12 @@ export class CameraService {
     // Update XZ-only environment root - horizon effects stay at ground level
     if (this.cameraEnvironmentRootXZ && this.camera) {
       this.cameraEnvironmentRootXZ.position.set(this.camera.position.x, 0, this.camera.position.z);
+    }
+
+    // Update camera light direction (follows camera view direction)
+    if (this.cameraLight && this.camera) {
+      const direction = this.camera.getDirection(new Vector3(0, 0, 1));
+      this.cameraLight.direction = direction;
     }
   }
 
@@ -660,6 +682,204 @@ export class CameraService {
   }
 
   /**
+   * Load camera light settings from localStorage
+   */
+  private loadCameraLightSettings(): void {
+    try {
+      const enabled = localStorage.getItem('cameraLight.enabled');
+      if (enabled !== null) {
+        this.cameraLightEnabled = enabled === 'true';
+      }
+
+      const intensity = localStorage.getItem('cameraLight.intensity');
+      if (intensity !== null) {
+        this.cameraLightIntensity = parseFloat(intensity);
+      }
+
+      const range = localStorage.getItem('cameraLight.range');
+      if (range !== null) {
+        this.cameraLightRange = parseFloat(range);
+      }
+
+      logger.debug('Camera light settings loaded from localStorage', {
+        enabled: this.cameraLightEnabled,
+        intensity: this.cameraLightIntensity,
+        range: this.cameraLightRange,
+      });
+    } catch (error) {
+      logger.warn('Failed to load camera light settings from localStorage', { error });
+    }
+  }
+
+  /**
+   * Save camera light settings to localStorage
+   */
+  private saveCameraLightSettings(): void {
+    try {
+      localStorage.setItem('cameraLight.enabled', String(this.cameraLightEnabled));
+      localStorage.setItem('cameraLight.intensity', String(this.cameraLightIntensity));
+      localStorage.setItem('cameraLight.range', String(this.cameraLightRange));
+
+      logger.debug('Camera light settings saved to localStorage');
+    } catch (error) {
+      logger.warn('Failed to save camera light settings to localStorage', { error });
+    }
+  }
+
+  /**
+   * Create camera light (torch/flashlight)
+   * Creates a SpotLight attached to the camera that points in camera direction
+   */
+  private createCameraLight(): void {
+    if (!this.camera) {
+      logger.warn('Cannot create camera light: camera not initialized');
+      return;
+    }
+
+    if (this.cameraLight) {
+      logger.info('Camera light already exists');
+      return;
+    }
+
+    // Create SpotLight at camera position pointing forward
+    const position = this.camera.position.clone();
+    const direction = this.camera.getDirection(new Vector3(0, 0, 1)); // Forward direction
+
+    this.cameraLight = new SpotLight(
+      'cameraLight',
+      position,
+      direction,
+      0.8, // Angle in radians (~46 degrees, typical flashlight cone)
+      2, // Exponent (controls falloff at edges)
+      this.scene
+    );
+
+    // Set light properties
+    this.cameraLight.diffuse = this.cameraLightColor;
+    this.cameraLight.specular = this.cameraLightColor;
+    this.cameraLight.intensity = this.cameraLightIntensity;
+    this.cameraLight.range = this.cameraLightRange;
+
+    // Attach to camera environment root (follows camera automatically)
+    if (this.cameraEnvironmentRoot) {
+      this.cameraLight.parent = this.cameraEnvironmentRoot;
+    }
+
+    logger.info('Camera light created', {
+      intensity: this.cameraLightIntensity,
+      range: this.cameraLightRange,
+      color: this.cameraLightColor,
+    });
+  }
+
+  /**
+   * Dispose camera light
+   */
+  private disposeCameraLight(): void {
+    if (this.cameraLight) {
+      this.cameraLight.dispose();
+      this.cameraLight = undefined;
+      logger.debug('Camera light disposed');
+    }
+  }
+
+  /**
+   * Enable or disable camera light (torch)
+   *
+   * @param enabled True to enable, false to disable
+   */
+  setCameraLightEnabled(enabled: boolean): void {
+    if (this.cameraLightEnabled === enabled) {
+      return; // No change
+    }
+
+    this.cameraLightEnabled = enabled;
+
+    if (enabled) {
+      this.createCameraLight();
+    } else {
+      this.disposeCameraLight();
+    }
+
+    this.saveCameraLightSettings();
+    logger.info('Camera light ' + (enabled ? 'enabled' : 'disabled'));
+  }
+
+  /**
+   * Get camera light enabled state
+   */
+  isCameraLightEnabled(): boolean {
+    return this.cameraLightEnabled;
+  }
+
+  /**
+   * Set camera light intensity
+   *
+   * @param intensity Light intensity (0-10, typical 0.5-2.0)
+   */
+  setCameraLightIntensity(intensity: number): void {
+    this.cameraLightIntensity = Math.max(0, intensity);
+
+    if (this.cameraLight) {
+      this.cameraLight.intensity = this.cameraLightIntensity;
+    }
+
+    this.saveCameraLightSettings();
+    logger.info('Camera light intensity set', { intensity: this.cameraLightIntensity });
+  }
+
+  /**
+   * Get camera light intensity
+   */
+  getCameraLightIntensity(): number {
+    return this.cameraLightIntensity;
+  }
+
+  /**
+   * Set camera light range (in blocks)
+   *
+   * @param range Light range/radius in blocks (typical 5-30)
+   */
+  setCameraLightRange(range: number): void {
+    this.cameraLightRange = Math.max(1, range);
+
+    if (this.cameraLight) {
+      this.cameraLight.range = this.cameraLightRange;
+    }
+
+    this.saveCameraLightSettings();
+    logger.info('Camera light range set', { range: this.cameraLightRange });
+  }
+
+  /**
+   * Get camera light range
+   */
+  getCameraLightRange(): number {
+    return this.cameraLightRange;
+  }
+
+  /**
+   * Get camera light info for debugging
+   */
+  getCameraLightInfo(): {
+    enabled: boolean;
+    intensity: number;
+    range: number;
+    color: { r: number; g: number; b: number };
+  } {
+    return {
+      enabled: this.cameraLightEnabled,
+      intensity: this.cameraLightIntensity,
+      range: this.cameraLightRange,
+      color: {
+        r: this.cameraLightColor.r,
+        g: this.cameraLightColor.g,
+        b: this.cameraLightColor.b,
+      },
+    };
+  }
+
+  /**
    * Dispose camera and underwater effects
    */
   dispose(): void {
@@ -686,6 +906,9 @@ export class CameraService {
       this.fogMaterial.dispose();
       this.fogMaterial = undefined;
     }
+
+    // Dispose camera light
+    this.disposeCameraLight();
 
     // Dispose environment root (automatically disposes all children)
     if (this.cameraEnvironmentRoot) {

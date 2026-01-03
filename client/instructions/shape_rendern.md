@@ -409,3 +409,10 @@ Welche möglichkeiten habe ich mit BabylonJs?
 
   Die Implementierung ist produktionsbereit und kann jetzt getestet werden! 🚀
 ```
+
+[ ] An der Camera soll es eine Beleuchtung geben 'CamLight, die man an schalten kann. Wie z.b. eine Fackel.
+- Es soll ein Lichtquelle an der Kamera sein, die immer in Blickrichtung leuchtet.
+- Es soll ein einstellbarer Radius sein, der den beleuchteten bereich steuert.
+- Es soll ein einstellbare Intensität sein, die die helligkeit steuert.
+- Die lichtquelle soll aktivierbar sein (enable).
+[ ] Erstelle Commands um die CamLight zu steuern.
