@@ -249,7 +249,6 @@ export class CollisionDetector {
         const currentBlockX = Math.floor(entity.position.x);
         const currentBlockZ = Math.floor(entity.position.z);
         const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
-        const invertedExitDir = PhysicsUtils.invertDirection(movementDir);
 
         // Check all vertical levels at current position
         for (let dy = 0; dy < numLevels; dy++) {
@@ -263,8 +262,19 @@ export class CollisionDetector {
             const isCurrentWall = physics?.solid !== true && physics?.passableFrom !== undefined;
 
             if (isCurrentWall) {
-                // Check if we can leave through this exit direction (inverted!)
-                if (!PhysicsUtils.canLeaveTo(physics.passableFrom, invertedExitDir, false)) {
+                // Check if we can leave in this movement direction
+                const canLeave = PhysicsUtils.canLeaveTo(physics.passableFrom, movementDir, false);
+                logger.info('Fall 2 - Exit from WALL block', {
+                    position: { x: currentBlockX, y: blockY, z: currentBlockZ },
+                    passableFrom: physics.passableFrom,
+                    movementDir,
+                    movementDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][movementDir],
+                    canLeave,
+                    dx,
+                    dz
+                });
+
+                if (!canLeave) {
                     // Cannot leave through this wall side - blocked
                     const blockInfo = { x: currentBlockX, y: blockY, z: currentBlockZ, block: currentBlock };
                     this.triggerCollisionEvent(blockInfo);
@@ -301,11 +311,26 @@ export class CollisionDetector {
                 if (!physics?.solid && !isWall) continue;
 
                 const blockInfo = { x: blockX, y: blockY, z: blockZ, block };
-                const entryDir = PhysicsUtils.getMovementDirection(dx, dz);
+                const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
+                // Entry side is opposite of movement direction (moving NORTH = entering from SOUTH)
+                const entryDir = PhysicsUtils.invertDirection(movementDir);
 
                 // WALL block: Check if it blocks from this direction (acts as solid)
                 if (isWall) {
-                    if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, false)) {
+                    const canEnter = PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, false);
+                    logger.info('Fall 1 - Enter WALL block', {
+                        position: { x: blockX, y: blockY, z: blockZ },
+                        passableFrom: physics.passableFrom,
+                        movementDir,
+                        movementDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][movementDir],
+                        entryDir,
+                        entryDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][entryDir],
+                        canEnter,
+                        dx,
+                        dz
+                    });
+
+                    if (!canEnter) {
                         // Wall blocks this direction - treat as solid
                         this.triggerCollisionEvent(blockInfo);
                         return { blocked: true, blockingBlock: blockInfo };
@@ -316,6 +341,7 @@ export class CollisionDetector {
 
                 // SOLID block: Check passableFrom for one-way gates
                 if (physics.passableFrom !== undefined) {
+                    // For solid blocks, entryDir is already inverted above (reuse the same variable)
                     if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, true)) {
                         // Blocked by one-way gate
                         this.triggerCollisionEvent(blockInfo);

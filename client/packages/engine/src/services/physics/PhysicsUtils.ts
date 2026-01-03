@@ -25,7 +25,8 @@ export function getMovementDirection(dx: number, dz: number): Direction {
     return dx > 0 ? Direction.EAST : Direction.WEST;
   } else {
     // Z-axis dominant (or equal, prefer Z)
-    return dz > 0 ? Direction.SOUTH : Direction.NORTH;
+    // Note: In this coordinate system, positive Z = North, negative Z = South
+    return dz > 0 ? Direction.NORTH : Direction.SOUTH;
   }
 }
 
