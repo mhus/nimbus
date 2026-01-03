@@ -249,26 +249,30 @@ export class CollisionDetector {
         const currentBlockX = Math.floor(entity.position.x);
         const currentBlockZ = Math.floor(entity.position.z);
         const threshold = 0.2;
-        const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
 
-        // Determine if we're approaching a block boundary based on movement direction
+        // Get ALL movement directions (can be multiple for diagonal movement)
+        const movementDirs: Direction[] = [];
+        if (dx > 0.001) movementDirs.push(Direction.EAST);
+        if (dx < -0.001) movementDirs.push(Direction.WEST);
+        if (dz > 0.001) movementDirs.push(Direction.NORTH);
+        if (dz < -0.001) movementDirs.push(Direction.SOUTH);
+
+        // Determine if we're approaching a block boundary in ANY movement direction
         let shouldCheckExit = false;
-        if (movementDir === Direction.NORTH) {
-            // Moving in positive Z direction
-            const boundary = currentBlockZ + 1.0;
-            shouldCheckExit = intendedZ >= boundary - threshold;
-        } else if (movementDir === Direction.SOUTH) {
-            // Moving in negative Z direction
-            const boundary = currentBlockZ;
-            shouldCheckExit = intendedZ <= boundary + threshold;
-        } else if (movementDir === Direction.EAST) {
-            // Moving in positive X direction
-            const boundary = currentBlockX + 1.0;
-            shouldCheckExit = intendedX >= boundary - threshold;
-        } else if (movementDir === Direction.WEST) {
-            // Moving in negative X direction
-            const boundary = currentBlockX;
-            shouldCheckExit = intendedX <= boundary + threshold;
+        for (const dir of movementDirs) {
+            if (dir === Direction.NORTH) {
+                const boundary = currentBlockZ + 1.0;
+                if (intendedZ >= boundary - threshold) shouldCheckExit = true;
+            } else if (dir === Direction.SOUTH) {
+                const boundary = currentBlockZ;
+                if (intendedZ <= boundary + threshold) shouldCheckExit = true;
+            } else if (dir === Direction.EAST) {
+                const boundary = currentBlockX + 1.0;
+                if (intendedX >= boundary - threshold) shouldCheckExit = true;
+            } else if (dir === Direction.WEST) {
+                const boundary = currentBlockX;
+                if (intendedX <= boundary + threshold) shouldCheckExit = true;
+            }
         }
 
         // Only check Fall 2 if we're approaching block boundary
@@ -286,22 +290,30 @@ export class CollisionDetector {
                 const isCurrentWall = physics?.solid !== true && physics?.passableFrom !== undefined;
 
                 if (isCurrentWall) {
-                    // Check if we can leave in this movement direction
-                    const canLeave = PhysicsUtils.canLeaveTo(physics.passableFrom, movementDir, false);
+                    // Check if we can leave in ANY of the movement directions
+                    let blocked = false;
+                    const movementDirNames = movementDirs.map(d => ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][d]).join('+');
+
+                    for (const movementDir of movementDirs) {
+                        if (!PhysicsUtils.canLeaveTo(physics.passableFrom, movementDir, false)) {
+                            blocked = true;
+                            break;
+                        }
+                    }
+
                     logger.info('Fall 2 - Exit from WALL block', {
                         currentPos: { x: currentBlockX, z: currentBlockZ },
                         intendedPos: { x: intendedX, z: intendedZ },
                         blockY,
                         passableFrom: physics.passableFrom,
-                        movementDir,
-                        movementDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][movementDir],
-                        canLeave,
+                        movementDirs: movementDirNames,
+                        blocked,
                         dx,
                         dz
                     });
 
-                    if (!canLeave) {
-                        // Cannot leave through this wall side - blocked
+                    if (blocked) {
+                        // Cannot leave through at least one wall side - blocked
                         const blockInfo = { x: currentBlockX, y: blockY, z: currentBlockZ, block: currentBlock };
                         this.triggerCollisionEvent(blockInfo);
                         return { blocked: true, blockingBlock: blockInfo };
@@ -352,46 +364,57 @@ export class CollisionDetector {
 
                 const blockInfo = { x: blockX, y: blockY, z: blockZ, block };
 
-                // Calculate which side of THIS specific block we're entering from
-                // Based on block position relative to current position, not movement direction
-                let entryDir: Direction;
-                if (blockX > currentBlockX) {
-                    entryDir = Direction.WEST;  // Block is east - entering from west side
-                } else if (blockX < currentBlockX) {
-                    entryDir = Direction.EAST;  // Block is west - entering from east side
-                } else if (blockZ > currentBlockZ) {
-                    entryDir = Direction.SOUTH; // Block is north - entering from south side
-                } else {
-                    entryDir = Direction.NORTH; // Block is south - entering from north side
-                }
+                // Calculate ALL sides of this block we're entering from (can be multiple for diagonal movement)
+                // Based on block position relative to current position
+                const entryDirs: Direction[] = [];
+                if (blockX > currentBlockX) entryDirs.push(Direction.WEST);  // Block is east - entering from west side
+                if (blockX < currentBlockX) entryDirs.push(Direction.EAST);  // Block is west - entering from east side
+                if (blockZ > currentBlockZ) entryDirs.push(Direction.SOUTH); // Block is north - entering from south side
+                if (blockZ < currentBlockZ) entryDirs.push(Direction.NORTH); // Block is south - entering from north side
 
-                // WALL block: Check if it blocks from this direction (acts as solid)
+                // WALL block: Check if it blocks from ANY of the entry directions
                 if (isWall) {
-                    const canEnter = PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, false);
+                    let blocked = false;
+                    const entryDirNames = entryDirs.map(d => ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][d]).join('+');
+
+                    for (const entryDir of entryDirs) {
+                        if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, false)) {
+                            blocked = true;
+                            break;
+                        }
+                    }
+
                     logger.info('Fall 1 - Enter WALL block', {
                         position: { x: blockX, y: blockY, z: blockZ },
                         currentPos: { x: currentBlockX, z: currentBlockZ },
                         passableFrom: physics.passableFrom,
-                        entryDir,
-                        entryDirName: ['NONE', 'NORTH', 'SOUTH', '', 'EAST', '', '', '', 'WEST'][entryDir],
-                        canEnter,
+                        entryDirs: entryDirNames,
+                        blocked,
                         dx,
                         dz
                     });
 
-                    if (!canEnter) {
-                        // Wall blocks this direction - treat as solid
+                    if (blocked) {
+                        // Wall blocks at least one entry direction - treat as solid
                         this.triggerCollisionEvent(blockInfo);
                         return { blocked: true, blockingBlock: blockInfo };
                     }
-                    // Wall allows entry from this direction - can pass through
+                    // Wall allows entry from all directions - can pass through
                     continue;
                 }
 
                 // SOLID block: Check passableFrom for one-way gates
                 if (physics.passableFrom !== undefined) {
-                    // entryDir is calculated above based on block position relative to current position
-                    if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, true)) {
+                    // Check if ANY of the entry directions is blocked
+                    let blocked = false;
+                    for (const entryDir of entryDirs) {
+                        if (!PhysicsUtils.canEnterFrom(physics.passableFrom, entryDir, true)) {
+                            blocked = true;
+                            break;
+                        }
+                    }
+
+                    if (blocked) {
                         // Blocked by one-way gate
                         this.triggerCollisionEvent(blockInfo);
                         return { blocked: true, blockingBlock: blockInfo };
