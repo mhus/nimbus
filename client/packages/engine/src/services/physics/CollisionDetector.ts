@@ -209,18 +209,28 @@ export class CollisionDetector {
       const physics = blockInfo.block.currentModifier.physics;
       if (!physics?.solid) continue;
 
-      // Get movement direction
+      // Get movement direction for passableFrom checks
       const dir = PhysicsUtils.getMovementDirection(dx, dz);
 
       // Check passableFrom
       if (physics.passableFrom !== undefined) {
         // Solid + passableFrom: One-way gate
         if (!PhysicsUtils.canEnterFrom(physics.passableFrom, dir, true)) {
-          // Blocked - stop ALL horizontal movement (prevent sliding)
-          x = entity.position.x;
-          z = entity.position.z;
-          entity.velocity.x = 0;
-          entity.velocity.z = 0;
+          // Blocked - determine which axis to block based on block position
+          const blockCenterX = blockInfo.x + 0.5;
+          const blockCenterZ = blockInfo.z + 0.5;
+          const deltaX = Math.abs(blockCenterX - entity.position.x);
+          const deltaZ = Math.abs(blockCenterZ - entity.position.z);
+
+          if (deltaX > deltaZ) {
+            // Block is primarily to the side (East/West) - block X movement
+            x = entity.position.x;
+            entity.velocity.x = 0;
+          } else {
+            // Block is primarily in front/behind (North/South) - block Z movement
+            z = entity.position.z;
+            entity.velocity.z = 0;
+          }
 
           // Trigger collision event if enabled
           this.triggerCollisionEvent(blockInfo);
@@ -270,11 +280,21 @@ export class CollisionDetector {
           continue;
         }
 
-        // Cannot pass - stop ALL horizontal movement
-        x = entity.position.x;
-        z = entity.position.z;
-        entity.velocity.x = 0;
-        entity.velocity.z = 0;
+        // Cannot pass - determine which axis to block based on block position
+        const blockCenterX = blockInfo.x + 0.5;
+        const blockCenterZ = blockInfo.z + 0.5;
+        const deltaX = Math.abs(blockCenterX - entity.position.x);
+        const deltaZ = Math.abs(blockCenterZ - entity.position.z);
+
+        if (deltaX > deltaZ) {
+          // Block is primarily to the side (East/West) - block X movement
+          x = entity.position.x;
+          entity.velocity.x = 0;
+        } else {
+          // Block is primarily in front/behind (North/South) - block Z movement
+          z = entity.position.z;
+          entity.velocity.z = 0;
+        }
 
         // Trigger collision event if enabled
         this.triggerCollisionEvent(blockInfo);
@@ -289,11 +309,16 @@ export class CollisionDetector {
       const isSolid = currentContext.currentBlocks.hasSolid;
 
       if (!PhysicsUtils.canLeaveTo(currentContext.currentBlocks.passableFrom, exitDir, isSolid)) {
-        // Cannot leave in this direction (thin wall) - stop ALL movement
-        x = entity.position.x;
-        z = entity.position.z;
-        entity.velocity.x = 0;
-        entity.velocity.z = 0;
+        // Cannot leave in this direction (thin wall) - stop movement in blocked direction only
+        if (exitDir === Direction.EAST || exitDir === Direction.WEST) {
+          // Block X movement, allow Z movement
+          x = entity.position.x;
+          entity.velocity.x = 0;
+        } else {
+          // Block Z movement, allow X movement
+          z = entity.position.z;
+          entity.velocity.z = 0;
+        }
       }
     }
 

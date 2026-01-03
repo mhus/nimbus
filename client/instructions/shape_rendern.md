@@ -286,9 +286,19 @@ billboard text ueber der entity. Wie kann hier der abglich der health geschehen?
 [x] An Block ist nun ein neuer parameter 'level'. Wenn der parameter gesetzt ist, soll beim erstellen des Winds
 aus WindModifier.leverUd und WindModifier.leverDown mit dem Wert block.level multipliziert werden.
 
-[ ] Der parameter 'level' soll im block instance editor unter packages/controls am block editierbar werden.
+[x] Der parameter 'level' soll im block instance editor unter packages/controls am block editierbar werden.
 Wenn er nicht gesetzt ist, oder kleiner 0, wird er als undefined gespeichert.
 - level werte sind immer integer
+
+## Bush Shape and Renderer
+
+[ ] Erstelle einen BushRenderer der Blocks mit shape BUSH rendert.
+- Ein Busch soll einen Busch, oder ein kleine gewächs darstellen, dafue werden mehrere flache Flächen genutzt die ineinander scheinbar 
+  unstrukturiert verschraenkt sind.
+- Die grosse und anzahl der Flächen soll durch die Offset Eigenschaften am Block gesteuert werden.
+  So kann der Busch 'wachsen' durch die aenderung der offsets.
+- Orientiere dich grob an CubeRenderer. - nicht Offsets
+- rotation und Wind sollen auch funktionieren - Wie bei CubeRenderer.
 
 ---
 
