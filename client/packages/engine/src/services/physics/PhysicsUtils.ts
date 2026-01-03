@@ -30,6 +30,25 @@ export function getMovementDirection(dx: number, dz: number): Direction {
 }
 
 /**
+ * Invert direction (for exit checks)
+ * NORTH ↔ SOUTH, EAST ↔ WEST
+ */
+export function invertDirection(direction: Direction): Direction {
+  switch (direction) {
+    case Direction.NORTH:
+      return Direction.SOUTH;
+    case Direction.SOUTH:
+      return Direction.NORTH;
+    case Direction.EAST:
+      return Direction.WEST;
+    case Direction.WEST:
+      return Direction.EAST;
+    default:
+      return direction;
+  }
+}
+
+/**
  * Check if we can enter a block from a specific direction
  *
  * For solid blocks with passableFrom:

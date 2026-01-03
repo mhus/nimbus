@@ -244,6 +244,35 @@ export class CollisionDetector {
         const feetY = Math.floor(entity.position.y);
         const numLevels = Math.ceil(dimensions.height);
 
+        // FALL 2: Check if trying to EXIT from a WALL block
+        // Check block at CURRENT position (where entity is standing)
+        const currentBlockX = Math.floor(entity.position.x);
+        const currentBlockZ = Math.floor(entity.position.z);
+        const movementDir = PhysicsUtils.getMovementDirection(dx, dz);
+        const invertedExitDir = PhysicsUtils.invertDirection(movementDir);
+
+        // Check all vertical levels at current position
+        for (let dy = 0; dy < numLevels; dy++) {
+            const blockY = feetY + dy;
+            const currentBlock = this.chunkService.getBlockAt(currentBlockX, blockY, currentBlockZ);
+            if (!currentBlock) continue;
+
+            const physics = currentBlock.currentModifier.physics;
+
+            // Check if current block is a WALL block
+            const isCurrentWall = physics?.solid !== true && physics?.passableFrom !== undefined;
+
+            if (isCurrentWall) {
+                // Check if we can leave through this exit direction (inverted!)
+                if (!PhysicsUtils.canLeaveTo(physics.passableFrom, invertedExitDir, false)) {
+                    // Cannot leave through this wall side - blocked
+                    const blockInfo = { x: currentBlockX, y: blockY, z: currentBlockZ, block: currentBlock };
+                    this.triggerCollisionEvent(blockInfo);
+                    return { blocked: true, blockingBlock: blockInfo };
+                }
+            }
+        }
+
         // Calculate all 4 corners at intended position
         const intendedCorners = [
             { x: intendedX - footprint, z: intendedZ - footprint }, // NW
