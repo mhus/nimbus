@@ -131,3 +131,11 @@ doModelselector('enable','#ff0000',true,true,8,74,8,'#00ff00')
 doModelselector('move',1,0,0)
 doModelselector('disable')
 
+# Camera Light
+
+doSunLightIntensity(0)
+doAmbientLightIntensity(0)
+doCameraLightRange(20)
+doCameraLightIntensity(2)
+doCameraLightEnable(true)
+

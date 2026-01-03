@@ -741,15 +741,16 @@ export class CameraService {
       return;
     }
 
-    // Create SpotLight at camera position pointing forward
-    const position = this.camera.position.clone();
-    const direction = this.camera.getDirection(new Vector3(0, 0, 1)); // Forward direction
+    // Create SpotLight at origin (will be positioned via parent)
+    // Direction will be updated every frame in update() method
+    const position = Vector3.Zero(); // Local position relative to parent
+    const direction = new Vector3(0, 0, 1); // Forward direction (will be updated)
 
     this.cameraLight = new SpotLight(
       'cameraLight',
       position,
       direction,
-      0.8, // Angle in radians (~46 degrees, typical flashlight cone)
+      1.5, // Angle in radians (~86 degrees, wide torch cone)
       2, // Exponent (controls falloff at edges)
       this.scene
     );
