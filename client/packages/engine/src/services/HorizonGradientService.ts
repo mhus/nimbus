@@ -51,6 +51,8 @@ export class HorizonGradientService {
   private color0: Color3 = new Color3(0.7, 0.8, 0.9); // Bottom color (light blue)
   private color1: Color3 = new Color3(0.3, 0.5, 0.8); // Top color (deep blue)
   private alpha: number = 0.5; // Transparency
+  private illuminationColor?: Color3; // Illumination/glow color (undefined = no illumination)
+  private illuminationStrength: number = 1.0; // Illumination intensity multiplier
 
   constructor(scene: Scene, appContext: AppContext) {
     this.scene = scene;
@@ -86,6 +88,16 @@ export class HorizonGradientService {
       this.alpha = config.alpha;
     }
 
+    // Load illumination settings
+    if (config.illumination?.color) {
+      const illumColor = config.illumination.color;
+      this.illuminationColor = new Color3(illumColor.r, illumColor.g, illumColor.b);
+    }
+
+    if (config.illumination?.strength !== undefined) {
+      this.illuminationStrength = config.illumination.strength;
+    }
+
     logger.debug('Horizon gradient parameters loaded from WorldInfo', {
       enabled: this.enabled,
       distance: this.distance,
@@ -94,6 +106,8 @@ export class HorizonGradientService {
       color0: { r: this.color0.r, g: this.color0.g, b: this.color0.b },
       color1: { r: this.color1.r, g: this.color1.g, b: this.color1.b },
       alpha: this.alpha,
+      illuminationColor: this.illuminationColor ? { r: this.illuminationColor.r, g: this.illuminationColor.g, b: this.illuminationColor.b } : undefined,
+      illuminationStrength: this.illuminationStrength,
     });
   }
 
@@ -241,8 +255,17 @@ export class HorizonGradientService {
   private createMaterial(): StandardMaterial {
     const material = new StandardMaterial('horizonGradientMaterial', this.scene);
 
-    material.disableLighting = true; // Self-illuminated
-    material.emissiveColor = Color3.White(); // Full brightness
+    // Apply illumination (emissive color for glow effect)
+    if (this.illuminationColor) {
+      // With illumination: use emissive color scaled by strength
+      material.emissiveColor = this.illuminationColor.scale(this.illuminationStrength);
+      material.disableLighting = false; // Allow lighting interaction
+    } else {
+      // Without illumination: fully self-illuminated (original behavior)
+      material.disableLighting = true; // Self-illuminated
+      material.emissiveColor = Color3.White(); // Full brightness
+    }
+
     (material as any).useVertexColors = true; // Enable vertex colors (not in TypeScript types but exists)
     material.transparencyMode = StandardMaterial.MATERIAL_ALPHABLEND;
     material.backFaceCulling = false; // Visible from inside
@@ -268,6 +291,24 @@ export class HorizonGradientService {
       this.applyVertexGradient(plane);
     });
     logger.debug('Vertex colors updated');
+  }
+
+  /**
+   * Update materials on all planes (when illumination changes)
+   */
+  private updateMaterials(): void {
+    // Dispose old materials
+    this.materials.forEach((material) => material.dispose());
+    this.materials = [];
+
+    // Create and apply new materials to all planes
+    this.planes.forEach((plane) => {
+      const material = this.createMaterial();
+      plane.material = material;
+      this.materials.push(material);
+    });
+
+    logger.debug('Materials updated with new illumination settings');
   }
 
   /**
@@ -380,6 +421,42 @@ export class HorizonGradientService {
    */
   isEnabled(): boolean {
     return this.enabled;
+  }
+
+  /**
+   * Set illumination color
+   * @param color RGB color for illumination (undefined to disable illumination)
+   */
+  setIlluminationColor(color: Color3 | undefined): void {
+    this.illuminationColor = color;
+    this.updateMaterials();
+    logger.info('Horizon gradient illumination color updated', {
+      color: color ? { r: color.r, g: color.g, b: color.b } : undefined,
+    });
+  }
+
+  /**
+   * Set illumination strength
+   * @param strength Illumination intensity multiplier (0-10, typical 0.5-2.0)
+   */
+  setIlluminationStrength(strength: number): void {
+    this.illuminationStrength = Math.max(0, strength);
+    this.updateMaterials();
+    logger.info('Horizon gradient illumination strength updated', { strength: this.illuminationStrength });
+  }
+
+  /**
+   * Get illumination color
+   */
+  getIlluminationColor(): Color3 | undefined {
+    return this.illuminationColor;
+  }
+
+  /**
+   * Get illumination strength
+   */
+  getIlluminationStrength(): number {
+    return this.illuminationStrength;
   }
 
   /**

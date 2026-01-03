@@ -410,9 +410,60 @@ Welche möglichkeiten habe ich mit BabylonJs?
   Die Implementierung ist produktionsbereit und kann jetzt getestet werden! 🚀
 ```
 
-[ ] An der Camera soll es eine Beleuchtung geben 'CamLight, die man an schalten kann. Wie z.b. eine Fackel.
+[?] An der Camera soll es eine Beleuchtung geben 'CamLight, die man an schalten kann. Wie z.b. eine Fackel.
 - Es soll ein Lichtquelle an der Kamera sein, die immer in Blickrichtung leuchtet.
 - Es soll ein einstellbarer Radius sein, der den beleuchteten bereich steuert.
 - Es soll ein einstellbare Intensität sein, die die helligkeit steuert.
 - Die lichtquelle soll aktivierbar sein (enable).
-[ ] Erstelle Commands um die CamLight zu steuern.
+[?] Erstelle Commands um die CamLight zu steuern.
+
+```text
+  Zusammenfassung
+
+  Ich habe erfolgreich das Camera Light (Fackel/Taschenlampe) Feature implementiert:
+
+  Implementierte Komponenten:
+
+  1. CameraService Erweiterung (packages/engine/src/services/CameraService.ts):
+  - SpotLight wird an cameraEnvironmentRoot angehängt (folgt automatisch der Kamera)
+  - Richtung wird jeden Frame aktualisiert um in Blickrichtung zu zeigen
+  - LocalStorage-Persistierung für alle Einstellungen
+  - Public API Methoden für vollständige Kontrolle
+
+  2. Neue Commands (packages/engine/src/commands/camera/):
+  - cameraLightEnable - Licht an/aus schalten
+  - cameraLightIntensity - Helligkeit anpassen (0-10, Standard: 1.0)
+  - cameraLightRange - Reichweite anpassen (Blöcke, Standard: 15)
+  - cameraLightInfo - Alle Einstellungen anzeigen
+
+  3. Command-Registrierung in CommandsFactory.ts
+
+  Standard-Werte:
+
+  - Range: 15 Blöcke
+  - Intensity: 1.0
+  - Farbe: Warmes Fackel-Licht (Orange: #FFA500)
+  - Winkel: 0.8 Radiant (~46 Grad Lichtkegel)
+
+  Verwendung (Commands):
+
+  // Licht einschalten
+  cameraLightEnable(true)
+
+  // Helligkeit anpassen
+  cameraLightIntensity(0.5)  // dimmer
+  cameraLightIntensity(2.0)  // heller
+
+  // Reichweite anpassen
+  cameraLightRange(10)   // kurze Reichweite
+  cameraLightRange(25)   // lange Reichweite
+
+  // Informationen anzeigen
+  cameraLightInfo()
+
+  // Licht ausschalten
+  cameraLightEnable(false)
+
+  Die Einstellungen werden automatisch im LocalStorage gespeichert und beim nächsten Start wiederhergestellt. Das Licht folgt automatisch der Kamera und leuchtet immer in Blickrichtung!
+```
+

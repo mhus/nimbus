@@ -9,3 +9,5 @@ export { HorizonGradientHeightCommand } from './HorizonGradientHeightCommand';
 export { HorizonGradientColor0Command } from './HorizonGradientColor0Command';
 export { HorizonGradientColor1Command } from './HorizonGradientColor1Command';
 export { HorizonGradientAlphaCommand } from './HorizonGradientAlphaCommand';
+export { HorizonGradientIlluminationColorCommand } from './HorizonGradientIlluminationColorCommand';
+export { HorizonGradientIlluminationStrengthCommand } from './HorizonGradientIlluminationStrengthCommand';

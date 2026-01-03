@@ -167,6 +167,13 @@ export interface WorldInfo {
       color1?: { r: number; g: number; b: number };
       /** Transparency 0-1 (default: 0.5) */
       alpha?: number;
+      /** Illumination settings for glow effect (optional) */
+      illumination?: {
+        /** Illumination color RGB (hex string like '#ffffff') */
+        color: { r: number; g: number; b: number };
+        /** Illumination strength multiplier (0-10, typical 0.5-2.0, default: 1.0) */
+        strength?: number;
+      };
     };
 
     /** Environment scripts (optional) */

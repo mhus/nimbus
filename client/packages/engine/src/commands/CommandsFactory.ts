@@ -112,7 +112,9 @@ import {
     HorizonGradientColor0Command, HorizonGradientColor1Command,
     HorizonGradientDistanceCommand,
     HorizonGradientEnableCommand, HorizonGradientHeightCommand,
-    HorizonGradientPositionCommand
+    HorizonGradientPositionCommand,
+    HorizonGradientIlluminationColorCommand,
+    HorizonGradientIlluminationStrengthCommand
 } from "./horizonGradient";
 import {
     LightningCommand,
@@ -296,6 +298,8 @@ export class CommandsFactory {
         commandService.registerHandler(new HorizonGradientColor0Command(appContext));
         commandService.registerHandler(new HorizonGradientColor1Command(appContext));
         commandService.registerHandler(new HorizonGradientAlphaCommand(appContext));
+        commandService.registerHandler(new HorizonGradientIlluminationColorCommand(appContext));
+        commandService.registerHandler(new HorizonGradientIlluminationStrengthCommand(appContext));
 
         // Register precipitation commands
         commandService.registerHandler(new PrecipitationStartCommand(appContext));
