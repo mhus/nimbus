@@ -190,8 +190,8 @@ Folgende Idee:
 - Beim speichern reduziere die struktur auf das noetigste. Entferne alle _defined ...
 
 [ ] WLayer.ts und WLayerModel.ts in generated/types muss weg
-[ ] Es gibt in BlockModifier den effekt WIND am Block und an Texture. Eins muss weg.
-[ ] Der effekt FLIPBOX an BlockModifier muss weg, ist jetzt shape
+[-] Es gibt in BlockModifier den effekt WIND am Block und an Texture. Eins muss weg. - ist sinnvoll so
+[-] Der effekt FLIPBOX an BlockModifier muss weg, ist jetzt shape - ist schon weg
 
 [x] Storage worldId mitgeben
 [x] jump als number

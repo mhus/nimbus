@@ -10,7 +10,7 @@
 
 import { Vector3, Matrix } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
-import type { TextureDefinition } from '@nimbus/shared';
+import type { TextureDefinition, Block } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
@@ -187,6 +187,7 @@ export class StepsRenderer extends BlockRenderer {
       corners[4], corners[5], corners[6], corners[7],
       [0, 1, 0],
       topTexture, modifier,
+        block.block,
       renderContext
     );
     facesRendered++;
@@ -196,6 +197,7 @@ export class StepsRenderer extends BlockRenderer {
       corners[3], corners[2], corners[1], corners[0],
       [0, -1, 0],
       bottomTexture, modifier,
+        block.block,
       renderContext
     );
     facesRendered++;
@@ -205,7 +207,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[3], corners[7], corners[6], corners[2],
       [0, 0, 1],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -215,7 +218,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[1], corners[5], corners[4], corners[0],
       [0, 0, -1],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -225,7 +229,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[2], corners[6], corners[5], corners[1],
       [1, 0, 0],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -235,7 +240,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[0], corners[4], corners[7], corners[3],
       [-1, 0, 0],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -247,6 +253,7 @@ export class StepsRenderer extends BlockRenderer {
       corners[12], corners[13], corners[14], corners[15],
       [0, 1, 0],
       topTexture, modifier,
+        block.block,
       renderContext
     );
     facesRendered++;
@@ -256,6 +263,7 @@ export class StepsRenderer extends BlockRenderer {
       corners[11], corners[10], corners[9], corners[8],
       [0, -1, 0],
       bottomTexture, modifier,
+        block.block,
       renderContext
     );
     facesRendered++;
@@ -265,7 +273,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[11], corners[15], corners[14], corners[10],
       [0, 0, 1],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -275,7 +284,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[9], corners[13], corners[12], corners[8],
       [0, 0, -1],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -285,7 +295,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[10], corners[14], corners[13], corners[9],
       [1, 0, 0],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -295,7 +306,8 @@ export class StepsRenderer extends BlockRenderer {
       corners[8], corners[12], corners[15], corners[11],
       [-1, 0, 0],
       sideTexture, modifier,
-      renderContext,
+        block.block,
+        renderContext,
       true  // Reverse winding order
     );
     facesRendered++;
@@ -327,6 +339,7 @@ export class StepsRenderer extends BlockRenderer {
     normal: number[],
     texture: TextureDefinition | null,
     modifier: any,
+    block: Block,
     renderContext: RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -393,7 +406,7 @@ export class StepsRenderer extends BlockRenderer {
     }
 
     // Add wind attributes and colors (uses helper from base class)
-    this.addWindAttributesAndColors(faceData, modifier, 4);
+    this.addWindAttributesAndColors(faceData, modifier, block, 4);
 
     renderContext.vertexOffset += 4;
   }

@@ -421,7 +421,7 @@ export interface TextureDefinition {
   /** Opacity (0.0 - 1.0) */
   opacity?: number;
 
-  /** Effect type (NONE, FLIPBOX, WIND)
+  /** Effect type (NONE, WIND)
    * Default is the effect from the VisibilityModifier
    * If set, overrides the VisibilityModifier.effect for this texture
    */
@@ -462,7 +462,7 @@ export interface VisibilityModifier {
   /** Shape type */
   shape?: Shape;  // javaType: Integer
 
-  /** Effect type (NONE, FLIPBOX, WIND)
+  /** Effect type (NONE, WIND)
    * Applies to all textures by default
    * Can be overridden per texture in TextureDefinition.effect
    */

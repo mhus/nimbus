@@ -15,7 +15,7 @@
 
 import { Vector3, Matrix } from '@babylonjs/core';
 import { getLogger, FaceFlag, FaceVisibilityHelper, TextureKey } from '@nimbus/shared';
-import type { BlockModifier, TextureDefinition } from '@nimbus/shared';
+import type { BlockModifier, TextureDefinition, Block } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
@@ -273,6 +273,7 @@ export class WallRenderer extends BlockRenderer {
         [0, 1, 0],
         texture,
         modifier,
+        block.block,
         renderContext,
         false
       );
@@ -285,6 +286,7 @@ export class WallRenderer extends BlockRenderer {
         [0, -1, 0],
         texture,
         modifier,
+        block.block,
         renderContext,
         false
       );
@@ -297,6 +299,7 @@ export class WallRenderer extends BlockRenderer {
         [-1, 0, 0],
         texture,
         modifier,
+        block.block,
         renderContext,
         true
       );
@@ -309,6 +312,7 @@ export class WallRenderer extends BlockRenderer {
         [1, 0, 0],
         texture,
         modifier,
+        block.block,
         renderContext,
         true
       );
@@ -321,6 +325,7 @@ export class WallRenderer extends BlockRenderer {
         [0, 0, 1],
         texture,
         modifier,
+        block.block,
         renderContext,
         true
       );
@@ -333,6 +338,7 @@ export class WallRenderer extends BlockRenderer {
         [0, 0, -1],
         texture,
         modifier,
+        block.block,
         renderContext,
         true
       );
@@ -348,6 +354,7 @@ export class WallRenderer extends BlockRenderer {
         [0, -1, 0], // Normal pointing down (inside)
         texture,
         modifier,
+        block.block,
         renderContext,
         false
       );
@@ -361,6 +368,7 @@ export class WallRenderer extends BlockRenderer {
         [0, 1, 0], // Normal pointing up (inside)
         texture,
         modifier,
+        block.block,
         renderContext,
         false
       );
@@ -374,6 +382,7 @@ export class WallRenderer extends BlockRenderer {
         [1, 0, 0], // Normal pointing right (inside)
         texture,
         modifier,
+        block.block,
         renderContext,
         true
       );
@@ -387,6 +396,7 @@ export class WallRenderer extends BlockRenderer {
         [-1, 0, 0], // Normal pointing left (inside)
         texture,
         modifier,
+        block.block,
         renderContext,
         false
       );
@@ -400,6 +410,7 @@ export class WallRenderer extends BlockRenderer {
         [0, 0, -1], // Normal pointing back (inside)
         texture,
         modifier,
+        block.block,
         renderContext,
         true
       );
@@ -413,6 +424,7 @@ export class WallRenderer extends BlockRenderer {
         [0, 0, 1], // Normal pointing front (inside)
         texture,
         modifier,
+        block.block,
         renderContext,
         false
       );
@@ -433,7 +445,8 @@ export class WallRenderer extends BlockRenderer {
           [-1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -445,7 +458,8 @@ export class WallRenderer extends BlockRenderer {
           [1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -457,7 +471,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, 1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -469,7 +484,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, -1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -486,7 +502,8 @@ export class WallRenderer extends BlockRenderer {
           [-1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           false
         );
       }
@@ -497,7 +514,8 @@ export class WallRenderer extends BlockRenderer {
           [1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           false
         );
       }
@@ -508,7 +526,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, 1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           false
         );
       }
@@ -519,7 +538,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, -1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -536,7 +556,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -547,7 +568,8 @@ export class WallRenderer extends BlockRenderer {
           [0, -1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -558,7 +580,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, 1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -569,7 +592,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, -1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -586,7 +610,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           false
         );
       }
@@ -597,7 +622,8 @@ export class WallRenderer extends BlockRenderer {
           [0, -1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           false
         );
       }
@@ -608,7 +634,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, 1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           false
         );
       }
@@ -619,7 +646,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 0, -1],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           false
         );
       }
@@ -636,7 +664,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -647,7 +676,8 @@ export class WallRenderer extends BlockRenderer {
           [0, -1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -658,7 +688,8 @@ export class WallRenderer extends BlockRenderer {
           [-1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -669,7 +700,8 @@ export class WallRenderer extends BlockRenderer {
           [1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -686,7 +718,8 @@ export class WallRenderer extends BlockRenderer {
           [0, 1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -697,7 +730,8 @@ export class WallRenderer extends BlockRenderer {
           [0, -1, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -708,7 +742,8 @@ export class WallRenderer extends BlockRenderer {
           [-1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -719,7 +754,8 @@ export class WallRenderer extends BlockRenderer {
           [1, 0, 0],
           texture,
           modifier,
-          renderContext,
+        block.block,
+        renderContext,
           true
         );
       }
@@ -742,6 +778,7 @@ export class WallRenderer extends BlockRenderer {
     normal: number[],
     texture: TextureDefinition | null,
     modifier: BlockModifier,
+    block: Block,
     renderContext: RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -798,7 +835,7 @@ export class WallRenderer extends BlockRenderer {
       faceData.indices.push(i0, i2, i3);
     }
 
-    this.addWindAttributesAndColors(faceData, modifier, 4);
+    this.addWindAttributesAndColors(faceData, modifier, block, 4);
 
     renderContext.vertexOffset += 4;
   }

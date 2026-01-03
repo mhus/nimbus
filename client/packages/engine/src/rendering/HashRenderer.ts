@@ -8,7 +8,7 @@
 
 import { Vector3, Matrix } from '@babylonjs/core';
 import { getLogger, FaceFlag, FaceVisibilityHelper } from '@nimbus/shared';
-import type { TextureDefinition } from '@nimbus/shared';
+import type { TextureDefinition, Block } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
@@ -265,6 +265,7 @@ export class HashRenderer extends BlockRenderer {
         [0, 1, 0],  // Normal pointing up
         texture,
         modifier,
+        block.block,
         renderContext,
         false  // reverseWinding
       );
@@ -279,6 +280,7 @@ export class HashRenderer extends BlockRenderer {
         [0, -1, 0],  // Normal pointing down
         texture,
         modifier,
+        block.block,
         renderContext,
         false  // reverseWinding
       );
@@ -293,6 +295,7 @@ export class HashRenderer extends BlockRenderer {
         [-1, 0, 0],  // Normal pointing left
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -307,6 +310,7 @@ export class HashRenderer extends BlockRenderer {
         [1, 0, 0],  // Normal pointing right
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -321,6 +325,7 @@ export class HashRenderer extends BlockRenderer {
         [0, 0, 1],  // Normal pointing forward
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -335,6 +340,7 @@ export class HashRenderer extends BlockRenderer {
         [0, 0, -1],  // Normal pointing backward
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -368,6 +374,7 @@ export class HashRenderer extends BlockRenderer {
     normal: number[],
     texture: TextureDefinition | null,
     modifier: any,
+    block: Block,
     renderContext: RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -434,7 +441,7 @@ export class HashRenderer extends BlockRenderer {
     }
 
     // Add wind attributes and colors (uses helper from base class)
-    this.addWindAttributesAndColors(faceData, modifier, 4);
+    this.addWindAttributesAndColors(faceData, modifier, block, 4);
 
     renderContext.vertexOffset += 4;
   }

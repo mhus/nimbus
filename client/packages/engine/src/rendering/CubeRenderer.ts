@@ -244,6 +244,7 @@ export class CubeRenderer extends BlockRenderer {
         [0, 1, 0],  // Normal pointing up
         texture,
         modifier,
+        block.block,
         renderContext,
         false  // reverseWinding
       );
@@ -258,6 +259,7 @@ export class CubeRenderer extends BlockRenderer {
         [0, -1, 0],  // Normal pointing down
         texture,
         modifier,
+        block.block,
         renderContext,
         false  // reverseWinding
       );
@@ -272,6 +274,7 @@ export class CubeRenderer extends BlockRenderer {
         [-1, 0, 0],  // Normal pointing left
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -286,6 +289,7 @@ export class CubeRenderer extends BlockRenderer {
         [1, 0, 0],  // Normal pointing right
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -300,6 +304,7 @@ export class CubeRenderer extends BlockRenderer {
         [0, 0, 1],  // Normal pointing forward
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -314,6 +319,7 @@ export class CubeRenderer extends BlockRenderer {
         [0, 0, -1],  // Normal pointing backward
         texture,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -348,6 +354,7 @@ export class CubeRenderer extends BlockRenderer {
     normal: number[],
     texture: TextureDefinition | null,
     modifier: BlockModifier,
+    block: Block,
     renderContext : RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -415,7 +422,7 @@ export class CubeRenderer extends BlockRenderer {
     }
 
     // Add wind attributes and colors (uses helper from base class)
-    this.addWindAttributesAndColors(faceData, modifier, 4);
+    this.addWindAttributesAndColors(faceData, modifier, block, 4);
 
     renderContext.vertexOffset += 4;  // 4 vertices added
   }

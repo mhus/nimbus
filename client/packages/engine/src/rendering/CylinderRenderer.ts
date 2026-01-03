@@ -354,7 +354,7 @@ export class CylinderRenderer extends BlockRenderer {
     }
 
     // Add wind attributes and colors (uses helper from base class)
-    this.addWindAttributesAndColors(faceData, modifier, vertices.length);
+    this.addWindAttributesAndColors(faceData, modifier, block.block, vertices.length);
 
     // Add indices (offset by current vertex count)
     for (let i = 0; i < indices.length; i++) {

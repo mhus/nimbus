@@ -7,7 +7,7 @@
 
 import { Vector3, Matrix } from '@babylonjs/core';
 import { getLogger } from '@nimbus/shared';
-import type { TextureDefinition } from '@nimbus/shared';
+import type { TextureDefinition, Block } from '@nimbus/shared';
 import type { ClientBlock } from '../types';
 import { BlockRenderer } from './BlockRenderer';
 import type { RenderContext } from '../services/RenderService';
@@ -194,6 +194,7 @@ export class CrossRenderer extends BlockRenderer {
         [0.707, 0, -0.707],  // Normal pointing diagonally (normalized vector)
         texture1,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -207,6 +208,7 @@ export class CrossRenderer extends BlockRenderer {
         [-0.707, 0, -0.707],  // Normal pointing diagonally
         texture2,
         modifier,
+        block.block,
         renderContext,
         true  // Reverse winding order
       );
@@ -239,6 +241,7 @@ export class CrossRenderer extends BlockRenderer {
     normal: number[],
     texture: TextureDefinition | null,
     modifier: any,
+    block: Block,
     renderContext: RenderContext,
     reverseWinding: boolean = false
   ): Promise<void> {
@@ -294,7 +297,7 @@ export class CrossRenderer extends BlockRenderer {
     }
 
     // Add wind attributes and colors (uses helper from base class)
-    this.addWindAttributesAndColors(faceData, modifier, 4);
+    this.addWindAttributesAndColors(faceData, modifier, block, 4);
 
     renderContext.vertexOffset += 4;  // 4 vertices added
   }

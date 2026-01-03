@@ -418,11 +418,11 @@ Es werden also zwei neue network messages benoetigt:
 [x] Erstelle im Server commandos die es erlauben in WorldInfo den status, seasonStatus und seasonProgress zu aendern.
 - Wenn die Änderung erfolgt, muessen alle clients die worldInfo neu laden. Dazu wird in den engine clients das commando 'reloadWorldConfig' ausgefuehrt.
 
-[?] Es soll eeinen neuen Bewegungsmodus neben FLY, WALK, SPRINT, CROUCH etc. geben: FREE_FLY, der Modus kommt vor FLY in der liste.
+[x] Es soll eeinen neuen Bewegungsmodus neben FLY, WALK, SPRINT, CROUCH etc. geben: FREE_FLY, der Modus kommt vor FLY in der liste.
 - Nenne den jetztigen FLY modus in FREE_FLY um. - Wird nur im Editor modus aktiv, keine physik
 - Erstelle einen neuen Modus FLY, der wie FREE_FLY funktioniert, aber die physik aktiviert hat, d.h. alle Physik ausser GRAVITY ist aktiv und die Kamerasteuerung ist wie bei FREE_FLY.
 
-[?] In WorldInfo wird definiert welche Bewegungsmodi erlaubt sind.
+[x] In WorldInfo wird definiert welche Bewegungsmodi erlaubt sind.
 - Erstelle in WorldInfo einen neuen parameter 'allowedMovementModes?: string[]' der die erlaubten Bewegungsmodi enthaelt.
 - Wenn der parameter nicht gesetzt ist, sind alle Bewegungsmodi erlaubt, wie bisher.
 - Erstelle einen parameter 'defaultMovementMode'?: string der den default Bewegungsmodus enthaelt, wenn der player die Welt betritt.

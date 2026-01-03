@@ -39,39 +39,51 @@
           </div>
 
           <!-- Two-column layout: BlockType/Status left (70%), Navigation right (30%) -->
-          <div class="grid gap-2 mb-4" style="grid-template-columns: 70% 30%;">
+          <div class="grid gap-2 mb-4" :style="showNavigator ? 'grid-template-columns: 70% 30%;' : 'grid-template-columns: 100%;'">
             <!-- Left Column: Block Type and Status -->
             <div class="space-y-4">
               <!-- Block Type Selection -->
               <div class="form-control">
                 <label class="label">
                   <span class="label-text font-semibold">Block Type</span>
-                  <span class="label-text-alt text-error" v-if="!blockData.blockTypeId">Required</span>
+                  <div class="flex items-center gap-2">
+                    <button
+                      @click="showNavigator = !showNavigator"
+                      class="btn btn-xs btn-ghost"
+                      :title="showNavigator ? 'Hide Navigator' : 'Show Navigator'"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path v-if="!showNavigator" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    <span class="label-text-alt text-error" v-if="!blockData.blockTypeId">Required</span>
+                  </div>
                 </label>
 
                 <!-- Currently Selected Block Type -->
                 <div
                   v-if="blockData.blockTypeId != '' && !showBlockTypeSearch"
-                  class="p-3 bg-base-200 rounded-lg flex items-center justify-between mb-2"
+                  class="p-3 bg-base-200 rounded-lg mb-2"
                 >
-                  <div>
+                  <div class="mb-2">
                     <span class="font-mono font-bold">ID {{ blockData.blockTypeId }}</span>
                     <span class="mx-2">-</span>
                     <span v-if="selectedBlockType">{{ selectedBlockType.description || 'Unnamed' }}</span>
                     <span v-else class="text-base-content/50 italic">(BlockType details not loaded)</span>
                   </div>
                   <div class="flex gap-2">
+                    <button class="btn btn-sm btn-primary" @click="clearBlockType">
+                      Change
+                    </button>
                     <a
                       :href="getBlockTypeEditorUrl(blockData.blockTypeId)"
                       target="_blank"
-                      class="btn btn-sm btn-primary"
+                      class="btn btn-sm btn-ghost"
                       title="Open BlockType in new tab"
                     >
                       Edit Type
                     </a>
-                    <button class="btn btn-sm btn-ghost" @click="clearBlockType">
-                      Change
-                    </button>
                   </div>
                 </div>
 
@@ -110,25 +122,48 @@
                 </div>
               </div>
 
-              <!-- Status -->
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text font-semibold">Status</span>
-                  <span class="label-text-alt">0-255</span>
-                </label>
-                <input
-                  v-model.number="blockData.status"
-                  type="number"
-                  min="0"
-                  max="255"
-                  class="input input-bordered"
-                  placeholder="0"
-                />
+              <!-- Status and Level in same row -->
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Status -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-semibold">Status</span>
+                    <span class="label-text-alt">0-255</span>
+                  </label>
+                  <input
+                    v-model.number="blockData.status"
+                    type="number"
+                    min="0"
+                    max="255"
+                    class="input input-bordered"
+                    placeholder="0"
+                  />
+                </div>
+
+                <!-- Level (Wind Height) -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text font-semibold">Level</span>
+                    <span class="label-text-alt">Wind height</span>
+                  </label>
+                  <input
+                    v-model.number="levelValue"
+                    type="number"
+                    step="1"
+                    class="input input-bordered"
+                    placeholder="-1 (not set)"
+                  />
+                </div>
+              </div>
+
+              <!-- Help text for Level -->
+              <div class="text-xs text-base-content/60 -mt-2">
+                Integer multiplier for wind lever values. -1 or &lt; 0 = not set. 0 = no multiplier.
               </div>
             </div>
 
             <!-- Right Column: Navigate Component -->
-            <div class="flex items-start justify-center">
+            <div v-if="showNavigator" class="flex items-start justify-center">
               <NavigateSelectedBlockComponent
                 :selected-block="blockCoordinates"
                 :step="1"
@@ -655,6 +690,9 @@ const confirmResolve = ref<((value: boolean) => void) | null>(null);
 // Block origin
 const loadingOrigin = ref(false);
 
+// Navigator visibility (default hidden to save space)
+const showNavigator = ref(false);
+
 // Save as BlockType dialog state
 const showSaveAsBlockTypeDialog = ref(false);
 const saveAsBlockTypeDialog = ref<HTMLDialogElement | null>(null);
@@ -1143,6 +1181,9 @@ async function saveBlock(closeAfter: boolean = false) {
         ? blockData.value.cornerHeights
         : undefined,
       rotation: blockData.value.rotation || undefined,
+      level: blockData.value.level !== undefined && blockData.value.level >= 0
+        ? blockData.value.level
+        : undefined,
       status: blockData.value.status || 0,
       modifiers: blockData.value.modifiers || undefined,
       // faceVisibility is now always stored as a numeric bitfield on the block
@@ -1345,6 +1386,21 @@ const rotationY = computed({
       blockData.value.rotation = { x: 0, y: 0 };
     }
     blockData.value.rotation.y = value;
+  },
+});
+
+// Level (wind height) state - always integer
+// Default is -1 to indicate undefined (0 is a valid value)
+const levelValue = computed({
+  get: () => blockData.value.level ?? -1,
+  set: (value: number) => {
+    // If value is undefined, NaN, or < 0, set to undefined
+    if (value === undefined || isNaN(value) || value < 0) {
+      blockData.value.level = undefined;
+    } else {
+      // Ensure integer value
+      blockData.value.level = Math.floor(value);
+    }
   },
 });
 

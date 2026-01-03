@@ -27,7 +27,7 @@
 > Already done!
 
 [ ] Im BlockModifierEditor beim anlegen von eneuen BlockModifieren wird die ID ausgewahlt in einem Dialog:
-- Neben der StatusId soll eine Auswhal der bekennte BlockStatus Types geben (BlocStatus in Block.ts)
+- Neben der StatusId soll eine Auswhal der bekennte BlockStatus Types geben (BlockStatus in Block.ts)
 - Die Option einen Status zu Kopieren / Clonen
 
 [ ] Im ScriptEditor soll der Tab zwischen Editor und Json SOurce raus, dafuer ein Button

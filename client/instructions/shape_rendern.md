@@ -280,9 +280,15 @@ Welche Einsaetze gemacht werden muessen hängt von der kombinantion der fehlende
 
 
 [x] ueber items soll immer ein keiner text stehen, der name und die anzahl (fallss angegeben) als billboard text ueber dem item. (ItemRenderer)
-[ ] Jetzt das gleche fuer Entities die haben in EntityData.ts schon einen namen, der angezeigt werden soll: ueber entities soll immer ein kleiner text stehen, der name der entity und deren health (falls angegeben, als balken) als
+[x] Jetzt das gleche fuer Entities die haben in EntityData.ts schon einen namen, der angezeigt werden soll: ueber entities soll immer ein kleiner text stehen, der name der entity und deren health (falls angegeben, als balken) als
 billboard text ueber der entity. Wie kann hier der abglich der health geschehen? Es soll auch der health wert angezeigt und im laufenden darstellung auch aktualisiert werden. Wie macht man das denn?
 
+[x] An Block ist nun ein neuer parameter 'level'. Wenn der parameter gesetzt ist, soll beim erstellen des Winds
+aus WindModifier.leverUd und WindModifier.leverDown mit dem Wert block.level multipliziert werden.
+
+[ ] Der parameter 'level' soll im block instance editor unter packages/controls am block editierbar werden.
+Wenn er nicht gesetzt ist, oder kleiner 0, wird er als undefined gespeichert.
+- level werte sind immer integer
 
 ---
 

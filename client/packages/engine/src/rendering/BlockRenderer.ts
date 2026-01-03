@@ -7,7 +7,7 @@
 import { Matrix, Vector3 } from '@babylonjs/core';
 import type { RenderService, RenderContext } from '../services/RenderService';
 import type { ClientBlock } from '../types';
-import type { BlockModifier } from '@nimbus/shared';
+import type { BlockModifier, Block } from '@nimbus/shared';
 
 /**
  * Abstract base class for shape renderers
@@ -47,11 +47,13 @@ export abstract class BlockRenderer {
    *
    * @param faceData - Face data to add attributes to
    * @param modifier - Block modifier containing wind properties
+   * @param block - Block instance (for level parameter)
    * @param vertexCount - Number of vertices to add attributes for
    */
   protected addWindAttributesAndColors(
     faceData: any,
     modifier: BlockModifier,
+    block: Block,
     vertexCount: number
   ): void {
     // Add vertex colors (white by default, RGBA format: 4 values per vertex)
@@ -66,8 +68,14 @@ export abstract class BlockRenderer {
     if (faceData.windLeafiness && faceData.windStability && faceData.windLeverUp && faceData.windLeverDown) {
       const windLeafiness = modifier.wind?.leafiness ?? 0.5;
       const windStability = modifier.wind?.stability ?? 0.5;
-      const windLeverUp = modifier.wind?.leverUp ?? 0.0;
-      const windLeverDown = modifier.wind?.leverDown ?? 0.0;
+      let windLeverUp = modifier.wind?.leverUp ?? 0.0;
+      let windLeverDown = modifier.wind?.leverDown ?? 0.0;
+
+      // Multiply lever values with block.level if set
+      if (block.level !== undefined) {
+        windLeverUp *= block.level;
+        windLeverDown *= block.level;
+      }
 
       for (let i = 0; i < vertexCount; i++) {
         faceData.windLeafiness.push(windLeafiness);

@@ -39,6 +39,23 @@ Auch wenn es nicht noetig ist, aber das ist das Konzept.
 
 [ ] In PhysicsService passableFrom wenn solid aus ist funktioniert nicht richtig
 
-[ ] In CylinderRenderer in packages/engine/src/renderers/CylinderRenderer.ts werden die Top und Bottom Flächen gezeichnet, diese werden aber nicht mit
+[x] In CylinderRenderer in packages/engine/src/renderers/CylinderRenderer.ts werden die Top und Bottom Flächen gezeichnet, diese werden aber nicht mit
 roteirt, so wie der Zylinder. Das muss gefixt werden.
 
+[-] In BlockModifier.ts gibt es effect:BlockEffect in VisibilityModifier (fuer den gesamten Block) und nochmals an
+TextureModifier (fuer die Textur). Das ist nicht sinnvoll. Prüfe ob beide effect Parameter benutzt werden.
+```text
+Fazit:
+
+  Das Design ist sinnvoll und korrekt implementiert. Es erlaubt:
+  - Globalen Effect für den ganzen Block (VisibilityModifier)
+  - Pro-Textur Overrides (TextureDefinition)
+  - Z.B. könnte ein Block WIND als Default haben, aber die TOP-Textur könnte NONE verwenden
+
+  Empfehlung: Keine Änderung nötig - beide Parameter erfüllen ihren Zweck.
+```
+
+[ ] Es gibt in packages/shared/types die Dateien WLayer.ts und WLayerModel.ts diese sollten nicht genutzt werden.
+Bitte pruefe das.
+    [ ] Es sollen stadtdessen die Dateien in packages/shared/generated/types genutzt werden. Die Beiden Dateien in
+    packages/shared/types sollen entfernt werden.
