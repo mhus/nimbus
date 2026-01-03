@@ -189,58 +189,113 @@ export class CollisionDetector {
     wishPosition: Vector3,
     dimensions: EntityDimensions
   ): { x: number; z: number } {
-    let x = wishPosition.x;
-    let z = wishPosition.z;
-
-    const dx = x - entity.position.x;
-    const dz = z - entity.position.z;
+    const dx = wishPosition.x - entity.position.x;
+    const dz = wishPosition.z - entity.position.z;
 
     // No horizontal movement
     if (Math.abs(dx) < 0.001 && Math.abs(dz) < 0.001) {
-      return { x, z };
+      return { x: wishPosition.x, z: wishPosition.z };
     }
 
-    // Check if moving into solid blocks
-    const frontBlocks = this.getFrontBlocks(entity, dimensions, dx, dz);
+    // PREDICTIVE COLLISION DETECTION:
+    // Calculate intended final position and check if it would collide
+    const intendedX = entity.position.x + dx;
+    const intendedZ = entity.position.z + dz;
 
-    for (const blockInfo of frontBlocks) {
-      if (!blockInfo.block) continue;
+    // Get all blocks that intended position would intersect
+    const collisionResult = this.checkCollisionAtIntendedPosition(
+      entity,
+      dimensions,
+      intendedX,
+      intendedZ,
+      dx,
+      dz
+    );
 
-      const physics = blockInfo.block.currentModifier.physics;
-      if (!physics?.solid) continue;
+    // If no collision, allow full movement
+    if (!collisionResult.blocked) {
+      return { x: intendedX, z: intendedZ };
+    }
 
-      // Get movement direction for passableFrom checks
-      const dir = PhysicsUtils.getMovementDirection(dx, dz);
+    // Collision detected - stop movement completely
+    // Do NOT try to calculate "safe" position, just stop where we are
+    entity.velocity.x = 0;
+    entity.velocity.z = 0;
 
-      // Check passableFrom
-      if (physics.passableFrom !== undefined) {
-        // Solid + passableFrom: One-way gate
-        if (!PhysicsUtils.canEnterFrom(physics.passableFrom, dir, true)) {
-          // Blocked - determine which axis to block based on block position
-          const blockCenterX = blockInfo.x + 0.5;
-          const blockCenterZ = blockInfo.z + 0.5;
-          const deltaX = Math.abs(blockCenterX - entity.position.x);
-          const deltaZ = Math.abs(blockCenterZ - entity.position.z);
+    logger.info('🛑 Collision: Blocked movement', {
+      blockPos: collisionResult.blockingBlock,
+      entityPos: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
+      intended: { x: intendedX, z: intendedZ },
+      movement: { dx, dz },
+      footprint: dimensions.footprint,
+    });
 
-          if (deltaX > deltaZ) {
-            // Block is primarily to the side (East/West) - block X movement
-            x = entity.position.x;
-            entity.velocity.x = 0;
-          } else {
-            // Block is primarily in front/behind (North/South) - block Z movement
-            z = entity.position.z;
-            entity.velocity.z = 0;
+    // Return current position (no movement)
+    return { x: entity.position.x, z: entity.position.z };
+  }
+
+  /**
+   * Check if intended position would cause collision with solid blocks
+   * Returns blocking block info if collision detected
+   */
+  private checkCollisionAtIntendedPosition(
+    entity: PhysicsEntity,
+    dimensions: EntityDimensions,
+    intendedX: number,
+    intendedZ: number,
+    dx: number,
+    dz: number
+  ): {
+    blocked: boolean;
+    blockingBlock?: { x: number; y: number; z: number; block: any };
+  } {
+    const footprint = dimensions.footprint;
+    const feetY = Math.floor(entity.position.y);
+    const numLevels = Math.ceil(dimensions.height);
+
+    // Calculate all 4 corners at intended position
+    const intendedCorners = [
+      { x: intendedX - footprint, z: intendedZ - footprint }, // NW
+      { x: intendedX + footprint, z: intendedZ - footprint }, // NE
+      { x: intendedX + footprint, z: intendedZ + footprint }, // SE
+      { x: intendedX - footprint, z: intendedZ + footprint }, // SW
+    ];
+
+    // Check each corner for solid block collision
+    for (const corner of intendedCorners) {
+      const blockX = Math.floor(corner.x);
+      const blockZ = Math.floor(corner.z);
+
+      // Check all vertical levels
+      for (let dy = 0; dy < numLevels; dy++) {
+        const blockY = feetY + dy;
+        const block = this.chunkService.getBlockAt(blockX, blockY, blockZ);
+        if (!block) continue;
+
+        const physics = block.currentModifier.physics;
+        if (!physics?.solid) continue;
+
+        // Found solid block at intended position!
+        const blockInfo = { x: blockX, y: blockY, z: blockZ, block };
+
+        // Get movement direction for passableFrom checks
+        const dir = PhysicsUtils.getMovementDirection(dx, dz);
+
+        // Check passableFrom (one-way gates)
+        if (physics.passableFrom !== undefined) {
+          if (!PhysicsUtils.canEnterFrom(physics.passableFrom, dir, true)) {
+            // Blocked by one-way gate
+            this.triggerCollisionEvent(blockInfo);
+            return { blocked: true, blockingBlock: blockInfo };
           }
-
-          // Trigger collision event if enabled
-          this.triggerCollisionEvent(blockInfo);
-          break;
+          // Can pass through one-way gate
+          continue;
         }
-      } else {
-        // Regular solid block - check if can climb
+
+        // Check if can climb over this block
 
         // Check 1: Slope blocks with low corner heights (always passable)
-        const cornerHeights = this.surfaceAnalyzer.getCornerHeights(blockInfo.block);
+        const cornerHeights = this.surfaceAnalyzer.getCornerHeights(block);
         if (cornerHeights) {
           const maxHeight = Math.max(...cornerHeights);
           if (maxHeight <= this.maxClimbHeight) {
@@ -250,120 +305,52 @@ export class CollisionDetector {
         }
 
         // Check 2: Full 1-block step - check autoClimbable property
-        const blockHeight = blockInfo.block.block.position.y + 1.0; // Top of block
+        const blockHeight = block.block.position.y + 1.0; // Top of block
         const currentY = entity.position.y;
         const heightDiff = blockHeight - currentY;
 
-        // If height difference <= 1.0 and block has autoClimbable property (or is undefined = default true)
         if (heightDiff > 0 && heightDiff <= 1.0) {
-          // Check if autoClimbable is explicitly set to false
           if (physics.autoClimbable === false) {
-            // Explicitly disabled - cannot climb
-            // Continue to blocking logic below
+            // Explicitly disabled auto-climb - BLOCKED
+            this.triggerCollisionEvent(blockInfo);
+            return { blocked: true, blockingBlock: blockInfo };
           } else {
-            // autoClimbable is true or undefined (default: allow climbing)
-            // Trigger climb event if enabled
+            // Can auto-climb this block
+            logger.info('⬆️ Auto-climb triggered (predictive)', {
+              blockPos: { x: blockX, y: blockY, z: blockZ },
+              entityPos: { x: entity.position.x, y: entity.position.y, z: entity.position.z },
+              heightDiff,
+            });
             this.triggerCollisionEvent(blockInfo, 'climb');
-
-            // WalkModeController will adjust Y position
             continue;
           }
         }
 
-        // Check 3: Alternative - if physical dimensions height >= 1.5, allow climbing 1-block
-        // (This makes taller entities able to step over 1-block obstacles naturally)
+        // Check 3: Tall entities can step over 1-block obstacles
         if (heightDiff > 0 && heightDiff <= 1.0 && dimensions.height >= 1.5) {
-          // Trigger climb event if enabled
           this.triggerCollisionEvent(blockInfo, 'climb');
-
-          // Tall entity can step over 1-block obstacles
           continue;
         }
 
-        // Cannot pass - determine which axis to block based on block position
-        const blockCenterX = blockInfo.x + 0.5;
-        const blockCenterZ = blockInfo.z + 0.5;
-        const deltaX = Math.abs(blockCenterX - entity.position.x);
-        const deltaZ = Math.abs(blockCenterZ - entity.position.z);
-
-        if (deltaX > deltaZ) {
-          // Block is primarily to the side (East/West) - block X movement
-          x = entity.position.x;
-          entity.velocity.x = 0;
-        } else {
-          // Block is primarily in front/behind (North/South) - block Z movement
-          z = entity.position.z;
-          entity.velocity.z = 0;
-        }
-
-        // Trigger collision event if enabled
+        // Cannot climb - BLOCKED
         this.triggerCollisionEvent(blockInfo);
-        break;
+        return { blocked: true, blockingBlock: blockInfo };
       }
     }
 
-    // Check current block passableFrom (wall barriers)
+    // Also check current block passableFrom (wall barriers)
     const currentContext = this.contextAnalyzer.getContext(entity, dimensions);
     if (currentContext.currentBlocks.passableFrom !== undefined) {
       const exitDir = PhysicsUtils.getMovementDirection(dx, dz);
       const isSolid = currentContext.currentBlocks.hasSolid;
 
       if (!PhysicsUtils.canLeaveTo(currentContext.currentBlocks.passableFrom, exitDir, isSolid)) {
-        // Cannot leave in this direction (thin wall) - stop movement in blocked direction only
-        if (exitDir === Direction.EAST || exitDir === Direction.WEST) {
-          // Block X movement, allow Z movement
-          x = entity.position.x;
-          entity.velocity.x = 0;
-        } else {
-          // Block Z movement, allow X movement
-          z = entity.position.z;
-          entity.velocity.z = 0;
-        }
+        // Cannot leave in this direction (thin wall)
+        return { blocked: true, blockingBlock: undefined };
       }
     }
 
-    return { x, z };
-  }
-
-  /**
-   * Get blocks in front of entity for collision check
-   */
-  private getFrontBlocks(
-    entity: PhysicsEntity,
-    dimensions: EntityDimensions,
-    dx: number,
-    dz: number
-  ) {
-    const blocks = [];
-    const feetY = Math.floor(entity.position.y);
-    const numLevels = Math.ceil(dimensions.height);
-
-    // Determine front direction
-    const frontX = dx > 0 ? 1 : dx < 0 ? -1 : 0;
-    const frontZ = dz > 0 ? 1 : dz < 0 ? -1 : 0;
-
-    // Check footprint corners
-    const footprint = dimensions.footprint;
-    const corners = [
-      { x: entity.position.x - footprint, z: entity.position.z - footprint },
-      { x: entity.position.x + footprint, z: entity.position.z - footprint },
-      { x: entity.position.x + footprint, z: entity.position.z + footprint },
-      { x: entity.position.x - footprint, z: entity.position.z + footprint },
-    ];
-
-    for (const corner of corners) {
-      const blockX = Math.floor(corner.x + frontX);
-      const blockZ = Math.floor(corner.z + frontZ);
-
-      for (let dy = 0; dy < numLevels; dy++) {
-        const block = this.chunkService.getBlockAt(blockX, feetY + dy, blockZ);
-        if (block) {
-          blocks.push({ x: blockX, y: feetY + dy, z: blockZ, block });
-        }
-      }
-    }
-
-    return blocks;
+    return { blocked: false };
   }
 
   /**
@@ -376,10 +363,31 @@ export class CollisionDetector {
     if (context.currentBlocks.hasSolid && !context.currentBlocks.allNonSolid) {
       // Check if space above is clear
       if (!context.headBlocks.hasSolid) {
+        // Calculate corner positions to understand WHY we're inside a block
+        const footprint = dimensions.footprint;
+        const corners = [
+          { x: entity.position.x - footprint, z: entity.position.z - footprint, name: 'NW' },
+          { x: entity.position.x + footprint, z: entity.position.z - footprint, name: 'NE' },
+          { x: entity.position.x + footprint, z: entity.position.z + footprint, name: 'SE' },
+          { x: entity.position.x - footprint, z: entity.position.z + footprint, name: 'SW' },
+        ];
+
+        const cornerInfo = corners.map(c => ({
+          name: c.name,
+          pos: { x: c.x.toFixed(3), z: c.z.toFixed(3) },
+          blockX: Math.floor(c.x),
+          blockZ: Math.floor(c.z),
+        }));
+
         entity.position.y += 1.0;
         entity.velocity.y = 0;
-        logger.debug('Pushed entity up - was inside solid block', {
+        logger.info('🔺 FLIP! Pushed entity up - was inside solid block', {
           entityId: entity.entityId,
+          position: { x: entity.position.x, y: entity.position.y - 1.0, z: entity.position.z },
+          newY: entity.position.y,
+          velocity: { x: entity.velocity.x, y: entity.velocity.y, z: entity.velocity.z },
+          footprint: dimensions.footprint,
+          corners: cornerInfo,
         });
         return true;
       }
