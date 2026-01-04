@@ -14,7 +14,7 @@ export interface BlockTypeListResponse {
 }
 
 export interface BlockTypeCreateResponse {
-  id: string;
+  blockId: string;
 }
 
 export interface BlockTypePagingParams {
@@ -59,11 +59,18 @@ export class BlockTypeService {
    * Create new block type
    */
   async createBlockType(worldId: string, blockType: Partial<BlockType>): Promise<string> {
+    // Map to CreateBlockTypeRequest format expected by backend
+    const request = {
+      blockId: blockType.id,
+      publicData: blockType,
+      blockTypeGroup: undefined  // Optional, will be extracted from blockId on server
+    };
+
     const response = await apiService.post<BlockTypeCreateResponse>(
       `/control/worlds/${worldId}/blocktypes/type`,
-      blockType
+      request
     );
-    return response.id;
+    return response.blockId;
   }
 
   /**
