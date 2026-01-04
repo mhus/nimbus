@@ -90,7 +90,7 @@
                             @click="changeStatusId(status)"
                             title="Click to change status ID"
                           >
-                            Status {{ status }}
+                            Status {{ status }}{{ getStatusName(status) }}
                           </div>
                           <div class="text-sm text-base-content/70">
                             {{ getModifierSummary(status) }}
@@ -176,11 +176,32 @@
   />
 
   <!-- Duplicate BlockType Dialog -->
-  <Dialog v-if="showDuplicateDialog" as="div" class="relative z-50" @close="closeDuplicateDialog">
-    <div class="fixed inset-0 bg-black bg-opacity-25" />
-    <div class="fixed inset-0 overflow-y-auto">
-      <div class="flex min-h-full items-center justify-center p-4">
-        <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
+  <TransitionRoot :show="showDuplicateDialog" as="template">
+    <Dialog as="div" class="relative z-50" @close="closeDuplicateDialog">
+      <TransitionChild
+        as="template"
+        enter="ease-out duration-300"
+        enter-from="opacity-0"
+        enter-to="opacity-100"
+        leave="ease-in duration-200"
+        leave-from="opacity-100"
+        leave-to="opacity-0"
+      >
+        <div class="fixed inset-0 bg-black bg-opacity-25" />
+      </TransitionChild>
+
+      <div class="fixed inset-0 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4">
+          <TransitionChild
+            as="template"
+            enter="ease-out duration-300"
+            enter-from="opacity-0 scale-95"
+            enter-to="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leave-from="opacity-100 scale-100"
+            leave-to="opacity-0 scale-95"
+          >
+            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
           <DialogTitle class="text-lg font-bold mb-4">
             Save as Copy
           </DialogTitle>
@@ -226,10 +247,75 @@
               {{ duplicating ? 'Duplicating...' : 'Save Copy' }}
             </button>
           </div>
-        </DialogPanel>
+            </DialogPanel>
+          </TransitionChild>
+        </div>
+      </div>
+    </Dialog>
+  </TransitionRoot>
+
+  <!-- Add Status Dialog -->
+  <Teleport to="body" v-if="showAddStatusDialog">
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black bg-opacity-50" @click="closeAddStatusDialog"></div>
+
+      <!-- Dialog Content -->
+      <div class="relative w-full max-w-md bg-base-100 rounded-lg shadow-2xl p-6">
+        <h3 class="text-lg font-bold mb-4">Add Status</h3>
+
+        <p class="text-sm text-base-content/70 mb-3">
+          Select a predefined status or enter a custom ID:
+        </p>
+
+        <!-- Quick action buttons for known statuses -->
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button
+            v-for="(name, statusId) in knownStatuses"
+            :key="statusId"
+            class="badge badge-lg badge-outline hover:badge-primary cursor-pointer transition-colors"
+            :class="{ 'badge-disabled': formData.modifiers?.[statusId] !== undefined }"
+            :disabled="formData.modifiers?.[statusId] !== undefined"
+            @click="selectStatus(Number(statusId))"
+          >
+            {{ statusId }} ({{ name }})
+          </button>
+        </div>
+
+        <div class="divider text-xs">OR CUSTOM</div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Custom Status ID</span>
+          </label>
+          <input
+            v-model="newStatusId"
+            type="number"
+            class="input input-bordered w-full"
+            :placeholder="`e.g., ${suggestedNextStatus}`"
+            @keyup.enter="confirmAddStatus"
+            @keyup.esc="closeAddStatusDialog"
+          />
+          <label class="label">
+            <span class="label-text-alt">Custom states typically start at 100</span>
+          </label>
+        </div>
+
+        <div class="mt-6 flex justify-end gap-2">
+          <button class="btn btn-ghost" @click="closeAddStatusDialog">
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            @click="confirmAddStatus"
+            :disabled="!newStatusId"
+          >
+            Add Status
+          </button>
+        </div>
       </div>
     </div>
-  </Dialog>
+  </Teleport>
 
   <!-- Input Dialog -->
   <InputDialog
@@ -275,6 +361,23 @@ const showDuplicateDialog = ref(false);
 const newBlockTypeId = ref('');
 const duplicating = ref(false);
 const duplicateError = ref<string | null>(null);
+
+// Add Status dialog state
+const showAddStatusDialog = ref(false);
+const newStatusId = ref<string>('');
+
+// Known statuses for quick selection
+const knownStatuses: Record<number, string> = {
+  0: 'DEFAULT',
+  1: 'OPEN',
+  2: 'CLOSED',
+  3: 'LOCKED',
+  5: 'DESTROYED',
+  10: 'WINTER',
+  11: 'SPRING',
+  12: 'SUMMER',
+  13: 'AUTUMN',
+};
 
 // Input dialog state
 const showInputDialog = ref(false);
@@ -354,6 +457,19 @@ const statusList = computed(() => {
   return Object.keys(formData.value.modifiers || {}).map(Number).sort((a, b) => a - b);
 });
 
+// Suggested next status for custom statuses
+const suggestedNextStatus = computed(() => {
+  const existingStatuses = statusList.value;
+  if (existingStatuses.length === 0) return 100;
+  const maxStatus = Math.max(...existingStatuses);
+  return maxStatus >= 100 ? maxStatus + 1 : 100;
+});
+
+// Get status name from BlockStatus enum
+const getStatusName = (status: number): string => {
+  return knownStatuses[status] ? ` (${knownStatuses[status]})` : '';
+};
+
 // Get modifier summary
 const getModifierSummary = (status: number): string => {
   const modifier = formData.value.modifiers?.[status];
@@ -370,26 +486,46 @@ const getModifierSummary = (status: number): string => {
   return parts.length > 0 ? parts.join(', ') : 'Empty';
 };
 
-// Add status
-const addStatus = async () => {
-  const existingStatuses = statusList.value;
-  const nextStatus = existingStatuses.length > 0 ? Math.max(...existingStatuses) + 1 : 1;
+// Add status - open dialog
+const addStatus = () => {
+  newStatusId.value = '';
+  showAddStatusDialog.value = true;
+};
 
-  const statusId = await showInput(
-    'Add Status',
-    `Enter status ID (default: ${nextStatus}):`,
-    nextStatus.toString()
-  );
+// Close add status dialog
+const closeAddStatusDialog = () => {
+  showAddStatusDialog.value = false;
+  newStatusId.value = '';
+};
 
-  if (statusId === null) return; // Cancelled
+// Select a known status from quick action buttons
+const selectStatus = (statusId: number) => {
+  if (formData.value.modifiers?.[statusId] !== undefined) {
+    return; // Already exists
+  }
 
-  const newStatusId = parseInt(statusId, 10);
+  if (!formData.value.modifiers) {
+    formData.value.modifiers = {};
+  }
 
-  if (isNaN(newStatusId)) {
+  formData.value.modifiers[statusId] = {
+    visibility: { shape: 1, textures: {} }
+  };
+
+  closeAddStatusDialog();
+};
+
+// Confirm adding custom status from input field
+const confirmAddStatus = () => {
+  const statusId = parseInt(newStatusId.value, 10);
+
+  if (isNaN(statusId)) {
+    alert('Please enter a valid number');
     return;
   }
 
-  if (formData.value.modifiers && formData.value.modifiers[newStatusId]) {
+  if (formData.value.modifiers && formData.value.modifiers[statusId]) {
+    alert('Status ID already exists');
     return;
   }
 
@@ -397,9 +533,11 @@ const addStatus = async () => {
     formData.value.modifiers = {};
   }
 
-  formData.value.modifiers[newStatusId] = {
+  formData.value.modifiers[statusId] = {
     visibility: { shape: 1, textures: {} }
   };
+
+  closeAddStatusDialog();
 };
 
 // Change status ID
