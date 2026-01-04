@@ -24,4 +24,6 @@ public class WorldInfoSettingsDTOHorizonGradientDTO {
     private WorldInfoSettingsDTOHorizonGradientDTOColor1DTO color1;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double alpha;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private WorldInfoSettingsDTOHorizonGradientDTOIlluminationDTO illumination;
 }

@@ -191,10 +191,11 @@ export function mergeBlockModifier(
     modifierCache.set(cacheKey, result);
 
     // overwrite from currentModifier to block if set
-    if (result.visibility?.offsets && result.visibility.offsets.length > 0) {
+    // IMPORTANT: Only overwrite if block value is not already set (block has priority over modifier)
+    if (result.visibility?.offsets && result.visibility.offsets.length > 0 && !block.offsets) {
       block.offsets = result.visibility.offsets;
     }
-    if (result.visibility?.rotation) {
+    if (result.visibility?.rotation && !block.rotation) {
       block.rotation = result.visibility.rotation;
     }
 
@@ -205,10 +206,11 @@ export function mergeBlockModifier(
   const result = performModifierMerge(blockType, status, block.modifiers ?? null);
 
   // overwrite from currentModifier to block if set
-  if (result.visibility?.offsets && result.visibility.offsets.length > 0) {
+  // IMPORTANT: Only overwrite if block value is not already set (block has priority over modifier)
+  if (result.visibility?.offsets && result.visibility.offsets.length > 0 && !block.offsets) {
     block.offsets = result.visibility.offsets;
   }
-  if (result.visibility?.rotation) {
+  if (result.visibility?.rotation && !block.rotation) {
     block.rotation = result.visibility.rotation;
   }
 

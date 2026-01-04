@@ -5453,6 +5453,51 @@
       } ],
       "methods" : [ ]
     }, {
+      "name" : "WorldInfoSettingsDTOHorizonGradientDTOIlluminationDTOColorDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "r",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "g",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "b",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
+      "name" : "WorldInfoSettingsDTOHorizonGradientDTOIlluminationDTO",
+      "extendsList" : [ ],
+      "properties" : [ {
+        "name" : "color",
+        "type" : "WorldInfoSettingsDTOHorizonGradientDTOIlluminationDTOColorDTO",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "strength",
+        "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      } ],
+      "methods" : [ ]
+    }, {
       "name" : "WorldInfoSettingsDTOHorizonGradientDTO",
       "extendsList" : [ ],
       "properties" : [ {
@@ -5500,6 +5545,13 @@
       }, {
         "name" : "alpha",
         "type" : "number",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "illumination",
+        "type" : "WorldInfoSettingsDTOHorizonGradientDTOIlluminationDTO",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
