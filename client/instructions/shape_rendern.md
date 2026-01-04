@@ -476,7 +476,7 @@ Welche möglichkeiten habe ich mit BabylonJs?
 
 ## Water
 
-[ ] Erstelle einen WaterRenderer der Blocks mit shape WATER rendert.
+[?] Erstelle einen WaterRenderer der Blocks mit shape WATER rendert.
 Water ist nicht OCEAN und nutzt keinen shader.
 - Orientire dich an CubeRenderer aber es wird nur die obere fläche gerendert.
 - scaling, rotation, offsets bleiben gleich wie bei CubeRenderer
@@ -484,4 +484,57 @@ Water ist nicht OCEAN und nutzt keinen shader.
 - Es kann alternativ eine Textur 'TOP' oder fallback 'ALL' genutzt werden.
 - nutze einen offset parameter um die farbe des wassers zu steuern (z.b. blau, grün, braun, etc)
 - nutze einen weiteren offset parameter um die transparenz des wassers zu steuern (0-1)
+```text
+Funktionalität
 
+  Der WaterRenderer rendert Blocks mit Shape.WATER und hat folgende Eigenschaften:
+
+  Rendering
+
+  - Nur obere Fläche: Rendert ausschließlich die TOP-Fläche des Blocks
+  - Textur-Support: Nutzt Textur TOP (Index 1) mit Fallback auf ALL (Index 7)
+  - Transformationen: Unterstützt scaling, rotation und offsets genau wie CubeRenderer
+
+  Transparenz und Farbe
+
+  Die Wasserfarbe und Transparenz werden über Offset-Parameter gesteuert:
+  - offsets[24]: Red-Komponente (0-1)
+  - offsets[25]: Green-Komponente (0-1)
+  - offsets[26]: Blue-Komponente (0-1)
+  - offsets[27]: Transparenz/Alpha (0-1, wobei 0=voll transparent, 1=voll opak)
+  - Standard: Weiß (1, 1, 1) mit Alpha 0.5 (halb transparent)
+
+  Beispiel-Verwendung
+
+  // Blaues, halb-transparentes Wasser
+  offsets[24] = 0.3;  // R
+  offsets[25] = 0.5;  // G
+  offsets[26] = 0.9;  // B
+  offsets[27] = 0.5;  // Alpha
+
+  // Grünes, trübes Wasser
+  offsets[24] = 0.2;  // R
+  offsets[25] = 0.6;  // G
+  offsets[26] = 0.3;  // B
+  offsets[27] = 0.4;  // Alpha
+
+  // Braunes Sumpfwasser
+  offsets[24] = 0.4;  // R
+  offsets[25] = 0.3;  // G
+  offsets[26] = 0.2;  // B
+  offsets[27] = 0.6;  // Alpha
+
+  Registrierung
+
+  Der WaterRenderer wurde im RenderService registriert:
+  - Import hinzugefügt
+  - Private Property deklariert
+  - Instanz im Constructor erstellt
+  - Case Shape.WATER im getRenderer() Switch hinzugefügt
+
+  Build-Status
+
+  ✅ Der Build ist erfolgreich durchgelaufen ohne Fehler!
+
+  Der WaterRenderer ist jetzt einsatzbereit für alle Blocks mit shape: Shape.WATER.
+```

@@ -32,6 +32,7 @@ import { ThinInstancesRenderer } from '../rendering/ThinInstancesRenderer';
 import { FlameRenderer } from '../rendering/FlameRenderer';
 import { OceanRenderer } from '../rendering/OceanRenderer';
 import { BushRenderer } from '../rendering/BushRenderer';
+import { WaterRenderer } from '../rendering/WaterRenderer';
 import { DisposableResources } from '../rendering/DisposableResources';
 import type { TextureAtlas } from '../rendering/TextureAtlas';
 import { RENDERING_GROUPS } from '../config/renderingGroups';
@@ -103,6 +104,7 @@ export class RenderService {
   private flameRenderer: FlameRenderer;
   private oceanRenderer: OceanRenderer;
   private bushRenderer: BushRenderer;
+  private waterRenderer: WaterRenderer;
 
   // Chunk meshes: Map<chunkKey, Map<materialKey, Mesh>>
   // Each chunk can have multiple meshes (one per material type)
@@ -145,6 +147,7 @@ export class RenderService {
     this.flameRenderer = new FlameRenderer();
     this.oceanRenderer = new OceanRenderer();
     this.bushRenderer = new BushRenderer(textureAtlas);
+    this.waterRenderer = new WaterRenderer(textureAtlas);
 
     // Listen to chunk events
     this.setupChunkEventListeners();
@@ -533,6 +536,8 @@ export class RenderService {
         return this.oceanRenderer;
       case Shape.BUSH:
         return this.bushRenderer;
+      case Shape.WATER:
+        return this.waterRenderer;
       default:
         return null;
     }

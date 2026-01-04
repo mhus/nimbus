@@ -215,6 +215,92 @@
       </div>
     </div>
 
+    <!-- WATER: 8 corners + water properties -->
+    <div v-else-if="shape === 22" class="space-y-3">
+      <p class="text-sm text-base-content/70 mb-2">Water surface: 8 corners × XYZ (supports float values)</p>
+      <div v-for="(corner, index) in cubeCorners" :key="index" class="grid grid-cols-4 gap-2 items-center">
+        <span class="text-xs text-base-content/70">{{ corner }}:</span>
+        <input
+          v-model.number="offsets[index * 3]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="X"
+        />
+        <input
+          v-model.number="offsets[index * 3 + 1]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Y"
+        />
+        <input
+          v-model.number="offsets[index * 3 + 2]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Z"
+        />
+      </div>
+
+      <!-- Water color and transparency -->
+      <div class="divider text-xs text-base-content/60">Water Properties</div>
+
+      <!-- Water color (RGB) -->
+      <div class="grid grid-cols-4 gap-2 items-center">
+        <span class="text-xs text-base-content/70">Color (RGB):</span>
+        <input
+          v-model.number="offsets[24]"
+          type="number"
+          step="0.1"
+          min="0"
+          max="1"
+          class="input input-bordered input-sm"
+          placeholder="R (0-1)"
+        />
+        <input
+          v-model.number="offsets[25]"
+          type="number"
+          step="0.1"
+          min="0"
+          max="1"
+          class="input input-bordered input-sm"
+          placeholder="G (0-1)"
+        />
+        <input
+          v-model.number="offsets[26]"
+          type="number"
+          step="0.1"
+          min="0"
+          max="1"
+          class="input input-bordered input-sm"
+          placeholder="B (0-1)"
+        />
+      </div>
+
+      <!-- Water transparency -->
+      <div class="grid grid-cols-2 gap-2 items-center">
+        <span class="text-xs text-base-content/70">Transparency (Alpha):</span>
+        <input
+          v-model.number="offsets[27]"
+          type="number"
+          step="0.1"
+          min="0"
+          max="1"
+          class="input input-bordered input-sm"
+          placeholder="0=transparent, 1=opaque"
+        />
+      </div>
+
+      <!-- Water presets -->
+      <div class="flex flex-wrap gap-2 mt-2">
+        <button class="btn btn-xs btn-outline" @click="setWaterPreset('clear')">Clear Water</button>
+        <button class="btn btn-xs btn-outline" @click="setWaterPreset('ocean')">Ocean Blue</button>
+        <button class="btn btn-xs btn-outline" @click="setWaterPreset('swamp')">Swamp Green</button>
+        <button class="btn btn-xs btn-outline" @click="setWaterPreset('murky')">Murky Brown</button>
+      </div>
+    </div>
+
     <!-- THIN_INSTANCES: Single offset (XYZ) -->
     <div v-else-if="shape === 25" class="space-y-3">
       <p class="text-sm text-base-content/70 mb-2">Position offset (supports float values)</p>
@@ -365,6 +451,45 @@ const hasOffsets = computed(() => {
 const resetOffsets = () => {
   offsets.value = [];
   emit('update:modelValue', undefined);
+};
+
+// Set water preset colors
+const setWaterPreset = (preset: string) => {
+  // Ensure offsets array has enough space
+  while (offsets.value.length < 28) {
+    offsets.value.push(0);
+  }
+
+  switch (preset) {
+    case 'clear':
+      // Clear water: light blue, semi-transparent
+      offsets.value[24] = 0.7;  // R
+      offsets.value[25] = 0.85; // G
+      offsets.value[26] = 1.0;  // B
+      offsets.value[27] = 0.3;  // Alpha
+      break;
+    case 'ocean':
+      // Ocean blue: deep blue, moderate transparency
+      offsets.value[24] = 0.1;  // R
+      offsets.value[25] = 0.3;  // G
+      offsets.value[26] = 0.8;  // B
+      offsets.value[27] = 0.5;  // Alpha
+      break;
+    case 'swamp':
+      // Swamp green: murky green, less transparent
+      offsets.value[24] = 0.2;  // R
+      offsets.value[25] = 0.5;  // G
+      offsets.value[26] = 0.2;  // B
+      offsets.value[27] = 0.6;  // Alpha
+      break;
+    case 'murky':
+      // Murky brown: brownish, mostly opaque
+      offsets.value[24] = 0.4;  // R
+      offsets.value[25] = 0.3;  // G
+      offsets.value[26] = 0.2;  // B
+      offsets.value[27] = 0.7;  // Alpha
+      break;
+  }
 };
 
 // Watch shape changes to reset offsets if needed
