@@ -5,9 +5,9 @@
       No offsets for invisible blocks
     </div>
 
-    <!-- CUBE, HASH, CROSS: 8 corners (24 values) -->
+    <!-- CUBE, HASH, CROSS, FLIPBOX: 8 corners (24 values) -->
     <div v-else-if="isCubeType" class="space-y-3">
-      <p class="text-sm text-base-content/70 mb-2">8 corners × XYZ (supports float values)</p>
+      <p class="text-sm text-base-content/70 mb-2">8 corners × XYZ (supports float values){{ shape === 11 ? ' — FLIPBOX uses top 4 corners only' : '' }}</p>
       <div v-for="(corner, index) in cubeCorners" :key="index" class="grid grid-cols-4 gap-2 items-center">
         <span class="text-xs text-base-content/70">{{ corner }}:</span>
         <input
@@ -244,9 +244,33 @@
       </div>
     </div>
 
-    <!-- Other shapes: No offsets -->
-    <div v-else class="text-sm text-base-content/60">
-      No offset configuration for this shape type
+    <!-- Unknown shapes: Generic numbered list (8 points × XYZ = 24 values) -->
+    <div v-else class="space-y-3">
+      <p class="text-sm text-base-content/70 mb-2">Generic offsets: 8 points × XYZ (supports float values)</p>
+      <div v-for="pointIndex in 8" :key="pointIndex - 1" class="grid grid-cols-4 gap-2 items-center">
+        <span class="text-xs text-base-content/70">Point {{ pointIndex - 1 }}:</span>
+        <input
+          v-model.number="offsets[(pointIndex - 1) * 3]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="X"
+        />
+        <input
+          v-model.number="offsets[(pointIndex - 1) * 3 + 1]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Y"
+        />
+        <input
+          v-model.number="offsets[(pointIndex - 1) * 3 + 2]"
+          type="number"
+          step="0.1"
+          class="input input-bordered input-sm"
+          placeholder="Z"
+        />
+      </div>
     </div>
 
     <!-- Reset Button -->
@@ -309,9 +333,9 @@ const trimTrailingZeros = (arr: number[]): number[] => {
   return lastNonZero >= 0 ? arr.slice(0, lastNonZero + 1) : [];
 };
 
-// Check if cube-type shape (CUBE=1, HASH=3, CROSS=2)
+// Check if cube-type shape (CUBE=1, CROSS=2, HASH=3, FLIPBOX=11)
 const isCubeType = computed(() => {
-  return props.shape === 1 || props.shape === 2 || props.shape === 3;
+  return props.shape === 1 || props.shape === 2 || props.shape === 3 || props.shape === 11;
 });
 
 // Cube corner labels

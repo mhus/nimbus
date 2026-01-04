@@ -142,7 +142,7 @@ export class FlipboxRenderer extends BlockRenderer {
     ];
 
     // Apply corner offsets if provided
-    if (offsets && offsets.length >= 24) {
+    if (offsets && offsets.length > 0) {
       // TOP face uses corners: 4, 5, 6, 7 (top 4 corners of cube)
       const topCornerIndices = [4, 5, 6, 7];
       for (let i = 0; i < 4; i++) {
