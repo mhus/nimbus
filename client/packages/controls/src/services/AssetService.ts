@@ -75,10 +75,22 @@ export class AssetService {
   }
 
   /**
-   * Duplicate asset to new path (copy)
+   * Duplicate asset to new path (copy within same world)
    */
   async duplicateAsset(worldId: string, sourcePath: string, newPath: string): Promise<void> {
     return apiService.patch(`/control/worlds/${worldId}/assets/duplicate`, {
+      sourcePath,
+      newPath,
+    });
+  }
+
+  /**
+   * Copy asset from source world to target world (cross-world copy)
+   * Preserves all metadata (publicData)
+   */
+  async copyAssetFromWorld(targetWorldId: string, sourceWorldId: string, sourcePath: string, newPath: string): Promise<void> {
+    return apiService.post(`/control/worlds/${targetWorldId}/assets/copy-from`, {
+      sourceWorldId,
       sourcePath,
       newPath,
     });

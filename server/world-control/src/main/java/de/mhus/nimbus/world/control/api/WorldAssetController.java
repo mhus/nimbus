@@ -318,7 +318,7 @@ public class WorldAssetController extends BaseEditorController {
 
 
     /**
-     * Duplicate Asset with a new path.
+     * Duplicate Asset with a new path (same world).
      * PATCH /control/worlds/{worldId}/assets/duplicate
      * Body: { "sourcePath": "...", "newPath": "..." }
      */
@@ -376,6 +376,72 @@ public class WorldAssetController extends BaseEditorController {
             log.error("Failed to duplicate asset", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to duplicate asset: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Duplicate/Copy Asset from source world to target world (cross-world copy).
+     * POST /control/worlds/{targetWorldId}/assets/copy-from
+     * Body: { "sourceWorldId": "...", "sourcePath": "...", "newPath": "..." }
+     */
+    @PostMapping("/copy-from")
+    @Operation(summary = "Asset zwischen Welten kopieren",
+            description = "Kopiert ein Asset von einer Quell-Welt in diese Ziel-Welt. Erhält alle Metadaten (publicData).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Asset erfolgreich kopiert"),
+            @ApiResponse(responseCode = "400", description = "Ungültige Parameter"),
+            @ApiResponse(responseCode = "404", description = "Quell-Asset nicht gefunden"),
+            @ApiResponse(responseCode = "409", description = "Ziel-Asset existiert bereits")
+    })
+    public ResponseEntity<?> copyFromWorld(
+            @Parameter(description = "Target world identifier") @PathVariable String worldId,
+            @RequestBody Map<String, String> body) {
+        String sourceWorldId = body.get("sourceWorldId");
+        String sourcePath = normalizePath(body.get("sourcePath"));
+        String newPath = normalizePath(body.get("newPath"));
+
+        log.debug("COPY asset cross-world: sourceWorldId={}, sourcePath={}, targetWorldId={}, newPath={}",
+                sourceWorldId, sourcePath, worldId, newPath);
+
+        if (blank(sourceWorldId)) return bad("sourceWorldId required");
+        if (blank(sourcePath)) return bad("sourcePath required");
+        if (blank(newPath)) return bad("newPath required");
+
+        WorldId sourceWid = WorldId.of(sourceWorldId).orElse(null);
+        WorldId targetWid = WorldId.of(worldId).orElse(null);
+        if (sourceWid == null) return bad("invalid sourceWorldId");
+        if (targetWid == null) return bad("invalid targetWorldId");
+
+        // Check if source asset exists
+        Optional<SAsset> sourceOpt = assetService.findByPath(sourceWid, sourcePath);
+        if (sourceOpt.isEmpty()) {
+            log.warn("Source asset not found for cross-world copy: sourceWorldId={}, path={}", sourceWorldId, sourcePath);
+            return notFound("source asset not found");
+        }
+
+        // Check if target path already exists
+        if (assetService.findByPath(targetWid, newPath).isPresent()) {
+            return conflict("asset already exists at target path: " + newPath);
+        }
+
+        try {
+            SAsset source = sourceOpt.get();
+
+            // Copy asset to target world with all metadata
+            SAsset copy = assetService.duplicateAssetToWorld(source, targetWid, newPath, "editor");
+
+            log.info("Copied asset cross-world: sourceWorldId={}, sourcePath={}, targetWorldId={}, newPath={}, size={}",
+                    sourceWorldId, sourcePath, worldId, newPath, copy.getSize());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "path", copy.getPath(),
+                    "worldId", copy.getWorldId(),
+                    "message", "Asset copied successfully"
+            ));
+        } catch (Exception e) {
+            log.error("Failed to copy asset cross-world", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to copy asset: " + e.getMessage()));
         }
     }
 

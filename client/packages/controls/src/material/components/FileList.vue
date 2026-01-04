@@ -371,20 +371,9 @@ const handleAssetsDrop = async (data: any, shouldCopy: boolean = false) => {
         await assetService.duplicateAsset(sourceWorldId, sourceAsset.path, newPath);
         console.log(`Asset duplicated: ${sourceAsset.path} -> ${newPath}`);
       } else {
-        // Different world: download and re-upload to update worldId
+        // Different world: use cross-world copy endpoint (preserves metadata)
         console.log(`Copying asset between worlds: ${sourceWorldId} -> ${targetWorldId}`);
-
-        // Download asset from source world
-        const sourceUrl = assetService.getAssetUrl(sourceWorldId, sourceAsset.path);
-        const response = await fetch(sourceUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to download asset: ${response.statusText}`);
-        }
-        const blob = await response.blob();
-        const file = new File([blob], fileName, { type: sourceAsset.mimeType });
-
-        // Upload to target world (this sets the correct worldId)
-        await assetService.uploadAsset(targetWorldId, newPath, file);
+        await assetService.copyAssetFromWorld(targetWorldId, sourceWorldId, sourceAsset.path, newPath);
         console.log(`Asset copied to new world: ${sourceAsset.path} -> ${newPath}`);
       }
 

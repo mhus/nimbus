@@ -245,70 +245,59 @@ public class SAssetService {
      */
     @Transactional
     public SAsset duplicateAsset(SAsset source, String newPath, String createdBy) {
+        return duplicateAssetToWorld(source, WorldId.of(source.getWorldId()).orElseThrow(), newPath, createdBy);
+    }
+
+    /**
+     * Duplicates an asset to a target world with a new path (supports cross-world copy).
+     * Creates a copy of the content in storage and a new database entry.
+     * All metadata (publicData) is preserved.
+     * The content is copied as-is (preserving compression state and size).
+     */
+    @Transactional
+    public SAsset duplicateAssetToWorld(SAsset source, WorldId targetWorldId, String newPath, String createdBy) {
         if (source == null) throw new IllegalArgumentException("source asset required");
+        if (targetWorldId == null) throw new IllegalArgumentException("targetWorldId required");
         if (newPath == null || newPath.isBlank()) throw new IllegalArgumentException("newPath required");
         if (!source.isEnabled()) throw new IllegalStateException("Source asset disabled: " + source.getId());
 
-        // Load content from source (this decompresses if necessary)
-        InputStream sourceContent = loadContent(source);
+        // Load RAW content from storage (without decompression) to preserve exact binary data
+        InputStream sourceContent = storageService.load(source.getStorageId());
         if (sourceContent == null) {
             throw new IllegalStateException("Failed to load source asset content: " + source.getId());
         }
 
-        // Create new asset entity
+        // Handle world collection prefix in newPath
+        var collection = WorldCollection.of(targetWorldId.withoutInstanceAndZone(), newPath);
+
+        // Create new asset entity with target worldId
+        // Copy compression state and metadata from source
         SAsset duplicate = SAsset.builder()
-                .worldId(source.getWorldId())
-                .path(newPath)
-                .name(extractName(newPath))
+                .worldId(collection.worldId().getId())
+                .path(collection.path())
+                .name(extractName(collection.path()))
                 .createdBy(createdBy)
                 .enabled(true)
+                .compressed(source.isCompressed()) // Preserve compression state
                 .publicData(source.getPublicData()) // Copy metadata
                 .build();
         duplicate.setCreatedAt(Instant.now());
 
-        // Compression if enabled
-        InputStream finalStream = sourceContent;
-        long originalSize = -1;
-        if (compressionEnabled) {
-            try {
-                byte[] originalData = sourceContent.readAllBytes();
-                originalSize = originalData.length;
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
-                    gzip.write(originalData);
-                    gzip.finish();
-                }
-                byte[] compressedData = buffer.toByteArray();
-                finalStream = new ByteArrayInputStream(compressedData);
-                duplicate.setCompressed(true);
-                log.debug("Asset compressed on duplicate: path={} original={} compressed={} ratio={}",
-                        newPath, originalSize, compressedData.length,
-                        String.format("%.1f%%", 100.0 * compressedData.length / originalSize));
-            } catch (Exception e) {
-                log.warn("Failed to compress asset on duplicate, storing uncompressed: path={}", newPath, e);
-                finalStream = new ByteArrayInputStream(new byte[0]);
-                duplicate.setCompressed(false);
-            }
-        } else {
-            duplicate.setCompressed(false);
-        }
-
-        // Store content in new location
-        WorldId worldId = WorldId.of(source.getWorldId())
-                .orElseThrow(() -> new IllegalStateException("Invalid worldId in source asset"));
+        // Store content in new location (use target worldId)
+        // Store as-is without re-compression to preserve exact size
         StorageService.StorageInfo storageInfo = storageService.store(
                 STORAGE_SCHEMA,
                 STORAGE_SCHEMA_VERSION,
-                worldId.getId(),
-                "assets/" + newPath,
-                finalStream
+                collection.worldId().getId(),
+                "assets/" + collection.path(),
+                sourceContent
         );
 
         duplicate.setStorageId(storageInfo.id());
         duplicate.setSize(storageInfo.size());
 
-        log.debug("Duplicated asset: sourcePath={}, newPath={}, size={}, storageId={}, compressed={}",
-                  source.getPath(), newPath, storageInfo.size(), storageInfo.id(), duplicate.isCompressed());
+        log.debug("Duplicated asset: sourcePath={}, sourceWorldId={}, newPath={}, targetWorldId={}, size={}, storageId={}, compressed={}",
+                  source.getPath(), source.getWorldId(), collection.path(), collection.worldId().getId(), storageInfo.size(), storageInfo.id(), duplicate.isCompressed());
 
         return repository.save(duplicate);
     }
