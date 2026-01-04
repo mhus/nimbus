@@ -103,7 +103,7 @@ dem ShaderService verwendet.
   - z.b. |0|1|2|3| soll UVMapping den bereich fuer 0 angeben, also u=0,v=0,w=0.25,h=1 fuer 4 bilder nebeneinander.
 - Der Renderer definiert seinen eigenen Mesh, da sonst der Atlas die restlchen Bilder nicht uebernimmt.
 
-[ ] Erweitere den FlipboxRenderer so, das er auch vertical flippen kann. Dazu wird effectParameters erweitert um den ersten parameter 'h' oder 'v'.
+[x] Erweitere den FlipboxRenderer so, das er auch vertical flippen kann. Dazu wird effectParameters erweitert um den ersten parameter 'h' oder 'v'.
   - direction: 'h' oder 'v' (NEU!)
   - anzahl (frameCount): anzahl der bilder
   - milliseconds: wartezeit zwischen den flips - optional, default 100
@@ -473,4 +473,15 @@ Welche möglichkeiten habe ich mit BabylonJs?
 
   Die Einstellungen werden automatisch im LocalStorage gespeichert und beim nächsten Start wiederhergestellt. Das Licht folgt automatisch der Kamera und leuchtet immer in Blickrichtung!
 ```
+
+## Water
+
+[ ] Erstelle einen WaterRenderer der Blocks mit shape WATER rendert.
+Water ist nicht OCEAN und nutzt keinen shader.
+- Orientire dich an CubeRenderer aber es wird nur die obere fläche gerendert.
+- scaling, rotation, offsets bleiben gleich wie bei CubeRenderer
+- Die Fläche ist eine halb durchsichtige Wasserfläche
+- Es kann alternativ eine Textur 'TOP' oder fallback 'ALL' genutzt werden.
+- nutze einen offset parameter um die farbe des wassers zu steuern (z.b. blau, grün, braun, etc)
+- nutze einen weiteren offset parameter um die transparenz des wassers zu steuern (0-1)
 

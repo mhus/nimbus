@@ -154,45 +154,36 @@ export class FlipboxRenderer extends BlockRenderer {
       }
     }
 
-    // Face center (for scaling and rotation)
-    const faceCenter = [0, 0.5, 0]; // Center of top face in local space
-
-    // Apply scaling around face center
-    const scaledVertices = baseVertices.map(([x, y, z]) => [
-      (x - faceCenter[0]) * scalingX + faceCenter[0],
-      (y - faceCenter[1]) * scalingY + faceCenter[1],
-      (z - faceCenter[2]) * scalingZ + faceCenter[2],
+    // 1. Translate to origin (shift by -0.5 in Y so center is at 0,0,0)
+    const centeredVertices = baseVertices.map(([x, y, z]) => [
+      x,
+      y - 0.5,
+      z,
     ]);
 
-    // Apply rotation around face center
+    // 2. Scale
+    const scaledVertices = centeredVertices.map(([x, y, z]) => [
+      x * scalingX,
+      y * scalingY,
+      z * scalingZ,
+    ]);
+
+    // 3. Rotate
     const rotationMatrix = Matrix.RotationYawPitchRoll(
       (rotationY * Math.PI) / 180, // Yaw (Y-axis)
       (rotationX * Math.PI) / 180, // Pitch (X-axis)
-      0 // Roll (Z-axis, not used in visibility)
+      0 // Roll (Z-axis, not used)
     );
 
-    const transformedVertices = scaledVertices.map(([x, y, z]) => {
-      // Translate to origin (relative to face center)
-      const relativePos = new Vector3(
-        x - faceCenter[0],
-        y - faceCenter[1],
-        z - faceCenter[2]
-      );
-
-      // Apply rotation
-      const rotatedPos = Vector3.TransformCoordinates(relativePos, rotationMatrix);
-
-      // Translate back
-      return [
-        rotatedPos.x + faceCenter[0],
-        rotatedPos.y + faceCenter[1],
-        rotatedPos.z + faceCenter[2]
-      ];
+    const rotatedVertices = scaledVertices.map(([x, y, z]) => {
+      const pos = new Vector3(x, y, z);
+      const rotatedPos = Vector3.TransformCoordinates(pos, rotationMatrix);
+      return [rotatedPos.x, rotatedPos.y, rotatedPos.z];
     });
 
-    // Translate to world position
+    // 4. Translate to world position (position already includes +0.5 offset)
     const positions: number[] = [];
-    for (const [x, y, z] of transformedVertices) {
+    for (const [x, y, z] of rotatedVertices) {
       positions.push(position.x + x, position.y + y, position.z + z);
     }
 
