@@ -843,10 +843,10 @@ export class ShaderService {
           float u = vUV.x * (frameWidth - pixelSize) + frameOffset + halfPixel;
           frameUV = vec2(clamp(u, 0.0, 1.0), vUV.y);
         } else {
-          // Vertical flip - simple calculation with proper inset
+          // Vertical flip - shift down by 1 pixel to hide top line artifact
           float frameOffset = float(currentFrame) * frameWidth;
-          // Map vUV.y (0=top, 1=bottom) to frame range with inset
-          float v = vUV.y * (frameWidth - pixelSize) + frameOffset + halfPixel;
+          // Map vUV.y (0=top, 1=bottom) to frame range, shifting down by 1 pixel
+          float v = vUV.y * (frameWidth - pixelSize * 3.0) + frameOffset + pixelSize;
           frameUV = vec2(vUV.x, clamp(v, 0.0, 1.0));
         }
 
