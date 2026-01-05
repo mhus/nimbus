@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.util.HashMap;
 
+@Builder
 public class WFlat {
 
     public static final int NOT_SET = 0;
@@ -21,6 +22,12 @@ public class WFlat {
     private int oceanLevel;
     @Getter @Setter
     private String oceanBlockId;
+    /**
+     * If true, unknown/not set columns are protected from modification
+     * Set this after initial setting up block you want to modify. Leave others untouched at 0.
+     */
+    @Getter @Setter
+    private boolean unknownProtected;
 
     @Getter
     private int sizeX;
@@ -31,7 +38,6 @@ public class WFlat {
     private HashMap<String, String> extraBlocks = new HashMap<>(); // for water and ocean ...
 
     private HashMap<Byte, ColumnDefinition> definitions = new HashMap<>();
-
 
     public void initWithSize(int sizeX, int sizeZ) {
         if (sizeX <= 0 || sizeZ <= 0 || sizeX > 400 || sizeZ > 400)
@@ -44,12 +50,16 @@ public class WFlat {
         this.columns = new byte[sizeX * sizeZ];
     }
 
-    public void setLevel(int x, int z, int level) {
+    public boolean setLevel(int x, int z, int level) {
         if (x < 0 || z < 0 || x >= sizeX || z >= sizeZ)
             throw new IllegalArgumentException("Coordinates out of range");
         if (level < 0) level = 0;
         if (level > 255) level = 255;
+        if (unknownProtected && !isColumnDefined(x, z)) {
+            return false;
+        }
         levels[x + z * sizeX] = (byte)level;
+        return true;
     }
 
     public int getLevel(int x, int z) {
@@ -58,18 +68,28 @@ public class WFlat {
         return Byte.toUnsignedInt(levels[x + z * sizeX]);
     }
 
-    public void setColumn(int x, int z, int definition) {
+    public boolean setColumn(int x, int z, int definition) {
         if (x < 0 || z < 0 || x >= sizeX || z >= sizeZ)
             throw new IllegalArgumentException("Coordinates out of range");
         if (definition < 0 || definition > 255)
             throw new IllegalArgumentException("Size out of range");
+        if (unknownProtected && !isColumnDefined(x, z)) {
+            return false;
+        }
         columns[x + z * sizeX] = (byte)definition;
+        return true;
     }
 
     public int getColumn(int x, int z) {
         if (x < 0 || z < 0 || x >= sizeX || z >= sizeZ)
             throw new IllegalArgumentException("Coordinates out of range");
         return Byte.toUnsignedInt(columns[x + z * sizeX]);
+    }
+
+    public boolean isColumnDefined(int x, int z) {
+        if (x < 0 || z < 0 || x >= sizeX || z >= sizeZ)
+            throw new IllegalArgumentException("Coordinates out of range");
+        return columns[x + z * sizeX] == NOT_SET ? false : true;
     }
 
     public ColumnDefinition getColumnDefinition(int x, int z) {
@@ -123,8 +143,8 @@ public class WFlat {
     @Data
     @Builder
     public static class ColumnDefinition {
-        private String blockId;
-        private String nextBlockId;
+        private String blockDef; // id + "@s:" + state e.g. n:s@s:100, n:s@s:101 - siehe BlockDef
+        private String nextBlockDef; // id + "@" + state
         private boolean hasOcean;
 
         /**
@@ -138,13 +158,13 @@ public class WFlat {
                 return null;
             // first: my own block
             if (y == level)
-                return blockId;
+                return blockDef;
             // second: extra block
             if (extraBlocks != null && extraBlocks[y] != null)
                 return extraBlocks[y];
             // third: next block
             if (y < level)
-                return nextBlockId != null ? nextBlockId : blockId;
+                return nextBlockDef != null ? nextBlockDef : blockDef;
             // finally: ocean block
             if (hasOcean && y == flat.getOceanLevel())
                 return flat.getOceanBlockId();

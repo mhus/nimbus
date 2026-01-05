@@ -194,24 +194,40 @@ Block Types:
 - blockGroup/blockId
 - blockGroup: \[a-zA-Z0-9_-\]{1,64}
 - blockId: \[a-zA-Z0-9_-\]{1,64}
-- default blockGroup: 'w'
+- default blockGroup: 'w' (sollte 'n' sein! Aber wegen legacy 'w')
 
 Block Gruppen:
 - 'w' - World spezifische Blöcke
 - 'r' - Region spezifische Blöcke
-- '*' - shared Blöcke 
+- 'rp' - Region Public Blöcke
+- 'p' - shared Public Blöcke
+- '*' - shared Blöcke - Shared collection
 
 Spezielle Typen:
-- air: 0, w/0, air, w/air
-- item: 1, w/1, item, w/item
-- invisible:: 2, w/2, invisible, w/invisible
-- invisible blocking: 3, w/3, invisible_blocking, w/invisible_blocking
+- air: 0, w:0, air, w:air
+- item: 1, w:1, item, w:item
+- invisible:: 2, w:2, invisible, w:invisible
+- invisible blocking: 3, w:3, invisible_blocking, w:invisible_blocking
 
 Weiter standart Typen:
+ALT:
 - r/ocean
 - r/grass
 - r/stone
+NEU:
+- n:0 - air
+- n:1 - item
+- n:2 - invisible
+- n:3 - invisible_blocking
+- n:o - ocean
+- n:g - grass
+- n:s - stone
+- n:d - dirt
+- n:w - water
+- n:sn - snow
+- n:sa - sand
 
+- n:l - lava ??
 
 ## Tokens und Access
 

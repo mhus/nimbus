@@ -3,6 +3,9 @@ package de.mhus.nimbus.world.shared.world;
 import de.mhus.nimbus.shared.types.WorldId;
 
 public record WorldCollection(TYPE type, WorldId worldId, String path) {
+
+    public static final String SHARED_PUBLIC = "public";
+
     public enum TYPE {
         WORLD,
         REGION,
@@ -36,8 +39,10 @@ public record WorldCollection(TYPE type, WorldId worldId, String path) {
                 return new WorldCollection(TYPE.WORLD, worldId, path);
             case "r":
                 return new WorldCollection(TYPE.REGION, WorldId.of(WorldId.COLLECTION_REGION, worldId.getRegionId()).get(), path);
-            case "p":
+            case "rp":
                 return new WorldCollection(TYPE.PUBLIC, WorldId.of(WorldId.COLLECTION_PUBLIC, worldId.getRegionId()).get(), path);
+            case "p":
+                return new WorldCollection(TYPE.SHARED, WorldId.of(WorldId.COLLECTION_SHARED, SHARED_PUBLIC).get(), path);
             default:
                 return new WorldCollection(TYPE.SHARED, WorldId.of(WorldId.COLLECTION_SHARED, group).get(), path);
         }
@@ -50,8 +55,10 @@ public record WorldCollection(TYPE type, WorldId worldId, String path) {
             case REGION:
                 return "r";
             case PUBLIC:
-                return "p";
+                return "rp";
             case SHARED:
+                if (SHARED_PUBLIC.equals(worldId.getWorldName()))
+                    return "p";
                 return worldId.getWorldName();
         }
         return "w"; // should not happen
