@@ -4765,7 +4765,7 @@
       } ]
     }, {
       "name" : "BlockTypeType",
-      "values" : [ "AIR", "GROUND", "WATER", "PLANT", "PLANT_PART", "STRUCTURE", "DECORATION", "UTILITY", "LAVA", "WINDOW", "DOOR", "WALL", "ROOF", "PATH", "FENCE", "STAIRS", "RAMP", "BRIDGE", "LIGHT" ],
+      "values" : [ "AIR", "GROUND", "WATER", "PLANT", "PLANT_PART", "STRUCTURE", "DECORATION", "UTILITY", "LAVA", "WINDOW", "DOOR", "WALL", "ROOF", "PATH", "FENCE", "STAIRS", "RAMP", "BRIDGE", "LIGHT", "OTHER" ],
       "enumValues" : [ {
         "name" : "AIR",
         "value" : "0"
@@ -4823,6 +4823,9 @@
       }, {
         "name" : "LIGHT",
         "value" : "18"
+      }, {
+        "name" : "OTHER",
+        "value" : "99"
       } ]
     } ],
     "classes" : [ ],

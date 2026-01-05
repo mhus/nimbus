@@ -23,7 +23,8 @@ public enum BlockTypeType implements de.mhus.nimbus.types.TsEnum {
     STAIRS(15),
     RAMP(16),
     BRIDGE(17),
-    LIGHT(18);
+    LIGHT(18),
+    OTHER(99);
 
     @lombok.Getter
     private final int tsIndex;
