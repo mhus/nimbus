@@ -1,7 +1,0 @@
-{
-  "type": "texture",
-  "height": 120,
-  "texture": "backdrops/sky.png",
-  "alpha": 0.8,
-  "alphaMode": 2
-}

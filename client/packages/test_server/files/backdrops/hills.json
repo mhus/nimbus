@@ -1,7 +1,0 @@
-{
-  "type": "texture",
-  "height": 40,
-  "texture": "backdrops/hills.png",
-  "alpha": 0.7,
-  "alphaMode": 2
-}

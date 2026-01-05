@@ -3,7 +3,6 @@
   "references": [
     { "path": "./packages/shared" },
     { "path": "./packages/engine" },
-    { "path": "./packages/test_server" },
     { "path": "./packages/controls" }
   ]
 }

@@ -8,7 +8,6 @@ Das Projekt verwendet **pnpm workspaces** mit vier Packages:
 - `@nimbus/shared` - Shared types, protocols, utils
 - `@nimbus/engine` - 3D Engine (Viewer + Editor builds)
 - `@nimbus/controls` - UI controls and components
-- `@nimbus/test_server` - Test server
 
 Alle Scripts können vom Root aus aufgerufen werden.
 
@@ -22,7 +21,6 @@ pnpm build
 
 Baut alle Packages in der richtigen Reihenfolge:
 1. `@nimbus/shared` (TypeScript → dist/)
-2. `@nimbus/test_server` (TypeScript → dist/)
 3. `@nimbus/engine` (Vite + TypeScript → dist/viewer/ + dist/editor/)
 4. `@nimbus/controls` (Vite + TypeScript → dist/)
 
@@ -31,9 +29,6 @@ Baut alle Packages in der richtigen Reihenfolge:
 ```bash
 # Build shared types
 pnpm build:shared
-
-# Build test server
-pnpm build:test_server
 
 # Build engine (both viewer and editor)
 pnpm build:engine
@@ -55,9 +50,6 @@ pnpm build:controls
 ### Start Development Servers
 
 ```bash
-# Start test server (port 3000)
-pnpm dev:test_server
-
 # Start engine viewer (port 3001)
 pnpm dev:engine
 
@@ -74,20 +66,10 @@ pnpm dev:controls
 **Typical workflow:**
 
 ```bash
-# Terminal 1: Start test server
-pnpm dev:test_server
-
 # Terminal 2: Start engine
 pnpm dev:engine
 # OR
 pnpm dev:editor
-```
-
-## Production Scripts
-
-```bash
-# Start production test server (after build)
-pnpm start:test_server
 ```
 
 ## Utility Scripts
@@ -111,15 +93,13 @@ pnpm clean
 
 **What it does**:
 1. Builds `@nimbus/shared` (dependencies first)
-2. Builds `@nimbus/test_server`
-3. Builds `@nimbus/engine` (viewer + editor + type declarations)
-4. Builds `@nimbus/controls`
+2. Builds `@nimbus/engine` (viewer + editor + type declarations)
+3. Builds `@nimbus/controls`
 
 **Output**:
 ```
 packages/
 ├── shared/dist/         # TypeScript declarations
-├── test_server/dist/    # Compiled test server
 ├── engine/dist/
 │   ├── viewer/          # Viewer build
 │   ├── editor/          # Editor build
@@ -141,20 +121,6 @@ packages/
 **Output**: `packages/shared/dist/`
 
 **Duration**: ~2 seconds
-
----
-
-### build:test_server
-
-**Command**: `pnpm build:test_server`
-
-**What it does**: Compiles TypeScript for `@nimbus/test_server`
-
-**Output**: `packages/test_server/dist/`
-
-**Duration**: ~2 seconds
-
-**Note**: Requires `@nimbus/shared` to be built first
 
 ---
 
@@ -218,30 +184,6 @@ pnpm build
 
 ---
 
-### dev:test_server
-
-**Command**: `pnpm dev:test_server`
-
-**What it does**: Starts test server with hot reload
-
-**Uses**: `tsx watch` for TypeScript hot reload
-
-**Port**: 3000 (default)
-
-**Features**:
-- WebSocket server
-- REST API
-- Auto-restart on file changes
-
-**Output**:
-```
-Nimbus Server v2.0.0
-WebSocket server listening on ws://localhost:3000
-REST API listening on http://localhost:3000
-```
-
----
-
 ### dev:engine
 
 **Command**: `pnpm dev:engine`
@@ -287,25 +229,13 @@ REST API listening on http://localhost:3000
 
 ---
 
-### start:test_server
-
-**Command**: `pnpm start:test_server`
-
-**What it does**: Starts production test server (no hot reload)
-
-**Requires**: `pnpm build:test_server` must be run first
-
-**Uses**: `node dist/NimbusServer.js`
-
----
-
 ### test
 
 **Command**: `pnpm test`
 
 **What it does**: Runs Jest tests in all packages
 
-**Recursive**: Runs in `@nimbus/shared`, `@nimbus/engine`, `@nimbus/controls`, `@nimbus/test_server`
+**Recursive**: Runs in `@nimbus/shared`, `@nimbus/engine`, `@nimbus/controls`
 
 ---
 
@@ -343,10 +273,7 @@ pnpm install
 # 2. Build all packages (first time)
 pnpm build
 
-# 3. Start test server (Terminal 1)
-pnpm dev:test_server
-
-# 4. Start engine (Terminal 2)
+# 3. Start engine (Terminal 2)
 pnpm dev:engine
 # OR for editor
 pnpm dev:editor
@@ -362,19 +289,16 @@ pnpm build
 
 # Verify builds
 ls packages/shared/dist/
-ls packages/test_server/dist/
 ls packages/engine/dist/viewer/
 ls packages/engine/dist/editor/
 ls packages/controls/dist/
 
-# Start production test server
-pnpm start:test_server
 ```
 
 ### Quick Client Development
 
 ```bash
-# Only rebuild engine (if shared/test_server haven't changed)
+# Only rebuild engine
 pnpm build:engine
 
 # Or just viewer
@@ -411,13 +335,9 @@ pnpm preview:editor
 @nimbus/controls
   ↓ depends on
 @nimbus/shared
-
-@nimbus/test_server
-  ↓ depends on
-@nimbus/shared
 ```
 
-**Important**: Always build `@nimbus/shared` before building `@nimbus/engine`, `@nimbus/controls`, or `@nimbus/test_server`.
+**Important**: Always build `@nimbus/shared` before building `@nimbus/engine`, `@nimbus/controls`.
 
 The root scripts handle this automatically.
 
@@ -427,7 +347,7 @@ pnpm supports parallel execution with `-r` flag, but we use sequential builds to
 
 ```bash
 # Sequential (correct)
-pnpm build:shared && pnpm build:test_server && pnpm build:engine
+pnpm build:shared && pnpm build:engine
 
 # Parallel would fail due to dependencies
 pnpm -r build  # ❌ May fail if engine builds before shared
@@ -439,14 +359,7 @@ Scripts respect environment variables from `.env` files:
 
 ```bash
 # packages/engine/.env
-CLIENT_USERNAME=test
-CLIENT_PASSWORD=test
-SERVER_WEBSOCKET_URL=ws://localhost:3000
 SERVER_API_URL=http://localhost:3000
-
-# packages/test_server/.env
-PORT=3000
-HOST=localhost
 ```
 
 ## Troubleshooting
@@ -461,10 +374,6 @@ pnpm build:shared
 ### "Port 3001 already in use"
 
 **Solution**: Stop running engine dev server or change port in `packages/engine/vite.config.ts`
-
-### "Port 3000 already in use"
-
-**Solution**: Stop running test server or change port in `packages/test_server/.env`
 
 ### Build fails after git pull
 
@@ -505,12 +414,10 @@ steps:
 |---------|-------------|----------|
 | `pnpm build` | Build all packages | ~10s |
 | `pnpm build:shared` | Build shared types | ~2s |
-| `pnpm build:test_server` | Build test server | ~2s |
 | `pnpm build:engine` | Build engine (both) | ~5s |
 | `pnpm build:viewer` | Build viewer only | ~3s |
 | `pnpm build:editor` | Build editor only | ~3s |
 | `pnpm build:controls` | Build controls | ~3s |
-| `pnpm dev:test_server` | Start test server dev | - |
 | `pnpm dev:engine` | Start viewer dev | - |
 | `pnpm dev:editor` | Start editor dev | - |
 | `pnpm dev:controls` | Start controls dev | - |

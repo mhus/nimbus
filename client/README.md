@@ -11,8 +11,7 @@ client/
 ├── packages/
 │   ├── shared/          # Shared types, protocols, utils
 │   ├── engine/          # 3D Engine (Viewer + Editor)
-│   ├── controls/        # UI controls and components
-│   └── test_server/     # Test server
+│   └── controls/        # UI controls and components
 ├── CLAUDE.md            # Claude AI development documentation
 ├── package.json         # Root workspace config
 ├── pnpm-workspace.yaml  # pnpm workspace definition
@@ -51,7 +50,6 @@ pnpm install
 pnpm build
 
 # Development servers
-pnpm dev:test_server # Test server (port 3000)
 pnpm dev:engine      # Engine viewer (port 3001)
 pnpm dev:viewer      # Alias for viewer
 pnpm dev:editor      # Engine editor (port 3001)
@@ -59,7 +57,6 @@ pnpm dev:controls    # UI controls (port 3002)
 
 # Build specific packages
 pnpm build:shared      # Shared types only
-pnpm build:test_server # Test server only
 pnpm build:engine      # Engine (both variants)
 pnpm build:viewer      # Viewer variant only
 pnpm build:editor      # Editor variant only
@@ -73,10 +70,7 @@ pnpm clean          # Clean all builds
 
 **Typical workflow:**
 ```bash
-# Terminal 1: Start test server
-pnpm dev:test_server
-
-# Terminal 2: Start engine
+# Terminal: Start engine
 pnpm dev:engine
 # OR
 pnpm dev:editor
@@ -94,13 +88,6 @@ CLIENT_USERNAME=username
 CLIENT_PASSWORD=password
 SERVER_WEBSOCKET_URL=ws://localhost:3000
 SERVER_API_URL=http://localhost:3000
-```
-
-**Test Server** (`packages/test_server/.env`):
-```bash
-PORT=3000
-HOST=0.0.0.0
-WORLD_SEED=12345
 ```
 
 ## Package Overview
@@ -133,14 +120,6 @@ See [packages/engine/BUILD_VARIANTS.md](./packages/engine/BUILD_VARIANTS.md) for
 
 ### @nimbus/controls
 UI controls and components for Nimbus.
-
-### @nimbus/test_server
-Simple test server for engine development.
-
-- REST API for world data
-- WebSocket server
-- Basic world generation
-- Chunk streaming
 
 ## Architecture
 

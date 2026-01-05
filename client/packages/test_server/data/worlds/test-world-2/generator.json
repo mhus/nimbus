@@ -1,9 +1,0 @@
-{
-  "type": "normal",
-  "seed": 99999,
-  "parameters": {
-    "waterLevel": 64,
-    "baseHeight": 80,
-    "heightVariation": 48
-  }
-}

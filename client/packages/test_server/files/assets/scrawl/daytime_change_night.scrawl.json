@@ -1,6 +1,0 @@
-{"id":"daytime_change_night","root":{"kind":"Sequence","steps":[
-  {"kind":"Cmd","cmd":"sunEnable","parameters":[false]},
-  {"kind":"Cmd","cmd":"skyBoxStart","parameters":[{"r":0.5, "g":0.7, "b":1},45, 450, "textures/skybox/space"]},
-  {"kind":"Cmd","cmd":"ambientLightIntensity","parameters":[0]},
-  {"kind":"Cmd","cmd":"sunLightIntensity","parameters":[0]}
-]},"description":"daytime_change_night"}

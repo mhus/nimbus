@@ -1,7 +1,0 @@
-{
-  "type": "texture",
-  "height": 60,
-  "texture": "backdrops/fog2.png",
-  "alpha": 0.5,
-  "alphaMode": 2
-}
