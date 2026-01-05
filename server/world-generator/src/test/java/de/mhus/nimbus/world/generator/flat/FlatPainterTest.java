@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.generator.flat;
 
+import de.mhus.nimbus.world.shared.generator.WFlat;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,23 +1,56 @@
-package de.mhus.nimbus.world.generator.flat;
+package de.mhus.nimbus.world.shared.generator;
 
+import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
 import java.util.HashMap;
 
+/**
+ * MongoDB Entity for flat terrain data used in world generation.
+ * Stores height maps, column definitions, and extra blocks for world layers.
+ */
+@Document(collection = "w_flats")
+@ActualSchemaVersion("1.0.0")
+@CompoundIndexes({
+        @CompoundIndex(name = "worldId_layerDataId_flatId_idx", def = "{ 'worldId': 1, 'layerDataId': 1, 'flatId': 1 }", unique = true)
+})
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class WFlat {
 
     public static final int NOT_SET = 0;
     private static final int MAX_SIZE = 800;
 
+    @Id
+    @Getter
+    private String id;
+
+    @Indexed
+    @Getter
     private String worldId;
+
+    @Indexed
+    @Getter
     private String layerDataId;
+
+    @Getter
     private String flatId;
 
+    @Getter
     private int mountX;
+    @Getter
     private int mountZ;
     @Getter
     private int oceanLevel;
@@ -34,16 +67,20 @@ public class WFlat {
     private int sizeX;
     @Getter
     private int sizeZ;
+    @Getter
     private byte[] levels;
+    @Getter
     private byte[] columns;
+    @Builder.Default
     private HashMap<String, String> extraBlocks = new HashMap<>(); // for water and ocean ...
 
+    @Builder.Default
     private HashMap<Byte, ColumnDefinition> definitions = new HashMap<>();
 
     public void initWithSize(int sizeX, int sizeZ) {
         if (sizeX <= 0 || sizeZ <= 0 || sizeX > MAX_SIZE || sizeZ > MAX_SIZE)
             throw new IllegalArgumentException("Size out of range");
-        if (sizeX != 0)
+        if (this.sizeX != 0)
             throw  new IllegalStateException("Already initialized");
         this.sizeX = sizeX;
         this.sizeZ = sizeZ;
@@ -139,6 +176,28 @@ public class WFlat {
         if (id == NOT_SET)
             return null;
         return definitions.get((byte)id);
+    }
+
+    @Getter
+    private Instant createdAt;
+
+    @Getter
+    private Instant updatedAt;
+
+    /**
+     * Initialize timestamps for new flat.
+     */
+    public void touchCreate() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    /**
+     * Update modification timestamp.
+     */
+    public void touchUpdate() {
+        updatedAt = Instant.now();
     }
 
     @Data

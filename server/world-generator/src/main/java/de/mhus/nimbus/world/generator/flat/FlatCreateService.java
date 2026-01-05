@@ -1,0 +1,300 @@
+package de.mhus.nimbus.world.generator.flat;
+
+import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.generated.types.BlockType;
+import de.mhus.nimbus.generated.types.BlockTypeType;
+import de.mhus.nimbus.shared.types.WorldId;
+import de.mhus.nimbus.world.shared.generator.WFlat;
+import de.mhus.nimbus.world.shared.generator.WFlatService;
+import de.mhus.nimbus.world.shared.layer.LayerBlock;
+import de.mhus.nimbus.world.shared.layer.LayerChunkData;
+import de.mhus.nimbus.world.shared.layer.LayerType;
+import de.mhus.nimbus.world.shared.layer.WLayer;
+import de.mhus.nimbus.world.shared.layer.WLayerService;
+import de.mhus.nimbus.world.shared.world.BlockUtil;
+import de.mhus.nimbus.world.shared.world.WBlockType;
+import de.mhus.nimbus.world.shared.world.WBlockTypeService;
+import de.mhus.nimbus.world.shared.world.WWorld;
+import de.mhus.nimbus.world.shared.world.WWorldService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+/**
+ * Service for creating WFlat instances.
+ * Handles initialization of flat terrain data structures.
+ */
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class FlatCreateService {
+
+    private final WWorldService worldService;
+    private final WFlatService flatService;
+    private final WLayerService layerService;
+    private final WBlockTypeService blockTypeService;
+
+    /**
+     * Create a new WFlat instance with initialized size.
+     * Ocean level is loaded from world info.
+     *
+     * @param worldId World identifier
+     * @param layerDataId Layer data identifier
+     * @param flatId Flat identifier
+     * @param sizeX Width of the flat (1-800)
+     * @param sizeZ Height of the flat (1-800)
+     * @param mountX Mount X position
+     * @param mountZ Mount Z position
+     * @return Created and persisted WFlat instance
+     * @throws IllegalArgumentException if world not found or parameters invalid
+     */
+    public WFlat createFlat(String worldId, String layerDataId, String flatId,
+                           int sizeX, int sizeZ, int mountX, int mountZ) {
+        log.debug("Creating flat: worldId={}, layerDataId={}, flatId={}, size={}x{}, mount=({},{})",
+                worldId, layerDataId, flatId, sizeX, sizeZ, mountX, mountZ);
+
+        // Load world to get ocean level
+        Optional<WWorld> worldOpt = worldService.getByWorldId(worldId);
+        if (worldOpt.isEmpty()) {
+            throw new IllegalArgumentException("World not found: " + worldId);
+        }
+
+        WWorld world = worldOpt.get();
+        int oceanLevel = world.getWaterLevel() != null ? world.getWaterLevel() : 0;
+        String oceanBlockId = world.getWaterBlockType();
+
+        log.debug("Loaded world settings: oceanLevel={}, oceanBlockId={}", oceanLevel, oceanBlockId);
+
+        // Build WFlat instance
+        WFlat flat = WFlat.builder()
+                .worldId(worldId)
+                .layerDataId(layerDataId)
+                .flatId(flatId)
+                .mountX(mountX)
+                .mountZ(mountZ)
+                .oceanLevel(oceanLevel)
+                .oceanBlockId(oceanBlockId)
+                .build();
+
+        // Initialize with size
+        flat.initWithSize(sizeX, sizeZ);
+
+        // Persist to database
+        WFlat saved = flatService.create(flat);
+
+        log.info("Created flat: id={}, worldId={}, layerDataId={}, flatId={}, size={}x{}",
+                saved.getId(), worldId, layerDataId, flatId, sizeX, sizeZ);
+
+        return saved;
+    }
+
+    /**
+     * Create a new WFlat instance with default mount position (0,0).
+     *
+     * @param worldId World identifier
+     * @param layerDataId Layer data identifier
+     * @param flatId Flat identifier
+     * @param sizeX Width of the flat (1-800)
+     * @param sizeZ Height of the flat (1-800)
+     * @return Created and persisted WFlat instance
+     * @throws IllegalArgumentException if world not found or parameters invalid
+     */
+    public WFlat createFlat(String worldId, String layerDataId, String flatId, int sizeX, int sizeZ) {
+        return createFlat(worldId, layerDataId, flatId, sizeX, sizeZ, 0, 0);
+    }
+
+    /**
+     * Import WFlat from a WLayer of type GROUND.
+     * Scans all blocks in the layer and finds the highest ground block for each column.
+     *
+     * @param worldId World identifier
+     * @param layerName Name of the layer to import from
+     * @param flatId Flat identifier for the new WFlat
+     * @param sizeX Width of the flat (1-800)
+     * @param sizeZ Height of the flat (1-800)
+     * @param mountX Mount X position (where flat starts in world coordinates)
+     * @param mountZ Mount Z position (where flat starts in world coordinates)
+     * @return Created and persisted WFlat instance with imported height data
+     * @throws IllegalArgumentException if world or layer not found, or layer is not GROUND type
+     */
+    public WFlat importFromLayer(String worldId, String layerName, String flatId,
+                                 int sizeX, int sizeZ, int mountX, int mountZ) {
+        log.info("Importing flat from layer: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{})",
+                worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ);
+
+        // Load world
+        WWorld world = worldService.getByWorldId(worldId)
+                .orElseThrow(() -> new IllegalArgumentException("World not found: " + worldId));
+
+        // Load layer
+        WLayer layer = layerService.findByWorldIdAndName(worldId, layerName)
+                .orElseThrow(() -> new IllegalArgumentException("Layer not found: " + layerName));
+
+        // Validate layer type
+        if (layer.getLayerType() != LayerType.GROUND) {
+            throw new IllegalArgumentException("Layer must be of type GROUND, but is: " + layer.getLayerType());
+        }
+
+        // Check if flat already exists and delete it (in case of retry)
+        Optional<WFlat> existingFlat = flatService.findByWorldIdAndLayerDataIdAndFlatId(
+                worldId, layer.getLayerDataId(), flatId);
+        if (existingFlat.isPresent()) {
+            log.info("Flat already exists, deleting before re-import: flatId={}", flatId);
+            flatService.deleteById(existingFlat.get().getId());
+        }
+
+        // Get ocean level and block from world
+        int oceanLevel = world.getWaterLevel() == null ? 60 : world.getWaterLevel();
+        String oceanBlockId = world.getWaterBlockType() == null ? "n:o" : world.getWaterBlockType();
+
+        // Build WFlat instance (without persisting yet)
+        WFlat flat = WFlat.builder()
+                .worldId(worldId)
+                .layerDataId(layer.getLayerDataId())
+                .flatId(flatId)
+                .mountX(mountX)
+                .mountZ(mountZ)
+                .oceanLevel(oceanLevel)
+                .oceanBlockId(oceanBlockId)
+                .build();
+
+        // Initialize with size
+        flat.initWithSize(sizeX, sizeZ);
+        int defaultLevel = oceanLevel - 10; // Default level if no blocks found
+        int chunkSize = world.getPublicData().getChunkSize();
+
+        // Calculate which chunks are needed (optimize: only load required chunks once)
+        java.util.Set<String> requiredChunkKeys = new java.util.HashSet<>();
+        int minChunkX = world.getChunkX(mountX);
+        int minChunkZ = world.getChunkZ(mountZ);
+        int maxChunkX = world.getChunkX(mountX + sizeX - 1);
+        int maxChunkZ = world.getChunkZ(mountZ + sizeZ - 1);
+
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                requiredChunkKeys.add(BlockUtil.toChunkKey(chunkX, chunkZ));
+            }
+        }
+
+        log.debug("Loading {} chunks for import", requiredChunkKeys.size());
+
+        // Load all required chunks at once
+        java.util.Map<String, LayerChunkData> chunkCache = new java.util.HashMap<>();
+        for (String chunkKey : requiredChunkKeys) {
+            Optional<LayerChunkData> chunkDataOpt = layerService.loadTerrainChunk(layer.getLayerDataId(), chunkKey);
+            chunkDataOpt.ifPresent(data -> chunkCache.put(chunkKey, data));
+        }
+
+        int importedColumns = 0;
+        int emptyColumns = 0;
+
+        // Iterate over all X,Z coordinates in the flat
+        for (int localX = 0; localX < sizeX; localX++) {
+            for (int localZ = 0; localZ < sizeZ; localZ++) {
+                // Calculate world coordinates
+                int worldX = mountX + localX;
+                int worldZ = mountZ + localZ;
+
+                // Calculate chunk coordinates
+                int chunkX = world.getChunkX(worldX);
+                int chunkZ = world.getChunkZ(worldZ);
+                String chunkKey = BlockUtil.toChunkKey(chunkX, chunkZ);
+
+                // Get chunk from cache
+                LayerChunkData chunkData = chunkCache.get(chunkKey);
+
+                if (chunkData == null) {
+                    // No chunk data, use default level
+                    flat.setLevel(localX, localZ, defaultLevel);
+                    emptyColumns++;
+                    continue;
+                }
+
+                // Find highest ground block at this position
+                int groundLevel = findGroundLevel(worldX, worldZ, chunkData, WorldId.unchecked(worldId));
+
+                if (groundLevel == -1) {
+                    // No ground block found, use default level
+                    flat.setLevel(localX, localZ, defaultLevel);
+                    emptyColumns++;
+                } else {
+                    flat.setLevel(localX, localZ, groundLevel);
+                    importedColumns++;
+                }
+            }
+        }
+
+        // Persist to database
+        WFlat saved = flatService.create(flat);
+
+        log.info("Import complete: flatId={}, imported={} columns, empty={} columns",
+                flatId, importedColumns, emptyColumns);
+
+        return saved;
+    }
+
+    /**
+     * Find the ground level (Y coordinate of highest ground block) at a specific world position.
+     * First checks for blocks with BlockType.type == GROUND.
+     * If none found, falls back to legacy method (any solid block).
+     *
+     * @param worldX World X coordinate
+     * @param worldZ World Z coordinate
+     * @param chunkData Chunk data to search
+     * @param worldId World identifier for block type lookup
+     * @return Y coordinate of ground surface, or -1 if not found
+     */
+    private int findGroundLevel(int worldX, int worldZ, LayerChunkData chunkData, WorldId worldId) {
+        int highestGroundBlock = -1;
+        int highestSolidBlock = -1;
+
+        // Iterate through all blocks in chunk
+        for (LayerBlock layerBlock : chunkData.getBlocks()) {
+            Block block = layerBlock.getBlock();
+            if (block == null || block.getPosition() == null) {
+                continue;
+            }
+
+            var pos = block.getPosition();
+
+            // Check if block is at our target position
+            if (pos.getX() == worldX && pos.getZ() == worldZ) {
+                int blockY = pos.getY();
+                String blockTypeId = block.getBlockTypeId();
+
+                if (blockTypeId == null || blockTypeId.equals("0") || blockTypeId.isBlank()) {
+                    // Air block, skip
+                    continue;
+                }
+
+                // Track highest solid block (legacy fallback)
+                if (blockY > highestSolidBlock) {
+                    highestSolidBlock = blockY;
+                }
+
+                // Check if this is a ground block
+                Optional<WBlockType> blockTypeOpt = blockTypeService.findByBlockId(worldId, blockTypeId);
+                if (blockTypeOpt.isPresent()) {
+                    WBlockType wBlockType = blockTypeOpt.get();
+                    BlockType blockType = wBlockType.getPublicData();
+
+                    if (blockType != null && blockType.getType() == BlockTypeType.GROUND) {
+                        // This is a ground block
+                        if (blockY > highestGroundBlock) {
+                            highestGroundBlock = blockY;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Return highest ground block if found, otherwise highest solid block
+        if (highestGroundBlock != -1) {
+            return highestGroundBlock;
+        }
+
+        return highestSolidBlock;
+    }
+}

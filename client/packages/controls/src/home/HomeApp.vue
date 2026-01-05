@@ -246,6 +246,18 @@
           </svg>
         </EditorCard>
 
+        <!-- Flat Editor -->
+        <EditorCard
+          v-if="hasAccess('FLAT_EDITOR')"
+          title="Flat Editor"
+          description="Manage flat terrain data with height and block visualization"
+          url="/controls/flat-editor.html"
+        >
+          <svg class="w-8 h-8 text-brown-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+          </svg>
+        </EditorCard>
+
         <!-- Item Editor -->
         <EditorCard
           v-if="hasAccess('ITEM_EDITOR')"
@@ -410,6 +422,7 @@ const editorRoleMap: Record<string, string[]> = {
   'LAYER_EDITOR': ['SECTOR_ADMIN', 'LAYER_EDITOR', 'WORLD_EDITOR'],
   'EDITCACHE_EDITOR': ['SECTOR_ADMIN', 'EDITCACHE_EDITOR', 'WORLD_EDITOR'],
   'CHUNK_EDITOR': ['SECTOR_ADMIN', 'CHUNK_EDITOR', 'WORLD_EDITOR'],
+  'FLAT_EDITOR': ['SECTOR_ADMIN', 'FLAT_EDITOR', 'WORLD_EDITOR'],
   'ITEM_EDITOR': ['SECTOR_ADMIN', 'ITEM_EDITOR', 'WORLD_EDITOR'],
   'ITEMTYPE_EDITOR': ['SECTOR_ADMIN', 'ITEMTYPE_EDITOR', 'WORLD_EDITOR'],
   'CHEST_EDITOR': ['SECTOR_ADMIN', 'CHEST_EDITOR', 'WORLD_EDITOR'],
