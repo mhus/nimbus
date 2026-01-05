@@ -51,6 +51,24 @@
 
                 <div class="form-control">
                   <label class="label">
+                    <span class="label-text font-semibold">Type</span>
+                  </label>
+                  <select
+                    v-model="formData.type"
+                    class="select select-bordered w-full"
+                  >
+                    <option :value="undefined">-- Not specified --</option>
+                    <option v-for="(value, name) in BlockTypeType" :key="name" :value="value">
+                      {{ name }} ({{ value }})
+                    </option>
+                  </select>
+                  <label class="label">
+                    <span class="label-text-alt">Category of this block type</span>
+                  </label>
+                </div>
+
+                <div class="form-control">
+                  <label class="label">
                     <span class="label-text font-semibold">Description</span>
                   </label>
                   <input
@@ -332,6 +350,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild } from '@headlessui/vue';
 import type { BlockType, BlockModifier } from '@nimbus/shared';
+import { BlockTypeType } from '@nimbus/shared';
 import { useBlockTypes } from '@/composables/useBlockTypes';
 import { apiService } from '@/services/ApiService';
 import JsonEditorDialog from '@components/JsonEditorDialog.vue';

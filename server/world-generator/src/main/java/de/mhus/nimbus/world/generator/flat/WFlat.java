@@ -11,6 +11,7 @@ import java.util.HashMap;
 public class WFlat {
 
     public static final int NOT_SET = 0;
+    private static final int MAX_SIZE = 800;
 
     private String worldId;
     private String layerDataId;
@@ -40,7 +41,7 @@ public class WFlat {
     private HashMap<Byte, ColumnDefinition> definitions = new HashMap<>();
 
     public void initWithSize(int sizeX, int sizeZ) {
-        if (sizeX <= 0 || sizeZ <= 0 || sizeX > 400 || sizeZ > 400)
+        if (sizeX <= 0 || sizeZ <= 0 || sizeX > MAX_SIZE || sizeZ > MAX_SIZE)
             throw new IllegalArgumentException("Size out of range");
         if (sizeX != 0)
             throw  new IllegalStateException("Already initialized");

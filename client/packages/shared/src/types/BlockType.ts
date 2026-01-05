@@ -31,6 +31,28 @@ export enum BlockStatus {
   CUSTOM_START = 100,
 }
 
+export enum BlockTypeType {
+    AIR = 0,
+    GROUND = 1,
+    WATER = 2,
+    PLANT = 3,
+    PLANT_PART = 4,
+    STRUCTURE = 5,
+    DECORATION = 6,
+    UTILITY = 7,
+    LAVA = 8,
+    WINDOW = 9,
+    DOOR = 10,
+    WALL = 11,
+    ROOF = 12,
+    PATH = 13,
+    FENCE = 14,
+    STAIRS = 15,
+    RAMP = 16,
+    BRIDGE = 17,
+    LIGHT = 18,
+}
+
 /**
  * BlockType definition
  */
@@ -39,6 +61,8 @@ export interface BlockType {
    * Unique block type ID
    */
   id: string;
+
+  type?: BlockTypeType;
 
   /**
    * Initial status for new block instances

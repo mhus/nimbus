@@ -4699,6 +4699,13 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
+        "name" : "type",
+        "type" : "BlockTypeType",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
         "name" : "initialStatus",
         "type" : "number",
         "optional" : true,
@@ -4755,6 +4762,67 @@
       }, {
         "name" : "CUSTOM_START",
         "value" : "100"
+      } ]
+    }, {
+      "name" : "BlockTypeType",
+      "values" : [ "AIR", "GROUND", "WATER", "PLANT", "PLANT_PART", "STRUCTURE", "DECORATION", "UTILITY", "LAVA", "WINDOW", "DOOR", "WALL", "ROOF", "PATH", "FENCE", "STAIRS", "RAMP", "BRIDGE", "LIGHT" ],
+      "enumValues" : [ {
+        "name" : "AIR",
+        "value" : "0"
+      }, {
+        "name" : "GROUND",
+        "value" : "1"
+      }, {
+        "name" : "WATER",
+        "value" : "2"
+      }, {
+        "name" : "PLANT",
+        "value" : "3"
+      }, {
+        "name" : "PLANT_PART",
+        "value" : "4"
+      }, {
+        "name" : "STRUCTURE",
+        "value" : "5"
+      }, {
+        "name" : "DECORATION",
+        "value" : "6"
+      }, {
+        "name" : "UTILITY",
+        "value" : "7"
+      }, {
+        "name" : "LAVA",
+        "value" : "8"
+      }, {
+        "name" : "WINDOW",
+        "value" : "9"
+      }, {
+        "name" : "DOOR",
+        "value" : "10"
+      }, {
+        "name" : "WALL",
+        "value" : "11"
+      }, {
+        "name" : "ROOF",
+        "value" : "12"
+      }, {
+        "name" : "PATH",
+        "value" : "13"
+      }, {
+        "name" : "FENCE",
+        "value" : "14"
+      }, {
+        "name" : "STAIRS",
+        "value" : "15"
+      }, {
+        "name" : "RAMP",
+        "value" : "16"
+      }, {
+        "name" : "BRIDGE",
+        "value" : "17"
+      }, {
+        "name" : "LIGHT",
+        "value" : "18"
       } ]
     } ],
     "classes" : [ ],
