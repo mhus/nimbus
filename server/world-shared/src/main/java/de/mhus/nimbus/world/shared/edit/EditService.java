@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.control.service;
+package de.mhus.nimbus.world.shared.edit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
@@ -13,6 +13,7 @@ import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
+import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -619,35 +620,28 @@ public class EditService {
         // Calculate chunk coordinates
         de.mhus.nimbus.world.shared.world.WWorld world = worldService.getByWorldId(worldId)
                 .orElseThrow(() -> new IllegalStateException("World not found: " + worldId));
-        int chunkSize = world.getPublicData().getChunkSize();
-        int cx = Math.floorDiv(x, chunkSize);
-        int cz = Math.floorDiv(z, chunkSize);
-        String chunk = cx + ":" + cz;
-
-        // Create LayerBlock from Block
-        de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock =
-                de.mhus.nimbus.world.shared.layer.LayerBlock.builder()
-                        .block(pastedBlock)
-                        .build();
 
         // Save to WEditCache with modelName
-        editCacheService.setBlock(worldId, layerDataId, modelName, x, z, chunk, layerBlock);
-
-        log.debug("Saved block to WEditCache: session={} layer={} pos=({},{},{}) chunk={}",
-                sessionId, layer.getName(), x, y, z, chunk);
-
-        // Set source field for block update
-        String source = layerDataId + ":" + layer.getName();
-        pastedBlock.setSource(source);
-
-        // Send block update to client with source parameter
-        boolean sent = blockUpdateService.sendBlockUpdateWithSource(worldId, sessionId, x, y, z, pastedBlock, source, null);
-        if (!sent) {
-            log.warn("Failed to send block update to client: session={}", sessionId);
-        }
+        setAndSendBlock(world, layerDataId, modelName, pastedBlock, editState.getSelectedGroup());
 
         log.info("Block pasted: session={} layer={} to=({},{},{}) type={}",
                 sessionId, layer.getName(), x, y, z, pastedBlock.getBlockTypeId());
+
+    }
+
+    public void setAndSendBlock(WWorld world, String layerDataId, String modelName, Block block, int group) {
+
+        editCacheService.setBlock(world, layerDataId, modelName, block, group);
+
+        // Set source field for block update
+        String source = layerDataId + ":" + (modelName == null ? "" : modelName);
+        block.setSource(source);
+
+        // Send block update to client with source parameter
+        boolean sent = blockUpdateService.sendBlockUpdateWithSource(world.getId(), "", block.getPosition().getX(), block.getPosition().getY(), block.getPosition().getZ(), block, source, null);
+        if (!sent) {
+            log.warn("Failed to send block update to clients: position={}", block.getPosition());
+        }
 
     }
 
@@ -1030,34 +1024,8 @@ public class EditService {
         // Get world and calculate chunk key
         var world = worldService.getByWorldId(worldId)
                 .orElseThrow(() -> new IllegalStateException("World not found: " + worldId));
-        String chunkKey = world.getChunkKey(x, z);
 
-        // Create LayerBlock wrapper
-        de.mhus.nimbus.world.shared.layer.LayerBlock layerBlock =
-            de.mhus.nimbus.world.shared.layer.LayerBlock.builder()
-                .block(block)
-                .group(0)
-                .build();
-
-        // Save to WEditCache with modelName
-        try {
-            editCacheService.setBlock(worldId, layerDataId, modelName, x, z, chunkKey, layerBlock);
-        } catch (Exception e) {
-            log.error("Failed to save block to edit cache: worldId={}, pos=({},{},{})",
-                    worldId, x, y, z, e);
-            return false;
-        }
-
-        // Set source field for block update
-        String source = layerDataId + ":" + layer.getName();
-        block.setSource(source);
-
-        // Send update to client with source parameter
-        boolean sent = blockUpdateService.sendBlockUpdateWithSource(worldId, sessionId, x, y, z, block, source, null);
-        if (!sent) {
-            log.warn("Failed to send block update to client: session={}, pos=({},{},{})",
-                    sessionId, x, y, z);
-        }
+        setAndSendBlock(world, layerDataId, modelName, block, editState.getSelectedGroup());
 
         return true;
     }

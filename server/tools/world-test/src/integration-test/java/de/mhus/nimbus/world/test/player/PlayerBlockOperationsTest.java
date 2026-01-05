@@ -147,7 +147,7 @@ class PlayerBlockOperationsTest extends AbstractPlayerTest {
     void shouldValidateBlockMetadataContract() throws Exception {
         // Test BlockMetadata contract
         BlockMetadata metadata = BlockMetadata.builder()
-                .displayName("Custom Block")
+                .title("Custom Block")
                 .build();
 
         String metadataJson = objectMapper.writeValueAsString(metadata);

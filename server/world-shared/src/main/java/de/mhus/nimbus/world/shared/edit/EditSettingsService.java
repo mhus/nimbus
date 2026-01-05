@@ -1,8 +1,5 @@
-package de.mhus.nimbus.world.control.service;
+package de.mhus.nimbus.world.shared.edit;
 
-import de.mhus.nimbus.world.control.entity.WWorldEditSettings;
-import de.mhus.nimbus.world.control.model.PaletteBlockDefinition;
-import de.mhus.nimbus.world.control.repository.WWorldEditSettingsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

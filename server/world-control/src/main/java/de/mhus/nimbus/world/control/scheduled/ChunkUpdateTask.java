@@ -1,6 +1,6 @@
 package de.mhus.nimbus.world.control.scheduled;
 
-import de.mhus.nimbus.world.control.service.ChunkUpdateService;
+import de.mhus.nimbus.world.shared.edit.ChunkUpdateService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

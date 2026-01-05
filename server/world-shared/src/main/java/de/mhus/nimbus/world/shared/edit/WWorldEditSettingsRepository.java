@@ -1,6 +1,5 @@
-package de.mhus.nimbus.world.control.repository;
+package de.mhus.nimbus.world.shared.edit;
 
-import de.mhus.nimbus.world.control.entity.WWorldEditSettings;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

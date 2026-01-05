@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
+import de.mhus.nimbus.world.shared.edit.BlockInfoService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 public class WorldController extends BaseEditorController {
 
     private final WWorldService worldService;
-    private final de.mhus.nimbus.world.control.service.BlockInfoService blockInfoService;
+    private final BlockInfoService blockInfoService;
 
     // DTOs
     public record WorldListDto(

@@ -1,7 +1,6 @@
-package de.mhus.nimbus.world.control.entity;
+package de.mhus.nimbus.world.shared.edit;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
-import de.mhus.nimbus.world.control.model.PaletteBlockDefinition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

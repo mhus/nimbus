@@ -4,17 +4,17 @@ import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.EditAction;
 import de.mhus.nimbus.shared.engine.EngineMapper;
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.control.service.EditService;
-import de.mhus.nimbus.world.control.service.EditState;
+import de.mhus.nimbus.world.shared.edit.EditService;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
+import de.mhus.nimbus.world.shared.edit.BlockUpdateService;
+import de.mhus.nimbus.world.shared.edit.EditState;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;
-import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Editor REST API controller.
@@ -43,7 +42,7 @@ public class EditorController extends BaseEditorController {
 
     private final EditService editService;
     private final WLayerService layerService;
-    private final de.mhus.nimbus.world.control.service.BlockUpdateService blockUpdateService;
+    private final BlockUpdateService blockUpdateService;
     private final de.mhus.nimbus.world.shared.layer.WDirtyChunkService dirtyChunkService;
     private final WorldRedisService redisService;
     private final WSessionService wSessionService;

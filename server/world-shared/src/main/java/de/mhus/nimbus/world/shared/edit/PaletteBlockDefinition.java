@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.control.model;
+package de.mhus.nimbus.world.shared.edit;
 
 import de.mhus.nimbus.generated.types.Block;
 import lombok.AllArgsConstructor;

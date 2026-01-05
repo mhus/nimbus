@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.control.service;
+package de.mhus.nimbus.world.shared.edit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

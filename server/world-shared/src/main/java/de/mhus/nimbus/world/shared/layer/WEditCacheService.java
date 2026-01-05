@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.shared.layer;
 
+import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.world.shared.world.WWorld;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -78,29 +80,36 @@ public class WEditCacheService {
         return repository.findByWorldIdAndLayerDataIdAndChunk(worldId, layerDataId, chunk);
     }
 
-    /**
-     * Set or update a block in the edit cache.
-     * Checks if entry exists and updates it, or creates a new one.
-     * If duplicates exist, keeps the first and deletes the rest before updating.
-     *
-     * @param worldId World identifier
-     * @param layerDataId Layer data identifier
-     * @param modelName Model name (null for GROUND layers)
-     * @param x X coordinate
-     * @param z Z coordinate
-     * @param chunk Chunk identifier
-     * @param block Block data
-     * @return Saved cache entry
-     */
+    public WEditCache setBlock(WWorld world, String layerDataId, String modelName, Block block, int group) {
+        LayerBlock layerBlock = LayerBlock.builder()
+                .block(block)
+                .group(group)
+                .build();
+        return setBlock(world, layerDataId, modelName, layerBlock);
+    }
+        /**
+         * Set or update a block in the edit cache.
+         * Checks if entry exists and updates it, or creates a new one.
+         * If duplicates exist, keeps the first and deletes the rest before updating.
+         *
+         * @param world World Object
+         * @param layerDataId Layer data identifier
+         * @param modelName Model name (null for GROUND layers)
+         * @param block Block data
+         * @return Saved cache entry
+         */
     @Transactional
-    public WEditCache setBlock(String worldId, String layerDataId, String modelName, int x, int z, String chunk, LayerBlock block) {
-        List<WEditCache> existing = repository.findByWorldIdAndLayerDataIdAndXAndZ(worldId, layerDataId, x, z);
+    public WEditCache setBlock(WWorld world, String layerDataId, String modelName, LayerBlock block) {
+        var x = block.getBlock().getPosition().getX();
+        var z = block.getBlock().getPosition().getZ();
+        var chunk = world.getChunkKey(x, z);
+        List<WEditCache> existing = repository.findByWorldIdAndLayerDataIdAndXAndZ(world.getWorldId(), layerDataId, x, z);
 
         WEditCache cache;
         if (existing.isEmpty()) {
             // Create new entry
             cache = WEditCache.builder()
-                    .worldId(worldId)
+                    .worldId(world.getWorldId())
                     .layerDataId(layerDataId)
                     .modelName(modelName)
                     .x(x)
@@ -110,7 +119,7 @@ public class WEditCacheService {
                     .build();
             cache.touchCreate();
             log.debug("Creating new cache entry: worldId={}, layerDataId={}, modelName={}, x={}, z={}, chunk={}",
-                    worldId, layerDataId, modelName, x, z, chunk);
+                    world.getWorldId(), layerDataId, modelName, x, z, chunk);
         } else {
             // Update existing entry (first one)
             cache = existing.get(0);
@@ -119,12 +128,12 @@ public class WEditCacheService {
             cache.setModelName(modelName); // Update modelName in case it changed
             cache.touchUpdate();
             log.debug("Updating existing cache entry: id={}, worldId={}, layerDataId={}, modelName={}, x={}, z={}, chunk={}",
-                    cache.getId(), worldId, layerDataId, modelName, x, z, chunk);
+                    cache.getId(), world.getWorldId(), layerDataId, modelName, x, z, chunk);
 
             // Delete duplicates if any
             if (existing.size() > 1) {
                 log.warn("Found {} duplicate cache entries for worldId={}, layerDataId={}, x={}, z={}, deleting {} duplicates",
-                        existing.size(), worldId, layerDataId, x, z, existing.size() - 1);
+                        existing.size(), world.getWorldId(), layerDataId, x, z, existing.size() - 1);
                 for (int i = 1; i < existing.size(); i++) {
                     repository.delete(existing.get(i));
                 }

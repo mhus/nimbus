@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.control.service;
+package de.mhus.nimbus.world.shared.edit;
 
 import de.mhus.nimbus.generated.types.Block;
 import lombok.Builder;
@@ -6,14 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
- * Smooths block offsets between neighboring cube blocks.
- * Adjusts offsets to create smooth transitions by averaging values across neighbors.
+ * Roughens block offsets between neighboring cube blocks.
+ * Increases offset differences to create rough/uneven transitions.
  */
 @Builder
 @Slf4j
-public class SmoothBlockOperation {
+public class RoughBlockOperation {
 
     private EditService editService;
     private EditState editState;
@@ -22,12 +23,14 @@ public class SmoothBlockOperation {
     private int centerY;
     private int centerZ;
 
+    private static final Random random = new Random();
+
     /**
-     * Execute the smooth operation.
-     * Reads all blocks around the center position and smooths offsets for cube-shaped blocks.
+     * Execute the rough operation.
+     * Reads all blocks around the center position and roughens offsets for cube-shaped blocks.
      */
     public void execute() {
-        log.debug("Executing smooth operation at ({},{},{})", centerX, centerY, centerZ);
+        log.debug("Executing rough operation at ({},{},{})", centerX, centerY, centerZ);
 
         // Read center block
         Block centerBlock = editService.getBlock(editState, sessionId, centerX, centerY, centerZ);
@@ -54,15 +57,15 @@ public class SmoothBlockOperation {
 
         // Process each direction
         for (int[] neighborPos : neighbors) {
-            smoothBlockPair(centerX, centerY, centerZ, neighborPos[0], neighborPos[1], neighborPos[2]);
+            roughenBlockPair(centerX, centerY, centerZ, neighborPos[0], neighborPos[1], neighborPos[2]);
         }
     }
 
     /**
-     * Smooth the transition between two blocks.
-     * Adjusts offsets by averaging them to create a smooth transition.
+     * Roughen the transition between two blocks.
+     * Increases offset differences by diverging from the average.
      */
-    private void smoothBlockPair(int x1, int y1, int z1, int x2, int y2, int z2) {
+    private void roughenBlockPair(int x1, int y1, int z1, int x2, int y2, int z2) {
         Block block1 = editService.getBlock(editState, sessionId, x1, y1, z1);
         Block block2 = editService.getBlock(editState, sessionId, x2, y2, z2);
 
@@ -79,9 +82,10 @@ public class SmoothBlockOperation {
         List<Float> offsets1 = getOffsets(block1);
         List<Float> offsets2 = getOffsets(block2);
 
-        // Calculate smoothed offsets (average between current values)
-        // Use a smoothing factor to gradually adjust (not instantly to average)
-        float smoothFactor = 0.3f; // 30% adjustment per execution
+        // Calculate roughened offsets (diverge from average)
+        // Use a roughening factor to gradually increase differences
+        float roughFactor = 0.2f; // 20% divergence per execution
+        float maxOffset = 0.5f; // Maximum offset value to prevent extreme deformation
 
         List<Float> newOffsets1 = new ArrayList<>(6);
         List<Float> newOffsets2 = new ArrayList<>(6);
@@ -91,9 +95,14 @@ public class SmoothBlockOperation {
             float val2 = offsets2.get(i);
             float avg = (val1 + val2) / 2.0f;
 
-            // Move each value towards the average by smoothFactor
-            float newVal1 = val1 + (avg - val1) * smoothFactor;
-            float newVal2 = val2 + (avg - val2) * smoothFactor;
+            // Add small random variation to make it more natural
+            float randomVariation = (random.nextFloat() - 0.5f) * 0.1f;
+
+            // Move each value away from the average by roughFactor
+            // Block1 diverges in one direction, block2 in the other
+            float divergence = (avg - val1) * roughFactor + randomVariation;
+            float newVal1 = clamp(val1 - divergence, -maxOffset, maxOffset);
+            float newVal2 = clamp(val2 + divergence, -maxOffset, maxOffset);
 
             newOffsets1.add(newVal1);
             newOffsets2.add(newVal2);
@@ -103,14 +112,21 @@ public class SmoothBlockOperation {
         if (offsetsChanged(offsets1, newOffsets1)) {
             block1.setOffsets(newOffsets1);
             editService.updateBlock(editState, sessionId, x1, y1, z1, block1);
-            log.debug("Smoothed block at ({},{},{})", x1, y1, z1);
+            log.debug("Roughened block at ({},{},{})", x1, y1, z1);
         }
 
         if (offsetsChanged(offsets2, newOffsets2)) {
             block2.setOffsets(newOffsets2);
             editService.updateBlock(editState, sessionId, x2, y2, z2, block2);
-            log.debug("Smoothed block at ({},{},{})", x2, y2, z2);
+            log.debug("Roughened block at ({},{},{})", x2, y2, z2);
         }
+    }
+
+    /**
+     * Clamp value between min and max.
+     */
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     /**
