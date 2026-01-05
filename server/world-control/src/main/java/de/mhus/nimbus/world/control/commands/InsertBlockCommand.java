@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.control.commands;
 
 import de.mhus.nimbus.generated.types.Block;
-import de.mhus.nimbus.world.shared.edit.EditService;
+import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import lombok.RequiredArgsConstructor;

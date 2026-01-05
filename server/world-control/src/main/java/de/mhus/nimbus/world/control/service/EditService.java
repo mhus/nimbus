@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.edit;
+package de.mhus.nimbus.world.control.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.mhus.nimbus.generated.types.Block;
@@ -6,7 +6,7 @@ import de.mhus.nimbus.generated.types.EditAction;
 import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.world.shared.client.WorldClientService;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
-import de.mhus.nimbus.world.shared.layer.LayerType;
+import de.mhus.nimbus.world.shared.edit.BlockUpdateService;import de.mhus.nimbus.world.shared.layer.LayerType;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
@@ -622,26 +622,10 @@ public class EditService {
                 .orElseThrow(() -> new IllegalStateException("World not found: " + worldId));
 
         // Save to WEditCache with modelName
-        setAndSendBlock(world, layerDataId, modelName, pastedBlock, editState.getSelectedGroup());
+        editCacheService.setAndSendBlock(world, layerDataId, modelName, pastedBlock, editState.getSelectedGroup());
 
         log.info("Block pasted: session={} layer={} to=({},{},{}) type={}",
                 sessionId, layer.getName(), x, y, z, pastedBlock.getBlockTypeId());
-
-    }
-
-    public void setAndSendBlock(WWorld world, String layerDataId, String modelName, Block block, int group) {
-
-        editCacheService.setBlock(world, layerDataId, modelName, block, group);
-
-        // Set source field for block update
-        String source = layerDataId + ":" + (modelName == null ? "" : modelName);
-        block.setSource(source);
-
-        // Send block update to client with source parameter
-        boolean sent = blockUpdateService.sendBlockUpdateWithSource(world.getId(), "", block.getPosition().getX(), block.getPosition().getY(), block.getPosition().getZ(), block, source, null);
-        if (!sent) {
-            log.warn("Failed to send block update to clients: position={}", block.getPosition());
-        }
 
     }
 
@@ -1025,7 +1009,7 @@ public class EditService {
         var world = worldService.getByWorldId(worldId)
                 .orElseThrow(() -> new IllegalStateException("World not found: " + worldId));
 
-        setAndSendBlock(world, layerDataId, modelName, block, editState.getSelectedGroup());
+        editCacheService.setAndSendBlock(world, layerDataId, modelName, block, editState.getSelectedGroup());
 
         return true;
     }

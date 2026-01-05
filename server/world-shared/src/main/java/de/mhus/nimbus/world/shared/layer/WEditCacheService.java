@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.layer;
 
 import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.world.shared.edit.BlockUpdateService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import java.util.Optional;
 public class WEditCacheService {
 
     private final WEditCacheRepository repository;
+    private final BlockUpdateService blockUpdateService;
 
     /**
      * Find cached block by world, layer, and coordinates.
@@ -78,6 +80,22 @@ public class WEditCacheService {
     @Transactional(readOnly = true)
     public List<WEditCache> findByWorldIdAndLayerDataIdAndChunk(String worldId, String layerDataId, String chunk) {
         return repository.findByWorldIdAndLayerDataIdAndChunk(worldId, layerDataId, chunk);
+    }
+
+    public void setAndSendBlock(WWorld world, String layerDataId, String modelName, Block block, int group) {
+
+        setBlock(world, layerDataId, modelName, block, group);
+
+        // Set source field for block update
+        String source = layerDataId + ":" + (modelName == null ? "" : modelName);
+        block.setSource(source);
+
+        // Send block update to client with source parameter
+        boolean sent = blockUpdateService.sendBlockUpdateWithSource(world.getId(), "", block.getPosition().getX(), block.getPosition().getY(), block.getPosition().getZ(), block, source, null);
+        if (!sent) {
+            log.warn("Failed to send block update to clients: position={}", block.getPosition());
+        }
+
     }
 
     public WEditCache setBlock(WWorld world, String layerDataId, String modelName, Block block, int group) {

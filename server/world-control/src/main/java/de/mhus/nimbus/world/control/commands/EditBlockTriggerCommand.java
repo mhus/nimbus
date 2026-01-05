@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.control.commands;
 
+import de.mhus.nimbus.world.control.service.EditService;
 import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import lombok.RequiredArgsConstructor;
@@ -7,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-
-import static org.apache.logging.log4j.util.Strings.isNotEmpty;
 
 /**
  * EditBlockTrigger command - triggered by engine when block selected.
@@ -19,7 +18,7 @@ import static org.apache.logging.log4j.util.Strings.isNotEmpty;
 @Slf4j
 public class EditBlockTriggerCommand implements Command {
 
-    private final de.mhus.nimbus.world.shared.edit.EditService editService;
+    private final EditService editService;
 
     @Override
     public String getName() {

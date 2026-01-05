@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.generator.blocks.generator;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.shared.types.BlockDef;
-import de.mhus.nimbus.world.shared.edit.EditService;
+import de.mhus.nimbus.world.shared.layer.WEditCacheService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,7 @@ public class EditCachePainter {
     };
 
     @Getter
-    private final EditService editService;
+    private final WEditCacheService editService;
     @Getter
     private BlockDef blockDef;
     @Getter

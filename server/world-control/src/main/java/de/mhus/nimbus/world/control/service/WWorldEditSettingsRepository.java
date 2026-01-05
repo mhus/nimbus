@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.edit;
+package de.mhus.nimbus.world.control.service;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;

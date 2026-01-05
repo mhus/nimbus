@@ -1,7 +1,7 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
-import de.mhus.nimbus.world.shared.edit.BlockInfoService;
+import de.mhus.nimbus.world.control.service.BlockInfoService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.Operation;

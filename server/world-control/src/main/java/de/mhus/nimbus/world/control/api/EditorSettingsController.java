@@ -1,9 +1,9 @@
 package de.mhus.nimbus.world.control.api;
 
 import de.mhus.nimbus.shared.types.WorldId;
-import de.mhus.nimbus.world.shared.edit.EditSettingsService;
-import de.mhus.nimbus.world.shared.edit.WWorldEditSettings;
-import de.mhus.nimbus.world.shared.edit.PaletteBlockDefinition;
+import de.mhus.nimbus.world.control.service.EditSettingsService;
+import de.mhus.nimbus.world.control.service.WWorldEditSettings;
+import de.mhus.nimbus.world.control.service.PaletteBlockDefinition;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionService;

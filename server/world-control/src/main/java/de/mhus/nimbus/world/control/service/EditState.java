@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.edit;
+package de.mhus.nimbus.world.control.service;
 
 import de.mhus.nimbus.generated.types.EditAction;
 import lombok.AllArgsConstructor;

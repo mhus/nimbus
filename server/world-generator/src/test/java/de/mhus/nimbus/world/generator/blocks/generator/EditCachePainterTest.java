@@ -2,7 +2,7 @@ package de.mhus.nimbus.world.generator.blocks.generator;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.shared.types.BlockDef;
-import de.mhus.nimbus.world.shared.edit.EditService;
+import de.mhus.nimbus.world.shared.layer.WEditCacheService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ class EditCachePainterTest {
 
     @BeforeEach
     void setUp() {
-        EditService editService = mock(EditService.class);
+        WEditCacheService editService = mock(WEditCacheService.class);
         WWorld world = mock(WWorld.class);
         BlockDef blockDef = mock(BlockDef.class);
         paintedBlocks = new HashSet<>();

@@ -1,4 +1,4 @@
-package de.mhus.nimbus.world.shared.edit;
+package de.mhus.nimbus.world.control.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
