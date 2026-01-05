@@ -19,13 +19,36 @@ export interface UseWorldReturn {
   selectWorld: (worldId: string) => void;
 }
 
+const WORLD_STORAGE_KEY = 'nimbus.selectedWorldId';
+
 // Read worldId from URL query parameter
 const getWorldIdFromUrl = (): string | null => {
   const params = new URLSearchParams(window.location.search);
   return params.get('world') || params.get('worldId');
 };
 
+// Read worldId from Local Storage
+const getWorldIdFromStorage = (): string | null => {
+  try {
+    return localStorage.getItem(WORLD_STORAGE_KEY);
+  } catch (err) {
+    logger.warn('Failed to read from localStorage', { error: err });
+    return null;
+  }
+};
+
+// Save worldId to Local Storage
+const saveWorldIdToStorage = (worldId: string): void => {
+  try {
+    localStorage.setItem(WORLD_STORAGE_KEY, worldId);
+    logger.info('Saved world/collection to localStorage', { worldId, key: WORLD_STORAGE_KEY });
+  } catch (err) {
+    logger.warn('Failed to write to localStorage', { error: err });
+  }
+};
+
 // Shared state across all instances
+// Initialize from URL parameter only - Local Storage is checked after worlds are loaded
 const currentWorldId = ref<string>(
   getWorldIdFromUrl() || ''
 );
@@ -50,16 +73,43 @@ export function useWorld(): UseWorldReturn {
     error.value = null;
 
     try {
+      // 1. Load all worlds from API
       worlds.value = await worldService.getWorlds(filter);
       logger.info('Loaded worlds', { count: worlds.value.length, filter });
 
-      // Verify current world ID exists
-      if (!worlds.value.find(w => w.worldId === currentWorldId.value)) {
-        // Fallback to first world if current ID not found
-        if (worlds.value.length > 0) {
-          currentWorldId.value = worlds.value[0].worldId;
-          logger.warn('Current world not found, using first world', { worldId: currentWorldId.value });
+      // 2. If no world selected yet, try to restore from Local Storage
+      if (!currentWorldId.value) {
+        const storedId = getWorldIdFromStorage();
+        if (storedId) {
+          currentWorldId.value = storedId;
+          logger.info('Restored worldId from localStorage', { worldId: storedId });
         }
+      }
+
+      // 3. Validate selected world exists in loaded list
+      if (currentWorldId.value) {
+        const foundWorld = worlds.value.find(w => w.worldId === currentWorldId.value);
+
+        if (foundWorld) {
+          logger.info('Selected world is valid', { worldId: currentWorldId.value });
+        } else {
+          logger.warn('Selected world not found in loaded list', {
+            selectedId: currentWorldId.value,
+            availableIds: worlds.value.map(w => w.worldId)
+          });
+
+          // Fallback to first world
+          if (worlds.value.length > 0) {
+            currentWorldId.value = worlds.value[0].worldId;
+            saveWorldIdToStorage(currentWorldId.value);
+            logger.info('Fallback to first world', { worldId: currentWorldId.value });
+          }
+        }
+      } else if (worlds.value.length > 0) {
+        // No world selected and nothing in storage - use first world
+        currentWorldId.value = worlds.value[0].worldId;
+        saveWorldIdToStorage(currentWorldId.value);
+        logger.info('No world selected, using first world', { worldId: currentWorldId.value });
       }
     } catch (err) {
       error.value = 'Failed to load worlds';
@@ -70,7 +120,7 @@ export function useWorld(): UseWorldReturn {
   };
 
   /**
-   * Select a world
+   * Select a world and save to Local Storage
    */
   const selectWorld = (worldId: string) => {
     if (!worlds.value.find(w => w.worldId === worldId)) {
@@ -79,6 +129,7 @@ export function useWorld(): UseWorldReturn {
     }
 
     currentWorldId.value = worldId;
+    saveWorldIdToStorage(worldId);
     logger.info('Selected world', { worldId });
   };
 

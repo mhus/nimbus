@@ -13,7 +13,7 @@
         <h1 class="text-xl font-bold px-4">Nimbus Backdrop Editor</h1>
       </div>
       <div class="flex-none">
-        <WorldSelector />
+        <WorldSelector filter="withCollections" />
       </div>
     </header>
 

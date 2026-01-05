@@ -283,7 +283,7 @@ import { backdropService, type BackdropData } from '../services/BackdropService'
 
 const props = defineProps<{ backdrop: BackdropData | 'new' }>();
 const emit = defineEmits<{ back: []; saved: [] }>();
-const { currentWorldId, loadWorlds } = useWorld();
+const { currentWorldId } = useWorld();
 const isNew = computed(() => props.backdrop === 'new');
 
 const saving = ref(false);
@@ -412,8 +412,7 @@ const handleSaveJson = async () => {
 const handleBack = () => emit('back');
 
 onMounted(() => {
-  // Load worlds with collections for backdrop editor
-  loadWorlds('withCollections');
+  // Note: WorldSelector in BackdropApp loads worlds with 'withCollections' filter
   loadBackdrop();
 });
 </script>

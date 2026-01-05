@@ -14,7 +14,7 @@
       </div>
       <div class="flex-none">
         <!-- World Selector -->
-        <WorldSelector />
+        <WorldSelector filter="withCollections" />
       </div>
     </header>
 

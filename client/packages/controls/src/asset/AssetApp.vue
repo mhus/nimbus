@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <!-- Header with World Selector (Main Worlds Only) -->
-    <AssetAppHeader title="Nimbus Asset Editor" />
+    <!-- Header with World Selector -->
+    <AssetAppHeader title="Nimbus Asset Editor" world-filter="withCollections" />
 
     <!-- Main Content -->
     <main class="flex-1 container mx-auto px-4 py-6">

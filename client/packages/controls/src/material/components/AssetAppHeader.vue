@@ -11,20 +11,22 @@
       <h1 class="text-xl font-bold px-4">{{ title }}</h1>
     </div>
     <div v-if="showWorldSelector" class="flex-none">
-      <!-- World Selector (Main Worlds Only) -->
-      <!-- Assets are only stored in main worlds (no branches, instances, zones) -->
-      <WorldSelector filter="mainOnly" />
+      <!-- World Selector -->
+      <WorldSelector :filter="worldFilter" />
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import WorldSelector from '@material/components/WorldSelector.vue';
+import type { WorldFilter } from '@/services/WorldService';
 
 withDefaults(defineProps<{
   title?: string;
   showWorldSelector?: boolean;
+  worldFilter?: WorldFilter;
 }>(), {
   showWorldSelector: true,
+  worldFilter: 'mainOnly', // Default to mainOnly for backwards compatibility
 });
 </script>

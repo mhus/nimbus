@@ -12,15 +12,17 @@
     </div>
     <div class="flex-none">
       <!-- World Selector -->
-      <WorldSelector />
+      <WorldSelector :filter="worldFilter" />
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
 import WorldSelector from '@material/components/WorldSelector.vue';
+import type { WorldFilter } from '@/services/WorldService';
 
 defineProps<{
   title?: string;
+  worldFilter?: WorldFilter;
 }>();
 </script>

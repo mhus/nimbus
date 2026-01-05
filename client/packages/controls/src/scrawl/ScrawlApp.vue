@@ -14,7 +14,7 @@
       </div>
       <div class="flex-none gap-2 mr-4">
         <!-- World Selector -->
-        <WorldSelector />
+        <WorldSelector filter="withCollections" />
         <button class="btn btn-sm btn-primary" @click="createNewScript">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -62,7 +62,7 @@ const getIdFromUrl = (): string | null => {
 };
 
 const apiService = new ApiService();
-const { currentWorldId, loadWorlds } = useWorld();
+const { currentWorldId } = useWorld();
 const urlScriptId = getIdFromUrl();
 const selectedScript = ref<ScrawlScript | null>(null);
 const isNewScript = ref(false);
@@ -145,8 +145,7 @@ function closeEditor() {
 }
 
 onMounted(() => {
-  // Load worlds with collections for scrawl script editor
-  loadWorlds('withCollections');
+  // Note: WorldSelector loads worlds with 'withCollections' filter
 });
 
 async function deleteScript(scriptId: string) {

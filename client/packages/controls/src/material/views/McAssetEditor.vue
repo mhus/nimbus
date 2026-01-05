@@ -36,11 +36,18 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useWorld } from '@/composables/useWorld';
+import { getLogger } from '@nimbus/shared';
 import AssetPanel from '@material/components/AssetPanel.vue';
 import InfoBar from '@material/components/InfoBar.vue';
 import type { Asset } from '@/services/AssetService';
 
+const logger = getLogger('McAssetEditor');
+
 const { currentWorldId, worlds, loadWorlds } = useWorld();
+
+// LocalStorage keys for panel world selections
+const LEFT_PANEL_WORLD_KEY = 'nimbus.mcAssetEditor.leftWorldId';
+const RIGHT_PANEL_WORLD_KEY = 'nimbus.mcAssetEditor.rightWorldId';
 
 // Panel refs for triggering refresh
 const leftPanelRef = ref<any>(null);
@@ -58,15 +65,71 @@ const rightSelectedFiles = ref<Asset[]>([]);
 const leftTrigger = ref(0);
 const rightTrigger = ref(0);
 
-// Load main worlds and collections, initialize both panels with first world
+// Read worldId from Local Storage
+const getWorldIdFromStorage = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch (err) {
+    logger.warn(`Failed to read from localStorage: ${key}`, { error: err });
+    return null;
+  }
+};
+
+// Save worldId to Local Storage
+const saveWorldIdToStorage = (key: string, worldId: string): void => {
+  try {
+    localStorage.setItem(key, worldId);
+    logger.info(`Saved worldId to localStorage: ${key}`, { worldId });
+  } catch (err) {
+    logger.warn(`Failed to write to localStorage: ${key}`, { error: err });
+  }
+};
+
+// Load main worlds and collections, initialize both panels
 onMounted(async () => {
   await loadWorlds('withCollections');
 
-  // Initialize both panels with first available world
   if (worlds.value.length > 0) {
-    const firstWorld = worlds.value[0].worldId;
-    leftWorldId.value = firstWorld;
-    rightWorldId.value = firstWorld;
+    // Try to restore from localStorage
+    const storedLeftWorldId = getWorldIdFromStorage(LEFT_PANEL_WORLD_KEY);
+    const storedRightWorldId = getWorldIdFromStorage(RIGHT_PANEL_WORLD_KEY);
+
+    // Validate stored values exist in loaded worlds
+    const leftWorldExists = storedLeftWorldId && worlds.value.some(w => w.worldId === storedLeftWorldId);
+    const rightWorldExists = storedRightWorldId && worlds.value.some(w => w.worldId === storedRightWorldId);
+
+    // Set left panel world
+    if (leftWorldExists) {
+      leftWorldId.value = storedLeftWorldId!;
+      logger.info('Restored left panel worldId from localStorage', { worldId: storedLeftWorldId });
+    } else {
+      leftWorldId.value = worlds.value[0].worldId;
+      saveWorldIdToStorage(LEFT_PANEL_WORLD_KEY, leftWorldId.value);
+      logger.info('Initialized left panel with first world', { worldId: leftWorldId.value });
+    }
+
+    // Set right panel world
+    if (rightWorldExists) {
+      rightWorldId.value = storedRightWorldId!;
+      logger.info('Restored right panel worldId from localStorage', { worldId: storedRightWorldId });
+    } else {
+      rightWorldId.value = worlds.value[0].worldId;
+      saveWorldIdToStorage(RIGHT_PANEL_WORLD_KEY, rightWorldId.value);
+      logger.info('Initialized right panel with first world', { worldId: rightWorldId.value });
+    }
+  }
+});
+
+// Watch for changes and persist to localStorage
+watch(leftWorldId, (newWorldId) => {
+  if (newWorldId) {
+    saveWorldIdToStorage(LEFT_PANEL_WORLD_KEY, newWorldId);
+  }
+});
+
+watch(rightWorldId, (newWorldId) => {
+  if (newWorldId) {
+    saveWorldIdToStorage(RIGHT_PANEL_WORLD_KEY, newWorldId);
   }
 });
 

@@ -142,7 +142,7 @@ import LayerEditorPanel from '@layer/components/LayerEditorPanel.vue';
 import ModelEditorPanel from '@layer/components/ModelEditorPanel.vue';
 import BlockGridEditor from '@layer/components/BlockGridEditor.vue';
 
-const { currentWorldId, loadWorlds } = useWorld();
+const { currentWorldId } = useWorld();
 
 const layersComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -192,8 +192,7 @@ watch(currentWorldId, () => {
 }, { immediate: true });
 
 onMounted(() => {
-  // Load worlds with collections for layer editor
-  loadWorlds('withCollections');
+  // Note: WorldSelector in AppHeader loads worlds with 'withCollections' filter
 });
 
 /**

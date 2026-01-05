@@ -88,7 +88,7 @@ import ErrorAlert from '@components/ErrorAlert.vue';
 import AssetGrid from '@material/components/AssetGrid.vue';
 import AssetInfoDialog from '@material/components/AssetInfoDialog.vue';
 
-const { currentWorldId, loadWorlds } = useWorld();
+const { currentWorldId } = useWorld();
 
 const assetsComposable = computed(() => {
   if (!currentWorldId.value) return null;
@@ -182,8 +182,7 @@ const handlePreviousPage = () => {
 };
 
 onMounted(() => {
-  // Load worlds with collections for asset editor
-  loadWorlds('withCollections');
+  // Note: WorldSelector in AssetAppHeader loads worlds with 'withCollections' filter
 
   // Load assets if valid worldId is set
   if (currentWorldId.value && currentWorldId.value !== '?' && assetsComposable.value) {

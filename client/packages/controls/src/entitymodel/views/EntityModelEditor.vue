@@ -421,7 +421,7 @@ const emit = defineEmits<{
   saved: [];
 }>();
 
-const { currentWorldId, loadWorlds } = useWorld();
+const { currentWorldId } = useWorld();
 
 const isNew = computed(() => props.entityModel === 'new');
 
@@ -553,8 +553,7 @@ const handleBack = () => {
 };
 
 onMounted(() => {
-  // Load worlds with collections for entity model editor
-  loadWorlds('withCollections');
+  // Note: WorldSelector in EntityModelApp loads worlds with 'withCollections' filter
   loadEntityModel();
 });
 </script>
