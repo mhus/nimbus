@@ -591,21 +591,24 @@ public class FlatExportService {
         // Apply corner smoothing to 4 top corners
         // Each corner has 3 neighbors: 2 orthogonal + 1 diagonal
 
-        // Top Front Left (SW) - indices 12,13,14 - neighbors: West(-X,0), South(0,-Z), SW(-X,-Z)
+        // Calculate all offsets first
+        // Top Front Left (SW) - neighbors: West(-X,0), South(0,-Z), SW(-X,-Z)
         float swOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, -1, -1, -1);
-        offsets.set(13, swOffset);
 
-        // Top Front Right (SE) - indices 15,16,17 - neighbors: East(+X,0), South(0,-Z), SE(+X,-Z)
+        // Top Front Right (SE) - neighbors: East(+X,0), South(0,-Z), SE(+X,-Z)
         float seOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, -1, 1, -1);
-        offsets.set(16, seOffset);
 
-        // Top Back Left (NW) - indices 18,19,20 - neighbors: West(-X,0), North(0,+Z), NW(-X,+Z)
+        // Top Back Left (NW) - neighbors: West(-X,0), North(0,+Z), NW(-X,+Z)
         float nwOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, 1, -1, 1);
-        offsets.set(19, nwOffset);
 
-        // Top Back Right (NE) - indices 21,22,23 - neighbors: East(+X,0), North(0,+Z), NE(+X,+Z)
+        // Top Back Right (NE) - neighbors: East(+X,0), North(0,+Z), NE(+X,+Z)
         float neOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, 1, 1, 1);
-        offsets.set(22, neOffset);
+
+        // Set offsets (NW and NE are swapped to fix north-facing direction)
+        offsets.set(13, swOffset);  // SW - indices 12,13,14
+        offsets.set(16, seOffset);  // SE - indices 15,16,17
+        offsets.set(19, neOffset);  // NW - indices 18,19,20 (swapped: uses NE offset)
+        offsets.set(22, nwOffset);  // NE - indices 21,22,23 (swapped: uses NW offset)
 
         // Set offsets on block
         block.setOffsets(offsets);
