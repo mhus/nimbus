@@ -137,3 +137,11 @@ WFlat in einen WLayer type GROUND zu exportieren.
 
 [x] Füge den Flat Editor in HomeApp hinzu
 
+## Material Palette
+
+[x] Erstelle einen FlatMaterialService in world-generator der es erlaubt an einem WFlat die MaterialDefinitions zu setzen.
+- Es gibt eine Funktion setMaterialDefinition(flatId, int materialId, Map<String, String> properties)
+- Es gibt eine Funktion setMaterialDefinitions(flatId, Map<String, String> properties)
+
+
+

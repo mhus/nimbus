@@ -226,6 +226,7 @@ NEU:
 - n:w - water
 - n:sn - snow
 - n:sa - sand
+- n:b - bedrock
 
 - n:l - lava ??
 

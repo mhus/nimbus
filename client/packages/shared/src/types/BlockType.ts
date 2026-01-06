@@ -65,6 +65,8 @@ export interface BlockType {
 
   type?: BlockTypeType;
 
+  title?: string;
+
   /**
    * Initial status for new block instances
    * @default 0 (BlockStatus.DEFAULT)
