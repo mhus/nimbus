@@ -2,11 +2,13 @@ package de.mhus.nimbus.world.generator.flat;
 
 import de.mhus.nimbus.generated.types.Block;
 import de.mhus.nimbus.generated.types.Vector3Int;
+import de.mhus.nimbus.shared.types.BlockDef;
 import de.mhus.nimbus.world.shared.generator.WFlat;
 import de.mhus.nimbus.world.shared.generator.WFlatService;
 import de.mhus.nimbus.world.shared.layer.LayerBlock;
 import de.mhus.nimbus.world.shared.layer.LayerChunkData;
 import de.mhus.nimbus.world.shared.layer.LayerType;
+import de.mhus.nimbus.world.shared.layer.WDirtyChunkService;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
@@ -18,12 +20,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * Service for exporting WFlat to WLayer GROUND type.
  * Handles conversion from flat terrain data to layer chunks.
+ * Marks modified chunks as dirty for regeneration.
  */
 @Service
 @Slf4j
@@ -33,6 +37,7 @@ public class FlatExportService {
     private final WFlatService flatService;
     private final WLayerService layerService;
     private final WWorldService worldService;
+    private final WDirtyChunkService dirtyChunkService;
 
     /**
      * Export WFlat to a WLayer of type GROUND.
@@ -78,26 +83,9 @@ public class FlatExportService {
         for (int localX = 0; localX < flat.getSizeX(); localX++) {
             for (int localZ = 0; localZ < flat.getSizeZ(); localZ++) {
 
-                // Check if column is set
-                if (!flat.isColumnSet(localX, localZ)) {
-                    skippedColumns++;
-                    continue;
-                }
-
                 // Calculate world coordinates
                 int worldX = flat.getMountX() + localX;
                 int worldZ = flat.getMountZ() + localZ;
-
-                // Get level from flat
-                int level = flat.getLevel(localX, localZ);
-
-                // Get block type from column definition
-                WFlat.MaterialDefinition columnDef = flat.getColumnMaterial(localX, localZ);
-                if (columnDef == null) {
-                    log.warn("Column definition not found for column at ({}, {}), skipping", localX, localZ);
-                    skippedColumns++;
-                    continue;
-                }
 
                 // Calculate chunk coordinates
                 int chunkX = world.getChunkX(worldX);
@@ -120,6 +108,26 @@ public class FlatExportService {
                     }
                 });
 
+                // Check if column is set
+                if (!flat.isColumnSet(localX, localZ)) {
+                    // NOT_SET: Keep existing blocks, but fill down if neighbors are lower
+                    handleNotSetColumn(chunkData, worldX, worldZ, flat, localX, localZ, world);
+                    skippedColumns++;
+                    continue;
+                }
+
+                // Column is set - process normally
+                // Get level from flat
+                int level = flat.getLevel(localX, localZ);
+
+                // Get block type from column definition
+                WFlat.MaterialDefinition columnDef = flat.getColumnMaterial(localX, localZ);
+                if (columnDef == null) {
+                    log.warn("Column definition not found for column at ({}, {}), skipping", localX, localZ);
+                    skippedColumns++;
+                    continue;
+                }
+
                 // Delete all existing blocks at this column
                 deleteColumnBlocks(chunkData, worldX, worldZ);
 
@@ -140,10 +148,156 @@ public class FlatExportService {
             layerService.saveTerrainChunk(worldId, layerDataId, chunkKey, chunkData);
         }
 
+        // Mark all modified chunks as dirty for regeneration
+        if (!modifiedChunks.isEmpty()) {
+            List<String> chunkKeys = new ArrayList<>(modifiedChunks.keySet());
+            dirtyChunkService.markChunksDirty(worldId, chunkKeys, "Flat export: " + flatId);
+            log.info("Marked {} chunks as dirty for regeneration", chunkKeys.size());
+        }
+
         log.info("Export complete: flatId={}, exported={} columns, skipped={} columns, modified={} chunks",
                 flatId, exportedColumns, skippedColumns, modifiedChunks.size());
 
         return exportedColumns;
+    }
+
+    /**
+     * Handle NOT_SET column: Keep top block, delete all blocks below, fill down if neighbors are lower.
+     * This prevents gaps between old high blocks and new lower blocks.
+     */
+    private void handleNotSetColumn(LayerChunkData chunkData, int worldX, int worldZ,
+                                    WFlat flat, int localX, int localZ, WWorld world) {
+        // Find highest existing block at this position
+        int existingLevel = findHighestBlockAtPosition(chunkData, worldX, worldZ);
+        if (existingLevel == -1) {
+            // No existing blocks, nothing to do
+            return;
+        }
+
+        // Get the block type from the highest existing block BEFORE deleting
+        String topBlockDefString = getBlockDefAtPosition(chunkData, worldX, worldZ, existingLevel);
+        if (topBlockDefString == null || topBlockDefString.isBlank()) {
+            log.warn("Could not find block definition at ({},{},{})", worldX, existingLevel, worldZ);
+            return;
+        }
+
+        // Parse block definition
+        Optional<BlockDef> topBlockDefOpt = BlockDef.of(topBlockDefString);
+        if (topBlockDefOpt.isEmpty()) {
+            log.warn("Invalid block definition for NOT_SET column: {}", topBlockDefString);
+            return;
+        }
+
+        // Delete all blocks BELOW the top block (keep only the top block)
+        deleteBlocksBelowLevel(chunkData, worldX, worldZ, existingLevel);
+
+        // Find lowest sibling level (from neighbors)
+        int lowestSiblingLevel = findLowestSiblingLevel(flat, localX, localZ, chunkData, world);
+
+        // If neighbors are lower, fill down to avoid gaps
+        if (lowestSiblingLevel < existingLevel) {
+            // Fill down from existingLevel-1 to lowestSiblingLevel
+            for (int y = existingLevel - 1; y >= lowestSiblingLevel; y--) {
+                // Create new block with same type as top block
+                Block block = Block.builder()
+                        .position(Vector3Int.builder()
+                                .x(worldX)
+                                .y(y)
+                                .z(worldZ)
+                                .build())
+                        .build();
+
+                topBlockDefOpt.get().fillBlock(block);
+
+                // Add to chunk
+                LayerBlock layerBlock = LayerBlock.builder()
+                        .block(block)
+                        .build();
+                chunkData.getBlocks().add(layerBlock);
+            }
+
+            log.debug("Filled NOT_SET column at ({},{}) from {} down to {}",
+                     worldX, worldZ, existingLevel - 1, lowestSiblingLevel);
+        }
+    }
+
+    /**
+     * Get block definition string at a specific position.
+     */
+    private String getBlockDefAtPosition(LayerChunkData chunkData, int worldX, int worldZ, int y) {
+        for (LayerBlock layerBlock : chunkData.getBlocks()) {
+            Block block = layerBlock.getBlock();
+            if (block == null || block.getPosition() == null) {
+                continue;
+            }
+            Vector3Int pos = block.getPosition();
+            if (pos.getX() == worldX && pos.getY() == y && pos.getZ() == worldZ) {
+                // Reconstruct blockDef string from block
+                return reconstructBlockDef(block);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Reconstruct a blockDef string from a Block.
+     * Format: blockTypeId@s:state@r:rx,ry@l:level@f:faceVisibility
+     */
+    private String reconstructBlockDef(Block block) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(block.getBlockTypeId());
+
+        Integer status = block.getStatus();
+        if (status != null && status != 0) {
+            sb.append("@s:").append(status);
+        }
+
+        if (block.getRotation() != null) {
+            sb.append("@r:").append(block.getRotation().getX()).append(",").append(block.getRotation().getY());
+        }
+
+        if (block.getLevel() != null) {
+            sb.append("@l:").append(block.getLevel());
+        }
+
+        if (block.getFaceVisibility() != null) {
+            sb.append("@f:").append(block.getFaceVisibility());
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Check if a block exists at a specific position.
+     */
+    private boolean hasBlockAtPosition(LayerChunkData chunkData, int worldX, int y, int worldZ) {
+        for (LayerBlock layerBlock : chunkData.getBlocks()) {
+            Block block = layerBlock.getBlock();
+            if (block == null || block.getPosition() == null) {
+                continue;
+            }
+            Vector3Int pos = block.getPosition();
+            if (pos.getX() == worldX && pos.getY() == y && pos.getZ() == worldZ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Delete all blocks below a specific level in a column.
+     * Keeps blocks at and above the specified level.
+     */
+    private void deleteBlocksBelowLevel(LayerChunkData chunkData, int worldX, int worldZ, int keepLevel) {
+        chunkData.getBlocks().removeIf(layerBlock -> {
+            Block block = layerBlock.getBlock();
+            if (block == null || block.getPosition() == null) {
+                return false;
+            }
+            Vector3Int pos = block.getPosition();
+            // Remove if same X,Z and Y < keepLevel
+            return pos.getX() == worldX && pos.getZ() == worldZ && pos.getY() < keepLevel;
+        });
     }
 
     /**
@@ -249,23 +403,30 @@ public class FlatExportService {
 
         // Fill from level down to lowestSiblingLevel
         for (int y = level; y >= lowestSiblingLevel; y--) {
-            // Get block type for this Y level
-            String blockTypeId = columnDef.getBlockAt(flat, level, y, extraBlocks);
+            // Get block definition for this Y level
+            String blockDefString = columnDef.getBlockAt(flat, level, y, extraBlocks);
 
-            if (blockTypeId == null || blockTypeId.equals("0") || blockTypeId.isBlank()) {
+            if (blockDefString == null || blockDefString.equals("0") || blockDefString.isBlank()) {
                 // Air block, skip
                 continue;
             }
 
-            // Create block
+            // Create block with position
             Block block = Block.builder()
                     .position(Vector3Int.builder()
                             .x(worldX)
                             .y(y)
                             .z(worldZ)
                             .build())
-                    .blockTypeId(blockTypeId)
                     .build();
+
+            // Parse and apply block definition
+            Optional<BlockDef> blockDefOpt = BlockDef.of(blockDefString);
+            if (blockDefOpt.isEmpty()) {
+                log.warn("Invalid block definition: {} at ({},{},{})", blockDefString, worldX, y, worldZ);
+                continue;
+            }
+            blockDefOpt.get().fillBlock(block);
 
             // Wrap in LayerBlock and add to chunk
             LayerBlock layerBlock = LayerBlock.builder()

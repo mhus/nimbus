@@ -55,7 +55,7 @@ public class BlockDef {
         return new BlockDef(blockId, state, offsets, rotations, level, faceVisibility);
     }
 
-    private static Optional<BlockDef> of(String blockDef) {
+    public static Optional<BlockDef> of(String blockDef) {
         if (blockDef == null) return Optional.empty();
         try {
             String[] parts = blockDef.split("@");

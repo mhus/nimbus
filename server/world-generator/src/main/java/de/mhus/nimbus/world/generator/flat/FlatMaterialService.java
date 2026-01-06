@@ -43,12 +43,12 @@ public class FlatMaterialService {
                     INVISIBLE_SOLID, "n:3@s:default"
             ),
             PALETTE_LEGACY, Map.of(
-                    GRASS, "w:310g@s:default", // old world
-                    DIRT, "w:279d@s:default", // old world
+                    GRASS, "w:310@s:default", // old world
+                    DIRT, "w:279@s:default", // old world
                     STONE, "w:553@s:default",
                     SAND, "w:520@s:default", // old world
                     WATER, "w:1008@s:default",
-                    BEDROCK, "w:127b@s:default",
+                    BEDROCK, "w:127@s:default",
                     SNOW, "w:537@s:default",
                     INVISIBLE, "w:2@s:default",
                     INVISIBLE_SOLID, "w:3@s:default"
@@ -272,5 +272,51 @@ public class FlatMaterialService {
         log.info("Material definition removed: flatId={}, materialId={}", flatId, materialId);
 
         return updated;
+    }
+
+    /**
+     * Set a predefined material palette on a flat.
+     * Available palettes: "nimbus" (PALETTE_NIMBUS), "legacy" (PALETTE_LEGACY)
+     *
+     * @param flatId Flat database ID
+     * @param paletteName Name of the predefined palette
+     * @return Updated WFlat instance
+     * @throws IllegalArgumentException if flat not found or palette not found
+     */
+    public WFlat setPalette(String flatId, String paletteName) {
+        log.debug("Setting palette: flatId={}, paletteName={}", flatId, paletteName);
+
+        // Validate palette name
+        if (paletteName == null || paletteName.isBlank()) {
+            throw new IllegalArgumentException("Palette name required");
+        }
+
+        // Get palette from presets
+        Map<Integer, String> palette = PRESET_MATERIALS.get(paletteName);
+        if (palette == null) {
+            throw new IllegalArgumentException("Palette not found: " + paletteName +
+                    ". Available palettes: " + PRESET_MATERIALS.keySet());
+        }
+
+        // Convert palette to MaterialDefinition map
+        Map<Integer, WFlat.MaterialDefinition> materials = new java.util.HashMap<>();
+        for (Map.Entry<Integer, String> entry : palette.entrySet()) {
+            int materialId = entry.getKey();
+            String blockDef = entry.getValue();
+
+            WFlat.MaterialDefinition materialDef = WFlat.MaterialDefinition.builder()
+                    .blockDef(blockDef)
+                    .nextBlockDef(null)
+                    .hasOcean(false)
+                    .build();
+
+            materials.put(materialId, materialDef);
+        }
+
+        // Set all materials using typed method
+        WFlat result = setMaterialDefinitionsTyped(flatId, materials);
+        log.info("Palette set: flatId={}, paletteName={}, materials={}", flatId, paletteName, materials.size());
+
+        return result;
     }
 }

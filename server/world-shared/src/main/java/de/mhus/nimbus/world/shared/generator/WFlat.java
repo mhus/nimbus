@@ -97,6 +97,10 @@ public class WFlat {
             throw new IllegalArgumentException("Coordinates out of range");
         if (level < 0) level = 0;
         if (level > 255) level = 255;
+        if (borderProtected) {
+            if (x == 0 || z == 0 || x == sizeX - 1 || z == sizeZ - 1)
+                return false;
+        }
         if (unknownProtected && !isColumnSet(x, z)) {
             return false;
         }
@@ -115,6 +119,10 @@ public class WFlat {
             throw new IllegalArgumentException("Coordinates out of range");
         if (definition < 0 || definition > 255)
             throw new IllegalArgumentException("Size out of range");
+        if (borderProtected) {
+            if (x == 0 || z == 0 || x == sizeX - 1 || z == sizeZ - 1)
+                return false;
+        }
         if (unknownProtected && !isColumnSet(x, z)) {
             return false;
         }

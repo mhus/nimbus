@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
  *
  * Optional parameters:
  * - flatId: Identifier for the new WFlat (if not provided, UUID will be generated)
+ * - paletteName: Name of predefined material palette to apply ("nimbus" or "legacy")
  */
 @Component
 @Slf4j
@@ -32,6 +33,7 @@ public class FlatImportJobExecutor implements JobExecutor {
     private static final String EXECUTOR_NAME = "flat-import";
 
     private final FlatCreateService flatCreateService;
+    private final FlatMaterialService flatMaterialService;
 
     @Override
     public String getExecutorName() {
@@ -55,6 +57,7 @@ public class FlatImportJobExecutor implements JobExecutor {
 
             // Extract optional parameters
             String flatId = getOptionalParameter(job, "flatId", java.util.UUID.randomUUID().toString());
+            String paletteName = getOptionalParameter(job, "paletteName", null);
 
             // Validate size parameters
             if (sizeX <= 0 || sizeX > 800) {
@@ -64,8 +67,8 @@ public class FlatImportJobExecutor implements JobExecutor {
                 throw new JobExecutionException("sizeZ must be between 1 and 800, got: " + sizeZ);
             }
 
-            log.info("Importing flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{})",
-                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ);
+            log.info("Importing flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), palette={}",
+                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, paletteName);
 
             // Execute import
             WFlat flat = flatCreateService.importFromLayer(
@@ -73,10 +76,23 @@ public class FlatImportJobExecutor implements JobExecutor {
                     sizeX, sizeZ, mountX, mountZ
             );
 
+            // Apply material palette if specified
+            if (paletteName != null && !paletteName.isBlank()) {
+                log.info("Applying material palette: flatId={}, paletteName={}", flat.getId(), paletteName);
+                try {
+                    flatMaterialService.setPalette(flat.getId(), paletteName);
+                    log.info("Material palette applied successfully: flatId={}, paletteName={}", flat.getId(), paletteName);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Failed to apply material palette: {}", e.getMessage());
+                    // Continue - don't fail the job if palette application fails
+                }
+            }
+
             // Build success result
             String resultData = String.format(
-                    "Successfully imported flat: id=%s, flatId=%s, worldId=%s, layerName=%s, size=%dx%d, mount=(%d,%d)",
-                    flat.getId(), flatId, worldId, layerName, sizeX, sizeZ, mountX, mountZ
+                    "Successfully imported flat: id=%s, flatId=%s, worldId=%s, layerName=%s, size=%dx%d, mount=(%d,%d), palette=%s",
+                    flat.getId(), flatId, worldId, layerName, sizeX, sizeZ, mountX, mountZ,
+                    paletteName != null ? paletteName : "none"
             );
 
             log.info("Flat import completed successfully: flatId={}, id={}", flatId, flat.getId());

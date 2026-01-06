@@ -1,9 +1,12 @@
 package de.mhus.nimbus.world.generator.flat;
 
+import de.mhus.nimbus.world.shared.generator.WFlat;
 import de.mhus.nimbus.world.shared.generator.WFlatService;
 import de.mhus.nimbus.world.shared.job.JobExecutionException;
 import de.mhus.nimbus.world.shared.job.JobExecutor;
 import de.mhus.nimbus.world.shared.job.WJob;
+import de.mhus.nimbus.world.shared.layer.WLayer;
+import de.mhus.nimbus.world.shared.layer.WLayerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,9 +19,9 @@ import org.springframework.stereotype.Component;
  *
  * Required parameters:
  * - flatId: Database ID of the WFlat to export
- * - layerName: Name of the target GROUND layer
  *
  * Optional parameters:
+ * - layerName: Name of the target GROUND layer (if not specified, uses the layer from which the flat was imported)
  * - deleteAfterExport: If true, deletes the WFlat after successful export (default: false)
  */
 @Component
@@ -30,6 +33,7 @@ public class FlatExportJobExecutor implements JobExecutor {
 
     private final FlatExportService flatExportService;
     private final WFlatService flatService;
+    private final WLayerService layerService;
 
     @Override
     public String getExecutorName() {
@@ -46,7 +50,29 @@ public class FlatExportJobExecutor implements JobExecutor {
 
             // Extract and validate required parameters
             String flatId = getRequiredParameter(job, "flatId");
-            String layerName = getRequiredParameter(job, "layerName");
+
+            // Extract optional layerDataId for compound key lookup
+            String layerDataId = getOptionalParameter(job, "layerDataId", null);
+
+            // Load flat using compound key or search
+            WFlat flat = loadFlat(job, flatId);
+
+            // Extract optional layerName (if not specified, use the layer from which flat was imported)
+            String layerName = getOptionalParameter(job, "layerName", null);
+            if (layerName == null || layerName.isBlank()) {
+                // Use layer from flat's layerDataId
+                String flatLayerDataId = flat.getLayerDataId();
+                if (flatLayerDataId == null || flatLayerDataId.isBlank()) {
+                    throw new JobExecutionException("No layerName specified and flat has no layerDataId");
+                }
+
+                // Find layer by layerDataId
+                WLayer layer = layerService.findByWorldIdAndLayerDataId(worldId, flatLayerDataId)
+                        .orElseThrow(() -> new JobExecutionException("Layer not found for layerDataId: " + flatLayerDataId));
+                layerName = layer.getName();
+
+                log.info("Using flat's original layer: layerDataId={}, layerName={}", flatLayerDataId, layerName);
+            }
 
             // Extract optional parameter
             boolean deleteAfterExport = getOptionalBooleanParameter(job, "deleteAfterExport", false);
@@ -54,13 +80,13 @@ public class FlatExportJobExecutor implements JobExecutor {
             log.info("Exporting flat: flatId={}, worldId={}, layerName={}, deleteAfterExport={}",
                     flatId, worldId, layerName, deleteAfterExport);
 
-            // Execute export
-            int exportedColumns = flatExportService.exportToLayer(flatId, worldId, layerName);
+            // Execute export (use database ID)
+            int exportedColumns = flatExportService.exportToLayer(flat.getId(), worldId, layerName);
 
             // Delete flat if requested
             if (deleteAfterExport) {
                 log.info("Deleting flat after export: flatId={}", flatId);
-                flatService.deleteById(flatId);
+                flatService.deleteById(flat.getId());
                 log.info("Flat deleted: flatId={}", flatId);
             }
 
@@ -74,6 +100,9 @@ public class FlatExportJobExecutor implements JobExecutor {
                     flatId, exportedColumns, deleteAfterExport);
             return JobResult.ofSuccess(resultData);
 
+        } catch (JobExecutionException e) {
+            log.error("Flat export job failed: {}", e.getMessage());
+            throw e;
         } catch (IllegalArgumentException e) {
             log.error("Invalid parameters for flat export", e);
             throw new JobExecutionException("Invalid parameters: " + e.getMessage(), e);
@@ -84,12 +113,46 @@ public class FlatExportJobExecutor implements JobExecutor {
     }
 
     /**
+     * Load WFlat by flatId with worldId from job.
+     * Optionally uses layerDataId if provided.
+     */
+    private WFlat loadFlat(WJob job, String flatId) throws JobExecutionException {
+        String worldId = job.getWorldId();
+        String layerDataId = getOptionalParameter(job, "layerDataId", null);
+
+        if (layerDataId != null && !layerDataId.isBlank()) {
+            // Use compound lookup with worldId, layerDataId, and flatId
+            return flatService.findByWorldIdAndLayerDataIdAndFlatId(worldId, layerDataId, flatId)
+                    .orElseThrow(() -> new JobExecutionException("Flat not found: worldId=" + worldId +
+                            ", layerDataId=" + layerDataId + ", flatId=" + flatId));
+        } else {
+            // Search for flat with matching flatId in this world
+            return flatService.findByWorldId(worldId).stream()
+                    .filter(f -> flatId.equals(f.getFlatId()))
+                    .findFirst()
+                    .orElseThrow(() -> new JobExecutionException("Flat not found: worldId=" + worldId +
+                            ", flatId=" + flatId));
+        }
+    }
+
+    /**
      * Get required string parameter from job.
      */
     private String getRequiredParameter(WJob job, String paramName) throws JobExecutionException {
         String value = job.getParameters().get(paramName);
         if (value == null || value.isBlank()) {
             throw new JobExecutionException("Missing required parameter: " + paramName);
+        }
+        return value;
+    }
+
+    /**
+     * Get optional string parameter from job with default value.
+     */
+    private String getOptionalParameter(WJob job, String paramName, String defaultValue) {
+        String value = job.getParameters().get(paramName);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
         }
         return value;
     }
