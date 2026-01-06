@@ -202,3 +202,11 @@ Folgende Idee:
   [x] Fly mode
   [x] BlockVector3.ts mit ints oder xyz direkt im block
   [x] rotation direkt im block
+
+
+[ ] Cneanup Service fuer Storage
+- Lösche storage ohne referenzierte items - achtung! Könnte in progress sein!
+- Lösche storage ohne final entity - achtung! Könnte in progress sein!
+
+[ ] world-generator macht wieder kein mongoDB Listener für schemas
+

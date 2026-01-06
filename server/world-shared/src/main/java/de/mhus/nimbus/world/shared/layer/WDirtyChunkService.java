@@ -39,7 +39,7 @@ public class WDirtyChunkService {
             existing.touch();
             existing.setReason(reason);
             dirtyChunkRepository.save(existing);
-            log.debug("Updated dirty chunk: world={} chunk={} reason={}",
+            log.trace("Updated dirty chunk: world={} chunk={} reason={}",
                     worldId, chunkKey, reason);
         } else {
             // Create new entry

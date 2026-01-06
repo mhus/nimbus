@@ -1,6 +1,7 @@
 package de.mhus.nimbus.world.shared.generator;
 
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
+import de.mhus.nimbus.shared.types.Identifiable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ import java.util.HashMap;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WFlat {
+public class WFlat implements Identifiable {
 
     public static final int NOT_SET = 0;
     private static final int MAX_SIZE = 800;
