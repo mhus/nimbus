@@ -202,18 +202,15 @@ public class JobController extends BaseEditorController {
             return bad("executor is required");
         }
 
-        if (blank(request.type())) {
-            return bad("type is required");
-        }
-
         try {
             int priority = request.priority() != null ? request.priority() : 5;
             int maxRetries = request.maxRetries() != null ? request.maxRetries() : 0;
+            String type = blank(request.type()) ? "" : request.type();
 
             WJob created = jobService.createJob(
                     worldId,
                     request.executor(),
-                    request.type(),
+                    type,
                     request.parameters(),
                     priority,
                     maxRetries

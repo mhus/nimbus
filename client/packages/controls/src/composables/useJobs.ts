@@ -47,7 +47,7 @@ export interface JobSummary {
 
 export interface JobCreateRequest {
   executor: string;
-  type: string;
+  type?: string;
   parameters: Record<string, string>;
   priority?: number;
   maxRetries?: number;

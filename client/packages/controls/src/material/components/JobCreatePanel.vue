@@ -31,36 +31,6 @@
 
               <!-- Form -->
               <form @submit.prevent="handleCreate" class="space-y-4">
-                <!-- Executor and Presets -->
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">Quick Presets</span>
-                  </label>
-                  <div class="flex gap-2 flex-wrap">
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline"
-                      @click="loadPreset('flat')"
-                    >
-                      Flat Terrain
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline"
-                      @click="loadPreset('normal')"
-                    >
-                      Normal Terrain
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline"
-                      @click="loadPreset('hilly')"
-                    >
-                      Hilly Terrain
-                    </button>
-                  </div>
-                </div>
-
                 <!-- Executor -->
                 <div class="form-control">
                   <label class="label">
@@ -85,7 +55,6 @@
                     type="text"
                     class="input input-bordered"
                     placeholder="e.g., terrain-generation"
-                    required
                   />
                 </div>
 
@@ -432,7 +401,7 @@ const { createJob } = useJobs(props.worldId);
 // Form data
 const formData = ref({
   executor: '',
-  type: 'terrain-generation',
+  type: '',
   priority: 5,
   maxRetries: 2,
 });
@@ -575,12 +544,7 @@ watch(
  * Validate form
  */
 const isFormValid = computed(() => {
-  return (
-    formData.value.executor !== '' &&
-    formData.value.type.trim() !== '' &&
-    parameterList.value.length > 0 &&
-    parameterList.value.every(p => p.key.trim() !== '' && p.value.trim() !== '')
-  );
+  return formData.value.executor !== '';
 });
 
 /**
@@ -623,61 +587,6 @@ const addOnErrorParameter = () => {
  */
 const removeOnErrorParameter = (index: number) => {
   onErrorParameters.value.splice(index, 1);
-};
-
-/**
- * Load preset
- */
-const loadPreset = (preset: string) => {
-  parameterList.value = [];
-
-  switch (preset) {
-    case 'flat':
-      formData.value.executor = 'flat-world-generator';
-      formData.value.type = 'terrain-generation';
-      parameterList.value = [
-        { key: 'grid', value: '0:0' },
-        { key: 'layer', value: 'terrain' },
-        { key: 'groundLevel', value: '64' },
-        { key: 'layerCount', value: '2' },
-        { key: 'groundBlockTypeId', value: 'w/310' }
-      ];
-      break;
-
-    case 'normal':
-      formData.value.executor = 'normal-world-generator';
-      formData.value.type = 'terrain-generation';
-      parameterList.value = [
-        { key: 'grid', value: '0:0' },
-        { key: 'layer', value: 'terrain' },
-        { key: 'waterLevel', value: '62' },
-        { key: 'baseHeight', value: '64' },
-        { key: 'heightVariation', value: '32' },
-        { key: 'seed', value: String(Date.now()) },
-        { key: 'grassBlockTypeId', value: 'w/310' },
-        { key: 'dirtBlockTypeId', value: 'w/279' },
-        { key: 'sandBlockTypeId', value: 'w/520' },
-        { key: 'waterBlockTypeId', value: 'w/5000' }
-      ];
-      break;
-
-    case 'hilly':
-      formData.value.executor = 'hilly-world-generator';
-      formData.value.type = 'terrain-generation';
-      parameterList.value = [
-        { key: 'grid', value: '0:0' },
-        { key: 'layer', value: 'terrain' },
-        { key: 'waterLevel', value: '62' },
-        { key: 'baseHeight', value: '64' },
-        { key: 'hillHeight', value: '64' },
-        { key: 'seed', value: String(Date.now()) },
-        { key: 'grassBlockTypeId', value: 'w/310' },
-        { key: 'dirtBlockTypeId', value: 'w/279' },
-        { key: 'sandBlockTypeId', value: 'w/520' },
-        { key: 'waterBlockTypeId', value: 'w/5000' }
-      ];
-      break;
-  }
 };
 
 /**
@@ -751,7 +660,7 @@ const handleCreate = async () => {
   try {
     const request: JobCreateRequest = {
       executor: formData.value.executor,
-      type: formData.value.type,
+      type: formData.value.type.trim() || undefined,
       parameters: buildParameters(),
       priority: formData.value.priority,
       maxRetries: formData.value.maxRetries,

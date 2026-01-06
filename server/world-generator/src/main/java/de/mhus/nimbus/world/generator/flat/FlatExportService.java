@@ -54,12 +54,13 @@ public class FlatExportService {
      * @param worldId World identifier
      * @param layerName Name of the target GROUND layer
      * @param smoothCorners If true, smooths corners of top GROUND blocks based on neighbors
+     * @param optimizeFaces If true, sets faceVisibility to hide non-visible faces
      * @return Number of exported columns
      * @throws IllegalArgumentException if flat, world, or layer not found, or layer is not GROUND type
      */
-    public int exportToLayer(String flatId, String worldId, String layerName, boolean smoothCorners) {
-        log.info("Exporting flat to layer: flatId={}, worldId={}, layerName={}, smoothCorners={}",
-                flatId, worldId, layerName, smoothCorners);
+    public int exportToLayer(String flatId, String worldId, String layerName, boolean smoothCorners, boolean optimizeFaces) {
+        log.info("Exporting flat to layer: flatId={}, worldId={}, layerName={}, smoothCorners={}, optimizeFaces={}",
+                flatId, worldId, layerName, smoothCorners, optimizeFaces);
 
         // Load flat
         WFlat flat = flatService.findById(flatId)
@@ -148,7 +149,7 @@ public class FlatExportService {
 
                 // Fill column from level down to lowestSiblingLevel
                 fillColumn(chunkData, worldX, worldZ, level, lowestSiblingLevel, columnDef, flat,
-                        smoothCorners, blockTypeCache, wid, localX, localZ);
+                        smoothCorners, optimizeFaces, blockTypeCache, wid, localX, localZ);
 
                 exportedColumns++;
             }
@@ -472,12 +473,13 @@ public class FlatExportService {
     /**
      * Fill a column with blocks from level down to lowestSiblingLevel.
      * Uses column definition to determine block types.
-     * Applies corner smoothing to top GROUND blocks if enabled.
+     * Applies corner smoothing and face visibility optimization if enabled.
      */
     private void fillColumn(LayerChunkData chunkData, int worldX, int worldZ,
                             int level, int lowestSiblingLevel,
                             WFlat.MaterialDefinition columnDef, WFlat flat,
-                            boolean smoothCorners, Map<String, WBlockType> blockTypeCache,
+                            boolean smoothCorners, boolean optimizeFaces,
+                            Map<String, WBlockType> blockTypeCache,
                             WorldId wid, int localX, int localZ) {
         // Get extra blocks for this column
         String[] extraBlocks = flat.getExtraBlocksForColumn(
@@ -520,9 +522,9 @@ public class FlatExportService {
             }
             blockDefOpt.get().fillBlock(block);
 
-            // Apply corner smoothing to top block if enabled
-            if (smoothCorners && y == level) {
-                applyCornerSmoothing(block, flat, localX, localZ, blockTypeCache, wid);
+            // Apply block optimizations (corner smoothing and/or face visibility) if enabled
+            if ((smoothCorners || optimizeFaces) && y <= level) {
+                applyBlockOptimizations(block, flat, localX, localZ, level, y, blockTypeCache, wid, smoothCorners, optimizeFaces);
             }
 
             // Wrap in LayerBlock and add to chunk
@@ -535,12 +537,15 @@ public class FlatExportService {
     }
 
     /**
-     * Apply corner smoothing to a block based on neighbor heights.
+     * Apply block optimizations: corner smoothing and/or face visibility.
      * Only applies to GROUND type blocks with modifier 0 and shape 1 (CUBE).
-     * Adjusts Y offsets of the 4 top corners based on neighbor terrain levels.
+     * - Corner smoothing: Adjusts Y offsets of 4 top corners based on neighbor heights
+     * - Face visibility: Sets faceVisibility to hide non-visible block faces
      */
-    private void applyCornerSmoothing(Block block, WFlat flat, int localX, int localZ,
-                                     Map<String, WBlockType> blockTypeCache, WorldId wid) {
+    private void applyBlockOptimizations(Block block, WFlat flat, int localX, int localZ,
+                                        int level, int y,
+                                        Map<String, WBlockType> blockTypeCache, WorldId wid,
+                                        boolean smoothCorners, boolean optimizeFaces) {
         if (block == null || block.getBlockTypeId() == null || wid == null) {
             return;
         }
@@ -581,40 +586,100 @@ public class FlatExportService {
         // Get current level
         int myLevel = flat.getLevel(localX, localZ);
 
-        // Initialize offsets array (24 values for 8 corners × XYZ)
-        // Default all to 0
-        List<Float> offsets = new ArrayList<>(24);
-        for (int i = 0; i < 24; i++) {
-            offsets.add(0.0f);
+        // === CORNER SMOOTHING (only for y == level) ===
+        if (smoothCorners && y == level) {
+            // Initialize offsets array (24 values for 8 corners × XYZ)
+            // Default all to 0
+            List<Float> offsets = new ArrayList<>(24);
+            for (int i = 0; i < 24; i++) {
+                offsets.add(0.0f);
+            }
+
+            // Calculate all corner offsets
+            // Top Front Left (SW) - neighbors: West(-X,0), South(0,-Z), SW(-X,-Z)
+            float swOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, -1, -1, -1);
+
+            // Top Front Right (SE) - neighbors: East(+X,0), South(0,-Z), SE(+X,-Z)
+            float seOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, -1, 1, -1);
+
+            // Top Back Left (NW) - neighbors: West(-X,0), North(0,+Z), NW(-X,+Z)
+            float nwOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, 1, -1, 1);
+
+            // Top Back Right (NE) - neighbors: East(+X,0), North(0,+Z), NE(+X,+Z)
+            float neOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, 1, 1, 1);
+
+            // Set offsets (NW and NE are swapped to fix north-facing direction)
+            offsets.set(13, swOffset);  // SW - indices 12,13,14
+            offsets.set(16, seOffset);  // SE - indices 15,16,17
+            offsets.set(19, neOffset);  // NW - indices 18,19,20 (swapped: uses NE offset)
+            offsets.set(22, nwOffset);  // NE - indices 21,22,23 (swapped: uses NW offset)
+
+            // Set offsets on block
+            block.setOffsets(offsets);
+
+            log.trace("Applied corner smoothing to block at ({},{}) with offsets SW:{}, SE:{}, NW:{}, NE:{}",
+                    localX, localZ, swOffset, seOffset, nwOffset, neOffset);
         }
 
-        // Apply corner smoothing to 4 top corners
-        // Each corner has 3 neighbors: 2 orthogonal + 1 diagonal
+        // === FACE VISIBILITY OPTIMIZATION ===
+        if (optimizeFaces) {
+            // Check if already fixed (FIXED bit set = 64)
+            Integer existingFaceVis = block.getFaceVisibility();
+            if (existingFaceVis != null && (existingFaceVis & 64) != 0) {
+                // FIXED bit is set, don't modify
+                return;
+            }
 
-        // Calculate all offsets first
-        // Top Front Left (SW) - neighbors: West(-X,0), South(0,-Z), SW(-X,-Z)
-        float swOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, -1, -1, -1);
+            // FaceFlag bits (set bit = visible face):
+            // TOP = 1, BOTTOM = 2, LEFT = 4, RIGHT = 8, FRONT = 16, BACK = 32
+            int faceVisibility = 0;
 
-        // Top Front Right (SE) - neighbors: East(+X,0), South(0,-Z), SE(+X,-Z)
-        float seOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, -1, 1, -1);
+            // TOP: visible if y == level (not visible if below level / nextBlock)
+            if (y == level) {
+                faceVisibility |= 1;  // TOP visible
+            }
+            // BOTTOM never visible (y >= lowestSiblingLevel means block below)
+            // Don't set BOTTOM bit (2)
 
-        // Top Back Left (NW) - neighbors: West(-X,0), North(0,+Z), NW(-X,+Z)
-        float nwOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, 1, -1, 1);
+            // Check neighbors for side visibility
+            // Get neighbor levels
+            int westLevel = getNeighborLevel(flat, localX - 1, localZ, myLevel);
+            int eastLevel = getNeighborLevel(flat, localX + 1, localZ, myLevel);
+            int southLevel = getNeighborLevel(flat, localX, localZ - 1, myLevel);
+            int northLevel = getNeighborLevel(flat, localX, localZ + 1, myLevel);
 
-        // Top Back Right (NE) - neighbors: East(+X,0), North(0,+Z), NE(+X,+Z)
-        float neOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, 1, 1, 1);
+            // LEFT (West): visible if neighbor is lower
+            if (westLevel < y) {
+                faceVisibility |= 4;  // LEFT visible
+            }
 
-        // Set offsets (NW and NE are swapped to fix north-facing direction)
-        offsets.set(13, swOffset);  // SW - indices 12,13,14
-        offsets.set(16, seOffset);  // SE - indices 15,16,17
-        offsets.set(19, neOffset);  // NW - indices 18,19,20 (swapped: uses NE offset)
-        offsets.set(22, nwOffset);  // NE - indices 21,22,23 (swapped: uses NW offset)
+            // RIGHT (East): visible if neighbor is lower
+            if (eastLevel < y) {
+                faceVisibility |= 8;  // RIGHT visible
+            }
 
-        // Set offsets on block
-        block.setOffsets(offsets);
+            // FRONT (South): visible if neighbor is lower (swapped: uses northLevel)
+            if (northLevel < y) {
+                faceVisibility |= 16;  // FRONT visible
+            }
 
-        log.trace("Applied corner smoothing to block at ({},{}) with offsets SW:{}, SE:{}, NW:{}, NE:{}",
-                localX, localZ, swOffset, seOffset, nwOffset, neOffset);
+            // BACK (North): visible if neighbor is lower (swapped: uses southLevel)
+            if (southLevel < y) {
+                faceVisibility |= 32;  // BACK visible
+            }
+
+            // Warning if no faces are visible (shouldn't happen)
+            if (faceVisibility == 0) {
+                log.info("Block at ({},{},{}) has no visible faces (faceVisibility=0)",
+                        block.getPosition().getX(), y, block.getPosition().getZ());
+            }
+
+            // Set faceVisibility on block
+            block.setFaceVisibility(faceVisibility);
+
+            log.trace("Applied face visibility to block at ({},{},{}): visibility={} (binary: {})",
+                    localX, y, localZ, faceVisibility, Integer.toBinaryString(faceVisibility));
+        }
     }
 
     /**

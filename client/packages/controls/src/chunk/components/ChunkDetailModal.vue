@@ -27,6 +27,10 @@
                 <span v-if="chunkMetadata?.compressed" class="badge badge-success badge-sm ml-2">Yes</span>
                 <span v-else class="badge badge-ghost badge-sm ml-2">No</span>
               </div>
+              <div v-if="storageInfo">
+                <span class="font-medium">Storage Size:</span>
+                <span class="text-xs">{{ formatFileSize(storageInfo.size) }}</span>
+              </div>
               <div v-if="chunkMetadata">
                 <span class="font-medium">Storage ID:</span>
                 <span class="text-xs">{{ chunkMetadata.storageId }}</span>
@@ -118,6 +122,8 @@
 import { ref, onMounted } from 'vue';
 import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue';
 import { chunkService, type ChunkDataResponse, type ChunkMetadata } from '@/services/ChunkService';
+import { storageService, type StorageInfo } from '@/services/StorageService';
+import { formatFileSize } from '@/utils/format';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import LoadingSpinner from '@components/LoadingSpinner.vue';
 
@@ -134,6 +140,7 @@ const emit = defineEmits<{
 
 const chunkData = ref<ChunkDataResponse | null>(null);
 const chunkMetadata = ref<ChunkMetadata | null>(null);
+const storageInfo = ref<StorageInfo | null>(null);
 const loading = ref(false);
 const errorMessage = ref('');
 
@@ -152,6 +159,15 @@ const loadChunkData = async () => {
     ]);
     chunkData.value = data;
     chunkMetadata.value = metadata;
+
+    // Load storage info if storageId is available
+    if (metadata.storageId) {
+      try {
+        storageInfo.value = await storageService.getInfo(metadata.storageId);
+      } catch (error) {
+        // Ignore storage info loading errors
+      }
+    }
   } catch (error: any) {
     errorMessage.value = error.message || 'Failed to load chunk data';
   } finally {

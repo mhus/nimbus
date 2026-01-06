@@ -156,6 +156,51 @@ Dazu werden die offsets angepasst. Siehe client/BLOCK_OFFSETS.md abteilung CUBE 
 [x] Erweiterung: sind alle nachbarn einer ecke mindestes zwei hoeher, wird das offset auf +1.0 gesetzt.
 sind alle nachbarn einer ecke mindestes zwei tiefer, wird das offset auf -1.0 gesetzt.
 
+[x] Ein weiteres flag soll die block.faceVisibility setzen.
+faceVisibility Definiert (wenn nicht null) welche Seiten eines Blocks sichtbar sind.
+Seiten die sowieso nicht gesehen werden können, können so ausgeblendet werden.
+- Das sollte mit in die smoothCorners mit eingepflegt werden, denn es werden die gleichen Daten benoetigt. ✓
+- Siehe Definition:
+  export enum FaceFlag {
+  TOP = 1 << 0,    // 0b00000001 = 1
+  BOTTOM = 1 << 1, // 0b00000010 = 2
+  LEFT = 4 << 2,   // 0b00000100 = 4 (West, -X)
+  RIGHT = 1 << 3,  // 0b00001000 = 8 (East, +X)
+  FRONT = 1 << 4,  // 0b00010000 = 16 (South, -Z)
+  BACK = 1 << 5,   // 0b00100000 = 32 (North, +Z)
+  FIXED = 1 << 6,  // 0b01000000 = 64 (fixed mode, not auto-calculated)
+  }
+- Ist ein Block größer level werden keine faceVisibility gesetzt. ✓
+- Nur GROUND und mit shape CUBE (1) werden angepasst. (wie bei smoothCorners) ✓
+- Ist bereits faceVisibility gesetzt, und FIXED ist gesetzt, wird nichts geändert. ✓
+- Ist mindestens level, kann die untere seite immer ausgeblendet werden. ✓
+- Es werden die sibling seiten betrachtet (wie bei smoothCorners) ✓
+  - ist das level auf einer seite höher oder gleich, kann die seite ausgeblendet werden (bit wird nicht gesetzt). ✓
+- Ist es ein nextBlock (y < level) kann immer die obere seite ausgeblendet werden. ✓
+- Ist faceVisibility am ende 0 weil keine Seite gesehen werden kann wird eine log info ausgegeben (sollte nicht passieren) ✓
+
+- Einfügen in Methode ✓
+- Einfügen in JobExecutor ✓
+
+```text
+  Face Visibility Optimization Implementation:
+  - Parameter optimizeFaces: boolean (default: true) in FlatExportJobExecutor
+  - Integriert in applyBlockOptimizations() (umbenannt von applyCornerSmoothing)
+  - Arbeitet auf y <= level Blöcken
+  - Nur für GROUND type, modifier==0, shape==1 (CUBE)
+  - Prüft FIXED bit (64) - wenn gesetzt, keine Änderung
+  - Bit-Mapping (gesetzt = visible):
+    - TOP (1): visible wenn y == level
+    - BOTTOM (2): nie visible (immer ausgeblendet)
+    - LEFT (4, West): visible wenn westLevel < y
+    - RIGHT (8, East): visible wenn eastLevel < y
+    - FRONT (16, South): visible wenn southLevel < y
+    - BACK (32, North): visible wenn northLevel < y
+  - Log Info wenn faceVisibility == 0 (sollte nicht vorkommen)
+```
+
+
+
 ## Manipulation
 
 ## Darstellung

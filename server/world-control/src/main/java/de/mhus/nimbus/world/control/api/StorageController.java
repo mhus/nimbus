@@ -5,11 +5,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/shared/storage")
@@ -18,6 +21,24 @@ import org.springframework.web.server.ResponseStatusException;
 public class StorageController {
 
     private final StorageService storageService;
+
+    @GetMapping("/info/{id}")
+    public ResponseEntity<?> getInfo(@PathVariable String id) {
+        var info = storageService.info(id);
+        if (info == null) {
+            return ResponseEntity.status(HttpStatusCode.valueOf(404))
+                    .body(Map.of("error", "Storage id not found"));
+        }
+        return ResponseEntity.ok(Map.of(
+                "id", info.id(),
+                "size", info.size(),
+                "createdAt", info.createdAt(),
+                "worldId", info.worldId(),
+                "path", info.path(),
+                "schema", info.schema(),
+                "schemaVersion", info.schemaVersion()
+        ));
+    }
 
     @GetMapping("/content/{id}")
     public void getContent(
