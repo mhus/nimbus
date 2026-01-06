@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -80,7 +79,7 @@ public class FlatExportService {
             for (int localZ = 0; localZ < flat.getSizeZ(); localZ++) {
 
                 // Check if column is set
-                if (!flat.isColumnDefined(localX, localZ)) {
+                if (!flat.isColumnSet(localX, localZ)) {
                     skippedColumns++;
                     continue;
                 }
@@ -93,7 +92,7 @@ public class FlatExportService {
                 int level = flat.getLevel(localX, localZ);
 
                 // Get block type from column definition
-                WFlat.ColumnDefinition columnDef = flat.getColumnDefinition(localX, localZ);
+                WFlat.MaterialDefinition columnDef = flat.getColumnMaterial(localX, localZ);
                 if (columnDef == null) {
                     log.warn("Column definition not found for column at ({}, {}), skipping", localX, localZ);
                     skippedColumns++;
@@ -188,7 +187,7 @@ public class FlatExportService {
                 neighborZ >= 0 && neighborZ < flat.getSizeZ()) {
 
                 // Check if neighbor column is defined
-                if (flat.isColumnDefined(neighborX, neighborZ)) {
+                if (flat.isColumnSet(neighborX, neighborZ)) {
                     int neighborLevel = flat.getLevel(neighborX, neighborZ);
                     if (neighborLevel < lowestLevel) {
                         lowestLevel = neighborLevel;
@@ -240,8 +239,8 @@ public class FlatExportService {
      * Uses column definition to determine block types.
      */
     private void fillColumn(LayerChunkData chunkData, int worldX, int worldZ,
-                           int level, int lowestSiblingLevel,
-                           WFlat.ColumnDefinition columnDef, WFlat flat) {
+                            int level, int lowestSiblingLevel,
+                            WFlat.MaterialDefinition columnDef, WFlat flat) {
         // Get extra blocks for this column
         String[] extraBlocks = flat.getExtraBlocksForColumn(
                 worldX - flat.getMountX(),

@@ -60,8 +60,12 @@ public class WFlat {
      * If true, unknown/not set columns are protected from modification
      * Set this after initial setting up block you want to modify. Leave others untouched at 0.
      */
+    @Builder.Default
     @Getter @Setter
-    private boolean unknownProtected;
+    private boolean unknownProtected = false;
+    @Builder.Default
+    @Getter @Setter
+    private boolean borderProtected = true;
 
     @Getter
     private int sizeX;
@@ -75,7 +79,7 @@ public class WFlat {
     private HashMap<String, String> extraBlocks = new HashMap<>(); // for water and ocean ...
 
     @Builder.Default
-    private HashMap<Byte, ColumnDefinition> definitions = new HashMap<>();
+    private HashMap<Byte, MaterialDefinition> materials = new HashMap<>();
 
     public void initWithSize(int sizeX, int sizeZ) {
         if (sizeX <= 0 || sizeZ <= 0 || sizeX > MAX_SIZE || sizeZ > MAX_SIZE)
@@ -93,7 +97,7 @@ public class WFlat {
             throw new IllegalArgumentException("Coordinates out of range");
         if (level < 0) level = 0;
         if (level > 255) level = 255;
-        if (unknownProtected && !isColumnDefined(x, z)) {
+        if (unknownProtected && !isColumnSet(x, z)) {
             return false;
         }
         levels[x + z * sizeX] = (byte)level;
@@ -111,7 +115,7 @@ public class WFlat {
             throw new IllegalArgumentException("Coordinates out of range");
         if (definition < 0 || definition > 255)
             throw new IllegalArgumentException("Size out of range");
-        if (unknownProtected && !isColumnDefined(x, z)) {
+        if (unknownProtected && !isColumnSet(x, z)) {
             return false;
         }
         columns[x + z * sizeX] = (byte)definition;
@@ -124,15 +128,15 @@ public class WFlat {
         return Byte.toUnsignedInt(columns[x + z * sizeX]);
     }
 
-    public boolean isColumnDefined(int x, int z) {
+    public boolean isColumnSet(int x, int z) {
         if (x < 0 || z < 0 || x >= sizeX || z >= sizeZ)
             throw new IllegalArgumentException("Coordinates out of range");
         return columns[x + z * sizeX] == NOT_SET ? false : true;
     }
 
-    public ColumnDefinition getColumnDefinition(int x, int z) {
+    public MaterialDefinition getColumnMaterial(int x, int z) {
         int definition = getColumn(x, z);
-        return getDefinition(definition);
+        return getMaterial(definition);
     }
 
     public void setExtraBlock(int x, int y, int z, String blockId) {
@@ -162,20 +166,20 @@ public class WFlat {
         return res;
     }
 
-    public void setDefinition(int id, ColumnDefinition definition) {
+    public void setMaterial(int id, MaterialDefinition definition) {
         if (id < 0 || id > 255)
             throw new IllegalArgumentException("Definition id out of range");
         if (id == NOT_SET)
             return;
-        definitions.put((byte)id, definition);
+        materials.put((byte)id, definition);
     }
 
-    public ColumnDefinition getDefinition(int id) {
+    public MaterialDefinition getMaterial(int id) {
         if (id < 0 || id > 255)
             throw new IllegalArgumentException("Definition id out of range");
         if (id == NOT_SET)
             return null;
-        return definitions.get((byte)id);
+        return materials.get((byte)id);
     }
 
     @Getter
@@ -202,7 +206,7 @@ public class WFlat {
 
     @Data
     @Builder
-    public static class ColumnDefinition {
+    public static class MaterialDefinition {
         private String blockDef; // id + "@s:" + state e.g. n:s@s:100, n:s@s:101 - siehe BlockDef
         private String nextBlockDef; // id + "@" + state
         private boolean hasOcean;
@@ -231,7 +235,5 @@ public class WFlat {
             // or air
             return null;
         }
-
     }
-
 }
