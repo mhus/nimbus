@@ -67,7 +67,7 @@ WFlat aus einem WLayer type GROUND zu importieren.
     - Aussagekräftige Error-Messages in JobExecutionException
 ```
 
-[ ] Es soll einen weiteren import jobtype geben der das Flat nur anlegt, ohne daten zu importieren.
+[?] Es soll einen weiteren import jobtype geben der das Flat nur anlegt, ohne daten zu importieren.
 Type: create
 - Es wird eine Palette importier mit FaltMaterialService
 - Es wird eine Fläche mit sizeX und sizeZ angelegt auf level 0 mit BEDROCK
@@ -108,6 +108,40 @@ Type: create-hexgrid
 - Die Felder die NICHT im Hex Grid sind sollen importiert werden aus dem Layer.
 - Dann wird der WFlat auf unknownProtected = true gestellt. Damit koennen nur noch die hex grid daten verändert werden.
 
+```text
+JobTypes im System (Übersicht)
+
+  | Type           | Executor Name       | Beschreibung                                                  |
+  |----------------|---------------------|---------------------------------------------------------------|
+  | import         | flat-import         | Importiert Flat-Daten vollständig vom Layer                   |
+  | create         | flat-create         | Legt leeres Flat an (Level 0, BEDROCK, Rand vom Layer)        |
+  | create-hexgrid | flat-create-hexgrid | Legt HexGrid-Flat an (BEDROCK im Hex, Layer außerhalb) ✅ NEU |
+
+  HexGrid-Mathematik
+
+  - Axiale Koordinaten: q und r (HexVector2)
+  - Konvertierung: HexMathUtil.hexToCartesian(hexPosition, gridSize) → (x, z)
+  - Point-in-Hex Test: HexMathUtil.isPointInHex(x, z, hexCenterX, hexCenterZ, gridSize)
+  - GridSize: Wird aus world.getPublicData().getHexGridSize() geladen
+
+  Verwendungsbeispiel
+
+  {
+    "executorName": "flat-create-hexgrid",
+    "worldId": "world-1",
+    "parameters": {
+      "layerName": "ground",
+      "sizeX": "200",
+      "sizeZ": "200",
+      "mountX": "0",
+      "mountZ": "0",
+      "hexQ": "0",
+      "hexR": "0",
+      "flatId": "hexgrid-0-0",
+      "paletteName": "nimbus"
+    }
+  }
+```
 
 ## Export
 

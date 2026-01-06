@@ -12,6 +12,7 @@ import de.mhus.nimbus.world.shared.layer.LayerType;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
+import de.mhus.nimbus.world.shared.world.HexMathUtil;
 import de.mhus.nimbus.world.shared.world.WBlockType;
 import de.mhus.nimbus.world.shared.world.WBlockTypeService;
 import de.mhus.nimbus.world.shared.world.WWorld;
@@ -433,6 +434,163 @@ public class FlatCreateService {
 
         log.info("Empty flat creation complete: flatId={}, size={}x{}, borderCells={}",
                 flatId, sizeX, sizeZ, borderCellsImported);
+
+        return saved;
+    }
+
+    /**
+     * Create a WFlat for a HexGrid area with BEDROCK material inside the hex and layer import outside.
+     * Creates a flat terrain where:
+     * - Positions inside the HexGrid are filled with BEDROCK material at level 0
+     * - Positions outside the HexGrid are imported from the layer
+     * - unknownProtected is set to true (only HexGrid positions can be modified)
+     *
+     * @param worldId World identifier
+     * @param layerName Name of the layer to import outside positions from
+     * @param flatId Flat identifier for the new WFlat
+     * @param sizeX Width of the flat (1-800)
+     * @param sizeZ Height of the flat (1-800)
+     * @param mountX Mount X position (where flat starts in world coordinates)
+     * @param mountZ Mount Z position (where flat starts in world coordinates)
+     * @param hexQ HexGrid Q coordinate (axial)
+     * @param hexR HexGrid R coordinate (axial)
+     * @return Created and persisted WFlat instance with HexGrid area
+     * @throws IllegalArgumentException if world or layer not found, or layer is not GROUND type
+     */
+    public WFlat createHexGridFlat(String worldId, String layerName, String flatId,
+                                   int sizeX, int sizeZ, int mountX, int mountZ,
+                                   int hexQ, int hexR) {
+        log.info("Creating HexGrid flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), hex=({},{})",
+                worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, hexQ, hexR);
+
+        // Load world
+        WWorld world = worldService.getByWorldId(worldId)
+                .orElseThrow(() -> new IllegalArgumentException("World not found: " + worldId));
+
+        // Load layer
+        WLayer layer = layerService.findByWorldIdAndName(worldId, layerName)
+                .orElseThrow(() -> new IllegalArgumentException("Layer not found: " + layerName));
+
+        // Validate layer type
+        if (layer.getLayerType() != LayerType.GROUND) {
+            throw new IllegalArgumentException("Layer must be of type GROUND, but is: " + layer.getLayerType());
+        }
+
+        // Get hexGridSize from world
+        int gridSize = world.getPublicData().getHexGridSize();
+        if (gridSize <= 0) {
+            throw new IllegalArgumentException("Invalid hexGridSize: " + gridSize);
+        }
+
+        log.debug("Using hexGridSize={} from world", gridSize);
+
+        // Check if flat already exists and delete it (in case of retry)
+        Optional<WFlat> existingFlat = flatService.findByWorldIdAndLayerDataIdAndFlatId(
+                worldId, layer.getLayerDataId(), flatId);
+        if (existingFlat.isPresent()) {
+            log.info("Flat already exists, deleting before creation: flatId={}", flatId);
+            flatService.deleteById(existingFlat.get().getId());
+        }
+
+        // Get ocean level and block from world
+        int oceanLevel = world.getWaterLevel() == null ? 60 : world.getWaterLevel();
+        String oceanBlockId = world.getWaterBlockType() == null ? "n:o" : world.getWaterBlockType();
+
+        // Build WFlat instance (without persisting yet)
+        WFlat flat = WFlat.builder()
+                .worldId(worldId)
+                .layerDataId(layer.getLayerDataId())
+                .flatId(flatId)
+                .mountX(mountX)
+                .mountZ(mountZ)
+                .oceanLevel(oceanLevel)
+                .oceanBlockId(oceanBlockId)
+                .unknownProtected(true)  // Set unknownProtected to true for HexGrid flats
+                .build();
+
+        // Initialize with size (sets all levels to 0)
+        flat.initWithSize(sizeX, sizeZ);
+        int chunkSize = world.getPublicData().getChunkSize();
+
+        // Calculate hex center in cartesian coordinates
+        de.mhus.nimbus.generated.types.HexVector2 hexPosition =
+                de.mhus.nimbus.generated.types.HexVector2.builder().q(hexQ).r(hexR).build();
+        double[] hexCenter = HexMathUtil.hexToCartesian(hexPosition, gridSize);
+        double hexCenterX = hexCenter[0];
+        double hexCenterZ = hexCenter[1];
+
+        log.debug("Hex center in cartesian: ({}, {})", hexCenterX, hexCenterZ);
+
+        // Calculate which chunks are needed for layer import
+        java.util.Set<String> requiredChunkKeys = new java.util.HashSet<>();
+        int minChunkX = world.getChunkX(mountX);
+        int minChunkZ = world.getChunkZ(mountZ);
+        int maxChunkX = world.getChunkX(mountX + sizeX - 1);
+        int maxChunkZ = world.getChunkZ(mountZ + sizeZ - 1);
+
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                requiredChunkKeys.add(BlockUtil.toChunkKey(chunkX, chunkZ));
+            }
+        }
+
+        log.debug("Loading {} chunks for layer import", requiredChunkKeys.size());
+
+        // Load all required chunks at once
+        java.util.Map<String, LayerChunkData> chunkCache = new java.util.HashMap<>();
+        for (String chunkKey : requiredChunkKeys) {
+            Optional<LayerChunkData> chunkDataOpt = layerService.loadTerrainChunk(layer.getLayerDataId(), chunkKey);
+            chunkDataOpt.ifPresent(data -> chunkCache.put(chunkKey, data));
+        }
+
+        int hexCellsSet = 0;
+        int outsideCellsImported = 0;
+
+        // Process each cell in the flat
+        for (int localX = 0; localX < sizeX; localX++) {
+            for (int localZ = 0; localZ < sizeZ; localZ++) {
+                // Calculate world coordinates
+                int worldX = mountX + localX;
+                int worldZ = mountZ + localZ;
+
+                // Check if this position is inside the HexGrid
+                boolean isInHex = HexMathUtil.isPointInHex(worldX, worldZ, hexCenterX, hexCenterZ, gridSize);
+
+                if (isInHex) {
+                    // Position is inside HexGrid: set BEDROCK material at level 0
+                    flat.setLevel(localX, localZ, 0);
+                    flat.setColumn(localX, localZ, FlatMaterialService.BEDROCK);
+                    hexCellsSet++;
+                } else {
+                    // Position is outside HexGrid: import from layer
+                    // Calculate chunk coordinates
+                    int chunkX = world.getChunkX(worldX);
+                    int chunkZ = world.getChunkZ(worldZ);
+                    String chunkKey = BlockUtil.toChunkKey(chunkX, chunkZ);
+
+                    // Get chunk from cache
+                    LayerChunkData chunkData = chunkCache.get(chunkKey);
+
+                    if (chunkData != null) {
+                        // Find ground level at this position
+                        int groundLevel = findGroundLevel(worldX, worldZ, chunkData, WorldId.unchecked(worldId));
+
+                        if (groundLevel != -1) {
+                            flat.setLevel(localX, localZ, groundLevel);
+                            outsideCellsImported++;
+                        }
+                        // If groundLevel == -1, keep default level 0
+                    }
+                    // If no chunk data, keep default level 0
+                }
+            }
+        }
+
+        // Persist to database
+        WFlat saved = flatService.create(flat);
+
+        log.info("HexGrid flat creation complete: flatId={}, size={}x{}, hexCells={}, outsideCells={}, unknownProtected=true",
+                flatId, sizeX, sizeZ, hexCellsSet, outsideCellsImported);
 
         return saved;
     }
