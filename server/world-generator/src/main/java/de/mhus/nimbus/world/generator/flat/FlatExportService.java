@@ -224,6 +224,9 @@ public class FlatExportService {
 
         // If neighbors are lower, fill down to avoid gaps
         if (lowestSiblingLevel < existingLevel) {
+            // Determine which sides need filling (which neighbors are lowest)
+            int faceVisibilityForFill = calculateNotSetFaceVisibility(flat, localX, localZ, existingLevel);
+
             // Fill down from existingLevel-1 to lowestSiblingLevel
             for (int y = existingLevel - 1; y >= lowestSiblingLevel; y--) {
                 // Create new block with same type as top block
@@ -237,6 +240,9 @@ public class FlatExportService {
 
                 topBlockDef.fillBlock(block);
 
+                // Set face visibility: only show faces toward the flat (opposite of fill direction)
+                block.setFaceVisibility(faceVisibilityForFill);
+
                 // Add to chunk
                 LayerBlock layerBlock = LayerBlock.builder()
                         .block(block)
@@ -244,8 +250,8 @@ public class FlatExportService {
                 chunkData.getBlocks().add(layerBlock);
             }
 
-            log.trace("Filled NOT_SET column at ({},{}) from {} down to {} with block type {}",
-                     worldX, worldZ, existingLevel - 1, lowestSiblingLevel, topBlockDefString);
+            log.trace("Filled NOT_SET column at ({},{}) from {} down to {} with block type {} and faceVisibility={}",
+                     worldX, worldZ, existingLevel - 1, lowestSiblingLevel, topBlockDefString, faceVisibilityForFill);
         }
     }
 
@@ -768,5 +774,46 @@ public class FlatExportService {
             return myLevel;
         }
         return flat.getLevel(x, z);
+    }
+
+    /**
+     * Calculate faceVisibility for NOT_SET column fill blocks.
+     * Shows ONLY ONE face - the one pointing outward from the flat edge.
+     *
+     * Logic: Determine which edge of the flat this block is on and show the outward-facing side:
+     * - West edge (localX = 0) → show LEFT face (4)
+     * - East edge (localX = sizeX-1) → show RIGHT face (8)
+     * - South edge (localZ = 0) → show FRONT face (16)
+     * - North edge (localZ = sizeZ-1) → show BACK face (32)
+     *
+     * @param flat The flat terrain data
+     * @param localX Column X coordinate (within flat)
+     * @param localZ Column Z coordinate (within flat)
+     * @param myLevel This column's level (unused but kept for consistency)
+     * @return Face visibility bitmask (only one bit set)
+     */
+    private int calculateNotSetFaceVisibility(WFlat flat, int localX, int localZ, int myLevel) {
+        int sizeX = flat.getSizeX();
+        int sizeZ = flat.getSizeZ();
+
+        // Determine which edge of the flat this block is on
+        // Priority: West, East, South, North if on multiple edges (corners)
+
+        if (localX == 0) {
+            // West edge → show RIGHT face (outward)
+            return 8;
+        } else if (localX == sizeX - 1) {
+            // East edge → show LEFT face (outward)
+            return 4;
+        } else if (localZ == 0) {
+            // South edge → show FRONT face (outward)
+            return 16;
+        } else if (localZ == sizeZ - 1) {
+            // North edge → show BACK face (outward)
+            return 32;
+        }
+
+        // Not on any edge → show all side faces (LEFT | RIGHT | FRONT | BACK)
+        return 4 | 8 | 16 | 32;  // = 60
     }
 }

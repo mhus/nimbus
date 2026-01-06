@@ -87,24 +87,17 @@ export class OceanRenderer extends BlockRenderer {
     // Block position
     const pos = block.position;
 
-    // Calculate chunk coordinates (chunk size = 32)
-    const chunkSize = 32;
-    const chunkX = Math.floor(pos.x / chunkSize) * chunkSize;
-    const chunkZ = Math.floor(pos.z / chunkSize) * chunkSize;
+    // Get chunk coordinates from clientBlock
+    const chunkX = clientBlock.chunk.cx;
+    const chunkZ = clientBlock.chunk.cz;
 
     // Water surface Y position (TOP of block)
     const waterY = pos.y + 0.5;
 
-    // Chunk center position for mesh
-    const chunkCenterX = chunkX + 16; // Half chunk size
-    const chunkCenterZ = chunkZ + 16;
-
     // Create ocean mesh
     await this.createOceanMesh(
       clientBlock,
-      chunkCenterX,
       waterY,
-      chunkCenterZ,
       bumpTextureDef.path,
       waterColor,
       renderContext
@@ -154,20 +147,17 @@ export class OceanRenderer extends BlockRenderer {
    *
    * Uses shared mesh per Y-level within chunk for efficiency.
    * Multiple ocean blocks at same Y-level share one large water surface.
+   * The mesh is automatically registered for disposal when chunk is unloaded.
    *
    * @param clientBlock Block to create ocean for
-   * @param chunkCenterX Chunk center X position
    * @param waterY Water surface Y position
-   * @param chunkCenterZ Chunk center Z position
    * @param bumpTexturePath Bump texture for water waves
    * @param waterColor Water color tint
    * @param renderContext Render context with resourcesToDispose
    */
   private async createOceanMesh(
     clientBlock: ClientBlock,
-    chunkCenterX: number,
     waterY: number,
-    chunkCenterZ: number,
     bumpTexturePath: string,
     waterColor: Color3,
     renderContext: RenderContext
@@ -175,20 +165,32 @@ export class OceanRenderer extends BlockRenderer {
     const block = clientBlock.block;
     const scene = renderContext.renderService.materialService.scene;
 
-    // Create shared mesh name per Y-level (all ocean blocks at same Y share one mesh)
-    const sharedMeshName = `ocean_y${block.position.y}`;
+    // Get chunk size from world info
+    const worldInfo = renderContext.renderService.appContext.worldInfo;
+    const chunkSize = worldInfo?.chunkSize ?? 32; // fallback to 32 if worldInfo not available
+
+    // Get chunk coordinates from clientBlock
+    const chunkX = clientBlock.chunk.cx;
+    const chunkZ = clientBlock.chunk.cz;
+
+    // Create shared mesh name per Y-level WITHIN THIS CHUNK (all ocean blocks at same Y in same chunk share one mesh)
+    const sharedMeshName = `ocean_${chunkX}_${chunkZ}_y${block.position.y}`;
 
     // Get or create shared ocean mesh for this Y-level
     const plane = renderContext.resourcesToDispose.getOrCreateMesh(
       sharedMeshName,
       () => {
-        logger.debug('Creating shared ocean mesh', { name: sharedMeshName });
+        logger.debug('Creating shared ocean mesh', { name: sharedMeshName, chunkSize });
+
+        // Calculate chunk center position in world coordinates
+        const chunkCenterX = chunkX * chunkSize + chunkSize / 2;
+        const chunkCenterZ = chunkZ * chunkSize + chunkSize / 2;
 
         // Create large flat ground with overlap for seamless chunk transitions
-        // 33x33 with random offset = slight overlap that hides seams
+        // Slightly larger than chunk size with random offset = slight overlap that hides seams
         const randomOffsetX = (Math.random() - 0.5) * 0.3; // Random -0.15 to +0.15
         const randomOffsetZ = (Math.random() - 0.5) * 0.3;
-        const randomSize = 32.5 + Math.random() * 1.0; // Random 32.5 to 33.5
+        const randomSize = chunkSize + 0.5 + Math.random() * 1.0; // chunkSize + random 0.5 to 1.5
 
         const mesh = MeshBuilder.CreateGround(
           sharedMeshName,

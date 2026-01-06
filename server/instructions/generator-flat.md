@@ -199,9 +199,28 @@ Seiten die sowieso nicht gesehen werden können, können so ausgeblendet werden.
   - Log Info wenn faceVisibility == 0 (sollte nicht vorkommen)
 ```
 
+[x] Auch bei NOT_SET Blöcken sollen die faceVisibility optimiert werden.
+- Es muss immer nur die Seite angezeigt werden, die in richtung des FLAT zeigt, denn weil diese fehlt, wird sie gezeichnet. ✓
+- z.b. die Füllung ist auf der LINKEN Seite, dann muss nur die RECHTE seite des Füll-Blocks angezeigt werden. ✓
+- Das kann relativ statisch gemacht werden ✓
 
+```text
+  NOT_SET Face Visibility Implementation:
+  - In handleNotSetColumn() für gefüllte Blöcke
+  - calculateNotSetFaceVisibility() berechnet statisch welche Seiten sichtbar sein müssen
+  - Logik: Zeige nur Seiten GEGENÜBER von niedrigeren Nachbarn (Füllrichtung)
+    - West-Nachbar tiefer (füllt von West) → RIGHT (8) sichtbar
+    - East-Nachbar tiefer (füllt von East) → LEFT (4) sichtbar
+    - South-Nachbar tiefer (füllt von South) → BACK (32) sichtbar (swapped)
+    - North-Nachbar tiefer (füllt von North) → FRONT (16) sichtbar (swapped)
+  - BOTTOM (2) nie sichtbar
+  - TOP nicht gesetzt (nur für Füll-Blöcke, nicht Top-Block)
+```
 
-## Manipulation
+[ ] Blöcke die gar keine sichtbaren Seiten haben (faceVisibility == 0) sollen nicht exportiert werden.
+- Aktuell ist da nur eine log warnung
+- d.m.n.w.g.flat.FlatExportService         : Block at (52,15,72) has no visible faces (faceVisibility=0)
+
 
 ## Darstellung
 

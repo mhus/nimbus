@@ -91,7 +91,7 @@ public class WEditCacheService {
         block.setSource(source);
 
         // Send block update to client with source parameter
-        boolean sent = blockUpdateService.sendBlockUpdateWithSource(world.getId(), "", block.getPosition().getX(), block.getPosition().getY(), block.getPosition().getZ(), block, source, null);
+        boolean sent = blockUpdateService.sendBlockUpdateWithSource(world.getWorldId(), "", block.getPosition().getX(), block.getPosition().getY(), block.getPosition().getZ(), block, source, null);
         if (!sent) {
             log.warn("Failed to send block update to clients: position={}", block.getPosition());
         }
