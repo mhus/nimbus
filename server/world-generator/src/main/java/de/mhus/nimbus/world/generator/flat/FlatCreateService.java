@@ -297,4 +297,143 @@ public class FlatCreateService {
 
         return highestSolidBlock;
     }
+
+    /**
+     * Create an empty WFlat with BEDROCK material and border imported from layer.
+     * Creates a flat terrain with all cells at level 0 and BEDROCK material.
+     * Border cells (outer edge) have their height imported from the layer for seamless transitions.
+     *
+     * @param worldId World identifier
+     * @param layerName Name of the layer to import border from
+     * @param flatId Flat identifier for the new WFlat
+     * @param sizeX Width of the flat (1-800)
+     * @param sizeZ Height of the flat (1-800)
+     * @param mountX Mount X position (where flat starts in world coordinates)
+     * @param mountZ Mount Z position (where flat starts in world coordinates)
+     * @return Created and persisted WFlat instance with BEDROCK material
+     * @throws IllegalArgumentException if world or layer not found, or layer is not GROUND type
+     */
+    public WFlat createEmptyFlat(String worldId, String layerName, String flatId,
+                                 int sizeX, int sizeZ, int mountX, int mountZ) {
+        log.info("Creating empty flat with border from layer: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{})",
+                worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ);
+
+        // Load world
+        WWorld world = worldService.getByWorldId(worldId)
+                .orElseThrow(() -> new IllegalArgumentException("World not found: " + worldId));
+
+        // Load layer
+        WLayer layer = layerService.findByWorldIdAndName(worldId, layerName)
+                .orElseThrow(() -> new IllegalArgumentException("Layer not found: " + layerName));
+
+        // Validate layer type
+        if (layer.getLayerType() != LayerType.GROUND) {
+            throw new IllegalArgumentException("Layer must be of type GROUND, but is: " + layer.getLayerType());
+        }
+
+        // Check if flat already exists and delete it (in case of retry)
+        Optional<WFlat> existingFlat = flatService.findByWorldIdAndLayerDataIdAndFlatId(
+                worldId, layer.getLayerDataId(), flatId);
+        if (existingFlat.isPresent()) {
+            log.info("Flat already exists, deleting before creation: flatId={}", flatId);
+            flatService.deleteById(existingFlat.get().getId());
+        }
+
+        // Get ocean level and block from world
+        int oceanLevel = world.getWaterLevel() == null ? 60 : world.getWaterLevel();
+        String oceanBlockId = world.getWaterBlockType() == null ? "n:o" : world.getWaterBlockType();
+
+        // Build WFlat instance (without persisting yet)
+        WFlat flat = WFlat.builder()
+                .worldId(worldId)
+                .layerDataId(layer.getLayerDataId())
+                .flatId(flatId)
+                .mountX(mountX)
+                .mountZ(mountZ)
+                .oceanLevel(oceanLevel)
+                .oceanBlockId(oceanBlockId)
+                .build();
+
+        // Initialize with size (sets all levels to 0)
+        flat.initWithSize(sizeX, sizeZ);
+        int chunkSize = world.getPublicData().getChunkSize();
+
+        // Set all cells to BEDROCK material
+        for (int localX = 0; localX < sizeX; localX++) {
+            for (int localZ = 0; localZ < sizeZ; localZ++) {
+                flat.setColumn(localX, localZ, FlatMaterialService.BEDROCK);
+            }
+        }
+
+        // Calculate which chunks are needed for border import
+        java.util.Set<String> requiredChunkKeys = new java.util.HashSet<>();
+        int minChunkX = world.getChunkX(mountX);
+        int minChunkZ = world.getChunkZ(mountZ);
+        int maxChunkX = world.getChunkX(mountX + sizeX - 1);
+        int maxChunkZ = world.getChunkZ(mountZ + sizeZ - 1);
+
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
+                requiredChunkKeys.add(BlockUtil.toChunkKey(chunkX, chunkZ));
+            }
+        }
+
+        log.debug("Loading {} chunks for border import", requiredChunkKeys.size());
+
+        // Load all required chunks at once
+        java.util.Map<String, LayerChunkData> chunkCache = new java.util.HashMap<>();
+        for (String chunkKey : requiredChunkKeys) {
+            Optional<LayerChunkData> chunkDataOpt = layerService.loadTerrainChunk(layer.getLayerDataId(), chunkKey);
+            chunkDataOpt.ifPresent(data -> chunkCache.put(chunkKey, data));
+        }
+
+        int borderCellsImported = 0;
+
+        // Import border cells from layer (outer edge only)
+        for (int localX = 0; localX < sizeX; localX++) {
+            for (int localZ = 0; localZ < sizeZ; localZ++) {
+                // Check if this is a border cell
+                boolean isBorder = (localX == 0 || localX == sizeX - 1 ||
+                                   localZ == 0 || localZ == sizeZ - 1);
+
+                if (!isBorder) {
+                    continue; // Skip interior cells
+                }
+
+                // Calculate world coordinates
+                int worldX = mountX + localX;
+                int worldZ = mountZ + localZ;
+
+                // Calculate chunk coordinates
+                int chunkX = world.getChunkX(worldX);
+                int chunkZ = world.getChunkZ(worldZ);
+                String chunkKey = BlockUtil.toChunkKey(chunkX, chunkZ);
+
+                // Get chunk from cache
+                LayerChunkData chunkData = chunkCache.get(chunkKey);
+
+                if (chunkData == null) {
+                    // No chunk data, keep default level 0
+                    continue;
+                }
+
+                // Find ground level at this position
+                int groundLevel = findGroundLevel(worldX, worldZ, chunkData, WorldId.unchecked(worldId));
+
+                if (groundLevel != -1) {
+                    // Set level from layer for border cell
+                    flat.setLevel(localX, localZ, groundLevel);
+                    borderCellsImported++;
+                }
+            }
+        }
+
+        // Persist to database
+        WFlat saved = flatService.create(flat);
+
+        log.info("Empty flat creation complete: flatId={}, size={}x{}, borderCells={}",
+                flatId, sizeX, sizeZ, borderCellsImported);
+
+        return saved;
+    }
 }

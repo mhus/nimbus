@@ -67,6 +67,48 @@ WFlat aus einem WLayer type GROUND zu importieren.
     - Aussagekräftige Error-Messages in JobExecutionException
 ```
 
+[ ] Es soll einen weiteren import jobtype geben der das Flat nur anlegt, ohne daten zu importieren.
+Type: create
+- Es wird eine Palette importier mit FaltMaterialService
+- Es wird eine Fläche mit sizeX und sizeZ angelegt auf level 0 mit BEDROCK
+- Der Rand muss aus dem Layer übernommen werden, d.h. es wird aus dem Layer die Blöcke am Rand übernommen.
+
+(der aktuelle type soll 'import' sein)
+```text
+JobTypes im System
+
+  | Type   | Executor Name | Beschreibung                                                  |
+  |--------|---------------|---------------------------------------------------------------|
+  | create | flat-create   | Legt leeres Flat an (Level 0, BEDROCK, Rand vom Layer) ✅ NEU |
+  | import | flat-import   | Importiert Flat-Daten vollständig vom Layer ✅                |
+
+  Verwendungsbeispiel
+
+  {
+    "executorName": "flat-create",
+    "worldId": "world-1",
+    "parameters": {
+      "layerName": "ground",
+      "sizeX": "200",
+      "sizeZ": "200",
+      "mountX": "0",
+      "mountZ": "0",
+      "flatId": "my-flat",
+      "paletteName": "nimbus"
+    }
+  }
+```
+
+[ ] Es soll einen weiterein import jobtype geben der ein HexGrid als WFlat anlegt.
+Type: create-hexgrid
+- Es werden die HexGrid coordinaten im Job angegeben.
+- Es wird die fläche dex HexGrid sizeX sizeZ angelegt.
+- Es wird eine Palette importier mit FaltMaterialService
+- Dann wird eine grundfläche mit dem BlockTypeId BEDROCK angelegt. Aber nur die Fläche die vom HexGrid belegt ist.
+- Die Felder die NICHT im Hex Grid sind sollen importiert werden aus dem Layer.
+- Dann wird der WFlat auf unknownProtected = true gestellt. Damit koennen nur noch die hex grid daten verändert werden.
+
+
 ## Export
 
 [?] Erstelle in world-generator einen FlatExportService der eine Funktion hat mit der ein WFlat in einen WLayer type GROUND exportiert wird.
