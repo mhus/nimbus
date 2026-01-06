@@ -44,7 +44,7 @@ public class ChunkedInputStream extends InputStream {
         // Load only the first chunk (not all chunks!)
         loadNextChunk();
 
-        log.debug("ChunkedInputStream created: uuid={}", uuid);
+        log.trace("ChunkedInputStream created: uuid={}", uuid);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class ChunkedInputStream extends InputStream {
         if (!closed) {
             closed = true;
             currentChunkData = null;
-            log.debug("ChunkedInputStream closed: uuid={}", uuid);
+            log.trace("ChunkedInputStream closed: uuid={}", uuid);
         }
     }
 

@@ -91,14 +91,14 @@ public class WWorld implements Identifiable {
      * Used when generating default chunks.
      */
     @Builder.Default
-    private String groundBlockType = "r/grass";
+    private String groundBlockType = "n:g";
 
     /**
      * Block type ID for water blocks (e.g., "core:water").
      * Used when generating ocean in default chunks.
      */
     @Builder.Default
-    private String waterBlockType = "r/ocean";
+    private String waterBlockType = "n:o";
 
     public void touchForCreate() {
         Instant now = Instant.now();

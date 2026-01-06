@@ -1,5 +1,7 @@
 package de.mhus.nimbus.world.control.scheduled;
 
+import de.mhus.nimbus.shared.service.SSettingsService;
+import de.mhus.nimbus.shared.settings.SettingInteger;
 import de.mhus.nimbus.world.shared.edit.ChunkUpdateService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +22,16 @@ import org.springframework.stereotype.Component;
 public class ChunkUpdateTask {
 
     private final ChunkUpdateService chunkUpdateService;
+    private final SSettingsService settingsService;
 
-    @Value("${world.control.chunk-update-batch-size:10}")
-    private int batchSize;
+    private SettingInteger batchSize;
 
     @PostConstruct
     public void init() {
+        batchSize = settingsService.getInteger(
+                "control.chunk-update-batch-size",
+                50
+        );
         log.info("Chunk update task initialized");
     }
 
@@ -36,7 +42,7 @@ public class ChunkUpdateTask {
     @Scheduled(fixedDelayString = "#{${world.control.chunk-update-interval-ms:5000}}")
     public void processChunkUpdates() {
         try {
-            int processed = chunkUpdateService.processDirtyChunks(batchSize);
+            int processed = chunkUpdateService.processDirtyChunks(batchSize.get());
 
             if (processed > 0) {
                 log.info("Chunk update task: processed {} dirty chunks", processed);

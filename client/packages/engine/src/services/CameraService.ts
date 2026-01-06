@@ -683,47 +683,26 @@ export class CameraService {
 
   /**
    * Load camera light settings from localStorage
+   * Note: Camera light settings are NOT persisted - always use defaults
    */
   private loadCameraLightSettings(): void {
-    try {
-      const enabled = localStorage.getItem('cameraLight.enabled');
-      if (enabled !== null) {
-        this.cameraLightEnabled = enabled === 'true';
-      }
-
-      const intensity = localStorage.getItem('cameraLight.intensity');
-      if (intensity !== null) {
-        this.cameraLightIntensity = parseFloat(intensity);
-      }
-
-      const range = localStorage.getItem('cameraLight.range');
-      if (range !== null) {
-        this.cameraLightRange = parseFloat(range);
-      }
-
-      logger.debug('Camera light settings loaded from localStorage', {
-        enabled: this.cameraLightEnabled,
-        intensity: this.cameraLightIntensity,
-        range: this.cameraLightRange,
-      });
-    } catch (error) {
-      logger.warn('Failed to load camera light settings from localStorage', { error });
-    }
+    // Camera light settings are not loaded from localStorage
+    // Always use default values defined in constructor
+    logger.debug('Camera light using default settings (not loaded from localStorage)', {
+      enabled: this.cameraLightEnabled,
+      intensity: this.cameraLightIntensity,
+      range: this.cameraLightRange,
+    });
   }
 
   /**
    * Save camera light settings to localStorage
+   * Note: Camera light settings are NOT persisted - settings are temporary per session
    */
   private saveCameraLightSettings(): void {
-    try {
-      localStorage.setItem('cameraLight.enabled', String(this.cameraLightEnabled));
-      localStorage.setItem('cameraLight.intensity', String(this.cameraLightIntensity));
-      localStorage.setItem('cameraLight.range', String(this.cameraLightRange));
-
-      logger.debug('Camera light settings saved to localStorage');
-    } catch (error) {
-      logger.warn('Failed to save camera light settings to localStorage', { error });
-    }
+    // Camera light settings are not saved to localStorage
+    // Settings are temporary and reset to defaults on each restart
+    logger.debug('Camera light settings NOT saved (temporary per session)');
   }
 
   /**

@@ -234,11 +234,11 @@ public class WFlat {
             // second: extra block
             if (extraBlocks != null && extraBlocks[y] != null)
                 return extraBlocks[y];
-            // third: next block
+            // third: next block (fill below level - no ocean check here!)
             if (y < level)
                 return nextBlockDef != null ? nextBlockDef : blockDef;
-            // finally: ocean block
-            if (hasOcean && y == flat.getOceanLevel())
+            // finally: ocean block (only above terrain level!)
+            if (hasOcean && y > level && y == flat.getOceanLevel())
                 return flat.getOceanBlockId();
             // or air
             return null;

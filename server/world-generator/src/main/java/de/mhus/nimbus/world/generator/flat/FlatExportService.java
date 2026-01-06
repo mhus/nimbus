@@ -1,8 +1,10 @@
 package de.mhus.nimbus.world.generator.flat;
 
 import de.mhus.nimbus.generated.types.Block;
+import de.mhus.nimbus.generated.types.BlockTypeType;
 import de.mhus.nimbus.generated.types.Vector3Int;
 import de.mhus.nimbus.shared.types.BlockDef;
+import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.generator.WFlat;
 import de.mhus.nimbus.world.shared.generator.WFlatService;
 import de.mhus.nimbus.world.shared.layer.LayerBlock;
@@ -12,10 +14,13 @@ import de.mhus.nimbus.world.shared.layer.WDirtyChunkService;
 import de.mhus.nimbus.world.shared.layer.WLayer;
 import de.mhus.nimbus.world.shared.layer.WLayerService;
 import de.mhus.nimbus.world.shared.world.BlockUtil;
+import de.mhus.nimbus.world.shared.world.WBlockType;
+import de.mhus.nimbus.world.shared.world.WBlockTypeService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -38,6 +43,7 @@ public class FlatExportService {
     private final WLayerService layerService;
     private final WWorldService worldService;
     private final WDirtyChunkService dirtyChunkService;
+    private final WBlockTypeService blockTypeService;
 
     /**
      * Export WFlat to a WLayer of type GROUND.
@@ -111,7 +117,7 @@ public class FlatExportService {
                 // Check if column is set
                 if (!flat.isColumnSet(localX, localZ)) {
                     // NOT_SET: Keep existing blocks, but fill down if neighbors are lower
-                    handleNotSetColumn(chunkData, worldX, worldZ, flat, localX, localZ, world);
+                    handleNotSetColumn(chunkData, worldX, worldZ, flat, localX, localZ, world, worldId);
                     skippedColumns++;
                     continue;
                 }
@@ -162,23 +168,32 @@ public class FlatExportService {
     }
 
     /**
-     * Handle NOT_SET column: Keep top block, delete all blocks below, fill down if neighbors are lower.
+     * Handle NOT_SET column: Keep top GROUND block, delete all blocks below, fill down if neighbors are lower.
      * This prevents gaps between old high blocks and new lower blocks.
+     * Only considers GROUND type blocks for filling.
      */
     private void handleNotSetColumn(LayerChunkData chunkData, int worldX, int worldZ,
-                                    WFlat flat, int localX, int localZ, WWorld world) {
-        // Find highest existing block at this position
-        int existingLevel = findHighestBlockAtPosition(chunkData, worldX, worldZ);
+                                    WFlat flat, int localX, int localZ, WWorld world, String worldId) {
+        // Find highest existing GROUND type block at this position
+        String topBlockDefString = null;
+        int existingLevel = findHighestGroundBlockAtPosition(chunkData, worldX, worldZ, worldId);
         if (existingLevel == -1) {
-            // No existing blocks, nothing to do
-            return;
+            log.debug("No GROUND type blocks found at ({},{}) for NOT_SET column", worldX, worldZ);
+            // exidently no GROUND blocks fake it:
+            existingLevel = flat.getLevel(localX, localZ);
+            topBlockDefString = flat.getMaterial(FlatMaterialService.BEDROCK).getBlockDef();
         }
 
-        // Get the block type from the highest existing block BEFORE deleting
-        String topBlockDefString = getBlockDefAtPosition(chunkData, worldX, worldZ, existingLevel);
-        if (topBlockDefString == null || topBlockDefString.isBlank()) {
-            log.warn("Could not find block definition at ({},{},{})", worldX, existingLevel, worldZ);
-            return;
+        // Get the block type from the highest existing GROUND block BEFORE deleting
+        if (Strings.isBlank(topBlockDefString)) {
+            topBlockDefString = getBlockDefAtPosition(chunkData, worldX, worldZ, existingLevel);
+        }
+        if (Strings.isBlank(topBlockDefString)) {
+            topBlockDefString = flat.getMaterial(FlatMaterialService.BEDROCK).getBlockDef();
+        }
+        if (Strings.isBlank(topBlockDefString)) {
+            log.debug("Could not determine top block definition for NOT_SET column at ({},{}), using default", worldX, worldZ);
+            topBlockDefString = "n:b";
         }
 
         // Parse block definition
@@ -186,6 +201,11 @@ public class FlatExportService {
         if (topBlockDefOpt.isEmpty()) {
             log.warn("Invalid block definition for NOT_SET column: {}", topBlockDefString);
             return;
+        }
+        BlockDef topBlockDef = topBlockDefOpt.get();
+        if ("5000".equals(topBlockDef.getBlockTypeId())) { // TODO hack for water
+            log.debug("Top block is water for NOT_SET column at ({},{}), using bedrock instead", worldX, worldZ);
+            topBlockDef = BlockDef.of(flat.getMaterial(FlatMaterialService.BEDROCK).getBlockDef()).orElseThrow();
         }
 
         // Delete all blocks BELOW the top block (keep only the top block)
@@ -207,7 +227,7 @@ public class FlatExportService {
                                 .build())
                         .build();
 
-                topBlockDefOpt.get().fillBlock(block);
+                topBlockDef.fillBlock(block);
 
                 // Add to chunk
                 LayerBlock layerBlock = LayerBlock.builder()
@@ -216,8 +236,8 @@ public class FlatExportService {
                 chunkData.getBlocks().add(layerBlock);
             }
 
-            log.debug("Filled NOT_SET column at ({},{}) from {} down to {}",
-                     worldX, worldZ, existingLevel - 1, lowestSiblingLevel);
+            log.trace("Filled NOT_SET column at ({},{}) from {} down to {} with block type {}",
+                     worldX, worldZ, existingLevel - 1, lowestSiblingLevel, topBlockDefString);
         }
     }
 
@@ -389,6 +409,60 @@ public class FlatExportService {
     }
 
     /**
+     * Find highest GROUND type block Y at a specific X,Z position in chunk data.
+     * Only considers blocks with BlockTypeType.GROUND.
+     *
+     * @param chunkData Chunk data to search
+     * @param worldX World X coordinate
+     * @param worldZ World Z coordinate
+     * @param worldId World identifier for block type lookup
+     * @return Highest Y coordinate of GROUND block, or -1 if no GROUND block found
+     */
+    private int findHighestGroundBlockAtPosition(LayerChunkData chunkData, int worldX, int worldZ, String worldId) {
+        int highestY = -1;
+
+        // Parse worldId for block type lookup
+        WorldId wid = WorldId.of(worldId).orElse(null);
+        if (wid == null) {
+            log.warn("Invalid worldId for block type lookup: {}", worldId);
+            return -1;
+        }
+
+        for (LayerBlock layerBlock : chunkData.getBlocks()) {
+            Block block = layerBlock.getBlock();
+            if (block == null || block.getPosition() == null) {
+                continue;
+            }
+
+            Vector3Int pos = block.getPosition();
+            if (pos.getX() == worldX && pos.getZ() == worldZ) {
+                // Check if this block is GROUND type
+                String blockTypeId = block.getBlockTypeId();
+                if (blockTypeId != null && !blockTypeId.isBlank()) {
+                    // Look up block type
+                    Optional<WBlockType> blockTypeOpt = blockTypeService.findByBlockId(wid, blockTypeId);
+                    if (blockTypeOpt.isPresent()) {
+                        WBlockType blockType = blockTypeOpt.get();
+                        if (blockType.getPublicData() == null || blockType.getPublicData().getType() == null ) {
+                            log.warn("Block type has no type defined: {}", blockTypeId);
+                            continue;
+                        }
+                        if (blockType.getPublicData() != null &&
+                            blockType.getPublicData().getType() == BlockTypeType.GROUND) {
+                            // This is a GROUND block
+                            if (pos.getY() > highestY) {
+                                highestY = pos.getY();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return highestY;
+    }
+
+    /**
      * Fill a column with blocks from level down to lowestSiblingLevel.
      * Uses column definition to determine block types.
      */
@@ -402,13 +476,21 @@ public class FlatExportService {
         );
 
         // Fill from level down to lowestSiblingLevel
-        for (int y = level; y >= lowestSiblingLevel; y--) {
+        // do not start at level, start at 255 - there could be extra blocks above
+        for (int y = 255; y >= lowestSiblingLevel; y--) {
             // Get block definition for this Y level
             String blockDefString = columnDef.getBlockAt(flat, level, y, extraBlocks);
 
-            if (blockDefString == null || blockDefString.equals("0") || blockDefString.isBlank()) {
+            if (Strings.isBlank(blockDefString)) {
                 // Air block, skip
                 continue;
+            }
+
+            if ("core:water".equals(blockDefString) || "w:5000".equals(blockDefString)) {
+                if (y != 60) {
+                    log.warn("Filling block at ({},{},{}) with definition: {}", worldX, y, worldZ, blockDefString);
+                }
+                blockDefString = "w:5000";
             }
 
             // Create block with position

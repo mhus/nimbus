@@ -30,28 +30,29 @@ public class FlatMaterialService {
     public static final String PALETTE_LEGACY = "legacy";
     public static final String PALETTE_MIMBUS = "nimbus";
 
+    // Preset material palettes with format: "blockDef|nextBlockDef|hasOcean"
     private static final Map<String,Map<Integer,String>> PRESET_MATERIALS = Map.of(
             PALETTE_MIMBUS, Map.of(
-                    GRASS, "n:g@s:default",
-                    DIRT, "n:d@s:default",
-                    STONE, "n:s@s:default",
-                    SAND, "n:sa@s:default",
-                    WATER, "n:w@s:default",
-                    BEDROCK, "n:b@s:default",
-                    SNOW, "n:sn@s:default",
-                    INVISIBLE, "n:2@s:default",
-                    INVISIBLE_SOLID, "n:3@s:default"
+                    GRASS, "n:g@s:default||true",
+                    DIRT, "n:d@s:default||true",
+                    STONE, "n:s@s:default||true",
+                    SAND, "n:sa@s:default||true",
+                    WATER, "n:w@s:default||true",
+                    BEDROCK, "n:b@s:default||true",
+                    SNOW, "n:sn@s:default||true",
+                    INVISIBLE, "n:2@s:default||true",
+                    INVISIBLE_SOLID, "n:3@s:default||true"
             ),
             PALETTE_LEGACY, Map.of(
-                    GRASS, "w:310@s:default", // old world
-                    DIRT, "w:279@s:default", // old world
-                    STONE, "w:553@s:default",
-                    SAND, "w:520@s:default", // old world
-                    WATER, "w:1008@s:default",
-                    BEDROCK, "w:127@s:default",
-                    SNOW, "w:537@s:default",
-                    INVISIBLE, "w:2@s:default",
-                    INVISIBLE_SOLID, "w:3@s:default"
+                    GRASS, "w:310@s:default||true",        // old world
+                    DIRT, "w:279@s:default||true",         // old world
+                    STONE, "w:553@s:default||true",
+                    SAND, "w:520@s:default||true",
+                    WATER, "w:1008@s:default||true",
+                    BEDROCK, "w:127@s:default||true",
+                    SNOW, "w:537@s:default||true",
+                    INVISIBLE, "w:2@s:default||true",
+                    INVISIBLE_SOLID, "w:3@s:default||true"
             )
     );
 
@@ -299,15 +300,27 @@ public class FlatMaterialService {
         }
 
         // Convert palette to MaterialDefinition map
+        // Format: "blockDef|nextBlockDef|hasOcean"
         Map<Integer, WFlat.MaterialDefinition> materials = new java.util.HashMap<>();
         for (Map.Entry<Integer, String> entry : palette.entrySet()) {
             int materialId = entry.getKey();
-            String blockDef = entry.getValue();
+            String propertyValue = entry.getValue();
+
+            // Parse property value: "blockDef|nextBlockDef|hasOcean"
+            String[] parts = propertyValue.split("\\|", 3);
+            if (parts.length < 1) {
+                log.warn("Invalid property format for materialId {}: {}, skipping", materialId, propertyValue);
+                continue;
+            }
+
+            String blockDef = parts[0];
+            String nextBlockDef = parts.length > 1 && !parts[1].isEmpty() ? parts[1] : null;
+            boolean hasOcean = parts.length > 2 && Boolean.parseBoolean(parts[2]);
 
             WFlat.MaterialDefinition materialDef = WFlat.MaterialDefinition.builder()
                     .blockDef(blockDef)
-                    .nextBlockDef(null)
-                    .hasOcean(false)
+                    .nextBlockDef(nextBlockDef)
+                    .hasOcean(hasOcean)
                     .build();
 
             materials.put(materialId, materialDef);
