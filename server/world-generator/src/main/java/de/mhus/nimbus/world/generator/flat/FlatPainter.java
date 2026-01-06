@@ -21,10 +21,37 @@ public class FlatPainter {
         int getLevel(WFlat flat, int x, int z, int level);
     }
 
+    public static class ChainPainter implements Painter {
+        private final Painter[] painters;
+
+        public ChainPainter(Painter... painters) {
+            this.painters = painters;
+        }
+
+        @Override
+        public int getLevel(WFlat flat, int x, int z, int level) {
+            int currentLevel = level;
+            for (Painter painter : painters) {
+                currentLevel = painter.getLevel(flat, x, z, currentLevel);
+            }
+            return currentLevel;
+        }
+    }
+
     public static final Painter DEFAULT_PAINTER = (flat, x, z, level) -> level;
-    public static final Painter ADDITIVE_PAINTER = (flat, x, z, level) -> flat.getLevel(x,z) + level;
+    public static final Painter ADDITIVE = (flat, x, z, level) -> flat.getLevel(x,z) + level;
     public static final Painter RANDOM_MODIFIER = (flat, x, z, level) -> flat.getLevel(x,z) + (int)(Math.random() * level) - level / 2;
     public static final Painter RANDOM_ADDITIVE = (flat, x, z, level) -> flat.getLevel(x,z) + (int)(Math.random() * level);
+    public static final Painter RANDOM_DIFFUSE_2 = (flat, x, z, level) -> level + (int)(Math.random() * 10) % 3;
+    public static final Painter RANDOM_DIFFUSE_1 = (flat, x, z, level) -> level + (int)(Math.random() * 10) % 2;
+    public static final Painter HIGHER = (flat, x, z, level) -> {
+        var current = flat.getLevel(x,z);
+        return current < level ? level : current;
+    };
+    public static final Painter LOWER = (flat, x, z, level) -> {
+        var current = flat.getLevel(x,z);
+        return current > level ? level : current;
+    };
 
     public void setPainter(Painter painter) {
         if (painter == null) this.painter = DEFAULT_PAINTER;

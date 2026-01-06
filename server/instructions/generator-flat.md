@@ -585,3 +585,36 @@ WFlat mit einem bestimmten Manipulator zu manipulieren.
   Der BorderSmoothManipulator ermöglicht nahtlose Übergänge zwischen
   unabhängig generierten WFlat-Bereichen!
 ```
+
+[?] Benutze FlatPainter im weitere Manipulatoren zu erstellen.
+- Siehe andere Modifierer wie z.b. FlatWorldGenerator etc.
+- soften()
+- sharpen()
+- roughen() - Einen RANDOM_ADDITIVE Painter und ein Rectangle zeichnen mit level=n
+
+```text
+  Erstellte Manipulatoren:
+
+  1. SoftenManipulator (soften)
+
+  - Nutzt FlatPainter.soften()
+  - Glättet das Terrain durch Mittelwertbildung mit benachbarten Höhen
+  - Parameter:
+    - factor: Glättungsstärke von 0.0 (keine Wirkung) bis 1.0 (volle Mittelung), Default: 0.5
+
+  2. SharpenManipulator (sharpen)
+
+  - Nutzt FlatPainter.sharpen()
+  - Verstärkt Kontraste durch Akzentuierung von Höhenunterschieden
+  - Parameter:
+    - factor: Schärfungsstärke, höhere Werte erzeugen mehr Kontrast, Default: 0.5
+
+  3. RoughenManipulator (roughen)
+
+  - Nutzt FlatPainter.fillRectangle() mit RANDOM_ADDITIVE Painter
+  - Fügt zufällige Höhenvariation hinzu für ein raueres, natürlicheres Aussehen
+  - Parameter:
+    - level: Maximale zufällige Höhenvariation (1-50), Default: 5
+
+  Alle drei Manipulatoren sind als Spring @Component registriert und werden automatisch vom FlatManipulatorService erkannt.
+```
