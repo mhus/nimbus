@@ -143,5 +143,14 @@ WFlat in einen WLayer type GROUND zu exportieren.
 - Es gibt eine Funktion setMaterialDefinition(flatId, int materialId, Map<String, String> properties)
 - Es gibt eine Funktion setMaterialDefinitions(flatId, Map<String, String> properties)
 
+[ ] Es gibt nun in FlatMaterialService eine konstante fuer vordefinierte paletten. Erstelle eine funktion die eine vordefinierte Palette setzt.
+- setPalette(flatId, String paletteName)
 
-
+[ ] Erstelle einen JobExecutor fuer den flat-material executor.
+- Er soll mehrerer job typen haben:
+  - set-material : setzt eine material definition
+    - parameter: flatId, materialId, properties (json string)
+  - set-materials : setzt mehrere material definitionen
+    - parameter: flatId, properties (json string)
+  - set-palette : setzt eine vordefinierte palette
+    - parameter: flatId, paletteName

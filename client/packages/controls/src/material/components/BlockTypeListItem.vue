@@ -6,6 +6,9 @@
           <h3 class="card-title text-lg">
             ID: {{ blockType.id }}
           </h3>
+          <p v-if="blockType.title" class="text-base-content/90 text-sm font-semibold">
+            {{ blockType.title }}
+          </p>
           <p class="text-base-content/70 text-sm mt-1">
             {{ blockType.description || 'No description' }}
           </p>

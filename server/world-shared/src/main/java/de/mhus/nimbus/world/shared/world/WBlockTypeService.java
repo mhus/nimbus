@@ -213,6 +213,8 @@ public class WBlockTypeService {
                     String blockId = blockType.getBlockId();
                     BlockType publicData = blockType.getPublicData();
                     return (blockId != null && blockId.toLowerCase().contains(lowerQuery)) ||
+                            (publicData != null && publicData.getTitle() != null &&
+                                    publicData.getTitle().toLowerCase().contains(lowerQuery)) ||
                             (publicData != null && publicData.getDescription() != null &&
                                     publicData.getDescription().toLowerCase().contains(lowerQuery));
                 })

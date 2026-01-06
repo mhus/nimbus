@@ -49,22 +49,41 @@
                   </label>
                 </div>
 
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text font-semibold">Type</span>
-                  </label>
-                  <select
-                    v-model="formData.type"
-                    class="select select-bordered w-full"
-                  >
-                    <option :value="undefined">-- Not specified --</option>
-                    <option v-for="(value, name) in BlockTypeType" :key="name" :value="value">
-                      {{ name }} ({{ value }})
-                    </option>
-                  </select>
-                  <label class="label">
-                    <span class="label-text-alt">Category of this block type</span>
-                  </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Title -->
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text font-semibold">Title</span>
+                    </label>
+                    <input
+                      v-model="formData.title"
+                      type="text"
+                      class="input input-bordered"
+                      placeholder="Enter display title..."
+                    />
+                    <label class="label">
+                      <span class="label-text-alt">Display name for this block type</span>
+                    </label>
+                  </div>
+
+                  <!-- Type -->
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text font-semibold">Type</span>
+                    </label>
+                    <select
+                      v-model="formData.type"
+                      class="select select-bordered w-full"
+                    >
+                      <option :value="undefined">-- Not specified --</option>
+                      <option v-for="(value, name) in BlockTypeType" :key="name" :value="value">
+                        {{ name }} ({{ value }})
+                      </option>
+                    </select>
+                    <label class="label">
+                      <span class="label-text-alt">Category of this block type</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div class="form-control">
