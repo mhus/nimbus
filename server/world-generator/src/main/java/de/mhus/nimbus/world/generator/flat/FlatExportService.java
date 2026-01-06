@@ -530,7 +530,11 @@ public class FlatExportService {
 
             // Apply block optimizations (corner smoothing and/or face visibility) if enabled
             if ((smoothCorners || optimizeFaces) && y <= level) {
-                applyBlockOptimizations(block, flat, localX, localZ, level, y, blockTypeCache, wid, smoothCorners, optimizeFaces);
+                boolean shouldExport = applyBlockOptimizations(block, flat, localX, localZ, level, y, blockTypeCache, wid, smoothCorners, optimizeFaces);
+                if (!shouldExport) {
+                    // Block has no visible faces, skip export
+                    continue;
+                }
             }
 
             // Wrap in LayerBlock and add to chunk
@@ -547,13 +551,15 @@ public class FlatExportService {
      * Only applies to GROUND type blocks with modifier 0 and shape 1 (CUBE).
      * - Corner smoothing: Adjusts Y offsets of 4 top corners based on neighbor heights
      * - Face visibility: Sets faceVisibility to hide non-visible block faces
+     *
+     * @return true if block should be exported, false if block should be skipped (no visible faces)
      */
-    private void applyBlockOptimizations(Block block, WFlat flat, int localX, int localZ,
+    private boolean applyBlockOptimizations(Block block, WFlat flat, int localX, int localZ,
                                         int level, int y,
                                         Map<String, WBlockType> blockTypeCache, WorldId wid,
                                         boolean smoothCorners, boolean optimizeFaces) {
         if (block == null || block.getBlockTypeId() == null || wid == null) {
-            return;
+            return true;  // No optimization, export block
         }
 
         // Get or cache block type
@@ -563,30 +569,30 @@ public class FlatExportService {
         );
 
         if (blockType == null || blockType.getPublicData() == null) {
-            return;
+            return true;  // Not optimizable, export block
         }
 
         var publicData = blockType.getPublicData();
 
         // Check if GROUND type
         if (publicData.getType() != BlockTypeType.GROUND) {
-            return;
+            return true;  // Not GROUND, export block
         }
 
         // Check if modifier (status) is 0 or null
         Integer status = block.getStatus();
         if (status != null && status != 0) {
-            return;
+            return true;  // Modified block, export block
         }
 
         // Check if shape is CUBE (shape 1)
         // Shape is stored in modifiers map, get modifier 0
         if (publicData.getModifiers() == null) {
-            return;
+            return true;  // No modifiers, export block
         }
         var modifier0 = publicData.getModifiers().get(0);
         if (modifier0 == null || modifier0.getVisibility() == null || modifier0.getVisibility().getShape() == null || modifier0.getVisibility().getShape() != 1) {
-            return;
+            return true;  // Not CUBE, export block
         }
 
         // Get current level
@@ -633,7 +639,7 @@ public class FlatExportService {
             Integer existingFaceVis = block.getFaceVisibility();
             if (existingFaceVis != null && (existingFaceVis & 64) != 0) {
                 // FIXED bit is set, don't modify
-                return;
+                return false;
             }
 
             // FaceFlag bits (set bit = visible face):
@@ -674,10 +680,11 @@ public class FlatExportService {
                 faceVisibility |= 32;  // BACK visible
             }
 
-            // Warning if no faces are visible (shouldn't happen)
+            // Don't export block if no faces are visible
             if (faceVisibility == 0) {
-                log.info("Block at ({},{},{}) has no visible faces (faceVisibility=0)",
+                log.debug("Block at ({},{},{}) has no visible faces (faceVisibility=0), skipping export",
                         block.getPosition().getX(), y, block.getPosition().getZ());
+                return false;  // Signal to skip this block
             }
 
             // Set faceVisibility on block
@@ -686,6 +693,8 @@ public class FlatExportService {
             log.trace("Applied face visibility to block at ({},{},{}): visibility={} (binary: {})",
                     localX, y, localZ, faceVisibility, Integer.toBinaryString(faceVisibility));
         }
+
+        return true;  // Block should be exported
     }
 
     /**

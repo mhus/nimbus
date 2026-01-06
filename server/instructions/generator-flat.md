@@ -217,9 +217,18 @@ Seiten die sowieso nicht gesehen werden können, können so ausgeblendet werden.
   - TOP nicht gesetzt (nur für Füll-Blöcke, nicht Top-Block)
 ```
 
-[ ] Blöcke die gar keine sichtbaren Seiten haben (faceVisibility == 0) sollen nicht exportiert werden.
-- Aktuell ist da nur eine log warnung
-- d.m.n.w.g.flat.FlatExportService         : Block at (52,15,72) has no visible faces (faceVisibility=0)
+[x] Blöcke die gar keine sichtbaren Seiten haben (faceVisibility == 0) sollen nicht exportiert werden.
+- Aktuell ist da nur eine log warnung ✓
+- d.m.n.w.g.flat.FlatExportService         : Block at (52,15,72) has no visible faces (faceVisibility=0) ✓
+
+```text
+  Skip Blocks without Visible Faces:
+  - applyBlockOptimizations() gibt jetzt boolean zurück (statt void)
+  - Wenn optimizeFaces aktiv ist und faceVisibility == 0 → return false
+  - fillColumn() prüft Return-Wert und überspringt Block (continue)
+  - Log-Level von info auf debug geändert
+  - Spart Performance durch nicht-exportierte unsichtbare Blöcke
+```
 
 
 ## Darstellung
