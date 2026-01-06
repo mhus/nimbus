@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
  * Optional parameters:
  * - layerName: Name of the target GROUND layer (if not specified, uses the layer from which the flat was imported)
  * - deleteAfterExport: If true, deletes the WFlat after successful export (default: false)
+ * - smoothCorners: If true, smooths corners of top GROUND blocks based on neighbor heights (default: true)
  */
 @Component
 @Slf4j
@@ -74,14 +75,15 @@ public class FlatExportJobExecutor implements JobExecutor {
                 log.info("Using flat's original layer: layerDataId={}, layerName={}", flatLayerDataId, layerName);
             }
 
-            // Extract optional parameter
+            // Extract optional parameters
             boolean deleteAfterExport = getOptionalBooleanParameter(job, "deleteAfterExport", false);
+            boolean smoothCorners = getOptionalBooleanParameter(job, "smoothCorners", true);
 
-            log.info("Exporting flat: flatId={}, worldId={}, layerName={}, deleteAfterExport={}",
-                    flatId, worldId, layerName, deleteAfterExport);
+            log.info("Exporting flat: flatId={}, worldId={}, layerName={}, deleteAfterExport={}, smoothCorners={}",
+                    flatId, worldId, layerName, deleteAfterExport, smoothCorners);
 
             // Execute export (use database ID)
-            int exportedColumns = flatExportService.exportToLayer(flat.getId(), worldId, layerName);
+            int exportedColumns = flatExportService.exportToLayer(flat.getId(), worldId, layerName, smoothCorners);
 
             // Delete flat if requested
             if (deleteAfterExport) {
@@ -92,12 +94,12 @@ public class FlatExportJobExecutor implements JobExecutor {
 
             // Build success result
             String resultData = String.format(
-                    "Successfully exported flat: flatId=%s, worldId=%s, layerName=%s, exportedColumns=%d, deleted=%s",
-                    flatId, worldId, layerName, exportedColumns, deleteAfterExport
+                    "Successfully exported flat: flatId=%s, worldId=%s, layerName=%s, exportedColumns=%d, deleted=%s, smoothCorners=%s",
+                    flatId, worldId, layerName, exportedColumns, deleteAfterExport, smoothCorners
             );
 
-            log.info("Flat export completed successfully: flatId={}, exportedColumns={}, deleted={}",
-                    flatId, exportedColumns, deleteAfterExport);
+            log.info("Flat export completed successfully: flatId={}, exportedColumns={}, deleted={}, smoothCorners={}",
+                    flatId, exportedColumns, deleteAfterExport, smoothCorners);
             return JobResult.ofSuccess(resultData);
 
         } catch (JobExecutionException e) {

@@ -121,6 +121,41 @@ WFlat in einen WLayer type GROUND zu exportieren.
   Der JobExecutor ist vollständig und bereit für die Verwendung über das Job-System!
 ```
 
+[x] Ein weiteres flag beim Export soll die Ecken der Blocks glätten.
+- Einfügen in Methode ✓
+- Einfügen in JobExecutor ✓
+Wenn das Flag gesetz ist wird beim obersten Block der type GROUND ist und der modifier 0 ein shape 'cube' hat., der Block so angepasst das die Ecken geglättet werden.
+Dazu werden die offsets angepasst. Siehe client/BLOCK_OFFSETS.md abteilung CUBE je nachdem wie die nachbarn sind.
+- ist ein nachbar tiefer, wird das offest auf -0.5 gesetzt
+- ist ein nachbar gleich hoch, wird das offset auf 0.5 gesetzt
+- sind zwei nachbarn an der ecke einer hoeher einer tiefer, bleibt es bei 0.
+- Es wird nur das Y offset angepasst, X und Z bleiben 0.
+- Cache die BlockTypen für einen Exportvorgang, damit nicht immer wieder die gleichen BlockTypen geladen werden muessen.
+
+```text
+  Corner-Smoothing Implementation:
+  - Parameter smoothCorners: boolean (default: true) in FlatExportJobExecutor
+  - BlockType Cache: Map<String, WBlockType> für Performance
+  - applyCornerSmoothing() prüft: GROUND type, modifier==0, shape==1 (CUBE)
+  - 4 Top-Corners: SW(13), SE(16), NW(19), NE(22) - nur Y-Offsets
+  - Jede Ecke hat 3 Nachbarn: 2 orthogonale + 1 diagonale
+    - SW: West(-1,0), South(0,-1), SW-Diagonal(-1,-1)
+    - SE: East(+1,0), South(0,-1), SE-Diagonal(+1,-1)
+    - NW: West(-1,0), North(0,+1), NW-Diagonal(-1,+1)
+    - NE: East(+1,0), North(0,+1), NE-Diagonal(+1,+1)
+  - Nachbar-Höhe aus flat.getLevel() mit Fallback am Rand
+  - Offset-Regeln (Prioritätsreihenfolge):
+    1. Alle 3 Nachbarn >=2 höher → +1.0
+    2. Alle 3 Nachbarn >=2 tiefer → -1.0
+    3. Gemischt (mind. einer höher UND mind. einer tiefer) → 0.0
+    4. Mindestens einer tiefer (keiner höher) → -0.5
+    5. Mindestens einer gleich (keiner tiefer) → 0.5
+    6. Alle höher (aber nicht alle >=2) → 0.5
+```
+
+[x] Erweiterung: sind alle nachbarn einer ecke mindestes zwei hoeher, wird das offset auf +1.0 gesetzt.
+sind alle nachbarn einer ecke mindestes zwei tiefer, wird das offset auf -1.0 gesetzt.
+
 ## Manipulation
 
 ## Darstellung
@@ -477,4 +512,3 @@ WFlat mit einem bestimmten Manipulator zu manipulieren.
   Der BorderSmoothManipulator ermöglicht nahtlose Übergänge zwischen
   unabhängig generierten WFlat-Bereichen!
 ```
-

@@ -53,11 +53,13 @@ public class FlatExportService {
      * @param flatId Flat identifier (database ID)
      * @param worldId World identifier
      * @param layerName Name of the target GROUND layer
+     * @param smoothCorners If true, smooths corners of top GROUND blocks based on neighbors
      * @return Number of exported columns
      * @throws IllegalArgumentException if flat, world, or layer not found, or layer is not GROUND type
      */
-    public int exportToLayer(String flatId, String worldId, String layerName) {
-        log.info("Exporting flat to layer: flatId={}, worldId={}, layerName={}", flatId, worldId, layerName);
+    public int exportToLayer(String flatId, String worldId, String layerName, boolean smoothCorners) {
+        log.info("Exporting flat to layer: flatId={}, worldId={}, layerName={}, smoothCorners={}",
+                flatId, worldId, layerName, smoothCorners);
 
         // Load flat
         WFlat flat = flatService.findById(flatId)
@@ -81,6 +83,10 @@ public class FlatExportService {
 
         // Map to store modified chunks: chunkKey -> LayerChunkData
         Map<String, LayerChunkData> modifiedChunks = new HashMap<>();
+
+        // BlockType cache for this export (to avoid repeated lookups)
+        Map<String, WBlockType> blockTypeCache = new HashMap<>();
+        WorldId wid = WorldId.of(worldId).orElse(null);
 
         int exportedColumns = 0;
         int skippedColumns = 0;
@@ -141,7 +147,8 @@ public class FlatExportService {
                 int lowestSiblingLevel = findLowestSiblingLevel(flat, localX, localZ, chunkData, world);
 
                 // Fill column from level down to lowestSiblingLevel
-                fillColumn(chunkData, worldX, worldZ, level, lowestSiblingLevel, columnDef, flat);
+                fillColumn(chunkData, worldX, worldZ, level, lowestSiblingLevel, columnDef, flat,
+                        smoothCorners, blockTypeCache, wid, localX, localZ);
 
                 exportedColumns++;
             }
@@ -465,10 +472,13 @@ public class FlatExportService {
     /**
      * Fill a column with blocks from level down to lowestSiblingLevel.
      * Uses column definition to determine block types.
+     * Applies corner smoothing to top GROUND blocks if enabled.
      */
     private void fillColumn(LayerChunkData chunkData, int worldX, int worldZ,
                             int level, int lowestSiblingLevel,
-                            WFlat.MaterialDefinition columnDef, WFlat flat) {
+                            WFlat.MaterialDefinition columnDef, WFlat flat,
+                            boolean smoothCorners, Map<String, WBlockType> blockTypeCache,
+                            WorldId wid, int localX, int localZ) {
         // Get extra blocks for this column
         String[] extraBlocks = flat.getExtraBlocksForColumn(
                 worldX - flat.getMountX(),
@@ -510,6 +520,11 @@ public class FlatExportService {
             }
             blockDefOpt.get().fillBlock(block);
 
+            // Apply corner smoothing to top block if enabled
+            if (smoothCorners && y == level) {
+                applyCornerSmoothing(block, flat, localX, localZ, blockTypeCache, wid);
+            }
+
             // Wrap in LayerBlock and add to chunk
             LayerBlock layerBlock = LayerBlock.builder()
                     .block(block)
@@ -517,5 +532,173 @@ public class FlatExportService {
 
             chunkData.getBlocks().add(layerBlock);
         }
+    }
+
+    /**
+     * Apply corner smoothing to a block based on neighbor heights.
+     * Only applies to GROUND type blocks with modifier 0 and shape 1 (CUBE).
+     * Adjusts Y offsets of the 4 top corners based on neighbor terrain levels.
+     */
+    private void applyCornerSmoothing(Block block, WFlat flat, int localX, int localZ,
+                                     Map<String, WBlockType> blockTypeCache, WorldId wid) {
+        if (block == null || block.getBlockTypeId() == null || wid == null) {
+            return;
+        }
+
+        // Get or cache block type
+        String blockTypeId = block.getBlockTypeId();
+        WBlockType blockType = blockTypeCache.computeIfAbsent(blockTypeId, id ->
+                blockTypeService.findByBlockId(wid, id).orElse(null)
+        );
+
+        if (blockType == null || blockType.getPublicData() == null) {
+            return;
+        }
+
+        var publicData = blockType.getPublicData();
+
+        // Check if GROUND type
+        if (publicData.getType() != BlockTypeType.GROUND) {
+            return;
+        }
+
+        // Check if modifier (status) is 0 or null
+        Integer status = block.getStatus();
+        if (status != null && status != 0) {
+            return;
+        }
+
+        // Check if shape is CUBE (shape 1)
+        // Shape is stored in modifiers map, get modifier 0
+        if (publicData.getModifiers() == null) {
+            return;
+        }
+        var modifier0 = publicData.getModifiers().get(0);
+        if (modifier0 == null || modifier0.getVisibility() == null || modifier0.getVisibility().getShape() == null || modifier0.getVisibility().getShape() != 1) {
+            return;
+        }
+
+        // Get current level
+        int myLevel = flat.getLevel(localX, localZ);
+
+        // Initialize offsets array (24 values for 8 corners × XYZ)
+        // Default all to 0
+        List<Float> offsets = new ArrayList<>(24);
+        for (int i = 0; i < 24; i++) {
+            offsets.add(0.0f);
+        }
+
+        // Apply corner smoothing to 4 top corners
+        // Each corner has 3 neighbors: 2 orthogonal + 1 diagonal
+
+        // Top Front Left (SW) - indices 12,13,14 - neighbors: West(-X,0), South(0,-Z), SW(-X,-Z)
+        float swOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, -1, -1, -1);
+        offsets.set(13, swOffset);
+
+        // Top Front Right (SE) - indices 15,16,17 - neighbors: East(+X,0), South(0,-Z), SE(+X,-Z)
+        float seOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, -1, 1, -1);
+        offsets.set(16, seOffset);
+
+        // Top Back Left (NW) - indices 18,19,20 - neighbors: West(-X,0), North(0,+Z), NW(-X,+Z)
+        float nwOffset = calculateCornerOffset(flat, localX, localZ, myLevel, -1, 0, 0, 1, -1, 1);
+        offsets.set(19, nwOffset);
+
+        // Top Back Right (NE) - indices 21,22,23 - neighbors: East(+X,0), North(0,+Z), NE(+X,+Z)
+        float neOffset = calculateCornerOffset(flat, localX, localZ, myLevel, 1, 0, 0, 1, 1, 1);
+        offsets.set(22, neOffset);
+
+        // Set offsets on block
+        block.setOffsets(offsets);
+
+        log.trace("Applied corner smoothing to block at ({},{}) with offsets SW:{}, SE:{}, NW:{}, NE:{}",
+                localX, localZ, swOffset, seOffset, nwOffset, neOffset);
+    }
+
+    /**
+     * Calculate Y offset for a corner based on three neighbor heights (2 orthogonal + 1 diagonal).
+     * Rules (in priority order):
+     * - All 3 neighbors at least 2 levels higher → +1.0
+     * - All 3 neighbors at least 2 levels lower → -1.0
+     * - Mixed (some higher, some lower) → 0.0
+     * - At least one lower (and none higher) → -0.5
+     * - At least one same (and none lower) → 0.5
+     * - All higher (but not all >= 2) → 0.5
+     *
+     * @param flat The flat terrain data
+     * @param localX Current column X
+     * @param localZ Current column Z
+     * @param myLevel Current column level
+     * @param dx1 X offset for first neighbor
+     * @param dz1 Z offset for first neighbor
+     * @param dx2 X offset for second neighbor
+     * @param dz2 Z offset for second neighbor
+     * @param dx3 X offset for third neighbor (diagonal)
+     * @param dz3 Z offset for third neighbor (diagonal)
+     * @return Y offset value
+     */
+    private float calculateCornerOffset(WFlat flat, int localX, int localZ, int myLevel,
+                                       int dx1, int dz1, int dx2, int dz2, int dx3, int dz3) {
+        // Get neighbor levels (use myLevel if out of bounds)
+        int neighbor1Level = getNeighborLevel(flat, localX + dx1, localZ + dz1, myLevel);
+        int neighbor2Level = getNeighborLevel(flat, localX + dx2, localZ + dz2, myLevel);
+        int neighbor3Level = getNeighborLevel(flat, localX + dx3, localZ + dz3, myLevel);
+
+        int diff1 = neighbor1Level - myLevel;
+        int diff2 = neighbor2Level - myLevel;
+        int diff3 = neighbor3Level - myLevel;
+
+        boolean n1Lower = diff1 < 0;
+        boolean n1Same = diff1 == 0;
+        boolean n1Higher = diff1 > 0;
+
+        boolean n2Lower = diff2 < 0;
+        boolean n2Same = diff2 == 0;
+        boolean n2Higher = diff2 > 0;
+
+        boolean n3Lower = diff3 < 0;
+        boolean n3Same = diff3 == 0;
+        boolean n3Higher = diff3 > 0;
+
+        // Apply rules (priority order)
+        // All 3 at least 2 levels higher → +1.0
+        if (diff1 >= 2 && diff2 >= 2 && diff3 >= 2) {
+            return 1.0f;
+        }
+
+        // All 3 at least 2 levels lower → -1.0
+        if (diff1 <= -2 && diff2 <= -2 && diff3 <= -2) {
+            return -1.0f;
+        }
+
+        // Mixed: at least one higher AND at least one lower → 0.0
+        boolean anyHigher = n1Higher || n2Higher || n3Higher;
+        boolean anyLower = n1Lower || n2Lower || n3Lower;
+        if (anyHigher && anyLower) {
+            return 0.0f;
+        }
+
+        // At least one lower (and none higher) → -0.5
+        if (anyLower && !anyHigher) {
+            return -0.5f;
+        }
+
+        // At least one same (and none lower) → 0.5
+        boolean anySame = n1Same || n2Same || n3Same;
+        if (anySame && !anyLower) {
+            return 0.5f;
+        }
+
+        // All higher (but not all >= 2 higher) → 0.5
+        return 0.5f;
+    }
+
+    /**
+     * Get neighbor level from flat, or myLevel if out of bounds.
+     */
+    private int getNeighborLevel(WFlat flat, int x, int z, int myLevel) {
+        if (x < 0 || z < 0 || x >= flat.getSizeX() || z >= flat.getSizeZ()) {
+            return myLevel;
+        }
+        return flat.getLevel(x, z);
     }
 }
