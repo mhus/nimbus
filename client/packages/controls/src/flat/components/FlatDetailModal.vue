@@ -173,6 +173,15 @@
           <span>{{ importError }}</span>
         </div>
 
+        <!-- Manipulators Section -->
+        <FlatManipulatorPanel
+          v-if="flat"
+          :flatId="props.flatId"
+          :worldId="flat.worldId"
+          @manipulator-completed="handleManipulatorCompleted"
+          class="mb-6"
+        />
+
         <!-- Visualizations -->
         <div class="space-y-6">
           <!-- Height Map -->
@@ -213,6 +222,7 @@
 import { ref, computed, watch } from 'vue';
 import { flatService, type FlatDetail } from '@/services/FlatService';
 import { apiService } from '@/services/ApiService';
+import FlatManipulatorPanel from './FlatManipulatorPanel.vue';
 
 const props = defineProps<{
   flatId: string;
@@ -353,6 +363,15 @@ const saveMetadata = async () => {
   } finally {
     savingMetadata.value = false;
   }
+};
+
+/**
+ * Handle manipulator completed
+ */
+const handleManipulatorCompleted = async () => {
+  console.log('[FlatDetailModal] Manipulator completed, reloading flat');
+  // Reload flat data to show updated terrain
+  await loadFlat();
 };
 
 // Watch for flatId changes
