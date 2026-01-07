@@ -20,6 +20,7 @@ nimbus:
   asset:
     compression:
       enabled: ${ASSET_COMPRESSION_ENABLED:true}
+      threshold: ${ASSET_COMPRESSION_THRESHOLD:1000}  # Files below this size (in bytes) are stored uncompressed
   schema:
     auto-migrate: ${NIMBUS_SCHEMA_AUTO_MIGRATE:true}
   pod:
