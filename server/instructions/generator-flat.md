@@ -449,7 +449,7 @@ Seiten die sowieso nicht gesehen werden können, können so ausgeblendet werden.
   Der FlatImportJobExecutor unterstützt jetzt die automatische Palette-Anwendung!
 ```
 
-[ ] Im flat editor sollen jobs erstellt werden und diese dann ueberwacht werden koennen.
+[x] Im flat editor sollen jobs erstellt werden und diese dann ueberwacht werden koennen.
 - Dazu wird eine komponente benoetigt (JobWatch) den job ueberwacht und in der zeit einen dialog anzeigt.
 - es soll moeglich sein den dialog zu beenden wenn der job zu lange laeuft.
 - Der dialog zeig erfolg / misserfolg des jos an
@@ -461,12 +461,26 @@ Es soll im flat editor moeglich sein neue Flats zu erstellen. Dazu einen button 
 - Es wird die auswahl getroffen wie erstellt werden soll, mit welchen parametern und dann wird der JobWatch angezeigt.
 - Danach wird die liste der Flats neu geladen
 
-[ ] Im flat editor details dialog soll es die möglichkeit geben Manipulatoren auf den Flat anzuwenden.
+[x] Im flat editor details dialog soll es die möglichkeit geben Manipulatoren auf den Flat anzuwenden.
 - Siehe dazu FlatManipulatorService in world-generator und die JobExecutor flat-manipulate
 - Ein Button mit drop Down liste der verfügbaren Manipulatoren
 - Nach Auswahl eines Manipulators wird ein Form für den Manipulator angezeigt
 - Danach wird der JobWatch angezeigt
 - Danach wird der Flat neu geladen und die Bilder aktualisiert
+
+[x] Im flat editor soll noch die funktion Export als Button hinziugefuegt werden.
+- Job flat-export ausfuehren
+- Danach wird der JobWatch angezeigt
+- Es wird eine Confirmation angezeigt, es wird kein weiter parameter ausser flatId benoetigt.
+
+[ ] Jetzt brauche ich noch eine Editor für die MaterialDefinitions eines Flats.
+- Die Aufgabe ist komplex, daher hier nur die groben Schritte:
+- Im Details Dialog einen neuen Tab "Materials" hinzufügen
+- Lade die MaterialDefinitions aus dem WFlat
+- Zeige eine Liste der MaterialDefinitions an
+- Erlaube das Hinzufügen, Bearbeiten und Löschen von MaterialDefinitions
+- Erlaube das bearbeiten von blockAtLevels Einträgen
+- Erstelle oder erweitere den REST Controller
 
 ## Backup / Restore
 

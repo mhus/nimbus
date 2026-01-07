@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * MongoDB Entity for flat terrain data used in world generation.
@@ -249,6 +250,8 @@ public class WFlat implements Identifiable {
         private String blockDef; // id + "@s:" + state e.g. n:s@s:100, n:s@s:101 - siehe BlockDef
         private String nextBlockDef; // id + "@" + state
         private boolean hasOcean;
+        private boolean isBlockMapDelta = true;
+        private Map<Integer, String> blockAtLevels = new HashMap<>(); // y -> block id
 
         /**
          * Returns the blockId for the y - starts at level
@@ -266,8 +269,18 @@ public class WFlat implements Identifiable {
             if (extraBlocks != null && extraBlocks[y] != null)
                 return extraBlocks[y];
             // third: next block (fill below level - no ocean check here!)
-            if (y < level)
+            if (y < level) {
+                if (isBlockMapDelta) {
+                    String blockDefAtLevel = blockAtLevels.get(level-y);
+                    if (blockDefAtLevel != null)
+                        return blockDefAtLevel;
+                } else {
+                    String blockDefAtLevel = blockAtLevels.get(level-y);
+                    if (blockDefAtLevel != null)
+                        return blockDefAtLevel;
+                }
                 return nextBlockDef != null ? nextBlockDef : blockDef;
+            }
             // finally: ocean block (only above terrain level!)
             if (hasOcean && y > level && y == flat.getOceanLevel())
                 return flat.getOceanBlockId();

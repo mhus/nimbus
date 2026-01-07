@@ -148,6 +148,18 @@
             {{ importing ? 'Importing...' : 'Import Flat Data' }}
           </button>
 
+          <button
+            class="btn btn-accent"
+            @click="showExportConfirmation"
+            :disabled="exporting"
+          >
+            <svg v-if="!exporting" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span v-if="exporting" class="loading loading-spinner loading-sm"></span>
+            {{ exporting ? 'Exporting...' : 'Export to Layer' }}
+          </button>
+
           <input
             ref="fileInput"
             type="file"
@@ -216,13 +228,63 @@
     </div>
     <div class="modal-backdrop" @click="$emit('close')"></div>
   </div>
+
+  <!-- Export Confirmation Dialog -->
+  <div v-if="showingExportConfirmation" class="modal modal-open">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Export Flat to Layer</h3>
+
+      <p class="mb-4">
+        This will export the flat terrain back to the layer <strong>{{ flat?.layerDataId }}</strong>.
+        All changes made in the flat will be written to the layer.
+      </p>
+
+      <div class="alert alert-warning mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>This operation cannot be undone. Make sure you have a backup if needed.</span>
+      </div>
+
+      <div class="modal-action">
+        <button
+          class="btn"
+          @click="cancelExportConfirmation"
+          :disabled="exporting"
+        >
+          Cancel
+        </button>
+        <button
+          class="btn btn-accent"
+          @click="startExport"
+          :disabled="exporting"
+        >
+          <span v-if="exporting" class="loading loading-spinner loading-sm"></span>
+          {{ exporting ? 'Starting Export...' : 'Export Now' }}
+        </button>
+      </div>
+    </div>
+    <div class="modal-backdrop" @click="cancelExportConfirmation"></div>
+  </div>
+
+  <!-- Export Job Watch Modal -->
+  <JobWatch
+    v-if="watchingExportJob"
+    :worldId="flat?.worldId || ''"
+    :jobId="exportJobId"
+    @close="handleExportJobClose"
+    @completed="handleExportJobCompleted"
+    @failed="handleExportJobFailed"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { flatService, type FlatDetail } from '@/services/FlatService';
 import { apiService } from '@/services/ApiService';
+import { useJobs, type JobCreateRequest, type Job } from '@/composables/useJobs';
 import FlatManipulatorPanel from './FlatManipulatorPanel.vue';
+import JobWatch from './JobWatch.vue';
 
 const props = defineProps<{
   flatId: string;
@@ -243,6 +305,12 @@ const editingMetadata = ref(false);
 const editTitle = ref('');
 const editDescription = ref('');
 const savingMetadata = ref(false);
+
+// Export state
+const showingExportConfirmation = ref(false);
+const exporting = ref(false);
+const watchingExportJob = ref(false);
+const exportJobId = ref('');
 
 /**
  * Computed URLs for images
@@ -372,6 +440,90 @@ const handleManipulatorCompleted = async () => {
   console.log('[FlatDetailModal] Manipulator completed, reloading flat');
   // Reload flat data to show updated terrain
   await loadFlat();
+};
+
+/**
+ * Show export confirmation dialog
+ */
+const showExportConfirmation = () => {
+  showingExportConfirmation.value = true;
+};
+
+/**
+ * Cancel export confirmation
+ */
+const cancelExportConfirmation = () => {
+  showingExportConfirmation.value = false;
+};
+
+/**
+ * Start export job
+ */
+const startExport = async () => {
+  if (!flat.value) return;
+
+  exporting.value = true;
+
+  try {
+    // Initialize jobs composable
+    const { createJob } = useJobs(flat.value.worldId);
+
+    // Build job parameters - only flatId is required
+    const parameters: Record<string, string> = {
+      flatId: props.flatId,
+    };
+
+    // Create export job
+    const jobRequest: JobCreateRequest = {
+      executor: 'flat-export',
+      parameters: parameters,
+      priority: 5,
+      maxRetries: 1,
+    };
+
+    console.log('[FlatDetailModal] Creating export job:', jobRequest);
+    const createdJob = await createJob(jobRequest);
+
+    console.log('[FlatDetailModal] Export job created:', createdJob.id);
+
+    // Hide confirmation, show job watch
+    showingExportConfirmation.value = false;
+    exportJobId.value = createdJob.id;
+    watchingExportJob.value = true;
+  } catch (e: any) {
+    console.error('[FlatDetailModal] Failed to create export job:', e);
+    alert('Failed to start export: ' + (e.message || 'Unknown error'));
+    showingExportConfirmation.value = false;
+  } finally {
+    exporting.value = false;
+  }
+};
+
+/**
+ * Handle export job watch close
+ */
+const handleExportJobClose = () => {
+  watchingExportJob.value = false;
+};
+
+/**
+ * Handle export job completed
+ */
+const handleExportJobCompleted = async (job: Job) => {
+  console.log('[FlatDetailModal] Export job completed:', job.id);
+  watchingExportJob.value = false;
+
+  // Show success message
+  alert('Flat exported successfully to layer!');
+};
+
+/**
+ * Handle export job failed
+ */
+const handleExportJobFailed = (job: Job) => {
+  console.error('[FlatDetailModal] Export job failed:', job.id, job.errorMessage);
+  watchingExportJob.value = false;
+  alert(`Export failed: ${job.errorMessage || 'Unknown error'}`);
 };
 
 // Watch for flatId changes
