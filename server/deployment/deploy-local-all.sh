@@ -2,8 +2,26 @@
 
 set -e
 
+git pull
+
 cd $(dirname "$0")
-./build-local.sh
+
+if [ "$1" = "ts" ]; then
+  cd docker-ts
+  ./build-all.sh "${@:2}"
+  cd ..
+elif [ "$1" = "jvm" ]; then
+  cd docker-jvm
+  ./build-all.sh "${@:2}"
+  cd ..
+else
+  cd docker-ts
+  ./build-all.sh "$@"
+  cd ..
+  cd docker-jvm
+  ./build-all.sh "$@"
+  cd ..
+fi
 
 cd local-all
 docker compose up -d
