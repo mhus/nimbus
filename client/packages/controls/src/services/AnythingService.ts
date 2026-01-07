@@ -3,7 +3,7 @@
  * Manages WAnything CRUD operations
  */
 
-import { ApiService } from './ApiService';
+import { apiService } from './ApiService';
 import type { WAnything } from '@nimbus/shared/generated/entities/WAnything';
 import { getLogger } from '@nimbus/shared';
 
@@ -50,7 +50,7 @@ export interface GetCollectionsResponse {
   count: number;
 }
 
-export class AnythingService extends ApiService {
+export class AnythingService {
   /**
    * Get distinct collection names with optional filtering
    */
@@ -64,7 +64,7 @@ export class AnythingService extends ApiService {
     const queryString = queryParams.toString();
     const url = `/control/anything/collections${queryString ? '?' + queryString : ''}`;
 
-    const response = await this.get<GetCollectionsResponse>(url);
+    const response = await apiService.get<GetCollectionsResponse>(url);
     logger.debug('Got collections', { count: response.count });
     return response;
   }
@@ -85,7 +85,7 @@ export class AnythingService extends ApiService {
     if (params.offset !== undefined) queryParams.append('offset', String(params.offset));
     if (params.limit !== undefined) queryParams.append('limit', String(params.limit));
 
-    const response = await this.get<ListAnythingResponse>(`/control/anything/list?${queryParams.toString()}`);
+    const response = await apiService.get<ListAnythingResponse>(`/control/anything/list?${queryParams.toString()}`);
     logger.debug('Listed entities', { count: response.count });
     return response;
   }
@@ -100,7 +100,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    const response = await this.get<WAnything>(`/control/anything/by-collection?${queryParams.toString()}`);
+    const response = await apiService.get<WAnything>(`/control/anything/by-collection?${queryParams.toString()}`);
     logger.debug('Got entity', { name: response.name, collection: response.collection });
     return response;
   }
@@ -116,7 +116,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    const response = await this.get<WAnything>(`/control/anything/by-world?${queryParams.toString()}`);
+    const response = await apiService.get<WAnything>(`/control/anything/by-world?${queryParams.toString()}`);
     logger.debug('Got entity', { name: response.name, collection: response.collection });
     return response;
   }
@@ -132,7 +132,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    const response = await this.get<WAnything>(`/control/anything/by-region?${queryParams.toString()}`);
+    const response = await apiService.get<WAnything>(`/control/anything/by-region?${queryParams.toString()}`);
     logger.debug('Got entity', { name: response.name, collection: response.collection });
     return response;
   }
@@ -143,7 +143,7 @@ export class AnythingService extends ApiService {
   async create(request: CreateAnythingRequest): Promise<WAnything> {
     logger.debug('Creating entity', { request });
 
-    const response = await this.post<WAnything>('/control/anything', request);
+    const response = await apiService.post<WAnything>('/control/anything', request);
     logger.info('Created entity', { collection: response.collection, name: response.name });
     return response;
   }
@@ -154,7 +154,7 @@ export class AnythingService extends ApiService {
   async update(id: string, request: UpdateAnythingRequest): Promise<WAnything> {
     logger.debug('Updating entity', { id, request });
 
-    const response = await this.put<WAnything>(`/control/anything/${id}`, request);
+    const response = await apiService.put<WAnything>(`/control/anything/${id}`, request);
     logger.info('Updated entity', { id, name: response.name });
     return response;
   }
@@ -169,7 +169,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    await this.delete(`/control/anything/by-collection?${queryParams.toString()}`);
+    await apiService.delete(`/control/anything/by-collection?${queryParams.toString()}`);
     logger.info('Deleted entity', { collection, name });
   }
 
@@ -184,7 +184,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    await this.delete(`/control/anything/by-world?${queryParams.toString()}`);
+    await apiService.delete(`/control/anything/by-world?${queryParams.toString()}`);
     logger.info('Deleted entity', { worldId, collection, name });
   }
 
@@ -199,7 +199,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    await this.delete(`/control/anything/by-region?${queryParams.toString()}`);
+    await apiService.delete(`/control/anything/by-region?${queryParams.toString()}`);
     logger.info('Deleted entity', { regionId, collection, name });
   }
 
@@ -215,7 +215,7 @@ export class AnythingService extends ApiService {
     queryParams.append('collection', collection);
     queryParams.append('name', name);
 
-    await this.delete(`/control/anything/by-region?${queryParams.toString()}`);
+    await apiService.delete(`/control/anything/by-region?${queryParams.toString()}`);
     logger.info('Deleted entity', { regionId, worldId, collection, name });
   }
 }
