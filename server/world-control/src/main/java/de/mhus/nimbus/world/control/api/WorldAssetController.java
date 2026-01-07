@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
 import de.mhus.nimbus.world.shared.world.SAssetService;
 import de.mhus.nimbus.world.shared.world.SAsset;
+import de.mhus.nimbus.world.shared.world.AssetMetadata;
 import de.mhus.nimbus.world.shared.world.FolderInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -202,7 +203,8 @@ public class WorldAssetController extends BaseEditorController {
         }
 
         try {
-            SAsset saved = assetService.saveAsset(wid, path, contentStream, "editor", null);
+            AssetMetadata metadata = createMetadataFromPath(path);
+            SAsset saved = assetService.saveAsset(wid, path, contentStream, "editor", metadata);
             log.info("Created asset: path={}, size={}", path, saved.getSize());
             return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
         } catch (IllegalArgumentException e) {
@@ -262,7 +264,8 @@ public class WorldAssetController extends BaseEditorController {
                 }
             } else {
                 // Create new
-                SAsset saved = assetService.saveAsset(wid, path, contentStream, "editor", null);
+                AssetMetadata metadata = createMetadataFromPath(path);
+                SAsset saved = assetService.saveAsset(wid, path, contentStream, "editor", metadata);
                 log.info("Created asset via PUT: path={}, size={}", path, saved.getSize());
                 return ResponseEntity.status(HttpStatus.CREATED).body(toListDto(saved));
             }
@@ -640,5 +643,13 @@ public class WorldAssetController extends BaseEditorController {
             case ".wav" -> "audio/wav";
             default -> "application/octet_stream";
         };
+    }
+
+    private AssetMetadata createMetadataFromPath(String path) {
+        return AssetMetadata.builder()
+                .mimeType(determineMimeType(path))
+                .category(extractCategory(path))
+                .extension(extractExtension(path))
+                .build();
     }
 }
