@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.generator.flat;
 import de.mhus.nimbus.world.shared.generator.WFlat;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -47,6 +48,7 @@ public class CompositionManipulator implements FlatManipulator {
     private static final String DEFAULT_PRESET = "custom";
 
     @Autowired
+    @Lazy
     private FlatManipulatorService manipulatorService;
 
     @Override

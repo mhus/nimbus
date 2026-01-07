@@ -27,6 +27,9 @@ public class FlatMaterialService {
     public static final int INVISIBLE = 8;
     public static final int INVISIBLE_SOLID = 9;
 
+    public static final int UNKNOWN_PROTECTED = 0;
+    public static final int UNKNOWN_NOT_PROTECTED = 255;
+
     public static final String PALETTE_LEGACY = "legacy";
     public static final String PALETTE_MIMBUS = "nimbus";
 

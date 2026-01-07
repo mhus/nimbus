@@ -47,7 +47,8 @@ public class FlatExportService {
 
     /**
      * Export WFlat to a WLayer of type GROUND.
-     * Only exports columns that are set (not 0/NOT_SET).
+     * Only exports columns that are set (not 0/NOT_SET and not 255).
+     * Material 255 is treated like NOT_SET (not exported, not deleted on target).
      * Fills columns down to lowest sibling level to avoid holes.
      *
      * @param flatId Flat identifier (database ID)
@@ -121,9 +122,10 @@ public class FlatExportService {
                     }
                 });
 
-                // Check if column is set
-                if (!flat.isColumnSet(localX, localZ)) {
-                    // NOT_SET: Keep existing blocks, but fill down if neighbors are lower
+                // Check if column is set or has material 255 (treated like NOT_SET)
+                int columnMaterial = flat.getColumn(localX, localZ);
+                if (!flat.isColumnSet(localX, localZ) || columnMaterial == 255) {
+                    // NOT_SET or Material 255: Keep existing blocks, but fill down if neighbors are lower
                     handleNotSetColumn(chunkData, worldX, worldZ, flat, localX, localZ, world, worldId);
                     skippedColumns++;
                     continue;
@@ -176,9 +178,10 @@ public class FlatExportService {
     }
 
     /**
-     * Handle NOT_SET column: Keep top GROUND block, delete all blocks below, fill down if neighbors are lower.
+     * Handle NOT_SET column (material 0 or 255): Keep top GROUND block, delete all blocks below, fill down if neighbors are lower.
      * This prevents gaps between old high blocks and new lower blocks.
      * Only considers GROUND type blocks for filling.
+     * Material 255 is treated the same as NOT_SET (material 0).
      */
     private void handleNotSetColumn(LayerChunkData chunkData, int worldX, int worldZ,
                                     WFlat flat, int localX, int localZ, WWorld world, String worldId) {

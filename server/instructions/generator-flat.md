@@ -99,7 +99,7 @@ JobTypes im System
   }
 ```
 
-[ ] Es soll einen weiterein import jobtype geben der ein HexGrid als WFlat anlegt.
+[?] Es soll einen weiterein import jobtype geben der ein HexGrid als WFlat anlegt.
 Type: create-hexgrid
 - Es werden die HexGrid coordinaten im Job angegeben.
 - Es wird die fläche dex HexGrid sizeX sizeZ angelegt.
@@ -142,6 +142,26 @@ JobTypes im System (Übersicht)
     }
   }
 ```
+
+[?] Anpassung: Material Definition 255 nicht exportiert (NOT_SET but EDITABLE if unknownProtected=true)
+- Wenn ein Punkt den MaterialTyp 255 hat, dann wird er nicht auf dem target gelöscht und nicht exportiert, wie bei 0.
+
+[?] Es soll einen weiterein import jobtype geben der ein HexGrid als WFlat anlegt.
+Type: import-hexgrid
+- Aehnlich wie crete-hexgrid, aber
+- Es wird der komplette inhalt vom Layer importiert
+- Erstmal werden alle Materialient columns auf 255 (UNKNOWN_NOT_PROTECTED) gesetzt
+- Dann wie beim create-hexgrid die raender, die ausserhalb des Hexgrids liegen werden auf Material 0 (UNKNOWN_PROTECTED) gesetzt
+- Dann wird der WFlat auf unknownProtected = true gestellt. Damit koennen nur noch die hex grid daten verändert werden.
+```text
+  4. flat-import-hexgrid - Importiert Layer komplett, schützt Bereiche außerhalb HexGrid
+```
+
+[ ] Es soll einen meitereen import ype geben, der in ein bestehendes WFlat den Border neu importiert.
+Type: update-border
+- Es wird nur der Rand des WFlat aus dem Layer importiert.
+- Angabe von flatId ist noetig
+- Siehe auch flat-create, hier wird auch nur der Border importiert
 
 ## Export
 
@@ -306,7 +326,6 @@ Seiten die sowieso nicht gesehen werden können, können so ausgeblendet werden.
   - Spart Performance durch nicht-exportierte unsichtbare Blöcke
 ```
 
-
 ## Darstellung
 
 [?] Erstelle unter ../client/packages/controls einen flat-editor.html der es erlaubt WFlat aufzulisten.
@@ -429,6 +448,43 @@ Seiten die sowieso nicht gesehen werden können, können so ausgeblendet werden.
 
   Der FlatImportJobExecutor unterstützt jetzt die automatische Palette-Anwendung!
 ```
+
+[ ] Im flat editor sollen jobs erstellt werden und diese dann ueberwacht werden koennen.
+- Dazu wird eine komponente benoetigt (JobWatch) den job ueberwacht und in der zeit einen dialog anzeigt.
+- es soll moeglich sein den dialog zu beenden wenn der job zu lange laeuft.
+- Der dialog zeig erfolg / misserfolg des jos an
+- Siehe dazu job-editor in ../client/packages/controls
+
+Es soll im flat editor moeglich sein neue Flats zu erstellen. Dazu einen button "Create New Flat"
+- Es gibt mehrere möglichkeiten ein flat zu erstellen über jobs.
+- Siehe dazu FlatImportService und den JobExecutor flat-import 
+- Es wird die auswahl getroffen wie erstellt werden soll, mit welchen parametern und dann wird der JobWatch angezeigt.
+- Danach wird die liste der Flats neu geladen
+
+[ ] Im flat editor details dialog soll es die möglichkeit geben Manipulatoren auf den Flat anzuwenden.
+- Siehe dazu FlatManipulatorService in world-generator und die JobExecutor flat-manipulate
+- Ein Button mit drop Down liste der verfügbaren Manipulatoren
+- Nach Auswahl eines Manipulators wird ein Form für den Manipulator angezeigt
+- Danach wird der JobWatch angezeigt
+- Danach wird der Flat neu geladen und die Bilder aktualisiert
+
+## Backup / Restore
+
+[?] Erstelle im flat-editor eine funktion die es erlaubt ein WFlat zu exportieren und zu importieren als BINARY/JSON Datei.
+- Export: Datei herunterladen 
+  - Button im Details Dialog
+- Import: Datei auswählen und hochladen, auf einen bestehende Flat 
+  - Button im Details Dialog
+  - Beim Import werden nur die levels, columns und materialDefinitions importiert.
+- Siehe ../client/packages/controls fuer den flat-editor
+
+[?] Erweitere WFlat um 'title' und 'description'
+- Diese sollen auch im flat editor angezeigt und editiert werden koennen.
+
+[ ] Beim Export soll der Dateiname folgendes Format haben:
+flat_{worldId}_{flatId}_{title}_{dateTime}.wflat.json
+- title muss natuerlich normalisiert werden
+- title kürzen wenn zu lang
 
 ## Manipulatoren
 

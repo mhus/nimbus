@@ -49,6 +49,12 @@ public class WFlat implements Identifiable {
     @Getter
     private String flatId;
 
+    @Getter @Setter
+    private String title;
+
+    @Getter @Setter
+    private String description;
+
     @Getter
     private int mountX;
     @Getter
@@ -176,7 +182,7 @@ public class WFlat implements Identifiable {
     }
 
     public void setMaterial(int id, MaterialDefinition definition) {
-        if (id < 0 || id > 255)
+        if (id < 1 || id > 254) // 0 = UNKNOWN_PROTECTED, 255 = UNKNOWN_NOT_PROTECTED
             throw new IllegalArgumentException("Definition id out of range");
         if (id == NOT_SET)
             return;
@@ -189,6 +195,30 @@ public class WFlat implements Identifiable {
         if (id == NOT_SET)
             return null;
         return materials.get((byte)id);
+    }
+
+    public HashMap<Byte, MaterialDefinition> getMaterials() {
+        return materials;
+    }
+
+    public void setMaterials(HashMap<Byte, MaterialDefinition> materials) {
+        this.materials = materials != null ? materials : new HashMap<>();
+    }
+
+    public void setLevels(byte[] levels) {
+        if (levels == null)
+            throw new IllegalArgumentException("Levels cannot be null");
+        if (levels.length != sizeX * sizeZ)
+            throw new IllegalArgumentException("Levels array size mismatch");
+        this.levels = levels;
+    }
+
+    public void setColumns(byte[] columns) {
+        if (columns == null)
+            throw new IllegalArgumentException("Columns cannot be null");
+        if (columns.length != sizeX * sizeZ)
+            throw new IllegalArgumentException("Columns array size mismatch");
+        this.columns = columns;
     }
 
     @Getter

@@ -9,17 +9,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Job executor for creating empty WFlat with BEDROCK material.
- * Creates a flat terrain at level 0 with border imported from layer.
+ * Job executor for importing HexGrid-based WFlat from layer.
+ * Imports all columns from the layer and sets them to material 255 (UNKNOWN_NOT_PROTECTED),
+ * then sets positions outside the HexGrid to material 0 (UNKNOWN_PROTECTED).
+ * Sets unknownProtected = true (only HexGrid positions can be modified).
  *
  * WorldId is taken from job.getWorldId()
  *
  * Required parameters:
- * - layerName: Name of the GROUND layer to import border from
+ * - layerName: Name of the GROUND layer to import from
  * - sizeX: Width of the flat (1-800)
  * - sizeZ: Height of the flat (1-800)
  * - mountX: Mount X position (start position in layer)
  * - mountZ: Mount Z position (start position in layer)
+ * - hexQ: HexGrid Q coordinate (axial)
+ * - hexR: HexGrid R coordinate (axial)
  *
  * Optional parameters:
  * - flatId: Identifier for the new WFlat (if not provided, UUID will be generated)
@@ -30,9 +34,9 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class FlatCreateJobExecutor implements JobExecutor {
+public class FlatHexGridImportJobExecutor implements JobExecutor {
 
-    private static final String EXECUTOR_NAME = "flat-create";
+    private static final String EXECUTOR_NAME = "flat-import-hexgrid";
 
     private final FlatCreateService flatCreateService;
     private final FlatMaterialService flatMaterialService;
@@ -45,7 +49,7 @@ public class FlatCreateJobExecutor implements JobExecutor {
     @Override
     public JobResult execute(WJob job) throws JobExecutionException {
         try {
-            log.info("Starting flat create job: jobId={}", job.getId());
+            log.info("Starting flat hexgrid import job: jobId={}", job.getId());
 
             // Get worldId from job
             String worldId = job.getWorldId();
@@ -56,6 +60,8 @@ public class FlatCreateJobExecutor implements JobExecutor {
             int sizeZ = getRequiredIntParameter(job, "sizeZ");
             int mountX = getRequiredIntParameter(job, "mountX");
             int mountZ = getRequiredIntParameter(job, "mountZ");
+            int hexQ = getRequiredIntParameter(job, "hexQ");
+            int hexR = getRequiredIntParameter(job, "hexR");
 
             // Extract optional parameters
             String flatId = getOptionalParameter(job, "flatId", java.util.UUID.randomUUID().toString());
@@ -71,14 +77,14 @@ public class FlatCreateJobExecutor implements JobExecutor {
                 throw new JobExecutionException("sizeZ must be between 1 and 800, got: " + sizeZ);
             }
 
-            log.info("Creating empty flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), title={}, description={}, palette={}",
-                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, title, description, paletteName);
+            log.info("Importing HexGrid flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), hex=({},{}), title={}, description={}, palette={}",
+                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, hexQ, hexR, title, description, paletteName);
 
-            // Execute create
-            WFlat flat = flatCreateService.createEmptyFlat(
+            // Execute import
+            WFlat flat = flatCreateService.importHexGridFlat(
                     worldId, layerName, flatId,
                     sizeX, sizeZ, mountX, mountZ,
-                    title, description
+                    hexQ, hexR, title, description
             );
 
             // Apply material palette if specified
@@ -95,20 +101,20 @@ public class FlatCreateJobExecutor implements JobExecutor {
 
             // Build success result
             String resultData = String.format(
-                    "Successfully created empty flat: id=%s, flatId=%s, worldId=%s, layerName=%s, size=%dx%d, mount=(%d,%d), palette=%s",
-                    flat.getId(), flatId, worldId, layerName, sizeX, sizeZ, mountX, mountZ,
+                    "Successfully imported HexGrid flat: id=%s, flatId=%s, worldId=%s, layerName=%s, size=%dx%d, mount=(%d,%d), hex=(%d,%d), palette=%s, unknownProtected=true",
+                    flat.getId(), flatId, worldId, layerName, sizeX, sizeZ, mountX, mountZ, hexQ, hexR,
                     paletteName != null ? paletteName : "none"
             );
 
-            log.info("Flat create completed successfully: flatId={}, id={}", flatId, flat.getId());
+            log.info("Flat hexgrid import completed successfully: flatId={}, id={}", flatId, flat.getId());
             return JobResult.ofSuccess(resultData);
 
         } catch (IllegalArgumentException e) {
-            log.error("Invalid parameters for flat create", e);
+            log.error("Invalid parameters for flat hexgrid import", e);
             throw new JobExecutionException("Invalid parameters: " + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("Flat create failed", e);
-            throw new JobExecutionException("Create failed: " + e.getMessage(), e);
+            log.error("Flat hexgrid import failed", e);
+            throw new JobExecutionException("Import failed: " + e.getMessage(), e);
         }
     }
 

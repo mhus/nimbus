@@ -63,7 +63,7 @@ export interface UseJobsReturn {
   loadJobs: (status?: JobStatus) => Promise<void>;
   loadJob: (jobId: string) => Promise<Job | null>;
   loadSummary: () => Promise<void>;
-  createJob: (request: JobCreateRequest) => Promise<void>;
+  createJob: (request: JobCreateRequest) => Promise<Job>;
   retryJob: (jobId: string) => Promise<void>;
   cancelJob: (jobId: string) => Promise<void>;
   deleteJob: (jobId: string) => Promise<void>;
@@ -159,7 +159,7 @@ export function useJobs(worldId: string): UseJobsReturn {
   /**
    * Create job
    */
-  const createJob = async (request: JobCreateRequest) => {
+  const createJob = async (request: JobCreateRequest): Promise<Job> => {
     // Skip if worldId is not set
     if (!worldId || worldId === '?') {
       throw new Error('World ID not set');
@@ -169,13 +169,14 @@ export function useJobs(worldId: string): UseJobsReturn {
     error.value = null;
 
     try {
-      await apiService.post<Job>(
+      const createdJob = await apiService.post<Job>(
         `/control/worlds/${worldId}/jobs`,
         request
       );
-      logger.info('Created job', { worldId, request });
+      logger.info('Created job', { worldId, request, jobId: createdJob.id });
       await loadJobs();
       await loadSummary();
+      return createdJob;
     } catch (err) {
       error.value = 'Failed to create job';
       logger.error('Failed to create job', { worldId, request }, err as Error);

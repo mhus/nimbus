@@ -23,6 +23,8 @@ import org.springframework.stereotype.Component;
  *
  * Optional parameters:
  * - flatId: Identifier for the new WFlat (if not provided, UUID will be generated)
+ * - title: Display title for the flat
+ * - description: Description text for the flat
  * - paletteName: Name of predefined material palette to apply ("nimbus" or "legacy")
  */
 @Component
@@ -57,6 +59,8 @@ public class FlatImportJobExecutor implements JobExecutor {
 
             // Extract optional parameters
             String flatId = getOptionalParameter(job, "flatId", java.util.UUID.randomUUID().toString());
+            String title = getOptionalParameter(job, "title", null);
+            String description = getOptionalParameter(job, "description", null);
             String paletteName = getOptionalParameter(job, "paletteName", null);
 
             // Validate size parameters
@@ -67,13 +71,14 @@ public class FlatImportJobExecutor implements JobExecutor {
                 throw new JobExecutionException("sizeZ must be between 1 and 800, got: " + sizeZ);
             }
 
-            log.info("Importing flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), palette={}",
-                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, paletteName);
+            log.info("Importing flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), title={}, description={}, palette={}",
+                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, title, description, paletteName);
 
             // Execute import
             WFlat flat = flatCreateService.importFromLayer(
                     worldId, layerName, flatId,
-                    sizeX, sizeZ, mountX, mountZ
+                    sizeX, sizeZ, mountX, mountZ,
+                    title, description
             );
 
             // Apply material palette if specified

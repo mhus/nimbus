@@ -28,6 +28,8 @@ import org.springframework.stereotype.Component;
  *
  * Optional parameters:
  * - flatId: Identifier for the new WFlat (if not provided, UUID will be generated)
+ * - title: Display title for the flat
+ * - description: Description text for the flat
  * - paletteName: Name of predefined material palette to apply ("nimbus" or "legacy")
  */
 @Component
@@ -64,6 +66,8 @@ public class FlatHexGridCreateJobExecutor implements JobExecutor {
 
             // Extract optional parameters
             String flatId = getOptionalParameter(job, "flatId", java.util.UUID.randomUUID().toString());
+            String title = getOptionalParameter(job, "title", null);
+            String description = getOptionalParameter(job, "description", null);
             String paletteName = getOptionalParameter(job, "paletteName", null);
 
             // Validate size parameters
@@ -74,14 +78,14 @@ public class FlatHexGridCreateJobExecutor implements JobExecutor {
                 throw new JobExecutionException("sizeZ must be between 1 and 800, got: " + sizeZ);
             }
 
-            log.info("Creating HexGrid flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), hex=({},{}), palette={}",
-                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, hexQ, hexR, paletteName);
+            log.info("Creating HexGrid flat: worldId={}, layerName={}, flatId={}, size={}x{}, mount=({},{}), hex=({},{}), title={}, description={}, palette={}",
+                    worldId, layerName, flatId, sizeX, sizeZ, mountX, mountZ, hexQ, hexR, title, description, paletteName);
 
             // Execute create
             WFlat flat = flatCreateService.createHexGridFlat(
                     worldId, layerName, flatId,
                     sizeX, sizeZ, mountX, mountZ,
-                    hexQ, hexR
+                    hexQ, hexR, title, description
             );
 
             // Apply material palette if specified

@@ -53,6 +53,7 @@ export default defineConfig({
         'backdrop-editor': resolve(__dirname, 'backdrop-editor.html'),
         'settings-editor': resolve(__dirname, 'settings-editor.html'),
         'job-editor': resolve(__dirname, 'job-editor.html'),
+        'flat-editor': resolve(__dirname, 'flat-editor.html'),
         'chest-editor': resolve(__dirname, 'chest-editor.html'),
         'chunk-editor': resolve(__dirname, 'chunk-editor.html'),
         'editcache-editor': resolve(__dirname, 'editcache-editor.html'),

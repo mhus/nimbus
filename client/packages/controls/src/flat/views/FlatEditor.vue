@@ -10,6 +10,20 @@
 
     <!-- Flat Editor Content (only shown when world is selected) -->
     <template v-else>
+      <!-- Header with Create Button -->
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold">Flats</h2>
+        <button
+          class="btn btn-primary"
+          @click="showCreateDialog = true"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create New Flat
+        </button>
+      </div>
+
       <!-- Loading State -->
       <LoadingSpinner v-if="loading && flats.length === 0" />
 
@@ -19,6 +33,15 @@
       <!-- Empty State -->
       <div v-else-if="!loading && flats.length === 0" class="text-center py-12">
         <p class="text-base-content/70 text-lg">No flats found for this world</p>
+        <button
+          class="btn btn-primary mt-4"
+          @click="showCreateDialog = true"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create New Flat
+        </button>
       </div>
 
       <!-- Flat List -->
@@ -36,6 +59,24 @@
         :flat-id="selectedFlatId"
         @close="closeFlatDetail"
       />
+
+      <!-- Flat Create Dialog -->
+      <FlatCreateDialog
+        v-if="showCreateDialog && currentWorldId"
+        :world-id="currentWorldId"
+        @close="showCreateDialog = false"
+        @job-created="handleJobCreated"
+      />
+
+      <!-- Job Watch Dialog -->
+      <JobWatch
+        v-if="watchingJobId && currentWorldId"
+        :world-id="currentWorldId"
+        :job-id="watchingJobId"
+        @close="handleJobWatchClose"
+        @completed="handleJobCompleted"
+        @failed="handleJobFailed"
+      />
     </template>
   </div>
 </template>
@@ -48,6 +89,9 @@ import LoadingSpinner from '@components/LoadingSpinner.vue';
 import ErrorAlert from '@components/ErrorAlert.vue';
 import FlatList from '../components/FlatList.vue';
 import FlatDetailModal from '../components/FlatDetailModal.vue';
+import FlatCreateDialog from '../components/FlatCreateDialog.vue';
+import JobWatch from '../components/JobWatch.vue';
+import type { Job } from '@/composables/useJobs';
 
 const { currentWorldId, loadWorlds } = useWorld();
 
@@ -60,6 +104,8 @@ const flats = computed(() => flatsComposable.value?.flats.value || []);
 const loading = computed(() => flatsComposable.value?.loading.value || false);
 const error = computed(() => flatsComposable.value?.error.value || null);
 const selectedFlatId = ref<string | null>(null);
+const showCreateDialog = ref(false);
+const watchingJobId = ref<string | null>(null);
 
 // Load flats when world changes
 watch(currentWorldId, () => {
@@ -102,5 +148,43 @@ const handleDeleteFlat = async (flatId: string) => {
  */
 const closeFlatDetail = () => {
   selectedFlatId.value = null;
+};
+
+/**
+ * Handle job created from create dialog
+ */
+const handleJobCreated = (jobId: string) => {
+  console.log('[FlatEditor] Job created:', jobId);
+  showCreateDialog.value = false;
+  watchingJobId.value = jobId;
+};
+
+/**
+ * Handle job watch close
+ */
+const handleJobWatchClose = () => {
+  watchingJobId.value = null;
+};
+
+/**
+ * Handle job completed
+ */
+const handleJobCompleted = (job: Job) => {
+  console.log('[FlatEditor] Job completed:', job);
+  watchingJobId.value = null;
+
+  // Reload flat list
+  flatsComposable.value?.loadFlats();
+};
+
+/**
+ * Handle job failed
+ */
+const handleJobFailed = (job: Job) => {
+  console.error('[FlatEditor] Job failed:', job);
+  watchingJobId.value = null;
+
+  // Still reload flat list in case partial work was done
+  flatsComposable.value?.loadFlats();
 };
 </script>

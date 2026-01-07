@@ -10,11 +10,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -39,6 +43,8 @@ public class FlatController extends BaseEditorController {
             String worldId,
             String layerDataId,
             String flatId,
+            String title,
+            String description,
             int sizeX,
             int sizeZ,
             int mountX,
@@ -53,6 +59,8 @@ public class FlatController extends BaseEditorController {
             String worldId,
             String layerDataId,
             String flatId,
+            String title,
+            String description,
             int sizeX,
             int sizeZ,
             int mountX,
@@ -65,6 +73,12 @@ public class FlatController extends BaseEditorController {
             Instant createdAt,
             Instant updatedAt
     ) {}
+
+    public record UpdateFlatMetadataRequest(
+            String title,
+            String description
+    ) {}
+
 
     /**
      * List all flats for a world.
@@ -90,6 +104,8 @@ public class FlatController extends BaseEditorController {
                         flat.getWorldId(),
                         flat.getLayerDataId(),
                         flat.getFlatId(),
+                        flat.getTitle(),
+                        flat.getDescription(),
                         flat.getSizeX(),
                         flat.getSizeZ(),
                         flat.getMountX(),
@@ -132,6 +148,8 @@ public class FlatController extends BaseEditorController {
                 flat.getWorldId(),
                 flat.getLayerDataId(),
                 flat.getFlatId(),
+                flat.getTitle(),
+                flat.getDescription(),
                 flat.getSizeX(),
                 flat.getSizeZ(),
                 flat.getMountX(),
@@ -143,6 +161,66 @@ public class FlatController extends BaseEditorController {
                 flat.getColumns(),
                 flat.getCreatedAt(),
                 flat.getUpdatedAt()
+        );
+
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * Update flat metadata (title and description).
+     * PATCH /control/flats/{id}/metadata
+     */
+    @PatchMapping("/{id}/metadata")
+    @Operation(summary = "Update flat metadata")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Flat not found")
+    })
+    public ResponseEntity<FlatDetailDto> updateFlatMetadata(
+            @Parameter(description = "Flat ID", required = true)
+            @PathVariable String id,
+            @RequestBody UpdateFlatMetadataRequest request) {
+
+        log.info("Updating flat metadata: id={}", id);
+
+        // Load flat
+        Optional<WFlat> flatOpt = flatService.findById(id);
+        if (flatOpt.isEmpty()) {
+            log.warn("Flat not found for metadata update: id={}", id);
+            return ResponseEntity.notFound().build();
+        }
+
+        WFlat flat = flatOpt.get();
+
+        // Update metadata
+        flat.setTitle(request.title());
+        flat.setDescription(request.description());
+        flat.touchUpdate();
+
+        // Save to database
+        WFlat updated = flatService.update(flat);
+
+        log.info("Flat metadata updated successfully: id={}", id);
+
+        // Return updated flat details
+        FlatDetailDto dto = new FlatDetailDto(
+                updated.getId(),
+                updated.getWorldId(),
+                updated.getLayerDataId(),
+                updated.getFlatId(),
+                updated.getTitle(),
+                updated.getDescription(),
+                updated.getSizeX(),
+                updated.getSizeZ(),
+                updated.getMountX(),
+                updated.getMountZ(),
+                updated.getOceanLevel(),
+                updated.getOceanBlockId(),
+                updated.isUnknownProtected(),
+                updated.getLevels(),
+                updated.getColumns(),
+                updated.getCreatedAt(),
+                updated.getUpdatedAt()
         );
 
         return ResponseEntity.ok(dto);
@@ -392,5 +470,287 @@ public class FlatController extends BaseEditorController {
         int bi = (int)((b + m) * 255);
 
         return (ri << 16) | (gi << 8) | bi;
+    }
+
+    /**
+     * Export flat data as JSON file for download.
+     * GET /control/flats/{id}/export
+     * Downloads levels, columns, and materials as JSON file.
+     */
+    @GetMapping("/{id}/export")
+    @Operation(summary = "Export flat data as JSON file")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Flat not found")
+    })
+    public ResponseEntity<byte[]> exportFlat(
+            @Parameter(description = "Flat ID", required = true)
+            @PathVariable String id) {
+
+        log.info("Exporting flat data: id={}", id);
+
+        try {
+            // Load flat
+            Optional<WFlat> flatOpt = flatService.findById(id);
+            if (flatOpt.isEmpty()) {
+                log.warn("Flat not found for export: id={}", id);
+                return ResponseEntity.notFound().build();
+            }
+
+            WFlat flat = flatOpt.get();
+
+            // Build JSON with levels, columns, and materials
+            StringBuilder json = new StringBuilder();
+            json.append("{");
+
+            // Levels array
+            json.append("\"levels\":[");
+            byte[] levels = flat.getLevels();
+            for (int i = 0; i < levels.length; i++) {
+                if (i > 0) json.append(",");
+                json.append(levels[i] & 0xFF); // unsigned
+            }
+            json.append("],");
+
+            // Columns array
+            json.append("\"columns\":[");
+            byte[] columns = flat.getColumns();
+            for (int i = 0; i < columns.length; i++) {
+                if (i > 0) json.append(",");
+                json.append(columns[i] & 0xFF); // unsigned
+            }
+            json.append("],");
+
+            // Materials map
+            json.append("\"materials\":{");
+            HashMap<Byte, WFlat.MaterialDefinition> materials = flat.getMaterials();
+            if (materials != null && !materials.isEmpty()) {
+                boolean first = true;
+                for (Map.Entry<Byte, WFlat.MaterialDefinition> entry : materials.entrySet()) {
+                    if (!first) json.append(",");
+                    first = false;
+
+                    json.append("\"").append(entry.getKey() & 0xFF).append("\":{");
+                    WFlat.MaterialDefinition mat = entry.getValue();
+                    json.append("\"blockDef\":").append(escapeJson(mat.getBlockDef())).append(",");
+                    json.append("\"nextBlockDef\":").append(mat.getNextBlockDef() != null ? escapeJson(mat.getNextBlockDef()) : "null").append(",");
+                    json.append("\"hasOcean\":").append(mat.isHasOcean());
+                    json.append("}");
+                }
+            }
+            json.append("}");
+
+            json.append("}");
+
+            byte[] jsonBytes = json.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+            // Build filename: flat_{worldId}_{flatId}_{title}_{dateTime}.wflat.json
+            String normalizedTitle = normalizeForFilename(flat.getTitle());
+            String dateTime = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String filename = String.format("flat_%s_%s_%s_%s.wflat.json",
+                    flat.getWorldId(),
+                    flat.getFlatId(),
+                    normalizedTitle,
+                    dateTime
+            );
+
+            log.info("Flat exported successfully: id={}, size={} bytes, filename={}", id, jsonBytes.length, filename);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                    .body(jsonBytes);
+
+        } catch (Exception e) {
+            log.error("Failed to export flat", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Import flat data from uploaded JSON file.
+     * POST /control/flats/{id}/import
+     * Updates levels, columns, and materials from uploaded file.
+     */
+    @PostMapping("/{id}/import")
+    @Operation(summary = "Import flat data from JSON file")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Success"),
+            @ApiResponse(responseCode = "404", description = "Flat not found"),
+            @ApiResponse(responseCode = "400", description = "Invalid file or data")
+    })
+    public ResponseEntity<FlatDetailDto> importFlat(
+            @Parameter(description = "Flat ID", required = true)
+            @PathVariable String id,
+            @Parameter(description = "JSON file to import", required = true)
+            @RequestParam("file") MultipartFile file) {
+
+        log.info("Importing flat data: id={}, filename={}", id, file.getOriginalFilename());
+
+        try {
+            // Validate file
+            if (file.isEmpty()) {
+                log.warn("Empty file uploaded");
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Load flat
+            Optional<WFlat> flatOpt = flatService.findById(id);
+            if (flatOpt.isEmpty()) {
+                log.warn("Flat not found for import: id={}", id);
+                return ResponseEntity.notFound().build();
+            }
+
+            WFlat flat = flatOpt.get();
+
+            // Read and parse JSON
+            String jsonContent = new String(file.getBytes(), java.nio.charset.StandardCharsets.UTF_8);
+
+            // Parse JSON manually (simple parsing for our structure)
+            Map<String, Object> data = parseSimpleJson(jsonContent);
+
+            // Extract levels
+            @SuppressWarnings("unchecked")
+            List<Integer> levelsList = (List<Integer>) data.get("levels");
+            if (levelsList == null) {
+                log.warn("Missing levels in import data");
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Extract columns
+            @SuppressWarnings("unchecked")
+            List<Integer> columnsList = (List<Integer>) data.get("columns");
+            if (columnsList == null) {
+                log.warn("Missing columns in import data");
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Validate size
+            int expectedSize = flat.getSizeX() * flat.getSizeZ();
+            if (levelsList.size() != expectedSize || columnsList.size() != expectedSize) {
+                log.warn("Invalid import data: size mismatch. Expected: {}, got levels: {}, columns: {}",
+                        expectedSize, levelsList.size(), columnsList.size());
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Convert to byte arrays
+            byte[] newLevels = new byte[levelsList.size()];
+            for (int i = 0; i < levelsList.size(); i++) {
+                newLevels[i] = levelsList.get(i).byteValue();
+            }
+
+            byte[] newColumns = new byte[columnsList.size()];
+            for (int i = 0; i < columnsList.size(); i++) {
+                newColumns[i] = columnsList.get(i).byteValue();
+            }
+
+            // Extract materials
+            @SuppressWarnings("unchecked")
+            Map<String, Map<String, Object>> materialsMap = (Map<String, Map<String, Object>>) data.get("materials");
+            HashMap<Byte, WFlat.MaterialDefinition> newMaterials = new HashMap<>();
+            if (materialsMap != null) {
+                for (Map.Entry<String, Map<String, Object>> entry : materialsMap.entrySet()) {
+                    byte key = Byte.parseByte(entry.getKey());
+                    Map<String, Object> matData = entry.getValue();
+
+                    WFlat.MaterialDefinition matDef = WFlat.MaterialDefinition.builder()
+                            .blockDef((String) matData.get("blockDef"))
+                            .nextBlockDef((String) matData.get("nextBlockDef"))
+                            .hasOcean((Boolean) matData.get("hasOcean"))
+                            .build();
+
+                    newMaterials.put(key, matDef);
+                }
+            }
+
+            // Update flat data
+            flat.setLevels(newLevels);
+            flat.setColumns(newColumns);
+            flat.setMaterials(newMaterials);
+            flat.touchUpdate();
+
+            // Save to database
+            WFlat updated = flatService.update(flat);
+
+            log.info("Flat imported successfully: id={}", id);
+
+            // Return updated flat details
+            FlatDetailDto dto = new FlatDetailDto(
+                    updated.getId(),
+                    updated.getWorldId(),
+                    updated.getLayerDataId(),
+                    updated.getFlatId(),
+                    updated.getTitle(),
+                    updated.getDescription(),
+                    updated.getSizeX(),
+                    updated.getSizeZ(),
+                    updated.getMountX(),
+                    updated.getMountZ(),
+                    updated.getOceanLevel(),
+                    updated.getOceanBlockId(),
+                    updated.isUnknownProtected(),
+                    updated.getLevels(),
+                    updated.getColumns(),
+                    updated.getCreatedAt(),
+                    updated.getUpdatedAt()
+            );
+
+            return ResponseEntity.ok(dto);
+
+        } catch (Exception e) {
+            log.error("Failed to import flat", e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * Escape JSON string
+     */
+    private String escapeJson(String str) {
+        if (str == null) return "null";
+        return "\"" + str.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
+
+    /**
+     * Normalize string for use in filename
+     * Removes/replaces special characters, spaces, etc.
+     * Limits length to 50 characters.
+     */
+    private String normalizeForFilename(String str) {
+        if (str == null || str.isBlank()) {
+            return "untitled";
+        }
+
+        // Replace spaces with underscores, remove special characters
+        String normalized = str.trim()
+                .replaceAll("[\\s]+", "_")  // Replace whitespace with underscore
+                .replaceAll("[^a-zA-Z0-9_-]", "")  // Remove special characters except underscore and dash
+                .replaceAll("_{2,}", "_")  // Replace multiple underscores with single
+                .toLowerCase();
+
+        // Limit length to 50 characters
+        if (normalized.length() > 50) {
+            normalized = normalized.substring(0, 50);
+            // Remove trailing underscore if any
+            if (normalized.endsWith("_")) {
+                normalized = normalized.substring(0, 49);
+            }
+        }
+
+        return normalized;
+    }
+
+    /**
+     * Simple JSON parser for our specific structure
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseSimpleJson(String json) {
+        // Use Jackson ObjectMapper for proper JSON parsing
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.readValue(json, Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse JSON", e);
+        }
     }
 }

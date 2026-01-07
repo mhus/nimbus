@@ -5,7 +5,10 @@
         <!-- Flat Info -->
         <div class="flex-1 space-y-1">
           <div class="flex items-center gap-2">
-            <h3 class="font-bold text-lg">{{ flat.flatId }}</h3>
+            <div class="flex flex-col">
+              <h3 v-if="flat.title" class="font-bold text-lg">{{ flat.title }}</h3>
+              <span class="text-sm" :class="flat.title ? 'text-base-content/70' : 'font-bold text-lg'">{{ flat.flatId }}</span>
+            </div>
             <span class="badge badge-sm badge-outline">{{ flat.sizeX }}x{{ flat.sizeZ }}</span>
           </div>
           <div class="text-sm text-base-content/70 space-x-4">
@@ -51,6 +54,8 @@ interface Flat {
   worldId: string;
   layerDataId: string;
   flatId: string;
+  title: string | null;
+  description: string | null;
   sizeX: number;
   sizeZ: number;
   mountX: number;
