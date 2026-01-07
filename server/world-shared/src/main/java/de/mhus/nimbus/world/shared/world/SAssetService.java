@@ -96,9 +96,10 @@ public class SAssetService {
 
         var storageInfo = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, collection.worldId().getId(), "assets/" + collection.path(), finalStream);
         asset.setStorageId(storageInfo.id());
-        asset.setSize(storageInfo.size());
-        log.debug("Storing asset externally path={} size={} storageId={} world={} compressed={}",
-                collection.path(), storageInfo.size(), storageInfo.id(), collection.worldId(), asset.isCompressed());
+        // Store original uncompressed size (not the compressed storage size)
+        asset.setSize(originalSize > 0 ? originalSize : storageInfo.size());
+        log.debug("Storing asset externally path={} originalSize={} storageSize={} storageId={} world={} compressed={}",
+                collection.path(), asset.getSize(), storageInfo.size(), storageInfo.id(), collection.worldId(), asset.isCompressed());
 
         return repository.save(asset);
     }
@@ -214,16 +215,20 @@ public class SAssetService {
 
             if (StringUtils.isNotEmpty(a.getStorageId())) {
                 var storageId = storageService.update(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, a.getStorageId(), finalStream);
-                a.setSize(storageId.size());
+                // Store original uncompressed size (not the compressed storage size)
+                a.setSize(originalSize > 0 ? originalSize : storageId.size());
                 a.setStorageId(storageId.id());
-                log.debug("Updated external content id={} compressed={}", storageId.id(), a.isCompressed());
+                log.debug("Updated external content id={} originalSize={} storageSize={} compressed={}",
+                        storageId.id(), a.getSize(), storageId.size(), a.isCompressed());
             } else {
                 var worldId = a.getWorldId();
                 var path = a.getPath();
                 var storageId = storageService.store(STORAGE_SCHEMA, STORAGE_SCHEMA_VERSION, worldId, "assets/" + path, finalStream);
-                a.setSize(storageId.size());
+                // Store original uncompressed size (not the compressed storage size)
+                a.setSize(originalSize > 0 ? originalSize : storageId.size());
                 a.setStorageId(storageId.id());
-                log.debug("Updated/Created external content id={} compressed={}", storageId.id(), a.isCompressed());
+                log.debug("Updated/Created external content id={} originalSize={} storageSize={} compressed={}",
+                        storageId.id(), a.getSize(), storageId.size(), a.isCompressed());
             }
             return repository.save(a);
         }).orElse(null);
@@ -294,10 +299,11 @@ public class SAssetService {
         );
 
         duplicate.setStorageId(storageInfo.id());
-        duplicate.setSize(storageInfo.size());
+        // Copy original size from source (source.size is already the uncompressed size)
+        duplicate.setSize(source.getSize());
 
-        log.debug("Duplicated asset: sourcePath={}, sourceWorldId={}, newPath={}, targetWorldId={}, size={}, storageId={}, compressed={}",
-                  source.getPath(), source.getWorldId(), collection.path(), collection.worldId().getId(), storageInfo.size(), storageInfo.id(), duplicate.isCompressed());
+        log.debug("Duplicated asset: sourcePath={}, sourceWorldId={}, newPath={}, targetWorldId={}, originalSize={}, storageSize={}, storageId={}, compressed={}",
+                  source.getPath(), source.getWorldId(), collection.path(), collection.worldId().getId(), duplicate.getSize(), storageInfo.size(), storageInfo.id(), duplicate.isCompressed());
 
         return repository.save(duplicate);
     }

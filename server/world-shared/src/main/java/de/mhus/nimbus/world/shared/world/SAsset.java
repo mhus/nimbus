@@ -43,7 +43,10 @@ public class SAsset implements Identifiable {
     @Indexed
     private String name;
 
-    /** Gesamtgröße des Inhalts (direkt oder extern) in Bytes. */
+    /**
+     * Original uncompressed size of the content in bytes.
+     * This is always the actual file size, regardless of compression in storage.
+     */
     private long size;
 
     /** Falls ausgelagert im StorageService. */
