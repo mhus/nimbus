@@ -25,8 +25,35 @@
 
       <!-- Flat Details -->
       <template v-else-if="flat">
+        <!-- Tab Navigation -->
+        <div class="tabs tabs-boxed mb-6">
+          <button
+            class="tab"
+            :class="{ 'tab-active': activeTab === 'details' }"
+            @click="activeTab = 'details'"
+          >
+            Details
+          </button>
+          <button
+            class="tab"
+            :class="{ 'tab-active': activeTab === 'visualizations' }"
+            @click="activeTab = 'visualizations'"
+          >
+            Visualizations
+          </button>
+          <button
+            class="tab"
+            :class="{ 'tab-active': activeTab === 'materials' }"
+            @click="activeTab = 'materials'"
+          >
+            Materials
+          </button>
+        </div>
+
+        <!-- Details Tab Content -->
+        <div v-show="activeTab === 'details'" class="space-y-6">
         <!-- Title and Description -->
-        <div class="mb-6 p-4 bg-base-200 rounded-lg">
+        <div class="p-4 bg-base-200 rounded-lg">
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-lg font-semibold">Details</h3>
             <button
@@ -191,39 +218,97 @@
           :flatId="props.flatId"
           :worldId="flat.worldId"
           @manipulator-completed="handleManipulatorCompleted"
-          class="mb-6"
         />
+        </div><!-- End Details Tab -->
 
-        <!-- Visualizations -->
-        <div class="space-y-6">
+        <!-- Visualizations Tab Content -->
+        <div v-show="activeTab === 'visualizations'" class="space-y-6">
           <!-- Height Map -->
           <div class="bg-base-100 p-4 rounded-lg border border-base-300">
-            <h3 class="text-lg font-semibold mb-3">Height Map</h3>
-            <p class="text-sm text-base-content/70 mb-2">Blue (low) → Green (mid) → Red (high)</p>
-            <div class="flex justify-center">
-              <img
-                :src="heightMapUrl"
-                :alt="`Height map for ${flat.flatId}`"
-                class="border border-base-300 bg-white max-w-full"
-                style="image-rendering: pixelated;"
-              />
+            <div class="flex justify-between items-center mb-3">
+              <div>
+                <h3 class="text-lg font-semibold">Height Map</h3>
+                <p class="text-sm text-base-content/70">Blue (low) → Green (mid) → Red (high)</p>
+              </div>
+              <button
+                @click="heightMapZoom = !heightMapZoom"
+                class="btn btn-sm btn-circle"
+                :class="{ 'btn-primary': heightMapZoom, 'btn-ghost': !heightMapZoom }"
+                title="Toggle zoom"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+              </button>
+            </div>
+            <div class="overflow-auto max-h-[600px]">
+              <div
+                class="flex justify-center transition-all duration-200"
+                :style="{
+                  width: heightMapZoom ? '200%' : '100%',
+                  margin: '0 auto'
+                }"
+              >
+                <img
+                  :src="heightMapUrl"
+                  :alt="`Height map for ${flat.flatId}`"
+                  class="border border-base-300 bg-white"
+                  :style="{
+                    'image-rendering': 'pixelated',
+                    width: heightMapZoom ? '100%' : 'auto',
+                    maxWidth: heightMapZoom ? 'none' : '100%'
+                  }"
+                />
+              </div>
             </div>
           </div>
 
           <!-- Block Map -->
           <div class="bg-base-100 p-4 rounded-lg border border-base-300">
-            <h3 class="text-lg font-semibold mb-3">Block Map</h3>
-            <p class="text-sm text-base-content/70 mb-2">Each color represents a different block type</p>
-            <div class="flex justify-center">
-              <img
-                :src="blockMapUrl"
-                :alt="`Block map for ${flat.flatId}`"
-                class="border border-base-300 bg-white max-w-full"
-                style="image-rendering: pixelated;"
-              />
+            <div class="flex justify-between items-center mb-3">
+              <div>
+                <h3 class="text-lg font-semibold">Block Map</h3>
+                <p class="text-sm text-base-content/70">Each color represents a different block type</p>
+              </div>
+              <button
+                @click="blockMapZoom = !blockMapZoom"
+                class="btn btn-sm btn-circle"
+                :class="{ 'btn-primary': blockMapZoom, 'btn-ghost': !blockMapZoom }"
+                title="Toggle zoom"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+              </button>
+            </div>
+            <div class="overflow-auto max-h-[600px]">
+              <div
+                class="flex justify-center transition-all duration-200"
+                :style="{
+                  width: blockMapZoom ? '200%' : '100%',
+                  margin: '0 auto'
+                }"
+              >
+                <img
+                  :src="blockMapUrl"
+                  :alt="`Block map for ${flat.flatId}`"
+                  class="border border-base-300 bg-white"
+                  :style="{
+                    'image-rendering': 'pixelated',
+                    width: blockMapZoom ? '100%' : 'auto',
+                    maxWidth: blockMapZoom ? 'none' : '100%'
+                  }"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </div><!-- End Visualizations Tab -->
+
+        <!-- Materials Tab Content -->
+        <div v-show="activeTab === 'materials'">
+          <MaterialEditor :flatId="props.flatId" />
+        </div><!-- End Materials Tab -->
+
       </template>
     </div>
     <div class="modal-backdrop" @click="$emit('close')"></div>
@@ -284,6 +369,7 @@ import { flatService, type FlatDetail } from '@/services/FlatService';
 import { apiService } from '@/services/ApiService';
 import { useJobs, type JobCreateRequest, type Job } from '@/composables/useJobs';
 import FlatManipulatorPanel from './FlatManipulatorPanel.vue';
+import MaterialEditor from './MaterialEditor.vue';
 import JobWatch from './JobWatch.vue';
 
 const props = defineProps<{
@@ -305,6 +391,13 @@ const editingMetadata = ref(false);
 const editTitle = ref('');
 const editDescription = ref('');
 const savingMetadata = ref(false);
+
+// Tab navigation
+const activeTab = ref<'details' | 'visualizations' | 'materials'>('details');
+
+// Visualization zoom state
+const heightMapZoom = ref(false);
+const blockMapZoom = ref(false);
 
 // Export state
 const showingExportConfirmation = ref(false);

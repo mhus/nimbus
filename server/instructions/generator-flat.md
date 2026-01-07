@@ -473,7 +473,7 @@ Es soll im flat editor moeglich sein neue Flats zu erstellen. Dazu einen button 
 - Danach wird der JobWatch angezeigt
 - Es wird eine Confirmation angezeigt, es wird kein weiter parameter ausser flatId benoetigt.
 
-[ ] Jetzt brauche ich noch eine Editor für die MaterialDefinitions eines Flats.
+[?] Jetzt brauche ich noch eine Editor für die MaterialDefinitions eines Flats.
 - Die Aufgabe ist komplex, daher hier nur die groben Schritte:
 - Im Details Dialog einen neuen Tab "Materials" hinzufügen
 - Lade die MaterialDefinitions aus dem WFlat

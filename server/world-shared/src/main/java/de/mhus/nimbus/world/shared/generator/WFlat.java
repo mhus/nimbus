@@ -246,11 +246,15 @@ public class WFlat implements Identifiable {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class MaterialDefinition {
         private String blockDef; // id + "@s:" + state e.g. n:s@s:100, n:s@s:101 - siehe BlockDef
         private String nextBlockDef; // id + "@" + state
         private boolean hasOcean;
+        @Builder.Default
         private boolean isBlockMapDelta = true;
+        @Builder.Default
         private Map<Integer, String> blockAtLevels = new HashMap<>(); // y -> block id
 
         /**

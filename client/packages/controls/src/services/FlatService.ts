@@ -41,6 +41,23 @@ export interface FlatDetail {
   updatedAt: string;
 }
 
+export interface MaterialDefinition {
+  materialId: number;
+  blockDef: string;
+  nextBlockDef: string | null;
+  hasOcean: boolean;
+  isBlockMapDelta: boolean;
+  blockAtLevels: Record<number, string>;
+}
+
+export interface UpdateMaterialRequest {
+  blockDef: string;
+  nextBlockDef?: string | null;
+  hasOcean: boolean;
+  isBlockMapDelta: boolean;
+  blockAtLevels: Record<number, string>;
+}
+
 export class FlatService {
   /**
    * Get all flats for a world
@@ -106,6 +123,57 @@ export class FlatService {
     return apiService.patch<FlatDetail>(
       `/control/flats/${encodeURIComponent(id)}/metadata`,
       { title, description }
+    );
+  }
+
+  /**
+   * List all materials for a flat
+   */
+  async listMaterials(flatId: string): Promise<MaterialDefinition[]> {
+    return apiService.get<MaterialDefinition[]>(
+      `/control/flats/${encodeURIComponent(flatId)}/materials`
+    );
+  }
+
+  /**
+   * Get a single material definition
+   */
+  async getMaterial(flatId: string, materialId: number): Promise<MaterialDefinition> {
+    return apiService.get<MaterialDefinition>(
+      `/control/flats/${encodeURIComponent(flatId)}/materials/${materialId}`
+    );
+  }
+
+  /**
+   * Create or update a material definition
+   */
+  async updateMaterial(
+    flatId: string,
+    materialId: number,
+    data: UpdateMaterialRequest
+  ): Promise<MaterialDefinition> {
+    return apiService.put<MaterialDefinition>(
+      `/control/flats/${encodeURIComponent(flatId)}/materials/${materialId}`,
+      data
+    );
+  }
+
+  /**
+   * Delete a material definition
+   */
+  async deleteMaterial(flatId: string, materialId: number): Promise<void> {
+    return apiService.delete<void>(
+      `/control/flats/${encodeURIComponent(flatId)}/materials/${materialId}`
+    );
+  }
+
+  /**
+   * Apply a preset palette to the flat
+   */
+  async applyPalette(flatId: string, paletteName: string): Promise<MaterialDefinition[]> {
+    return apiService.post<MaterialDefinition[]>(
+      `/control/flats/${encodeURIComponent(flatId)}/materials/palette`,
+      { paletteName }
     );
   }
 }
