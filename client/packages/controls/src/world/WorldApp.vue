@@ -20,26 +20,77 @@
 
     <!-- Main Content -->
     <main class="flex-1 container mx-auto px-4 py-6">
-      <!-- Show message if no region selected -->
-      <div v-if="!currentRegionId" class="alert alert-info">
+      <!-- Show message if no region selected and on Worlds tab -->
+      <div v-if="!currentRegionId && activeTab === 'worlds'" class="alert alert-info">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span>Please select a region from the dropdown above</span>
       </div>
 
-      <!-- World List or Editor -->
-      <div v-else>
-        <WorldList
-          v-if="!selectedWorld"
-          @select="handleWorldSelect"
-          @create="handleCreateNew"
-        />
+      <!-- Tabs Navigation -->
+      <div v-else-if="!selectedWorld && !selectedCollection" class="tabs tabs-boxed mb-6">
+        <a
+          class="tab"
+          :class="{ 'tab-active': activeTab === 'worlds' }"
+          @click="handleTabChange('worlds')"
+        >
+          Worlds
+        </a>
+        <a
+          class="tab"
+          :class="{ 'tab-active': activeTab === 'instances' }"
+          @click="handleTabChange('instances')"
+        >
+          Instances
+        </a>
+        <a
+          class="tab"
+          :class="{ 'tab-active': activeTab === 'collections' }"
+          @click="handleTabChange('collections')"
+        >
+          Collections
+        </a>
+      </div>
+
+      <!-- Tab Content -->
+      <div>
+        <!-- Worlds Tab -->
+        <div v-if="activeTab === 'worlds' && !selectedWorld">
+          <WorldList
+            v-if="currentRegionId"
+            @select="handleWorldSelect"
+            @create="handleCreateNewWorld"
+          />
+        </div>
+
+        <!-- Instances Tab -->
+        <div v-else-if="activeTab === 'instances'">
+          <InstanceList />
+        </div>
+
+        <!-- Collections Tab -->
+        <div v-else-if="activeTab === 'collections' && !selectedCollection">
+          <CollectionList
+            @select="handleCollectionSelect"
+            @create="handleCreateNewCollection"
+          />
+        </div>
+
+        <!-- World Editor -->
         <WorldEditor
-          v-else
+          v-if="selectedWorld"
           :world="selectedWorld"
-          @back="handleBack"
-          @saved="handleSaved"
+          @back="handleBackWorld"
+          @saved="handleSavedWorld"
+        />
+
+        <!-- Collection Editor -->
+        <CollectionEditor
+          v-if="selectedCollection"
+          :collection="selectedCollection"
+          @back="handleBackCollection"
+          @saved="handleSavedCollection"
         />
       </div>
     </main>
@@ -47,14 +98,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import { useRegion } from '@/composables/useRegion';
 import RegionSelector from './components/RegionSelector.vue';
 import WorldList from './views/WorldList.vue';
 import WorldEditor from './views/WorldEditor.vue';
+import InstanceList from './views/InstanceList.vue';
+import CollectionList from './views/CollectionList.vue';
+import CollectionEditor from './views/CollectionEditor.vue';
 import { worldServiceFrontend, type World } from './services/WorldServiceFrontend';
+import { type Collection } from './services/CollectionServiceFrontend';
 
 const { currentRegionId } = useRegion();
+
+// Active tab state
+const activeTab = ref<'worlds' | 'instances' | 'collections'>('worlds');
 
 // Read id from URL query parameter
 const getIdFromUrl = (): string | null => {
@@ -63,6 +121,7 @@ const getIdFromUrl = (): string | null => {
 };
 
 const selectedWorld = ref<World | 'new' | null>(null);
+const selectedCollection = ref<Collection | 'new' | null>(null);
 const urlWorldId = getIdFromUrl();
 
 // Load world from URL parameter if provided
@@ -72,25 +131,51 @@ const loadWorldFromUrl = async () => {
   try {
     const world = await worldServiceFrontend.getWorld(currentRegionId.value, urlWorldId);
     selectedWorld.value = world;
+    activeTab.value = 'worlds';
   } catch (e) {
     console.error('[WorldApp] Failed to load world from URL:', e);
   }
 };
 
+// Tab change handler
+const handleTabChange = (tab: 'worlds' | 'instances' | 'collections') => {
+  activeTab.value = tab;
+  selectedWorld.value = null;
+  selectedCollection.value = null;
+};
+
+// World handlers
 const handleWorldSelect = (world: World) => {
   selectedWorld.value = world;
 };
 
-const handleCreateNew = () => {
+const handleCreateNewWorld = () => {
   selectedWorld.value = 'new';
 };
 
-const handleBack = () => {
+const handleBackWorld = () => {
   selectedWorld.value = null;
 };
 
-const handleSaved = () => {
+const handleSavedWorld = () => {
   selectedWorld.value = null;
+};
+
+// Collection handlers
+const handleCollectionSelect = (collection: Collection) => {
+  selectedCollection.value = collection;
+};
+
+const handleCreateNewCollection = () => {
+  selectedCollection.value = 'new';
+};
+
+const handleBackCollection = () => {
+  selectedCollection.value = null;
+};
+
+const handleSavedCollection = () => {
+  selectedCollection.value = null;
 };
 
 // Watch for region changes and load world if URL param exists

@@ -1,7 +1,67 @@
 import { apiService } from '@/services/ApiService';
 
+// RGB Color object
+export interface RGBColor {
+  r: number;
+  g: number;
+  b: number;
+}
+
+// WorldInfo owner
+export interface WorldInfoOwner {
+  user: string;
+  title: string;
+  email?: string;
+}
+
+// Environment settings (highly nested)
+export interface WorldInfoEnvironment {
+  clearColor?: RGBColor;
+  cameraMaxZ?: number;
+  sunEnabled?: boolean;
+  sunTexture?: string;
+  sunSize?: number;
+  sunAngleY?: number;
+  sunElevation?: number;
+  sunColor?: RGBColor;
+  skyBoxEnabled?: boolean;
+  skyBoxMode?: string;
+  skyBoxColor?: RGBColor;
+  skyBoxTexturePath?: string;
+}
+
+// WorldInfo settings (nested structure)
+export interface WorldInfoSettings {
+  maxPlayers?: number;
+  allowGuests?: boolean;
+  pvpEnabled?: boolean;
+  pingInterval?: number;
+  allowedMovementModes?: string[];
+  defaultMovementMode?: string;
+  deadAmbientAudio?: string;
+  swimStepAudio?: string;
+  environment?: WorldInfoEnvironment;
+}
+
+// Main WorldInfo interface
 export interface WorldInfo {
-  [key: string]: any;
+  worldId?: string;
+  name?: string;
+  description?: string;
+  chunkSize?: number;
+  hexGridSize?: number;
+  worldIcon?: string;
+  status?: number;
+  seasonStatus?: number;
+  seasonProgress?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  editorUrl?: string;
+  splashScreen?: string;
+  splashScreenAudio?: string;
+  owner?: WorldInfoOwner;
+  settings?: WorldInfoSettings;
+  [key: string]: any;  // Allow additional fields
 }
 
 export interface World {
@@ -15,12 +75,14 @@ export interface World {
   updatedAt: string;
   enabled: boolean;
   parent: string;
+  instanceable: boolean;
   groundLevel: number;
   waterLevel: number | null;
   groundBlockType: string;
   waterBlockType: string;
   owner: string[];
   editor: string[];
+  supporter: string[];
   player: string[];
   publicFlag: boolean;
 }
@@ -32,6 +94,11 @@ export interface WorldRequest {
   publicData?: WorldInfo;
   enabled?: boolean;
   parent?: string;
+  instanceable?: boolean;
+  owner?: string[];
+  editor?: string[];
+  supporter?: string[];
+  player?: string[];
   groundLevel?: number;
   waterLevel?: number;
   groundBlockType?: string;

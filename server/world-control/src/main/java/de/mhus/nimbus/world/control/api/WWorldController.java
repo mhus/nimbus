@@ -36,6 +36,11 @@ public class WWorldController extends BaseEditorController {
             WorldInfo publicData,
             Boolean enabled,
             String parent,
+            Boolean instanceable,
+            Set<String> owner,
+            Set<String> editor,
+            Set<String> supporter,
+            Set<String> player,
             Integer groundLevel,
             Integer waterLevel,
             String groundBlockType,
@@ -53,12 +58,14 @@ public class WWorldController extends BaseEditorController {
             Instant updatedAt,
             boolean enabled,
             String parent,
+            boolean instanceable,
             int groundLevel,
             Integer waterLevel,
             String groundBlockType,
             String waterBlockType,
             Set<String> owner,
             Set<String> editor,
+            Set<String> supporter,
             Set<String> player,
             boolean publicFlag
     ) {}
@@ -81,12 +88,14 @@ public class WWorldController extends BaseEditorController {
                 world.getUpdatedAt(),
                 world.isEnabled(),
                 world.getParent(),
+                world.isInstanceable(),
                 world.getGroundLevel(),
                 world.getWaterLevel(),
                 world.getGroundBlockType(),
                 world.getWaterBlockType(),
                 world.getOwner(),
                 world.getEditor(),
+                world.getSupporter(),
                 world.getPlayer(),
                 world.isPublicFlag()
         );
@@ -111,12 +120,14 @@ public class WWorldController extends BaseEditorController {
                 null,  // no updatedAt
                 true,  // collections are always enabled
                 null,  // no parent
+                false, // collections are not instanceable
                 0,     // default groundLevel
                 null,  // no waterLevel
                 null,  // no groundBlockType
                 null,  // no waterBlockType
                 Set.of(),  // empty owner set
                 Set.of(),  // empty editor set
+                Set.of(),  // empty supporter set
                 Set.of(),  // empty player set
                 false  // not public
         );
@@ -325,6 +336,11 @@ public class WWorldController extends BaseEditorController {
             if (request.publicData() != null) existing.setPublicData(request.publicData());
             if (request.enabled() != null) existing.setEnabled(request.enabled());
             if (request.parent() != null) existing.setParent(request.parent());
+            if (request.instanceable() != null) existing.setInstanceable(request.instanceable());
+            if (request.owner() != null) existing.setOwner(request.owner());
+            if (request.editor() != null) existing.setEditor(request.editor());
+            if (request.supporter() != null) existing.setSupporter(request.supporter());
+            if (request.player() != null) existing.setPlayer(request.player());
             if (request.groundLevel() != null) existing.setGroundLevel(request.groundLevel());
             if (request.waterLevel() != null) existing.setWaterLevel(request.waterLevel());
             if (request.groundBlockType() != null) existing.setGroundBlockType(request.groundBlockType());

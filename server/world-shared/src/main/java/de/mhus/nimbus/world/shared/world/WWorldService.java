@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class WWorldService {
 
     private final WWorldRepository repository;
-    private final WAnythingService anythingService;
+    private final WWorldCollectionRepository worldCollectionRepository;
 
     @Transactional(readOnly = true)
     public Optional<WWorld> getByWorldId(WorldId worldId) {
@@ -144,19 +144,16 @@ public class WWorldService {
     }
 
     /**
-     * Find all world collections from WAnything entries with collection="worldCollection".
+     * Find all world collections.
      * World collections are identified by WorldId entries starting with '@'.
-     * Note: Region field in WAnything is ignored for world collections, as they are global.
      *
      * @return List of distinct WorldIds representing collections
      */
     @Transactional(readOnly = true)
     public List<WorldId> findWorldCollections() {
-        // Use findByCollection without region filter, as world collections are not region-specific
-        List<WAnything> entries = anythingService.findByCollection("worldCollection");
-        return entries.stream()
-                .map(WAnything::getName)
-                .filter(name -> name != null && name.startsWith("@"))
+        return worldCollectionRepository.findAll().stream()
+                .map(WWorldCollection::getWorldId)
+                .filter(worldId -> worldId != null && worldId.startsWith("@"))
                 .distinct()
                 .map(WorldId::unchecked)
                 .sorted()
@@ -165,8 +162,7 @@ public class WWorldService {
 
     /**
      * Find a specific world collection by WorldId.
-     * Checks if the given WorldId is a collection and if corresponding WAnything entries exist.
-     * Note: Region field in WAnything is ignored for world collections, as they are global.
+     * Checks if the given WorldId is a collection and if it exists.
      *
      * @param worldId The WorldId to search for (must be a collection starting with '@')
      * @return Optional containing the WorldId if found, empty otherwise
@@ -178,19 +174,13 @@ public class WWorldService {
             return Optional.empty();
         }
 
-        // Use findByCollection without region filter, then filter by worldId
-        // This ignores the regionId field in WAnything, which may be incorrectly set for collections
-        boolean exists = anythingService.findByCollection("worldCollection")
-                .stream()
-                .anyMatch(e -> worldId.getId().equals(e.getWorldId()));
-
-        return exists ? Optional.of(worldId) : Optional.empty();
+        return worldCollectionRepository.findByWorldId(worldId.getId())
+                .map(collection -> worldId);
     }
 
     /**
      * Check if a world collection exists.
-     * Verifies that the WorldId is a collection and that corresponding WAnything entries exist.
-     * Note: Region field in WAnything is ignored for world collections, as they are global.
+     * Verifies that the WorldId is a collection and that it exists.
      *
      * @param worldId The WorldId to check (must be a collection starting with '@')
      * @return true if the collection exists, false otherwise
@@ -201,16 +191,12 @@ public class WWorldService {
             return false;
         }
 
-        // Use findByCollection without region filter, then filter by worldId
-        // This ignores the regionId field in WAnything, which may be incorrectly set for collections
-        return anythingService.findByCollection("worldCollection")
-                .stream()
-                .anyMatch(e -> worldId.getId().equals(e.getWorldId()));
+        return worldCollectionRepository.existsByWorldId(worldId.getId());
     }
 
     /**
-     * Get the title for a world collection from its WAnything data.
-     * Returns the title from WorldCollectionDto if available, otherwise null.
+     * Get the title for a world collection.
+     * Returns the title if available, otherwise null.
      *
      * @param worldId The WorldId of the collection
      * @return The title if found and valid, null otherwise
@@ -221,13 +207,8 @@ public class WWorldService {
             return null;
         }
 
-        // Find the WAnything entry for this collection
-        return anythingService.findByCollection("worldCollection")
-                .stream()
-                .filter(e -> worldId.getId().equals(e.getName()))
-                .findFirst()
-                .flatMap(e -> e.getDataAs(WorldCollectionDto.class))
-                .map(WorldCollectionDto::getTitle)
+        return worldCollectionRepository.findByWorldId(worldId.getId())
+                .map(WWorldCollection::getTitle)
                 .orElse(null);
     }
 

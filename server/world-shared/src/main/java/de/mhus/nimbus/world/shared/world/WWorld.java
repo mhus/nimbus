@@ -69,6 +69,14 @@ public class WWorld implements Identifiable {
     @Builder.Default
     private boolean publicFlag = false; // ob Welt öffentlich zugänglich ist
 
+    /**
+     * Whether this world can create instances.
+     * If true, players can create independent copies (instances) of this world.
+     */
+    @Indexed
+    @Builder.Default
+    private boolean instanceable = false;
+
     @Builder.Default
     private List<WEntryPoint> entryPoints = List.of();
 
