@@ -39,6 +39,8 @@ public class AccessSettings {
     private String loginUrl;
     @Value( "${nimbus.access.logoutUrl:}")
     private String logoutUrl;
+    @Value( "${nimbus.access.teleportUrl:}")
+    private String teleportUrl;
     @Value( "${nimbus.access.cookieDomain:}")
     private String cookieDomain;
     @Value( "${nimbus.access.editorUrl:}")
@@ -171,5 +173,12 @@ public class AccessSettings {
             "http://localhost:3002/controls/dev-login.html"
                 :
             logoutUrl;
+    }
+
+    public String getTeleportUrl() {
+        return Strings.isBlank(teleportUrl) ?
+            "http://localhost:3002/controls/teleport-login.html"
+                :
+            teleportUrl;
     }
 }

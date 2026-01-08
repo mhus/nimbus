@@ -145,4 +145,77 @@ public class WPlayerSessionService {
     public long countByPlayer(String playerId) {
         return repository.countByPlayerId(playerId);
     }
+
+    /**
+     * Create new player session for teleportation.
+     * This method creates a new session and stores previous world/position/rotation data.
+     * Used when player teleports to a new world.
+     *
+     * @param worldId New worldId (including instance)
+     * @param playerId Player ID
+     * @param sessionId Session ID reference
+     * @param actor Actor type (PLAYER, EDITOR, SUPPORT)
+     * @param previousWorldId Previous worldId before teleport
+     * @param previousPosition Previous position before teleport
+     * @param previousRotation Previous rotation before teleport
+     * @return The created session
+     * @throws IllegalArgumentException if worldId or playerId is null or blank
+     */
+    @Transactional
+    public WPlayerSession createTeleportSession(String worldId, String playerId,
+                                                  String sessionId, String actor,
+                                                  String previousWorldId,
+                                                  Vector3 previousPosition,
+                                                  Rotation previousRotation) {
+        // Validation
+        if (worldId == null || worldId.isBlank()) {
+            throw new IllegalArgumentException("worldId cannot be null or blank");
+        }
+        if (playerId == null || playerId.isBlank()) {
+            throw new IllegalArgumentException("playerId cannot be null or blank");
+        }
+
+        // Create new session with previous values
+        WPlayerSession session = WPlayerSession.builder()
+                .worldId(worldId)
+                .playerId(playerId)
+                .sessionId(sessionId)
+                .actor(actor)
+                .position(null) // Will be set when player enters world
+                .rotation(null) // Will be set when player enters world
+                .previousWorldId(previousWorldId)
+                .previousPosition(previousPosition)
+                .previousRotation(previousRotation)
+                .build();
+        session.touchCreate();
+
+        repository.save(session);
+
+        log.info("Created teleport player session: worldId={}, playerId={}, previousWorldId={}",
+                worldId, playerId, previousWorldId);
+
+        return session;
+    }
+
+    /**
+     * Merge player status data from old session to new session.
+     * Placeholder for future implementation.
+     * This will transfer player state (health, mana, stamina, effects, inventory, etc.)
+     * when the data model is ready.
+     *
+     * @param newSession The new target session
+     * @param oldSession The old source session
+     */
+    @Transactional
+    public void mergePlayerData(WPlayerSession newSession, WPlayerSession oldSession) {
+        if (oldSession == null || newSession == null) {
+            return;
+        }
+
+        log.debug("mergePlayerData called but not yet implemented: oldWorldId={}, newWorldId={}, playerId={}",
+                oldSession.getWorldId(), newSession.getWorldId(), newSession.getPlayerId());
+
+        // TODO: Implement player data merge when fields are defined
+        // This will include: health, mana, stamina, effects, inventory, attributes, quest data, etc.
+    }
 }

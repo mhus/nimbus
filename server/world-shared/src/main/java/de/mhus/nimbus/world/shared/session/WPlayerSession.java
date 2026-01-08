@@ -57,6 +57,34 @@ public class WPlayerSession {
      */
     private Rotation rotation;
 
+    /**
+     * Previous worldId before teleportation.
+     * Stored when player teleports to allow tracking/return functionality.
+     */
+    private String previousWorldId;
+
+    /**
+     * Previous position before teleportation.
+     * Stored when player teleports to allow tracking/return functionality.
+     */
+    private Vector3 previousPosition;
+
+    /**
+     * Previous rotation before teleportation.
+     * Stored when player teleports to allow tracking/return functionality.
+     */
+    private Rotation previousRotation;
+
+    /**
+     * Session ID reference for administrative tracking.
+     */
+    private String sessionId;
+
+    /**
+     * Actor type (PLAYER, EDITOR, SUPPORT).
+     */
+    private String actor;
+
     @Indexed
     private Instant createdAt;
     private Instant updatedAt;

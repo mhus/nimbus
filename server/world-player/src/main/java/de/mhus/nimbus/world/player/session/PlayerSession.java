@@ -71,37 +71,12 @@ public class PlayerSession {
     private Integer currentChunkX;
     private Integer currentChunkZ;
 
-    /**
-     * Teleportation target for /teleport redirect.
-     * Format: <worldId>#<position> or worldId#grid:q,r or worldId or #<position> or #grid:q,r
-     */
-    private String teleportation;
-
     public PlayerSession(WebSocketSession webSocketSession) {
         this.webSocketSession = webSocketSession;
         this.connectedAt = Instant.now();
         this.lastPingAt = Instant.now();
     }
 
-    /**
-     * Set teleportation target and prepare for redirect.
-     *
-     * @param target Teleportation target string
-     */
-    public void setTeleportation(String target) {
-        this.teleportation = target;
-    }
-
-    /**
-     * Get and clear teleportation target.
-     *
-     * @return Teleportation target or null
-     */
-    public String consumeTeleportation() {
-        String target = this.teleportation;
-        this.teleportation = null;
-        return target;
-    }
 
     /**
      * Check if session is still alive based on ping timeout.

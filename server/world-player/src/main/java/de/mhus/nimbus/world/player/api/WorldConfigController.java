@@ -149,6 +149,9 @@ public class WorldConfigController {
         } else if (entryPoint.startsWith("grid:")) {
             // Load from hex grid coordinates
             handleGridEntryPoint(worldInfo, entryPoint);
+        } else if (entryPoint.startsWith("position:")) {
+            // Load from explicit position coordinates
+            handlePositionEntryPoint(worldInfo, entryPoint);
         } else {
             log.warn("Unknown entry point type: {} for sessionId={}", entryPoint, sessionId);
         }
@@ -226,6 +229,49 @@ public class WorldConfigController {
 
         } catch (NumberFormatException e) {
             log.warn("Invalid grid coordinates (not numbers): {}", entryPoint, e);
+        }
+    }
+
+    /**
+     * Handle "position:x,y,z" entry point - set explicit position coordinates.
+     * Falls back to world default if coordinates invalid.
+     */
+    private void handlePositionEntryPoint(WorldInfo worldInfo, String entryPoint) {
+        // Parse position coordinates from "position:x,y,z" format
+        String coordsPart = entryPoint.substring(9); // Remove "position:" prefix
+        String[] coords = coordsPart.split(",");
+
+        if (coords.length != 3) {
+            log.warn("Invalid position coordinates format: {}, expected 'position:x,y,z'", entryPoint);
+            return;
+        }
+
+        try {
+            double x = Double.parseDouble(coords[0].trim());
+            double y = Double.parseDouble(coords[1].trim());
+            double z = Double.parseDouble(coords[2].trim());
+
+            // Create Vector3Int from coordinates (floor to integers)
+            Vector3Int posInt = Vector3Int.builder()
+                    .x((int) Math.floor(x))
+                    .y((int) Math.floor(y))
+                    .z((int) Math.floor(z))
+                    .build();
+
+            Area area = Area.builder()
+                    .position(posInt)
+                    .size(Vector3Int.builder().x(1).y(1).z(1).build()) // Single point
+                    .build();
+
+            WorldInfoEntryPointDTO entryPointDTO = WorldInfoEntryPointDTO.builder()
+                    .area(area)
+                    .build();
+
+            worldInfo.setEntryPoint(entryPointDTO);
+            log.info("Set position entry point: x={}, y={}, z={}", x, y, z);
+
+        } catch (NumberFormatException e) {
+            log.warn("Invalid position coordinates (not numbers): {}", entryPoint, e);
         }
     }
 

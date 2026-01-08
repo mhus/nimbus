@@ -571,5 +571,42 @@ public class WChunkService {
                 && metadata.getClient() == null;
     }
 
+    /**
+     * Get server metadata for a specific block position.
+     * Loads world, calculates chunk coordinates, loads chunk, and returns server info.
+     *
+     * @param worldId World identifier
+     * @param x Block x coordinate (world coordinates)
+     * @param y Block y coordinate (world coordinates)
+     * @param z Block z coordinate (world coordinates)
+     * @return Server metadata map for the block, or null if not found
+     */
+    public Map<String, String> getServerInfo(WorldId worldId, int x, int y, int z) {
+        // Load world to get chunkSize
+        Optional<WWorld> worldOpt = worldService.getByWorldId(worldId.withoutInstance().getId());
+        if (worldOpt.isEmpty()) {
+            log.warn("World not found for server info lookup: worldId={}", worldId);
+            return null;
+        }
+
+        WWorld world = worldOpt.get();
+        String chunkKey = world.getChunkKey(x,z);
+
+        log.trace("Looking up server info for block: worldId={}, pos=({},{},{}), chunk={}",
+                worldId, x, y, z, chunkKey);
+
+        // Load chunk
+        Optional<WChunk> chunkOpt = find(worldId, chunkKey);
+        if (chunkOpt.isEmpty()) {
+            log.trace("Chunk not found for server info lookup: worldId={}, chunkKey={}",
+                    worldId, chunkKey);
+            return null;
+        }
+
+        // Get server info for block
+        WChunk chunk = chunkOpt.get();
+        return chunk.getServerInfoForBlock(x, y, z);
+    }
+
     private boolean blank(String s) { return s == null || s.isBlank(); }
 }

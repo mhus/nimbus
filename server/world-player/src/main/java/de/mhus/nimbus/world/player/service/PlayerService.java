@@ -9,12 +9,16 @@ import de.mhus.nimbus.shared.types.PlayerId;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.world.player.session.SessionPingConsumer;
 import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.shared.access.AccessSettings;
 import de.mhus.nimbus.world.shared.redis.WorldRedisService;
 import de.mhus.nimbus.world.shared.region.RCharacter;
 import de.mhus.nimbus.world.shared.region.RCharacterService;
 import de.mhus.nimbus.world.shared.region.RUserItemsService;
 import de.mhus.nimbus.world.shared.sector.RUser;
 import de.mhus.nimbus.world.shared.sector.RUserService;
+import de.mhus.nimbus.world.shared.session.WPlayerSession;
+import de.mhus.nimbus.world.shared.session.WPlayerSessionService;
+import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,10 @@ public class PlayerService implements SessionPingConsumer {
     private final RUserItemsService rUserItemsService;
     private final WorldRedisService worldRedisService;
     private final WWorldService worldService;
+    private final WPlayerSessionService playerSessionService;
+    private final WSessionService sessionService;
+    private final AccessSettings accessSettings;
+    private final ClientService clientService;
 
     /**
      * Get player data for a specific region.
@@ -114,9 +122,10 @@ public class PlayerService implements SessionPingConsumer {
      * Teleport player to target location.
      * Sets teleportation in session for /teleport redirect.
      * <p>
-     * Format: &lt;worldId&gt;#&lt;position&gt; or worldId#grid:q,r or worldId or #&lt;position&gt; or #grid:q,r
-     * - worldId can be empty, then only position: #&lt;position&gt; or #grid:q,r
+     * Format: &lt;worldId&gt;@&lt;position&gt; or worldId@grid:q,r or worldId or @&lt;position&gt; or @grid:q,r or "return"
+     * - worldId can be empty, then only position: @&lt;position&gt; or @grid:q,r
      * - worldId can be a full WorldId (without instance part)
+     * - "return" teleports back to previous world using previousWorldId/Position/Rotation
      *
      * @param session PlayerSession
      * @param target  Teleportation target string
@@ -128,17 +137,22 @@ public class PlayerService implements SessionPingConsumer {
             return false;
         }
 
-        // Parse target string: <worldId>#<position> or worldId or #<position>
+        // Handle "return" teleportation
+        if ("return".equalsIgnoreCase(target.trim())) {
+            return handleReturnTeleportation(session);
+        }
+
+        // Parse target string: <worldId>@<position> or worldId or @<position>
         String worldIdPart = null;
         String positionPart = null;
 
-        int hashIndex = target.indexOf('#');
+        int hashIndex = target.indexOf('@');
         if (hashIndex >= 0) {
-            // Format: worldId#position or #position
+            // Format: worldId@position or @position
             worldIdPart = target.substring(0, hashIndex);
             positionPart = target.substring(hashIndex + 1);
 
-            // Empty worldId part is allowed (e.g., "#grid:1,2")
+            // Empty worldId part is allowed (e.g., "@grid:1,2")
             if (worldIdPart.isBlank()) {
                 worldIdPart = null;
             }
@@ -159,7 +173,7 @@ public class PlayerService implements SessionPingConsumer {
             WorldId worldId = worldIdOpt.get();
 
             // Ensure no instance part
-            if (worldId.hasInstance()) {
+            if (worldId.isInstance()) {
                 log.warn("WorldId in teleportation target should not have instance part: {}", worldIdPart);
                 return false;
             }
@@ -171,9 +185,136 @@ public class PlayerService implements SessionPingConsumer {
             }
         }
 
-        // Set teleportation in session
-        session.setTeleportation(target);
-        log.info("Teleportation set for player {}: target={}", session.getPlayer(), target);
+        // Set teleportation in WSession
+        sessionService.updateTeleportation(session.getSessionId(), target);
+        log.info("Teleportation set in WSession for player {}: sessionId={}, target={}",
+                session.getPlayer(), session.getSessionId(), target);
+
+        // Save current session to MongoDB before redirect
+        try {
+            if (session.getWorldId() != null && session.getPlayer() != null
+                    && session.getPlayer().character() != null
+                    && session.getPlayer().character().getPublicData() != null) {
+
+                String playerId = session.getPlayer().character().getPublicData().getPlayerId();
+                if (playerId != null && !playerId.isBlank()) {
+                    // Save position and rotation to MongoDB
+                    playerSessionService.saveSession(
+                            session.getWorldId().getId(),
+                            playerId,
+                            session.getLastPosition(),
+                            session.getLastRotation()
+                    );
+
+                    log.info("Saved player session to MongoDB before teleport: playerId={}, worldId={}",
+                            playerId, session.getWorldId().getId());
+                } else {
+                    log.warn("Cannot save session: playerId is null");
+                }
+            } else {
+                log.warn("Cannot save session: required session data is null");
+            }
+        } catch (Exception e) {
+            log.error("Failed to save player session to MongoDB", e);
+            // Continue with teleport even if session save fails
+        }
+
+        // Get teleport URL from AccessSettings
+        String teleportUrl = accessSettings.getTeleportUrl();
+        if (teleportUrl == null || teleportUrl.isBlank()) {
+            log.error("TeleportUrl is not configured in AccessSettings");
+            return false;
+        }
+
+        log.info("Triggering RedirectCommand for player: url={}", teleportUrl);
+
+        // Trigger RedirectCommand via WebSocket
+        clientService.sendRedirectCommand(session, teleportUrl);
+
+        return true;
+    }
+
+    /**
+     * Handle "return" teleportation by loading previous world data from WPlayerSession.
+     *
+     * @param session PlayerSession
+     * @return true if return teleportation was set, false if failed
+     */
+    private boolean handleReturnTeleportation(PlayerSession session) {
+        // Get current worldId and playerId
+        if (session.getWorldId() == null) {
+            log.warn("Cannot handle return teleportation: worldId is null in session");
+            return false;
+        }
+
+        if (session.getPlayer() == null || session.getPlayer().character() == null
+                || session.getPlayer().character().getPublicData() == null) {
+            log.warn("Cannot handle return teleportation: player data is null in session");
+            return false;
+        }
+
+        String playerId = session.getPlayer().character().getPublicData().getPlayerId();
+        if (playerId == null || playerId.isBlank()) {
+            log.warn("Cannot handle return teleportation: playerId is null");
+            return false;
+        }
+
+        String currentWorldId = session.getWorldId().getId();
+
+        log.debug("Handling return teleportation: currentWorldId={}, playerId={}",
+                currentWorldId, playerId);
+
+        // Load WPlayerSession for current world
+        Optional<WPlayerSession> playerSessionOpt = playerSessionService.loadSession(currentWorldId, playerId);
+        if (playerSessionOpt.isEmpty()) {
+            log.warn("Cannot handle return teleportation: no player session found for worldId={}, playerId={}",
+                    currentWorldId, playerId);
+            return false;
+        }
+
+        WPlayerSession playerSession = playerSessionOpt.get();
+
+        // Check if previous data is available
+        if (playerSession.getPreviousWorldId() == null || playerSession.getPreviousWorldId().isBlank()) {
+            log.warn("Cannot handle return teleportation: previousWorldId is not set for playerId={}",
+                    playerId);
+            return false;
+        }
+
+        if (playerSession.getPreviousPosition() == null) {
+            log.warn("Cannot handle return teleportation: previousPosition is not set for playerId={}",
+                    playerId);
+            return false;
+        }
+
+        // Build teleportation target string: worldId@position:x,y,z
+        String previousWorldId = playerSession.getPreviousWorldId();
+        double x = playerSession.getPreviousPosition().getX();
+        double y = playerSession.getPreviousPosition().getY();
+        double z = playerSession.getPreviousPosition().getZ();
+
+        String teleportTarget = previousWorldId + "@position:" + x + "," + y + "," + z;
+
+        log.info("Return teleportation resolved: currentWorldId={}, targetWorldId={}, position=({},{},{}), playerId={}",
+                currentWorldId, previousWorldId, x, y, z, playerId);
+
+        // Validate target world exists
+        Optional<WorldId> targetWorldIdOpt = WorldId.of(previousWorldId);
+        if (targetWorldIdOpt.isEmpty()) {
+            log.warn("Cannot handle return teleportation: invalid previousWorldId format: {}", previousWorldId);
+            return false;
+        }
+
+        WorldId targetWorldId = targetWorldIdOpt.get();
+        if (worldService.getByWorldId(targetWorldId.withoutInstance().getId()).isEmpty()) {
+            log.warn("Cannot handle return teleportation: target world does not exist: {}", previousWorldId);
+            return false;
+        }
+
+        // Set teleportation in WSession
+        sessionService.updateTeleportation(session.getSessionId(), teleportTarget);
+        log.info("Return teleportation set in WSession for player {}: sessionId={}, target={}",
+                session.getPlayer(), session.getSessionId(), teleportTarget);
 
         return true;
     }

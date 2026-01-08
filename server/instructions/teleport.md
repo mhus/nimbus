@@ -38,7 +38,7 @@ event zum server gesendet (bereits implementiert).
 
 ## Teleport Gameplay
 
-[ ] Wird im GameplayService ein event von einer interaktion mit einem block empfangen,
+[?] Wird im GameplayService ein event von einer interaktion mit einem block empfangen,
 dann wird der WChunk geladen und dort geprueft ob in infoServer für den Block ein eintrag existiert.
 - Erstelle heirfür in WChunk eine methode getServerInfoForBlock(x:int,y:int,z:int):Map<String,String>
 Wenn ja prüfe ob ein eintrag teleportation existiert.
@@ -51,12 +51,24 @@ Wenn ja prüfe ob ein eintrag teleportation existiert.
 - Es wird in der session setTeleportation mit dem teleportation target gesetzt.
 - Dann wird umgeleitet auf die /teleport URL (wie logout).
 
-[ ] Erweiterung:
+[ ] Erweiterung im GamePlay:
 - Bevor weitergeleitet wird, muss die aktuelle Session im mongoDb w_player_sessions gespeichert werden. WPlayerSessionServcice
+- Die absprung URL ist die gerade erstellte teleport-login.html Seite. Dies muss dynamisch aus der logutUrl erstellt werden 
+  z.b. logaut url ist http://foo.bar/controls/dev-login.html dann ist teleport url http://foo.bar/controls/teleport-login.html
+
+[?] Ich merke gerade die Weiterleitung ist nicht so einfach moeglich. Da ja im Backend die Weiterleitung beschlossen wird.
+Wie können wir das lösen? Es kann im Client ein Commando ausgeführt werden vie Wenbsocket Message (gibt es schon)
+das die Weiterleitung im Client initiiert.
+- Neues Commando im Client: RedirectCommand - Feld url:string
+- Auslöesen des commandos im GameplayService nach dem setzen der teleportation.
+
+[?] Erweiterung in PlayerService
+- Wenn neuer w_player_sessions angelegt ist eine mergeFunktion aufrufen die daten vom alten in den neuen einträgt.
+  - aktuell ist die funktion leer, bitte implementieren. (Hier sollen mal parameter wie health, mana, stamina, effekte etc. übernommen werden.)
 
 ## Teleport Login
 
-[ ] Erstelle einen neue teleport-login.html komponente unter ../client/packages/controls
+[?] Erstelle einen neue teleport-login.html komponente unter ../client/packages/controls
 - Bei aufruf wird sofort ein neuer REST Controller aufgerufen /control/player/teleport-login 
   - der die sessionId aus dem cookie liest - wird bereits im AccessFilter gemacht.
   - auslesen der session, diese kann bereits CLOSED sein.
@@ -68,3 +80,23 @@ Wenn ja prüfe ob ein eintrag teleportation existiert.
     - Rückgabe an teleport-login.html die Urls jumpUrl, cookieUrls. - Dieser Teil ist dann exakt wie in dev-login.html
     - cookieUrls aufrufen und dann zu jumpUrl weiterleiten.
 - Orientiere dich an dev-login.html und den entsprechenden REST Controller
+- teleport-login hat keine aktiven Eingabeelemente 
+
+[?] In der neuen w_player_sessions muss es Felder geben in der die alte worldId und position gespeichert werden.
+Beides kann aus der alten w_player_sessions ausgelesen werden.
+- Neue Felder in w_player_sessions anlegen
+- Beim erstellen der neuen w_player_sessions die alten werte übernehmen.
+
+## Return 
+
+[ ] Wenn in teleportation nur 'return' steht, dann soll zurück zur alten welt teleportiert werden.
+- Im PlayerService im teleportPlayer prüfen ob target 'return' ist.
+- Wenn ja Prüfn ob im w_player_sessions die werte previousWorldId, previousPosition, previousRotation gesetzt sind.
+- Wenn ja, dann denn teleportation aus diesen werten zusammen bauen. 
+  - Erweiterung von entryPoint: um position: 'last|grid:q,r|world|position:x,y,z'
+  - Erweiterung muss im WorldConfigController gemacht werden.
+- Jetzt den w_player_sessions eintrag für das Ziel mergen (aktuell leere funktion, bitte einbauen), d.h. parameter wie health, mana, stamina, effekte etc. uebernehmen.
+  - Es kann die mereits erstellte Funktion im PlayerService benutzt werden.
+- Und jetzt die aktuelle w_player_sessions löschen. - Da wir aktiv zurück gehen sind die daten obsolate.
+- Jetzt wie bisher weiter verfahren, wie wenn die teleportation normal gesetzt wurde
+

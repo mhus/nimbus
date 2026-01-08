@@ -331,6 +331,22 @@ public class AccessService {
     }
 
     /**
+     * Creates a JWT token for session-based access (used by teleportation).
+     *
+     * @param regionId Region ID
+     * @param userId User ID
+     * @param worldId World ID (can include instance)
+     * @param characterId Character ID
+     * @param role Actor role
+     * @param sessionId Session ID
+     * @return JWT token
+     */
+    public String createSessionTokenForTeleport(String regionId, String userId, String worldId,
+                                                 String characterId, String role, String sessionId) {
+        return createSessionToken(regionId, userId, worldId, characterId, role, sessionId);
+    }
+
+    /**
      * Creates a JWT token for session-based access.
      */
     private String createSessionToken(String regionId, String userId, String worldId,

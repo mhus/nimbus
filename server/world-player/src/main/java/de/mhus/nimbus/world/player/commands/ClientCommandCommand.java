@@ -1,15 +1,13 @@
 package de.mhus.nimbus.world.player.commands;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.mhus.nimbus.world.player.ws.NetworkMessage;
 import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.player.service.ClientService;
 import de.mhus.nimbus.world.player.ws.SessionManager;
 import de.mhus.nimbus.world.shared.commands.Command;
 import de.mhus.nimbus.world.shared.commands.CommandContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.TextMessage;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +31,7 @@ import java.util.Optional;
 public class ClientCommandCommand implements Command {
 
     private final SessionManager sessionManager;
-    private final ObjectMapper objectMapper;
+    private final ClientService clientService;
 
     @Override
     public String getName() {
@@ -61,25 +59,12 @@ public class ClientCommandCommand implements Command {
 
             PlayerSession session = sessionOpt.get();
 
-            // Build "scmd" message data
+            // Extract command name and arguments
             String commandName = args.get(0);
             List<String> commandArgs = args.size() > 1 ? args.subList(1, args.size()) : List.of();
 
-            com.fasterxml.jackson.databind.node.ObjectNode data = objectMapper.createObjectNode();
-            data.put("cmd", commandName);
-            data.set("args", objectMapper.valueToTree(commandArgs));
-
-            // Build message
-            NetworkMessage message = NetworkMessage.builder()
-                    .t("scmd")
-                    .d(data)
-                    .build();
-
-            String json = objectMapper.writeValueAsString(message);
-            TextMessage textMessage = new TextMessage(json);
-
-            // Send via WebSocket
-            session.getWebSocketSession().sendMessage(textMessage);
+            // Send via ClientService
+            clientService.sendCommand(session, commandName, commandArgs);
 
             log.debug("Sent client command: session={} cmd={} args={}",
                     sessionId, commandName, commandArgs.size());

@@ -40,6 +40,7 @@ import {FogCommand} from "./FogCommand";
 import {FlashImageCommand} from "./FlashImageCommand";
 import {CenterTextCommand} from "./CenterTextCommand";
 import {LogLevelCommand} from "./LogLevelCommand";
+import {RedirectCommand} from "./RedirectCommand";
 import {BlockInfoCommand} from "./BlockInfoCommand";
 import {BlockTypeInfoCommand} from "./BlockTypeInfoCommand";
 import {TeleportCommand} from "./TeleportCommand";
@@ -206,6 +207,7 @@ export class CommandsFactory {
         commandService.registerHandler(new FlashImageCommand(appContext));
         commandService.registerHandler(new CenterTextCommand(appContext));
         commandService.registerHandler(new LogLevelCommand());
+        commandService.registerHandler(new RedirectCommand());
         commandService.registerHandler(new BlockInfoCommand(appContext));
         commandService.registerHandler(new BlockTypeInfoCommand(appContext));
         commandService.registerHandler(new TeleportCommand(appContext));
