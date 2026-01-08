@@ -80,9 +80,14 @@ const allFolders = computed(() => {
   return [...folders.value, ...pseudoAsFolderInfo];
 });
 
-// Root folders (no parent)
+// Root folders (no parent), sorted alphabetically
 const rootFolders = computed(() => {
-  return allFolders.value.filter(f => !f.parentPath || f.parentPath === '');
+  const roots = allFolders.value.filter(f => !f.parentPath || f.parentPath === '');
+  return roots.sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
 });
 
 /**

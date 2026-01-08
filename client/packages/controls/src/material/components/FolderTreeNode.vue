@@ -65,9 +65,14 @@ const emit = defineEmits<{
 
 const expanded = ref(false);
 
-// Child folders (direct children only)
+// Child folders (direct children only), sorted alphabetically
 const children = computed(() => {
-  return props.allFolders.filter(f => f.parentPath === props.folder.path);
+  const childFolders = props.allFolders.filter(f => f.parentPath === props.folder.path);
+  return childFolders.sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
 });
 
 /**

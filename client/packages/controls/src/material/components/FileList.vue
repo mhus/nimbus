@@ -117,11 +117,13 @@ const props = withDefaults(defineProps<{
   worldId?: string;
   folderPath?: string;
   selectedFiles?: Asset[];
+  searchQuery?: string;
   panel: 'left' | 'right';
 }>(), {
   worldId: '',
   folderPath: '',
   selectedFiles: () => [],
+  searchQuery: '',
 });
 
 const emit = defineEmits<{
@@ -158,14 +160,16 @@ const playingAssets = ref<Set<string>>(new Set());
 // Drag & Drop state
 const isDragOver = ref(false);
 
-// Filter assets by folder path
+// Filter assets by folder path and search query
 // Note: Asset paths may have prefixes like "w:", "r:", "p:", "xyz:" or none (legacy)
 // Examples: "w:textures/sun/sun1.png", "textures/magic/red_book.png"
 const filteredAssets = computed(() => {
+  let filtered: Asset[];
+
   // If folderPath is set, backend already filtered by query
   // We just need to show direct children only (no nested subfolders)
   if (props.folderPath && props.folderPath !== '') {
-    return assets.value.filter(a => {
+    filtered = assets.value.filter(a => {
       // Extract path without collection prefix (w:, r:, p:, xyz:)
       let assetPath = a.path;
       const colonPos = assetPath.indexOf(':');
@@ -183,7 +187,7 @@ const filteredAssets = computed(() => {
     });
   } else {
     // Root: show all assets without folder (after prefix removal)
-    return assets.value.filter(a => {
+    filtered = assets.value.filter(a => {
       let assetPath = a.path;
       const colonPos = assetPath.indexOf(':');
       if (colonPos > 0) {
@@ -192,6 +196,22 @@ const filteredAssets = computed(() => {
       return !assetPath.includes('/');
     });
   }
+
+  // Apply search filter if search query is provided
+  if (props.searchQuery && props.searchQuery.trim() !== '') {
+    const searchLower = props.searchQuery.toLowerCase().trim();
+    filtered = filtered.filter(a => {
+      const fileName = getFileName(a).toLowerCase();
+      return fileName.includes(searchLower);
+    });
+  }
+
+  // Sort alphabetically by filename (case-insensitive)
+  return filtered.sort((a, b) => {
+    const nameA = getFileName(a).toLowerCase();
+    const nameB = getFileName(b).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
 });
 
 /**

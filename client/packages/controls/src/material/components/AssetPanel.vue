@@ -19,18 +19,39 @@
     />
     <!-- Panel Header -->
     <div class="panel-header bg-base-200 p-3 border-b border-base-300">
-      <!-- World Selector -->
-      <select
-        v-model="localWorldId"
-        class="select select-sm select-bordered w-full"
-        @change="handleWorldChange"
-        :disabled="worldsLoading"
-      >
-        <option value="">{{ worldsLoading ? 'Loading worlds...' : 'Select World...' }}</option>
-        <option v-for="world in worlds" :key="world.worldId" :value="world.worldId">
-          {{ world.name || world.worldId }}
-        </option>
-      </select>
+      <div class="flex gap-2">
+        <!-- World Selector -->
+        <select
+          v-model="localWorldId"
+          class="select select-sm select-bordered flex-1"
+          @change="handleWorldChange"
+          :disabled="worldsLoading"
+        >
+          <option value="">{{ worldsLoading ? 'Loading worlds...' : 'Select World...' }}</option>
+          <option v-for="world in worlds" :key="world.worldId" :value="world.worldId">
+            {{ world.name || world.worldId }}
+          </option>
+        </select>
+
+        <!-- Search Field -->
+        <div class="relative flex-1">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search assets..."
+            class="input input-sm input-bordered w-full pr-8"
+            :disabled="!localWorldId"
+          />
+          <button
+            v-if="searchQuery"
+            class="btn btn-ghost btn-xs absolute right-1 top-1/2 -translate-y-1/2"
+            @click="searchQuery = ''"
+            title="Clear search"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Panel Content: Folder Tree + File List (with independent scrolling) -->
@@ -59,6 +80,7 @@
           :world-id="localWorldId"
           :folder-path="localCurrentPath"
           :selected-files="localSelectedFiles"
+          :search-query="searchQuery"
           :panel="panel"
           @file-select="handleFileSelect"
           @file-drop="handleFileDrop"
@@ -128,6 +150,9 @@ const localWorldId = ref(props.worldId);
 const localCurrentPath = ref(props.currentPath);
 const localSelectedFiles = ref(props.selectedFiles);
 
+// Search state
+const searchQuery = ref('');
+
 // Asset info dialog
 const isInfoDialogOpen = ref(false);
 const selectedAssetForEdit = ref<Asset | null>(null);
@@ -152,6 +177,7 @@ watch(localSelectedFiles, (val) => emit('update:selectedFiles', val));
 const handleWorldChange = () => {
   localCurrentPath.value = '';
   localSelectedFiles.value = [];
+  searchQuery.value = ''; // Clear search when changing world
 };
 
 /**
