@@ -291,7 +291,6 @@ public class BlockInfoService {
                                 .position(Vector3Int.builder().x(x).y(y).z(z).build())
                                 .blockTypeId(block.getBlockTypeId())
                                 .offsets(block.getOffsets())
-                                .cornerHeights(block.getCornerHeights())
                                 .status(block.getStatus())
                                 .modifiers(block.getModifiers())
                                 .metadata(block.getMetadata())

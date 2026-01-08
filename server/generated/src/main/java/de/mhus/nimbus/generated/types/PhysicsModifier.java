@@ -37,7 +37,4 @@ public class PhysicsModifier {
     @com.fasterxml.jackson.annotation.JsonProperty("autoJump")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private java.lang.Double autoJump;
-    @com.fasterxml.jackson.annotation.JsonProperty("cornerHeights")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private java.util.List<Object> cornerHeights;
 }

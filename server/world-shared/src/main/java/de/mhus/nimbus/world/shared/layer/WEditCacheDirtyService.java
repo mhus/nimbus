@@ -522,7 +522,6 @@ public class WEditCacheDirtyService {
         cloned.setOffsets(original.getOffsets());
         cloned.setRotation(original.getRotation());
         cloned.setFaceVisibility(original.getFaceVisibility());
-        cloned.setCornerHeights(original.getCornerHeights());
         cloned.setStatus(original.getStatus());
         cloned.setModifiers(original.getModifiers());
         cloned.setMetadata(original.getMetadata());

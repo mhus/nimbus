@@ -107,9 +107,6 @@ export class BlockInfoCommand extends CommandHandler {
         lines.push(`    Interactive       : ${mod.physics.interactive ?? false}`);
         lines.push(`    CollisionEvent    : ${mod.physics.collisionEvent ?? false}`);
         lines.push(`    AutoClimbable     : ${mod.physics.autoClimbable ?? false}`);
-        if (mod.physics.cornerHeights) {
-          lines.push(`    CornerHeights     : [${mod.physics.cornerHeights.join(', ')}]`);
-        }
         if (mod.physics.resistance !== undefined) {
           lines.push(`    Resistance        : ${mod.physics.resistance}`);
         }
@@ -122,12 +119,6 @@ export class BlockInfoCommand extends CommandHandler {
     if (block.offsets) {
       lines.push('Block Offsets:');
       lines.push(`  [${block.offsets.join(', ')}]`);
-      lines.push('');
-    }
-
-    if (block.cornerHeights) {
-      lines.push('Block CornerHeights:');
-      lines.push(`  [${block.cornerHeights.join(', ')}]`);
       lines.push('');
     }
 

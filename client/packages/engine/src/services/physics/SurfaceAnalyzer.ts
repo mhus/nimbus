@@ -30,15 +30,13 @@ export class SurfaceAnalyzer {
   constructor(private chunkService: ChunkService) {}
 
   /**
-   * Get corner heights for a block using priority cascade.
+   * Get corner heights for a block from auto-derived offsets.
    *
-   * Priority order:
-   * 1. Block.cornerHeights (highest priority)
-   * 2. PhysicsModifier.cornerHeights
-   * 3. Auto-derived from offsets (if shape == CUBE)
-   *    - Block.offsets (Y values of top 4 corners)
-   *    - VisibilityModifier.offsets
-   * 4. undefined (no corner heights)
+   * Auto-derives corner heights from:
+   * - Block.offsets (Y values of top 4 corners)
+   * - VisibilityModifier.offsets (fallback)
+   *
+   * Only works if shape == CUBE (shape === 1).
    *
    * @param block ClientBlock to get corner heights from
    * @returns Corner heights array [NW, NE, SE, SW] or undefined
@@ -46,19 +44,8 @@ export class SurfaceAnalyzer {
   getCornerHeights(block: ClientBlock): [number, number, number, number] | undefined {
     let cornerHeights: [number, number, number, number] | undefined;
 
-    // Priority 1: Block.cornerHeights (highest)
-    if (block.block.cornerHeights && block.block.cornerHeights.length === 4) {
-      cornerHeights = block.block.cornerHeights;
-    }
-    // Priority 2: PhysicsModifier.cornerHeights
-    else if (
-      block.currentModifier.physics?.cornerHeights &&
-      block.currentModifier.physics.cornerHeights.length === 4
-    ) {
-      cornerHeights = block.currentModifier.physics.cornerHeights;
-    }
-    // Priority 3: Auto-derive from offsets (if shape == CUBE)
-    else if (block.currentModifier.visibility?.shape === 1) { // Shape.CUBE = 1
+    // Auto-derive from offsets (only if shape == CUBE)
+    if (block.currentModifier.visibility?.shape === 1) { // Shape.CUBE = 1
       // Try Block.offsets first
       // Minimum length must be 24 for all 8 corners (3 values per corner)
       if (block.block.offsets && block.block.offsets.length >= 23) {

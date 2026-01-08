@@ -574,35 +574,6 @@ export interface PhysicsModifier {
 
   /** Auto-jump when walking into the block - like fence gate, default: false */
   autoJump?: number;
-
-  /**
-   * Corner heights for sloped/ramped blocks - defines Y-offset adjustments for the four top corners.
-   * Array of 4 numbers representing height adjustments (relative to block Y position).
-   *
-   * Corner order (counter-clockwise, top view):
-   * [0] = North-West (-X, -Z)
-   * [1] = North-East (+X, -Z)
-   * [2] = South-East (+X, +Z)
-   * [3] = South-West (-X, +Z)
-   *
-   * Values:
-   * - 0.0 = standard height (top of block)
-   * - negative = lower than standard
-   * - positive = higher than standard
-   *
-   * If undefined or not exactly 4 values: treated as [0, 0, 0, 0] (flat surface)
-   *
-   * Effects:
-   * - Player stands on interpolated surface height
-   * - Enables sliding on slopes (influenced by resistance)
-   * - Automatic slope detection for movement
-   *
-   * Priority: Block.cornerHeights > PhysicsModifier.cornerHeights > auto-derived from offsets (if shape == CUBE)
-   *
-   * Example: Ramp rising from North to South
-   * cornerHeights: [-0.5, -0.5, 0.0, 0.0]
-   */
-  cornerHeights?: [number, number, number, number];
 }
 
 /**

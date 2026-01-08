@@ -127,7 +127,6 @@ public class BlockUtil {
                 .offsets(originalBlock.getOffsets())
                 .rotation(originalBlock.getRotation())
                 .faceVisibility(originalBlock.getFaceVisibility())
-                .cornerHeights(originalBlock.getCornerHeights())
                 .status(originalBlock.getStatus())
                 .modifiers(originalBlock.getModifiers())
                 .metadata(originalBlock.getMetadata())

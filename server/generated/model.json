@@ -2791,13 +2791,6 @@
         "javaTypeHint" : "Integer",
         "comment" : "// javaType: Integer"
       }, {
-        "name" : "cornerHeights",
-        "type" : "[number, number, number, number]",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "status",
         "type" : "number",
         "optional" : true,
@@ -3462,13 +3455,6 @@
       }, {
         "name" : "autoJump",
         "type" : "number",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
-        "name" : "cornerHeights",
-        "type" : "[number, number, number, number]",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
