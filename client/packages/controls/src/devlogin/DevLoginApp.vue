@@ -201,6 +201,93 @@
                   <option value="SUPPORT">Support</option>
                 </select>
               </div>
+
+              <!-- Entry Point Selection (shown after character selected) -->
+              <div v-if="selectedCharacter" class="form-control">
+                <label class="label">
+                  <span class="label-text">Entry Point (Spawn Location)</span>
+                </label>
+
+                <!-- Entry Point Options -->
+                <div class="space-y-2">
+                  <!-- Last Position -->
+                  <label class="label cursor-pointer justify-start gap-3 bg-base-200 p-3 rounded-lg">
+                    <input
+                      type="radio"
+                      name="entry-point"
+                      class="radio radio-primary"
+                      value="last"
+                      v-model="entryPoint"
+                    />
+                    <div class="flex-1">
+                      <span class="label-text font-medium">Last Position</span>
+                      <div class="text-xs text-base-content/60 mt-1">
+                        Spawn at last saved position (if available, otherwise world default)
+                      </div>
+                    </div>
+                  </label>
+
+                  <!-- Hex Grid Coordinates -->
+                  <label class="label cursor-pointer justify-start gap-3 bg-base-200 p-3 rounded-lg">
+                    <input
+                      type="radio"
+                      name="entry-point"
+                      class="radio radio-primary"
+                      value="grid"
+                      v-model="entryPoint"
+                    />
+                    <div class="flex-1">
+                      <span class="label-text font-medium">Hex Grid Coordinates</span>
+                      <div class="text-xs text-base-content/60 mt-1">
+                        Spawn at specific hex grid coordinates
+                      </div>
+
+                      <!-- Grid Coordinate Inputs (shown when grid option selected) -->
+                      <div v-if="entryPoint === 'grid'" class="flex gap-2 mt-3" @click.stop>
+                        <div class="form-control flex-1">
+                          <label class="label py-1">
+                            <span class="label-text text-xs">Q Coordinate</span>
+                          </label>
+                          <input
+                            v-model="gridQ"
+                            type="number"
+                            placeholder="0"
+                            class="input input-bordered input-sm w-full"
+                          />
+                        </div>
+                        <div class="form-control flex-1">
+                          <label class="label py-1">
+                            <span class="label-text text-xs">R Coordinate</span>
+                          </label>
+                          <input
+                            v-model="gridR"
+                            type="number"
+                            placeholder="0"
+                            class="input input-bordered input-sm w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+
+                  <!-- World Default -->
+                  <label class="label cursor-pointer justify-start gap-3 bg-base-200 p-3 rounded-lg">
+                    <input
+                      type="radio"
+                      name="entry-point"
+                      class="radio radio-primary"
+                      value="world"
+                      v-model="entryPoint"
+                    />
+                    <div class="flex-1">
+                      <span class="label-text font-medium">World Default</span>
+                      <div class="text-xs text-base-content/60 mt-1">
+                        Use the world's default spawn point
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
             </div>
 
             <!-- Agent Login Form -->
@@ -314,6 +401,9 @@ const STORAGE_KEY_SESSION_USER = 'nimbus-devlogin-session-user';
 const STORAGE_KEY_CHARACTER = 'nimbus-devlogin-character';
 const STORAGE_KEY_ACTOR = 'nimbus-devlogin-actor';
 const STORAGE_KEY_AGENT_USER = 'nimbus-devlogin-agent-user';
+const STORAGE_KEY_ENTRY_POINT = 'nimbus-devlogin-entrypoint';
+const STORAGE_KEY_GRID_Q = 'nimbus-devlogin-grid-q';
+const STORAGE_KEY_GRID_R = 'nimbus-devlogin-grid-r';
 
 // ===== STATE =====
 
@@ -340,6 +430,11 @@ const loadingCharacters = ref(false);
 const charactersError = ref<string | null>(null);
 const selectedCharacter = ref<Character | null>(null);
 const selectedActor = ref<ActorType>('PLAYER');
+
+// Session Login - Entry Point
+const entryPoint = ref<'last' | 'grid' | 'world'>('world');
+const gridQ = ref<string>('0');
+const gridR = ref<string>('0');
 
 // Agent Login - Users
 const agentUsers = ref<User[]>([]);
@@ -391,6 +486,11 @@ const saveToLocalStorage = () => {
     if (selectedAgentUser.value) {
       localStorage.setItem(STORAGE_KEY_AGENT_USER, JSON.stringify(selectedAgentUser.value));
     }
+
+    // Save entry point settings
+    localStorage.setItem(STORAGE_KEY_ENTRY_POINT, entryPoint.value);
+    localStorage.setItem(STORAGE_KEY_GRID_Q, gridQ.value);
+    localStorage.setItem(STORAGE_KEY_GRID_R, gridR.value);
   } catch (e) {
     console.error('[DevLogin] Failed to save to localStorage:', e);
   }
@@ -449,6 +549,22 @@ const loadFromLocalStorage = async () => {
                 setTimeout(() => {
                   selectedActor.value = savedActor as ActorType;
                 }, 100);
+              }
+
+              // Load entry point settings
+              const savedEntryPoint = localStorage.getItem(STORAGE_KEY_ENTRY_POINT);
+              if (savedEntryPoint === 'last' || savedEntryPoint === 'grid' || savedEntryPoint === 'world') {
+                entryPoint.value = savedEntryPoint;
+              }
+
+              const savedGridQ = localStorage.getItem(STORAGE_KEY_GRID_Q);
+              if (savedGridQ) {
+                gridQ.value = savedGridQ;
+              }
+
+              const savedGridR = localStorage.getItem(STORAGE_KEY_GRID_R);
+              if (savedGridR) {
+                gridR.value = savedGridR;
               }
             }
           }
@@ -636,12 +752,23 @@ const handleLogin = async () => {
         throw new Error('User and character required');
       }
 
+      // Build entry point string
+      let entryPointStr: string | undefined;
+      if (entryPoint.value === 'last') {
+        entryPointStr = 'last';
+      } else if (entryPoint.value === 'grid') {
+        entryPointStr = `grid:${gridQ.value},${gridR.value}`;
+      } else if (entryPoint.value === 'world') {
+        entryPointStr = 'world';
+      }
+
       request = {
         worldId: selectedWorld.value.worldId,
         agent: false,
         userId: selectedSessionUser.value.username,
         characterId: selectedCharacter.value.id,
         actor: selectedActor.value,
+        entryPoint: entryPointStr,
       };
     } else {
       if (!selectedAgentUser.value) {

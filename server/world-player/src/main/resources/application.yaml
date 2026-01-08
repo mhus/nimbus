@@ -42,6 +42,8 @@ world:
     pathway-broadcast-interval-ms: 100  # Broadcast pathways every 100ms
     entity-update-timeout-ms: 200  # Skip inactive entities after 200ms
     pathway-prediction-time-ms: 100  # Predict position 100ms ahead
+    session-save-enabled: ${SESSION_SAVE_ENABLED:true}  # Enable/disable player session persistence
+    session-save-interval-ticks: ${SESSION_SAVE_INTERVAL_TICKS:60}  # Save every N ticks (60 ticks = 60s)
   client:
     player-base-url: ${PLAYER_BASE_URL:http://localhost:9042}
     life-base-url: ${LIFE_BASE_URL:http://localhost:9044}

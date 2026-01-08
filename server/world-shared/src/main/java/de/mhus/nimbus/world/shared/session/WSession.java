@@ -18,6 +18,8 @@ public class WSession {
     private String playerId;
     private String actor;
     private String playerUrl; // Internal URL of the world-player service
+    private String entryPoint; // Entry point specification: "last", "grid:q,r", or "world"
+    private String teleportation; // Teleportation data for later use
     private Instant createdAt;
     private Instant updatedAt;
     private Instant expireAt;

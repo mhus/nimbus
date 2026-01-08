@@ -34,4 +34,14 @@ public class DevSessionLoginRequest {
     @NotNull(message = "actor role is required")
     @TypeScript(import_ = "ActorRoles", importPath = "./ActorRoles")
     private ActorRoles actor;
+
+    /**
+     * Entry point specification for where the player should spawn.
+     * Formats:
+     * - "last" - Load from last saved position (WPlayerSession)
+     * - "grid:q,r" - Load from hex grid coordinates (e.g., "grid:0,0")
+     * - "world" - Use world default spawn point
+     * - null/blank - Defaults to "world"
+     */
+    private String entryPoint;
 }

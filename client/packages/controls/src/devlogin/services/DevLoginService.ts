@@ -34,6 +34,7 @@ export interface SessionLoginRequest {
   userId: string;
   characterId: string;
   actor: ActorType;
+  entryPoint?: string;  // Optional: "last", "grid:q,r", or "world"
 }
 
 export interface AgentLoginRequest {

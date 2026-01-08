@@ -28,6 +28,8 @@ public class WSessionService {
     private static final String FIELD_USER = "user";
     private static final String FIELD_ACTOR = "actor";
     private static final String FIELD_PLAYER_URL = "playerUrl";
+    private static final String FIELD_ENTRY_POINT = "entryPoint";
+    private static final String FIELD_TELEPORTATION = "teleportation";
     private static final String FIELD_CREATED = "created";
     private static final String FIELD_UPDATED = "updated";
     private static final String FIELD_EXPIRE = "expire";
@@ -68,6 +70,8 @@ public class WSessionService {
                     .playerId((String) map.get(FIELD_USER))
                     .playerUrl((String) map.get(FIELD_PLAYER_URL))
                     .actor((String) map.get(FIELD_ACTOR))
+                    .entryPoint((String) map.get(FIELD_ENTRY_POINT))
+                    .teleportation((String) map.get(FIELD_TELEPORTATION))
                     .createdAt(Instant.parse((String) map.get(FIELD_CREATED)))
                     .updatedAt(Instant.parse((String) map.get(FIELD_UPDATED)))
                     .expireAt(Instant.parse((String) map.get(FIELD_EXPIRE)))
@@ -123,6 +127,38 @@ public class WSessionService {
         });
     }
 
+    public Optional<WSession> updateEntryPoint(String id, String entryPoint) {
+        return get(id).map(existing -> {
+            existing.setEntryPoint(entryPoint);
+            existing.touchUpdate();
+            Duration ttl = switch (existing.getStatus()) {
+                case WAITING -> Duration.ofMinutes(props.getWaitingMinutes());
+                case RUNNING -> Duration.ofHours(props.getRunningHours());
+                case CLOSED -> Duration.ofMinutes(props.getDeprecatedMinutes());
+            };
+            existing.setExpireAt(Instant.now().plus(ttl));
+            write(existing, ttl);
+            log.debug("WSession entryPoint aktualisiert id={} entryPoint={}", id, entryPoint);
+            return existing;
+        });
+    }
+
+    public Optional<WSession> updateTeleportation(String id, String teleportation) {
+        return get(id).map(existing -> {
+            existing.setTeleportation(teleportation);
+            existing.touchUpdate();
+            Duration ttl = switch (existing.getStatus()) {
+                case WAITING -> Duration.ofMinutes(props.getWaitingMinutes());
+                case RUNNING -> Duration.ofHours(props.getRunningHours());
+                case CLOSED -> Duration.ofMinutes(props.getDeprecatedMinutes());
+            };
+            existing.setExpireAt(Instant.now().plus(ttl));
+            write(existing, ttl);
+            log.debug("WSession teleportation aktualisiert id={} teleportation={}", id, teleportation);
+            return existing;
+        });
+    }
+
     public boolean delete(String id) {
         return Boolean.TRUE.equals(redis.delete(key(id)));
     }
@@ -135,6 +171,12 @@ public class WSessionService {
         ops.put(k, FIELD_USER, session.getPlayerId());
         if (session.getPlayerUrl() != null) {
             ops.put(k, FIELD_PLAYER_URL, session.getPlayerUrl());
+        }
+        if (session.getEntryPoint() != null) {
+            ops.put(k, FIELD_ENTRY_POINT, session.getEntryPoint());
+        }
+        if (session.getTeleportation() != null) {
+            ops.put(k, FIELD_TELEPORTATION, session.getTeleportation());
         }
         ops.put(k, FIELD_ACTOR, session.getActor());
         ops.put(k, FIELD_CREATED, session.getCreatedAt().toString());

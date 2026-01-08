@@ -39,7 +39,8 @@ public class ControlAaaController extends BaseEditorController {
             String userId,
             Boolean agent,       // Optional, defaults to false
             String characterId,  // Required when agent=false
-            ActorRoles actor     // Required when agent=false
+            ActorRoles actor,    // Required when agent=false
+            String entryPoint    // Optional: "last", "grid:q,r", or "world"
     ) {
         public boolean isAgent() {
             return agent != null && agent;
@@ -201,14 +202,15 @@ public class ControlAaaController extends BaseEditorController {
                 response = accessService.devAgentLogin(agentRequest);
 
             } else {
-                log.debug("Executing session login for user={} character={} actor={} in world={}",
-                        request.userId(), request.characterId(), request.actor(), request.worldId());
+                log.debug("Executing session login for user={} character={} actor={} entryPoint={} in world={}",
+                        request.userId(), request.characterId(), request.actor(), request.entryPoint(), request.worldId());
 
                 DevSessionLoginRequest sessionRequest = DevSessionLoginRequest.builder()
                         .worldId(request.worldId())
                         .userId(request.userId())
                         .characterId(request.characterId())
                         .actor(request.actor())
+                        .entryPoint(request.entryPoint())
                         .build();
 
                 response = accessService.devSessionLogin(sessionRequest);

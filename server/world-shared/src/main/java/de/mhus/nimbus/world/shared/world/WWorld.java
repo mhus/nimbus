@@ -25,7 +25,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "worlds")
-@ActualSchemaVersion("1.0.1")
+@ActualSchemaVersion("1.0.0")
 // @GenerateTypeScript("entities") - need to clarify WEntryPoint type
 public class WWorld implements Identifiable {
 

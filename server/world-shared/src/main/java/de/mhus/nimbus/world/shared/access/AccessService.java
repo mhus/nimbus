@@ -288,6 +288,12 @@ public class AccessService {
         WorldId sessionWorldId = WorldId.unchecked(effectiveWorldId);
         WSession session = sessionService.create(sessionWorldId, playerId, String.valueOf(request.getActor()));
 
+        // Set entry point if provided
+        if (request.getEntryPoint() != null && !request.getEntryPoint().isBlank()) {
+            sessionService.updateEntryPoint(session.getId(), request.getEntryPoint());
+            log.debug("Entry point set for session: sessionId={}, entryPoint={}", session.getId(), request.getEntryPoint());
+        }
+
         // Create JWT token
         String token = createSessionToken(
                 world.getRegionId(),

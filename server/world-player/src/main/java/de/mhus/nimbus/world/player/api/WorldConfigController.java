@@ -5,15 +5,16 @@ import de.mhus.nimbus.generated.configs.PlayerBackpack;
 import de.mhus.nimbus.generated.configs.ServerInfo;
 import de.mhus.nimbus.generated.configs.Settings;
 import de.mhus.nimbus.generated.network.ClientType;
-import de.mhus.nimbus.generated.types.MovementStateDomensions;
-import de.mhus.nimbus.generated.types.MovementStateValues;
-import de.mhus.nimbus.generated.types.PlayerInfo;
-import de.mhus.nimbus.generated.types.WorldInfo;
+import de.mhus.nimbus.generated.types.*;
 import de.mhus.nimbus.shared.types.PlayerData;
 import de.mhus.nimbus.shared.types.PlayerId;
 import de.mhus.nimbus.world.player.config.ServerSettings;
 import de.mhus.nimbus.world.player.service.PlayerService;
 import de.mhus.nimbus.world.shared.access.AccessValidator;
+import de.mhus.nimbus.world.shared.session.WPlayerSession;
+import de.mhus.nimbus.world.shared.session.WPlayerSessionService;
+import de.mhus.nimbus.world.shared.session.WSession;
+import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +44,8 @@ public class WorldConfigController {
     private final PlayerService playerService;
     private final AccessValidator accessUtil;
     private final ServerSettings serverSettings;
+    private final WSessionService sessionService;
+    private final WPlayerSessionService playerSessionService;
 
     @GetMapping("/config")
     @Operation(summary = "Get complete EngineConfiguration",
@@ -70,7 +73,7 @@ public class WorldConfigController {
 
         WWorld world = worldOpt.get();
         WorldInfo worldInfo = world.getPublicData();
-        patchWorldInfo(worldInfo);
+        patchWorldInfo(worldInfo, worldId, playerId, request);
 
         // Load player data (always use WEB as ClientType for now)
         Optional<PlayerData> playerDataOpt = playerService.getPlayer(playerId, ClientType.WEB, worldId.getRegionId());
@@ -105,11 +108,125 @@ public class WorldConfigController {
         return ResponseEntity.ok(config);
     }
 
-    private void patchWorldInfo(WorldInfo worldInfo) {
-        worldInfo.setEditorUrl(
-                serverSettings.getControlsBaseUrl() + "/"
-        );
-        // TODO set splashScreen and splashScreenAudio for specific enrtry point
+    /**
+     * Patch WorldInfo with entry point specific data.
+     * Determines spawn position/rotation based on entry point setting in WSession.
+     *
+     * @param worldInfo The WorldInfo to patch
+     * @param worldId The worldId
+     * @param playerId The playerId
+     * @param request The HTTP request (for session lookup)
+     */
+    private void patchWorldInfo(WorldInfo worldInfo, de.mhus.nimbus.shared.types.WorldId worldId, PlayerId playerId, HttpServletRequest request) {
+        // Set editor URL
+        worldInfo.setEditorUrl(serverSettings.getControlsBaseUrl() + "/");
+
+        // Get session to determine entry point
+        String sessionId = accessUtil.getSessionId(request);
+        if (sessionId == null || sessionId.isBlank()) {
+            log.debug("No session ID found, using default world entry point");
+            return;
+        }
+
+        Optional<WSession> sessionOpt = sessionService.get(sessionId);
+        if (sessionOpt.isEmpty()) {
+            log.warn("Session not found: sessionId={}", sessionId);
+            return;
+        }
+
+        WSession session = sessionOpt.get();
+        String entryPoint = session.getEntryPoint();
+
+        if (entryPoint == null || entryPoint.isBlank() || "world".equals(entryPoint)) {
+            // Use world default spawn point (no changes needed)
+            log.debug("Using world default spawn point for sessionId={}", sessionId);
+            return;
+        }
+
+        if ("last".equals(entryPoint)) {
+            // Load from last saved position (WPlayerSession)
+            handleLastEntryPoint(worldInfo, worldId.getId(), playerId.getId());
+        } else if (entryPoint.startsWith("grid:")) {
+            // Load from hex grid coordinates
+            handleGridEntryPoint(worldInfo, entryPoint);
+        } else {
+            log.warn("Unknown entry point type: {} for sessionId={}", entryPoint, sessionId);
+        }
+    }
+
+    /**
+     * Handle "last" entry point - load from WPlayerSession.
+     * Falls back to world default if no saved session found.
+     */
+    private void handleLastEntryPoint(WorldInfo worldInfo, String worldId, String playerId) {
+        Optional<WPlayerSession> playerSessionOpt = playerSessionService.loadSession(worldId, playerId);
+
+        if (playerSessionOpt.isEmpty()) {
+            log.debug("No saved session found for worldId={}, playerId={}, using world default", worldId, playerId);
+            return;
+        }
+
+        WPlayerSession playerSession = playerSessionOpt.get();
+        Vector3 position = playerSession.getPosition();
+        // Rotation rotation = playerSession.getRotation(); // TODO: Add rotation support when needed
+
+        if (position != null) {
+            // Create Area from saved position
+            Vector3Int posInt = Vector3Int.builder()
+                    .x((int) Math.floor(position.getX()))
+                    .y((int) Math.floor(position.getY()))
+                    .z((int) Math.floor(position.getZ()))
+                    .build();
+
+            Area area = Area.builder()
+                    .position(posInt)
+                    .size(Vector3Int.builder().x(1).y(1).z(1).build()) // Single point
+                    .build();
+
+            WorldInfoEntryPointDTO entryPointDTO = WorldInfoEntryPointDTO.builder()
+                    .area(area)
+                    .build();
+
+            worldInfo.setEntryPoint(entryPointDTO);
+            log.info("Restored entry point from saved session: worldId={}, playerId={}, position={}",
+                    worldId, playerId, position);
+        }
+    }
+
+    /**
+     * Handle "grid:q,r" entry point - set hex grid coordinates.
+     * Falls back to world default if coordinates invalid.
+     */
+    private void handleGridEntryPoint(WorldInfo worldInfo, String entryPoint) {
+        // Parse grid coordinates from "grid:q,r" format
+        String coordsPart = entryPoint.substring(5); // Remove "grid:" prefix
+        String[] coords = coordsPart.split(",");
+
+        if (coords.length != 2) {
+            log.warn("Invalid grid coordinates format: {}, expected 'grid:q,r'", entryPoint);
+            return;
+        }
+
+        try {
+            int q = Integer.parseInt(coords[0].trim());
+            int r = Integer.parseInt(coords[1].trim());
+
+            // Create HexVector2 from coordinates
+            HexVector2 hexGrid = HexVector2.builder()
+                    .q(q)
+                    .r(r)
+                    .build();
+
+            WorldInfoEntryPointDTO entryPointDTO = WorldInfoEntryPointDTO.builder()
+                    .grid(hexGrid)
+                    .build();
+
+            worldInfo.setEntryPoint(entryPointDTO);
+            log.info("Set hex grid entry point: q={}, r={}", q, r);
+
+        } catch (NumberFormatException e) {
+            log.warn("Invalid grid coordinates (not numbers): {}", entryPoint, e);
+        }
     }
 
     @GetMapping("/config/worldinfo")

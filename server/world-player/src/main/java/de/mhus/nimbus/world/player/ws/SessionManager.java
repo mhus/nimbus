@@ -5,6 +5,7 @@ import de.mhus.nimbus.shared.types.PlayerData;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.shared.utils.LocationService;
 import de.mhus.nimbus.world.player.session.PlayerSession;
+import de.mhus.nimbus.world.player.session.SessionAuthenticatedConsumer;
 import de.mhus.nimbus.world.player.session.SessionClosedConsumer;
 import de.mhus.nimbus.world.shared.session.WSessionService;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
@@ -44,6 +45,10 @@ public class SessionManager {
     @Autowired
     @Lazy
     private List<SessionClosedConsumer> sessionClosedConsumers;
+
+    @Autowired
+    @Lazy
+    private List<SessionAuthenticatedConsumer> sessionAuthenticatedConsumers;
 
     public SessionManager(WSessionService wSessionService,
                          LocationService locationService,
@@ -188,6 +193,19 @@ public class SessionManager {
     }
 
     /**
+     * Notify all SessionAuthenticatedConsumers.
+     */
+    private void notifySessionAuthenticated(PlayerSession session) {
+        for (SessionAuthenticatedConsumer consumer : sessionAuthenticatedConsumers) {
+            try {
+                consumer.onSessionAuthenticated(session);
+            } catch (Exception e) {
+                log.error("SessionAuthenticatedConsumer failed: {}", consumer.getClass().getSimpleName(), e);
+            }
+        }
+    }
+
+    /**
      * Mark session as deprecated (connection lost, but keep session data).
      * Updates WSession in Redis to DEPRECATED.
      * Notifies world-control for instance cleanup (fire-and-forget).
@@ -270,5 +288,7 @@ public class SessionManager {
         log.debug("Session authenticated and subscribed to broadcasts: sessionId={}, worldId={}, actor={}",
                 worldSessionId, worldId.getId(), actor);
 
+        // Notify SessionAuthenticatedConsumers (e.g., start persistence tick thread)
+        notifySessionAuthenticated(session);
     }
 }
