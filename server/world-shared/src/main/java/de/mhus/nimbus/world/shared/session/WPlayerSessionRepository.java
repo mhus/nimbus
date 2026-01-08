@@ -17,12 +17,13 @@ public interface WPlayerSessionRepository extends MongoRepository<WPlayerSession
     /**
      * Find player session by worldId and playerId.
      * This is the primary lookup method.
+     * If multiple sessions exist (duplicates), returns the most recently updated one.
      *
      * @param worldId The full worldId (including instance)
      * @param playerId The playerId
      * @return Optional containing the session if found
      */
-    Optional<WPlayerSession> findByWorldIdAndPlayerId(String worldId, String playerId);
+    Optional<WPlayerSession> findFirstByWorldIdAndPlayerIdOrderByUpdatedAtDesc(String worldId, String playerId);
 
     /**
      * Check if a session exists for worldId and playerId.

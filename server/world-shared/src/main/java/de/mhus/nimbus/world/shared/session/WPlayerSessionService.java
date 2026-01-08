@@ -45,7 +45,7 @@ public class WPlayerSessionService {
         }
 
         // Upsert: find existing or create new
-        Optional<WPlayerSession> existingOpt = repository.findByWorldIdAndPlayerId(worldId, playerId);
+        Optional<WPlayerSession> existingOpt = repository.findFirstByWorldIdAndPlayerIdOrderByUpdatedAtDesc(worldId, playerId);
 
         WPlayerSession session;
         if (existingOpt.isPresent()) {
@@ -80,7 +80,7 @@ public class WPlayerSessionService {
      */
     @Transactional(readOnly = true)
     public Optional<WPlayerSession> loadSession(String worldId, String playerId) {
-        return repository.findByWorldIdAndPlayerId(worldId, playerId);
+        return repository.findFirstByWorldIdAndPlayerIdOrderByUpdatedAtDesc(worldId, playerId);
     }
 
     /**
