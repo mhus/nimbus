@@ -86,7 +86,7 @@ mitgeteilt das der Player die Instanz verlässt. Ist es der Letzte Player in der
 
 [x] EntryPoints kann aus WWorld entfernt werden. (nicht aus WorldInfo!)
 
-[ ] Erstelle in world-editor einen Button zum erstellen einer Zone an einer Welt (nicht zone).
+[?] Erstelle in world-editor einen Button zum erstellen einer Zone an einer Welt (nicht zone).
 - Abfrage des Zone namens und anhängen an die WeltId
 - Kopieren des World Datensatzes und die Zone WeltId setzen
 

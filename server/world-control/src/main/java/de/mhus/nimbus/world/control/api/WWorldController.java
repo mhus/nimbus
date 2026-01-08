@@ -388,4 +388,51 @@ public class WWorldController extends BaseEditorController {
             return bad(e.getMessage());
         }
     }
+
+    /**
+     * Create zone from existing world
+     * POST /control/regions/{regionId}/worlds/{worldId}/zones
+     *
+     * Request body: { "zoneName": "zone1" }
+     */
+    @PostMapping("/{worldId}/zones")
+    public ResponseEntity<?> createZone(
+            @PathVariable String regionId,
+            @PathVariable String worldId,
+            @RequestBody Map<String, String> request) {
+
+        var error = validateId(regionId, "regionId");
+        if (error != null) return error;
+
+        var error2 = validateId(worldId, "worldId");
+        if (error2 != null) return error2;
+
+        String zoneName = request.get("zoneName");
+        if (zoneName == null || zoneName.isBlank()) {
+            return bad("zoneName is required");
+        }
+
+        // Validate source world exists
+        Optional<WWorld> sourceWorld = worldService.getByWorldId(worldId);
+        if (sourceWorld.isEmpty()) {
+            return notFound("Source world not found: " + worldId);
+        }
+
+        if (!regionId.equals(sourceWorld.get().getRegionId())) {
+            return notFound("World not found in this region");
+        }
+
+        try {
+            WorldId worldIdObj = WorldId.of(worldId).orElseThrow(() ->
+                new IllegalArgumentException("Invalid worldId: " + worldId));
+
+            WWorld zoneWorld = worldService.copyWorldAsZone(worldIdObj, zoneName);
+            String zoneWorldId = zoneWorld.getWorldId();
+
+            return ResponseEntity.created(URI.create("/control/regions/" + regionId + "/worlds/" + zoneWorldId))
+                    .body(toResponse(zoneWorld));
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return bad(e.getMessage());
+        }
+    }
 }

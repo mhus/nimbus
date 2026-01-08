@@ -108,6 +108,15 @@
                 </svg>
               </button>
               <button
+                class="btn btn-ghost btn-xs text-info"
+                @click.stop="handleCreateZone(world.worldId, world.name)"
+                title="Create Zone"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <button
                 class="btn btn-ghost btn-xs text-error"
                 @click.stop="handleDelete(world.worldId, world.name)"
               >
@@ -152,6 +161,35 @@
         </div>
       </div>
     </div>
+
+    <!-- Create Zone Modal -->
+    <dialog ref="zoneModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Create Zone</h3>
+        <p class="py-4">Create a zone for world: <strong>{{ zoneSourceWorldName }}</strong></p>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Zone Name</span>
+          </label>
+          <input
+            v-model="zoneName"
+            type="text"
+            placeholder="Enter zone name..."
+            class="input input-bordered"
+            @keyup.enter="handleConfirmCreateZone"
+          />
+        </div>
+        <div class="modal-action">
+          <button class="btn btn-ghost" @click="handleCancelCreateZone">Cancel</button>
+          <button class="btn btn-primary" @click="handleConfirmCreateZone" :disabled="!zoneName || zoneName.trim() === ''">
+            Create Zone
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -177,6 +215,12 @@ const filterPublic = ref(false);
 // Paging
 const currentPage = ref(1);
 const pageSize = ref(20);
+
+// Zone creation modal
+const zoneModal = ref<HTMLDialogElement | null>(null);
+const zoneName = ref('');
+const zoneSourceWorldId = ref('');
+const zoneSourceWorldName = ref('');
 
 const filteredWorlds = computed(() => {
   let result = worlds.value;
@@ -274,6 +318,50 @@ const handleNextPage = () => {
 const handlePreviousPage = () => {
   if (hasPreviousPage.value) {
     currentPage.value--;
+  }
+};
+
+const handleCreateZone = (worldId: string, name: string) => {
+  zoneSourceWorldId.value = worldId;
+  zoneSourceWorldName.value = name;
+  zoneName.value = '';
+  zoneModal.value?.showModal();
+};
+
+const handleCancelCreateZone = () => {
+  zoneName.value = '';
+  zoneSourceWorldId.value = '';
+  zoneSourceWorldName.value = '';
+  zoneModal.value?.close();
+};
+
+const handleConfirmCreateZone = async () => {
+  if (!zoneName.value || zoneName.value.trim() === '') {
+    return;
+  }
+
+  if (!currentRegionId.value) {
+    return;
+  }
+
+  try {
+    loading.value = true;
+    await worldServiceFrontend.createZone(
+      currentRegionId.value,
+      zoneSourceWorldId.value,
+      zoneName.value.trim()
+    );
+
+    // Close modal
+    handleCancelCreateZone();
+
+    // Reload worlds list
+    await loadWorlds();
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to create zone';
+    console.error('[WorldList] Failed to create zone:', e);
+  } finally {
+    loading.value = false;
   }
 };
 

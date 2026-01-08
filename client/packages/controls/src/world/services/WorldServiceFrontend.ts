@@ -55,6 +55,13 @@ export interface WorldInfoSettings {
   worldTime?: WorldInfoWorldTime;
 }
 
+// Vector3 position
+export interface Vector3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
 // Main WorldInfo interface
 export interface WorldInfo {
   worldId?: string;
@@ -71,6 +78,8 @@ export interface WorldInfo {
   editorUrl?: string;
   splashScreen?: string;
   splashScreenAudio?: string;
+  start?: Vector3;
+  stop?: Vector3;
   owner?: WorldInfoOwner;
   settings?: WorldInfoSettings;
   [key: string]: any;  // Allow additional fields
@@ -136,6 +145,13 @@ class WorldServiceFrontend {
 
   async deleteWorld(regionId: string, worldId: string): Promise<void> {
     return apiService.delete<void>(`/control/regions/${regionId}/worlds/${worldId}`);
+  }
+
+  async createZone(regionId: string, sourceWorldId: string, zoneName: string): Promise<World> {
+    return apiService.post<World>(
+      `/control/regions/${regionId}/worlds/${sourceWorldId}/zones`,
+      { zoneName }
+    );
   }
 }
 

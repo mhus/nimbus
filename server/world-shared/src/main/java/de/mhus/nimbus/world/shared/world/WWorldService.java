@@ -337,6 +337,73 @@ public class WWorldService {
     }
 
     /**
+     * Copy an existing world as a new zone.
+     * Creates a new world with zone worldId (sourceWorldId:zoneName).
+     *
+     * @param sourceWorldId The worldId of the world to copy
+     * @param zoneName The name of the zone to create
+     * @return The created zone world
+     * @throws IllegalArgumentException if sourceWorldId is invalid or zoneName is blank
+     * @throws IllegalStateException if source world not found or zone already exists
+     */
+    @Transactional
+    public WWorld copyWorldAsZone(WorldId sourceWorldId, String zoneName) {
+        // Validation
+        if (zoneName == null || zoneName.isBlank()) {
+            throw new IllegalArgumentException("zoneName cannot be null or blank");
+        }
+
+        // Ensure source is not already a zone or instance
+        if (sourceWorldId.isZone()) {
+            throw new IllegalArgumentException("Source world is already a zone: " + sourceWorldId);
+        }
+        if (sourceWorldId.isInstance()) {
+            throw new IllegalArgumentException("Cannot create zone from instance world: " + sourceWorldId);
+        }
+
+        // Load source world
+        WWorld sourceWorld = repository.findByWorldId(sourceWorldId.getId())
+                .orElseThrow(() -> new IllegalStateException("Source world not found: " + sourceWorldId));
+
+        // Build zone worldId: sourceWorldId:zoneName
+        String zoneWorldIdStr = sourceWorldId.getId() + ":" + zoneName;
+        WorldId zoneWorldId = WorldId.of(zoneWorldIdStr)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid zone worldId: " + zoneWorldIdStr));
+
+        // Check if zone already exists
+        if (repository.existsByWorldId(zoneWorldId.getId())) {
+            throw new IllegalStateException("Zone already exists: " + zoneWorldId);
+        }
+
+        // Copy world data
+        WWorld zoneWorld = WWorld.builder()
+                .worldId(zoneWorldId.getId())
+                .regionId(sourceWorld.getRegionId())
+                .name(sourceWorld.getName() + " (Zone: " + zoneName + ")")
+                .description(sourceWorld.getDescription())
+                .publicData(sourceWorld.getPublicData())  // Copy publicData
+                .enabled(sourceWorld.isEnabled())
+                .parent(sourceWorld.getParent())
+                .instanceable(sourceWorld.isInstanceable())
+                .groundLevel(sourceWorld.getGroundLevel())
+                .waterLevel(sourceWorld.getWaterLevel())
+                .groundBlockType(sourceWorld.getGroundBlockType())
+                .waterBlockType(sourceWorld.getWaterBlockType())
+                .owner(sourceWorld.getOwner())
+                .editor(sourceWorld.getEditor())
+                .supporter(sourceWorld.getSupporter())
+                .player(sourceWorld.getPlayer())
+                .publicFlag(sourceWorld.isPublicFlag())
+                .build();
+
+        zoneWorld.touchForCreate();
+        repository.save(zoneWorld);
+
+        log.info("Created zone world: {} (copied from {})", zoneWorldId, sourceWorldId);
+        return zoneWorld;
+    }
+
+    /**
      * Find all world collections.
      * World collections are identified by WorldId entries starting with '@'.
      *

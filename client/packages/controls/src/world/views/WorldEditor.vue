@@ -343,6 +343,8 @@
           <div class="tabs tabs-boxed">
             <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'basic'}"
                @click="activeWorldInfoTab = 'basic'">Basic</a>
+            <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'boundaries'}"
+               @click="activeWorldInfoTab = 'boundaries'">Boundaries</a>
             <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'visual'}"
                @click="activeWorldInfoTab = 'visual'">Visual</a>
             <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'gameplay'}"
@@ -384,6 +386,89 @@
                 <option :value="1">Inactive</option>
                 <option :value="2">Maintenance</option>
               </select>
+            </div>
+          </div>
+
+          <!-- Tab: Boundaries -->
+          <div v-show="activeWorldInfoTab === 'boundaries'" class="space-y-4 mt-4">
+            <p class="text-sm text-base-content/70">Define the physical boundaries of the world (bounding box).</p>
+
+            <!-- Start Position -->
+            <div class="divider">Start Position (Min)</div>
+            <div class="grid grid-cols-3 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Start X</span></label>
+                <input v-model.number="formData.publicData.start.x" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Minimum X coordinate</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Start Y</span></label>
+                <input v-model.number="formData.publicData.start.y" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Minimum Y coordinate</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Start Z</span></label>
+                <input v-model.number="formData.publicData.start.z" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Minimum Z coordinate</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Stop Position -->
+            <div class="divider">Stop Position (Max)</div>
+            <div class="grid grid-cols-3 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Stop X</span></label>
+                <input v-model.number="formData.publicData.stop.x" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Maximum X coordinate</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Stop Y</span></label>
+                <input v-model.number="formData.publicData.stop.y" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Maximum Y coordinate</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Stop Z</span></label>
+                <input v-model.number="formData.publicData.stop.z" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Maximum Z coordinate</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Calculated World Size -->
+            <div class="divider">World Size</div>
+            <div class="stats shadow">
+              <div class="stat">
+                <div class="stat-title">Width (X)</div>
+                <div class="stat-value text-primary">{{ Math.abs(formData.publicData.stop.x - formData.publicData.start.x) }}</div>
+                <div class="stat-desc">blocks</div>
+              </div>
+              <div class="stat">
+                <div class="stat-title">Height (Y)</div>
+                <div class="stat-value text-secondary">{{ Math.abs(formData.publicData.stop.y - formData.publicData.start.y) }}</div>
+                <div class="stat-desc">blocks</div>
+              </div>
+              <div class="stat">
+                <div class="stat-title">Depth (Z)</div>
+                <div class="stat-value text-accent">{{ Math.abs(formData.publicData.stop.z - formData.publicData.start.z) }}</div>
+                <div class="stat-desc">blocks</div>
+              </div>
             </div>
           </div>
 
@@ -663,6 +748,35 @@
                 </label>
               </div>
             </div>
+
+            <!-- Current World Time Display -->
+            <div class="divider">Current World Time</div>
+            <div class="alert alert-info">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="w-full">
+                <div class="font-bold text-lg mb-3">{{ currentWorldTimeFormatted }}</div>
+                <div class="grid grid-cols-5 gap-2 text-sm">
+                  <div>
+                    <span class="font-medium">Era:</span> {{ currentWorldTimeComponents.era }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Year:</span> {{ currentWorldTimeComponents.year }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Month:</span> {{ currentWorldTimeComponents.month }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Day:</span> {{ currentWorldTimeComponents.day }}
+                  </div>
+                  <div>
+                    <span class="font-medium">Time:</span> {{ currentWorldTimeComponents.hour }}:{{ currentWorldTimeComponents.minute.toString().padStart(2, '0') }}
+                  </div>
+                </div>
+                <div class="text-xs mt-2 opacity-70">Based on current configuration and Unix epoch offset</div>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -691,7 +805,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRegion } from '@/composables/useRegion';
 import { worldServiceFrontend, type World, type WorldInfo } from '../services/WorldServiceFrontend';
 
@@ -712,6 +826,51 @@ const saving = ref(false);
 const error = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 
+// Timer for world time updates
+const currentTime = ref(Date.now());
+let timeUpdateInterval: number | null = null;
+
+// Computed: Current world time components
+const currentWorldTimeComponents = computed(() => {
+  const config = formData.value.publicData.settings.worldTime;
+
+  // Calculate current world time (use currentTime.value to make it reactive)
+  const now = currentTime.value;
+  const realElapsedMinutes = now / (1000 * 60);
+  const worldElapsedMinutes = realElapsedMinutes * config.minuteScaling;
+  const currentWorldMinute = config.linuxEpocheDeltaMinutes + worldElapsedMinutes;
+
+  // Format world time
+  let remainingMinutes = Math.floor(currentWorldMinute);
+
+  const minute = remainingMinutes % config.minutesPerHour;
+  remainingMinutes = Math.floor(remainingMinutes / config.minutesPerHour);
+
+  const hour = remainingMinutes % config.hoursPerDay;
+  remainingMinutes = Math.floor(remainingMinutes / config.hoursPerDay);
+
+  const day = (remainingMinutes % config.daysPerMonth) + 1;
+  remainingMinutes = Math.floor(remainingMinutes / config.daysPerMonth);
+
+  const month = (remainingMinutes % config.monthsPerYear) + 1;
+  remainingMinutes = Math.floor(remainingMinutes / config.monthsPerYear);
+
+  const year = remainingMinutes + 1;
+  const era = config.currentEra;
+
+  return {
+    era,
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    formatted: `@${era}, @${year}.${month}.${day}, ${hour}:${minute.toString().padStart(2, '0')}`
+  };
+});
+
+const currentWorldTimeFormatted = computed(() => currentWorldTimeComponents.value.formatted);
+
 // Helper refs for tag inputs
 const newOwner = ref('');
 const newEditor = ref('');
@@ -719,7 +878,7 @@ const newSupporter = ref('');
 const newPlayer = ref('');
 
 // Tab navigation for WorldInfo
-const activeWorldInfoTab = ref<'basic' | 'visual' | 'gameplay' | 'environment' | 'time'>('basic');
+const activeWorldInfoTab = ref<'basic' | 'boundaries' | 'visual' | 'gameplay' | 'environment' | 'time'>('basic');
 
 const formData = ref({
   worldId: '',
@@ -749,6 +908,16 @@ const formData = ref({
     seasonProgress: 0,
     splashScreen: '',
     splashScreenAudio: '',
+    start: {
+      x: -120000,
+      y: -100,
+      z: -128000
+    },
+    stop: {
+      x: 120000,
+      y: 200,
+      z: 128000
+    },
     owner: {
       user: '',
       title: '',
@@ -817,6 +986,16 @@ const loadWorld = () => {
         seasonProgress: 0,
         splashScreen: '',
         splashScreenAudio: '',
+        start: {
+          x: -120000,
+          y: -100,
+          z: -128000
+        },
+        stop: {
+          x: 120000,
+          y: 200,
+          z: 128000
+        },
         owner: {
           user: '',
           title: '',
@@ -874,6 +1053,8 @@ const loadWorld = () => {
       seasonProgress: worldData?.seasonProgress || 0,
       splashScreen: worldData?.splashScreen || '',
       splashScreenAudio: worldData?.splashScreenAudio || '',
+      start: worldData?.start || { x: -120000, y: -100, z: -128000 },
+      stop: worldData?.stop || { x: 120000, y: 200, z: 128000 },
       owner: worldData?.owner || { user: '', title: '', email: '' },
       settings: {
         maxPlayers: worldData?.settings?.maxPlayers || 100,
@@ -1020,5 +1201,18 @@ const handleBack = () => {
 
 onMounted(() => {
   loadWorld();
+
+  // Start timer to update world time display every second
+  timeUpdateInterval = window.setInterval(() => {
+    currentTime.value = Date.now();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  // Clear timer when component is unmounted
+  if (timeUpdateInterval !== null) {
+    window.clearInterval(timeUpdateInterval);
+    timeUpdateInterval = null;
+  }
 });
 </script>
