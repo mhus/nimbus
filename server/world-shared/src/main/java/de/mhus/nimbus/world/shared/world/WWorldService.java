@@ -99,7 +99,7 @@ public class WWorldService {
     }
 
     @Transactional
-    public WWorld createWorld(WorldId worldId, WorldInfo info, String parent, String branch, Boolean enabled) {
+    public WWorld createWorld(WorldId worldId, WorldInfo info, String parent, Boolean enabled) {
         if (repository.existsByWorldId(worldId.getId())) {
             throw new IllegalStateException("WorldId bereits vorhanden: " + worldId);
         }
@@ -107,7 +107,6 @@ public class WWorldService {
                 .worldId(worldId.getId())
                 .publicData(info)
                 .parent(parent)
-                .branch(branch)
                 .enabled(enabled == null ? true : enabled)
                 .build();
         entity.touchForCreate();

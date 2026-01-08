@@ -13,7 +13,6 @@ export type WorldListResponse = WorldInfo;
 
 export type WorldFilter =
   | 'mainOnly'
-  | 'mainAndBranches'
   | 'mainWorldsAndInstances'
   | 'allWithoutInstances'
   | 'regionCollections'

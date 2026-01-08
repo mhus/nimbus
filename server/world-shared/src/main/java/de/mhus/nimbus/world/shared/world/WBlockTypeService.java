@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 /**
  * Service for managing WBlockType entities.
  * Block types are stored per main world (no instances, no zones).
- * Branches use COW (Copy On Write) - they can have their own block types, falling back to parent.
- * Block types cannot be deleted in branches.
  */
 @Service
 @RequiredArgsConstructor
@@ -28,26 +26,14 @@ public class WBlockTypeService {
     private final WBlockTypeRepository repository;
 
     /**
-     * Find block type by blockId with COW fallback for branches.
+     * Find block type by blockId.
      * Instances and zones always look up in their main world.
-     * Branches first check their own block types, then fall back to parent world.
      */
     @Transactional(readOnly = true)
     public Optional<WBlockType> findByBlockId(WorldId worldId, String blockId) {
 
         var lookupWorld = worldId.mainWorld();
         var collection = WorldCollection.of(lookupWorld, blockId);
-
-        // Try branch first if this is a branch world
-        if (collection.worldId().isBranch()) {
-            var blockType = repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
-            if (blockType.isPresent()) {
-                return blockType;
-            }
-            // Fallback to parent world (COW)
-            var parentWorld = collection.worldId().withoutBranchAndInstance();
-            return repository.findByWorldIdAndBlockId(parentWorld.getId(), collection.path());
-        }
 
         return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path());
     }
@@ -154,17 +140,10 @@ public class WBlockTypeService {
     /**
      * Delete a block type.
      * Filters out instances and zones.
-     * IMPORTANT: Deletion is NOT allowed in branches - block types can only be deleted in main worlds.
      */
     @Transactional
     public boolean delete(WorldId worldId, String blockId) {
         var collection = WorldCollection.of(worldId.mainWorld(), blockId);
-
-        // Prevent deletion in branches
-        if (collection.worldId().isBranch()) {
-            log.warn("Attempted to delete block type '{}' in branch world '{}' - not allowed", blockId, worldId.getId());
-            throw new IllegalArgumentException("Block types cannot be deleted in branches: " + worldId.getId());
-        }
 
         return repository.findByWorldIdAndBlockId(collection.worldId().getId(), collection.path()).map(entity -> {
             repository.delete(entity);

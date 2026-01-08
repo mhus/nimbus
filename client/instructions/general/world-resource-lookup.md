@@ -3,11 +3,10 @@
 
 ## Welt Id
 
-- worldId: regionId:worldName\[:zone\]\[@branch\][!instance\] (aus universe.md)
+- worldId: regionId:worldName\[:zone\][!instance\] (aus universe.md)
 
 Beispiele:
 - earth616:main
-- earth616:main@dev
 - earth616:main:1234-553728-123
 
 oder collection welt:
@@ -57,33 +56,18 @@ Beispiele:
 - WorldInfo: direkt
 - PlayerInfo: region:world
 
-## World Branch: region:world@branch / region:world:zone@branch
+## Instance: region:world#instance / region:world:zone!instance
 
-- Chunks: direkt + region:world:zone (fallback)
+- Chunks: region:world:zone
 - Assets: region:world
 - BlockTypes: region:world
-- Layers: direkt + region:world:zone (fallback)
-- Entities: direkt + region:world:zone (fallback)
-- EntityModels: direkt + region:world:zone (fallback)
-- Backdrops: direkt + region:world:zone (fallback)
+- Layers: region:world:zone
+- Entities: region:world:zone
+- EntityModels: region:world:zone
+- Backdrops: region:world:zone
 - Items: region:world:zone
 - ItemType: region:world:zone
-- Item Positions: region:world:zone (?)
-- WorldInfo: direkt
-- PlayerInfo: region:world
-
-## Instance: region:world#instance / region:world:zone!instance / region:world@branch!instance
-
-- Chunks: region:world:zone@branch
-- Assets: region:world
-- BlockTypes: region:world
-- Layers: region:world:zone@branch
-- Entities: region:world:zone@branch
-- EntityModels: region:world:zone@branch
-- Backdrops: region:world:zone@branch
-- Items: region:world:zone@branch
-- ItemType: region:world:zone@branch
-- Item Positions: direkt + region:world:zone@branch (fallback)
+- Item Positions: direkt + region:world:zone (fallback)
 - WorldInfo: direkt
 - PlayerInfo: region:world
 

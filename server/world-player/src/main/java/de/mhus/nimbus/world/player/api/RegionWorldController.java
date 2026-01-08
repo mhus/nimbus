@@ -29,7 +29,7 @@ public class RegionWorldController {
 
     // DTOs
     public static class CreateWorldRequest { public String worldId; public WorldInfo info; public String getWorldId(){return worldId;} public WorldInfo getInfo(){return info;} }
-    public static class WorldResponse { public String worldId; public boolean enabled; public String parent; public String branch; public WorldInfo info; public WorldResponse(String w, boolean e, String p, String b, WorldInfo i){worldId=w;enabled=e;parent=p;branch=b;info=i;} }
+    public static class WorldResponse { public String worldId; public boolean enabled; public String parent; public WorldInfo info; public WorldResponse(String w, boolean e, String p, WorldInfo i){worldId=w;enabled=e;parent=p;info=i;} }
 
     @GetMapping(produces = "application/json")
     @Operation(summary = "Main World abrufen", description = "Liefert Daten einer Main World per worldId")
@@ -46,7 +46,7 @@ public class RegionWorldController {
     }
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    @Operation(summary = "Main World erstellen", description = "Erstellt eine neue Main World (nur worldId ohne Zone/Branch)")
+    @Operation(summary = "Main World erstellen", description = "Erstellt eine neue Main World (nur worldId ohne Zone)")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Erstellt"),
         @ApiResponse(responseCode = "400", description = "Validierungsfehler"),
@@ -57,7 +57,7 @@ public class RegionWorldController {
         WorldId worldId;
         try { worldId = WorldId.of(req.getWorldId()).get(); } catch (NoSuchElementException e) { return ResponseEntity.badRequest().body(Map.of("error", e.getMessage())); }
         if (!worldId.isMain()) {
-            return ResponseEntity.badRequest().body(Map.of("error","only main worlds can be created (no zone, no branch)", "worldId", req.getWorldId()));
+            return ResponseEntity.badRequest().body(Map.of("error","only main worlds can be created (no zone)", "worldId", req.getWorldId()));
         }
         try {
             WWorld created = worldService.createWorld(worldId, req.getInfo());
@@ -67,5 +67,5 @@ public class RegionWorldController {
         }
     }
 
-    private WorldResponse toResponse(WWorld w) { return new WorldResponse(w.getWorldId(), w.isEnabled(), w.getParent(), w.getBranch(), w.getPublicData()); }
+    private WorldResponse toResponse(WWorld w) { return new WorldResponse(w.getWorldId(), w.isEnabled(), w.getParent(), w.getPublicData()); }
 }

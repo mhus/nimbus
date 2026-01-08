@@ -14,8 +14,6 @@ import java.util.function.Consumer;
 /**
  * Service for managing WEntity instances in the world.
  * Entities exist separately for each world/zone/instance.
- * Branches use COW (Copy On Write) - they can have their own entities, falling back to parent.
- * Entities cannot be deleted in branches.
  * No storage functionality supported (always world-instance-specific).
  */
 @Service
@@ -26,25 +24,12 @@ public class WEntityService {
     private final WEntityRepository repository;
 
     /**
-     * Find entity by entityId with COW fallback for branches.
+     * Find entity by entityId.
      * Instances and zones always look up in their main world.
-     * Branches first check their own entities, then fall back to parent world.
      */
     @Transactional(readOnly = true)
     public Optional<WEntity> findByWorldIdAndEntityId(WorldId worldId, String entityId) {
         var lookupWorld = worldId.withoutInstanceAndZone();
-
-        // Try branch first if this is a branch world
-        if (lookupWorld.isBranch()) {
-            var entity = repository.findByWorldIdAndEntityId(lookupWorld.getId(), entityId);
-            if (entity.isPresent()) {
-                return entity;
-            }
-            // Fallback to parent world (COW)
-            var parentWorld = lookupWorld.withoutBranchAndInstance();
-            return repository.findByWorldIdAndEntityId(parentWorld.getId(), entityId);
-        }
-
         return repository.findByWorldIdAndEntityId(lookupWorld.getId(), entityId);
     }
 
@@ -149,17 +134,10 @@ public class WEntityService {
     /**
      * Delete an entity.
      * Filters out instances and zones.
-     * IMPORTANT: Deletion is NOT allowed in branches - entities can only be deleted in main worlds.
      */
     @Transactional
     public boolean delete(WorldId worldId, String entityId) {
         var lookupWorld = worldId.withoutInstanceAndZone();
-
-        // Prevent deletion in branches
-        if (lookupWorld.isBranch()) {
-            log.warn("Attempted to delete entity '{}' in branch world '{}' - not allowed", entityId, lookupWorld.getId());
-            throw new IllegalArgumentException("Entities cannot be deleted in branches: " + lookupWorld.getId());
-        }
 
         return repository.findByWorldIdAndEntityId(lookupWorld.getId(), entityId).map(entity -> {
             repository.delete(entity);

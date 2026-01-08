@@ -50,7 +50,7 @@ public class WBackdropService {
      */
     @Transactional(readOnly = true)
     public List<WBackdrop> findAllEnabled(WorldId worldId) {
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        var lookupWorld = worldId.withoutInstanceAndZone();
         return repository.findByWorldIdAndEnabled(lookupWorld.getId(), true);
     }
 
@@ -67,7 +67,7 @@ public class WBackdropService {
             throw new IllegalArgumentException("publicData required");
         }
 
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        var lookupWorld = worldId.withoutInstanceAndZone();
 
         WBackdrop entity = repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId).orElseGet(() -> {
             WBackdrop neu = WBackdrop.builder()
@@ -107,7 +107,7 @@ public class WBackdropService {
      */
     @Transactional
     public Optional<WBackdrop> update(WorldId worldId, String backdropId, Consumer<WBackdrop> updater) {
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        var lookupWorld = worldId.withoutInstanceAndZone();
         return repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId).map(entity -> {
             updater.accept(entity);
             entity.touchUpdate();
@@ -123,7 +123,7 @@ public class WBackdropService {
      */
     @Transactional
     public boolean delete(WorldId worldId, String backdropId) {
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        var lookupWorld = worldId.withoutInstanceAndZone();
         return repository.findByWorldIdAndBackdropId(lookupWorld.getId(), backdropId).map(entity -> {
             repository.delete(entity);
             log.debug("Deleted WBackdrop: {}", backdropId);

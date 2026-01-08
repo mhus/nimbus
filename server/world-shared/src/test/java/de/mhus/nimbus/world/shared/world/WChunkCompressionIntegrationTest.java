@@ -113,38 +113,6 @@ class WChunkCompressionIntegrationTest {
         assertThat(uncompressedChunk.isCompressed()).isFalse();
     }
 
-    @Test
-    void testCOWWithCompression() {
-        if (chunkService == null) {
-            return;
-        }
-
-        // Given: Branch world with COW
-        WorldId branchWorld = WorldId.unchecked("test-region:main-world@branch-1");
-        WorldId mainWorld = WorldId.unchecked("test-region:main-world");
-        String chunkKey = "5:5";
-
-        WChunk mainChunk = WChunk.builder()
-                .worldId(mainWorld.getId())
-                .chunk(chunkKey)
-                .storageId("storage-main")
-                .compressed(true)
-                .build();
-
-        // Mock: Main world has chunk, branch doesn't
-        when(repository.findByWorldIdAndChunk(branchWorld.getId(), chunkKey))
-                .thenReturn(Optional.empty());
-        when(repository.findByWorldIdAndChunk(mainWorld.getId(), chunkKey))
-                .thenReturn(Optional.of(mainChunk));
-
-        // When: Load from branch (should fall back to main)
-        Optional<WChunk> found = chunkService.find(branchWorld, chunkKey);
-
-        // Then: Should find main chunk
-        assertThat(found).isPresent();
-        assertThat(found.get().isCompressed()).isTrue();
-    }
-
     private ChunkData createLargeChunkData(int cx, int cz, int blockCount) {
         ChunkData chunkData = new ChunkData();
         chunkData.setCx(cx);

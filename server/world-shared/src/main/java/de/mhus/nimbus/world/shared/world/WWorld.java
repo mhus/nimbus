@@ -25,7 +25,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "worlds")
-@ActualSchemaVersion("1.0.0")
+@ActualSchemaVersion("1.0.1")
 // @GenerateTypeScript("entities") - need to clarify WEntryPoint type
 public class WWorld implements Identifiable {
 
@@ -55,7 +55,6 @@ public class WWorld implements Identifiable {
     @Builder.Default
     private boolean enabled = true; // Standardmäßig aktiviert
     private String parent; // optionale Referenz auf übergeordnete Welt / Gruppe
-    private String branch; // z.B. Entwicklungszweig / Variante
 
     // Zugriff / Berechtigungen
     @Builder.Default

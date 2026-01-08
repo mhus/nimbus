@@ -36,7 +36,6 @@ public class WWorldController extends BaseEditorController {
             WorldInfo publicData,
             Boolean enabled,
             String parent,
-            String branch,
             Integer groundLevel,
             Integer waterLevel,
             String groundBlockType,
@@ -54,7 +53,6 @@ public class WWorldController extends BaseEditorController {
             Instant updatedAt,
             boolean enabled,
             String parent,
-            String branch,
             int groundLevel,
             Integer waterLevel,
             String groundBlockType,
@@ -83,7 +81,6 @@ public class WWorldController extends BaseEditorController {
                 world.getUpdatedAt(),
                 world.isEnabled(),
                 world.getParent(),
-                world.getBranch(),
                 world.getGroundLevel(),
                 world.getWaterLevel(),
                 world.getGroundBlockType(),
@@ -114,7 +111,6 @@ public class WWorldController extends BaseEditorController {
                 null,  // no updatedAt
                 true,  // collections are always enabled
                 null,  // no parent
-                null,  // no branch
                 0,     // default groundLevel
                 null,  // no waterLevel
                 null,  // no groundBlockType
@@ -276,7 +272,6 @@ public class WWorldController extends BaseEditorController {
                     worldIdObj,
                     info,
                     request.parent(),
-                    request.branch(),
                     request.enabled()
             );
 
@@ -330,7 +325,6 @@ public class WWorldController extends BaseEditorController {
             if (request.publicData() != null) existing.setPublicData(request.publicData());
             if (request.enabled() != null) existing.setEnabled(request.enabled());
             if (request.parent() != null) existing.setParent(request.parent());
-            if (request.branch() != null) existing.setBranch(request.branch());
             if (request.groundLevel() != null) existing.setGroundLevel(request.groundLevel());
             if (request.waterLevel() != null) existing.setWaterLevel(request.waterLevel());
             if (request.groundBlockType() != null) existing.setGroundBlockType(request.groundBlockType());

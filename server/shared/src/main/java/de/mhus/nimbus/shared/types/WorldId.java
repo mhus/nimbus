@@ -6,7 +6,7 @@ import java.util.Optional;
 
 /*
  * WorldId represents a unique identifier for a world in the format
- * "regionId:worldName[:zone][@branch][!instance]".
+ * "regionId:worldName[:zone][!instance]".
  * or
  * @collection:collectinId
  * Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
@@ -19,7 +19,6 @@ public class WorldId implements Comparable<WorldId> {
     @Getter
     private String id;
     private String regionId;
-    private String branch;
     private String worldName;
     private String zone;
     private String instance;
@@ -36,11 +35,6 @@ public class WorldId implements Comparable<WorldId> {
     public String getRegionId() {
         parseId();
         return regionId;
-    }
-
-    public String getBranch() {
-        parseId();
-        return branch;
     }
 
     public String getWorldName() {
@@ -70,7 +64,6 @@ public class WorldId implements Comparable<WorldId> {
             var parts = string.split(":", 3); // one more for garbage
             regionId = parts[0];
             worldName = parts[1];
-            branch = null;
             zone = null;
             instance = null;
             return;
@@ -79,13 +72,6 @@ public class WorldId implements Comparable<WorldId> {
             var parts = id.split("!", 3); // one more for garbage
             if (parts.length > 1) {
                 instance = parts[1];
-            }
-            string = parts[0];
-        }
-        if (string.indexOf('@') > 0) {
-            var parts = string.split("@", 3); // one more for garbage
-            if (parts.length > 1) {
-                branch = parts[1];
             }
             string = parts[0];
         }
@@ -118,17 +104,12 @@ public class WorldId implements Comparable<WorldId> {
             return id.matches("^@[a-zA-Z0-9_\\-]{1,64}:[a-zA-Z0-9_\\-]{1,64}$");
         }
          // Every part is a string 'a-zA-Z0-9_-' from 1 to 64 characters.
-        return id.matches("^[a-zA-Z0-9_\\-]{1,64}:[a-zA-Z0-9_\\-]{1,64}(:[a-zA-Z0-9_\\-]{1,64})?(@[a-zA-Z0-9_\\-]{1,64})?(![a-zA-Z0-9_\\-]{1,64})?$");
+        return id.matches("^[a-zA-Z0-9_\\-]{1,64}:[a-zA-Z0-9_\\-]{1,64}(:[a-zA-Z0-9_\\-]{1,64})?(![a-zA-Z0-9_\\-]{1,64})?$");
     }
 
     public boolean isMain() {
         parseId();
-        return zone == null && branch == null && instance == null;
-    }
-
-    public boolean isBranch() {
-        parseId();
-        return branch != null;
+        return zone == null && instance == null;
     }
 
     public boolean isInstance() {
@@ -159,16 +140,6 @@ public class WorldId implements Comparable<WorldId> {
         StringBuilder sb = new StringBuilder();
         sb.append(regionId).append(":").append(worldName);
         if (zone != null) sb.append(":").append(zone);
-        if (branch != null) sb.append("@").append(branch);
-        return new WorldId(sb.toString());
-    }
-
-    public WorldId withoutBranchAndInstance() {
-        parseId();
-        if (branch == null && instance == null) return this;
-        StringBuilder sb = new StringBuilder();
-        sb.append(regionId).append(":").append(worldName);
-        if (zone != null) sb.append(":").append(zone);
         return new WorldId(sb.toString());
     }
 
@@ -177,7 +148,6 @@ public class WorldId implements Comparable<WorldId> {
         if (instance == null && zone == null) return this;
         StringBuilder sb = new StringBuilder();
         sb.append(regionId).append(":").append(worldName);
-        if (branch != null) sb.append("@").append(branch);
         return new WorldId(sb.toString());
     }
 

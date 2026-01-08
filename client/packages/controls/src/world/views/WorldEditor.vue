@@ -28,8 +28,6 @@
         <span class="mx-1">→</span>
         <span>zone: -</span>
         <span class="mx-1">→</span>
-        <span>branch: {{ formData.branch || '-' }}</span>
-        <span class="mx-1">→</span>
         <span>instance: -</span>
       </div>
     </div>
@@ -241,7 +239,6 @@ const formData = ref({
   enabled: true,
   publicFlag: false,
   parent: '',
-  branch: '',
   groundLevel: 0,
   waterLevel: null as number | null,
   groundBlockType: 'r/grass',
@@ -257,7 +254,6 @@ const loadWorld = () => {
       enabled: true,
       publicFlag: false,
       parent: '',
-      branch: '',
       groundLevel: 0,
       waterLevel: null,
       groundBlockType: 'r/grass',
@@ -275,7 +271,6 @@ const loadWorld = () => {
     enabled: world.enabled,
     publicFlag: world.publicFlag,
     parent: world.parent || '',
-    branch: world.branch || '',
     groundLevel: world.groundLevel,
     waterLevel: world.waterLevel,
     groundBlockType: world.groundBlockType,
@@ -300,7 +295,6 @@ const handleSave = async () => {
       description: formData.value.description,
       enabled: formData.value.enabled,
       parent: formData.value.parent,
-      branch: formData.value.branch,
       groundLevel: formData.value.groundLevel,
       waterLevel: formData.value.waterLevel ?? undefined,
       groundBlockType: formData.value.groundBlockType,

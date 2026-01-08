@@ -19,8 +19,6 @@ import java.util.function.Consumer;
  *
  * HexGrids exist separately for each world/zone.
  * Instances CANNOT have their own hex grids - always taken from the defined world.
- * Branches use COW (Copy On Write) - they can have their own hex grids, falling back to parent.
- * HexGrids cannot be deleted in branches.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,9 +28,8 @@ public class WHexGridService {
     private final WHexGridRepository repository;
 
     /**
-     * Finds a hex grid by world ID and hex position with COW fallback for branches.
+     * Finds a hex grid by world ID and hex position.
      * Instances always look up in their world (without instance suffix).
-     * Branches first check their own hex grids, then fall back to parent world.
      *
      * @param worldId The world identifier
      * @param hexPos The hex vector with q and r coordinates
@@ -52,17 +49,6 @@ public class WHexGridService {
         // Parse WorldId and filter instances
         WorldId parsedWorldId = WorldId.unchecked(worldId);
         var lookupWorld = parsedWorldId.withoutInstance();
-
-        // Try branch first if this is a branch world
-        if (lookupWorld.isBranch()) {
-            var hexGrid = repository.findByWorldIdAndPosition(lookupWorld.getId(), positionKey);
-            if (hexGrid.isPresent()) {
-                return hexGrid;
-            }
-            // Fallback to parent world (COW)
-            var parentWorld = lookupWorld.withoutBranchAndInstance();
-            return repository.findByWorldIdAndPosition(parentWorld.getId(), positionKey);
-        }
 
         return repository.findByWorldIdAndPosition(lookupWorld.getId(), positionKey);
     }
@@ -245,7 +231,6 @@ public class WHexGridService {
     /**
      * Deletes a hex grid (hard delete).
      * Filters out instances.
-     * IMPORTANT: Deletion is NOT allowed in branches - hex grids can only be deleted in main worlds.
      *
      * @param worldId The world identifier
      * @param hexPos The hex vector with q and r coordinates
@@ -262,13 +247,6 @@ public class WHexGridService {
 
         WorldId parsedWorldId = WorldId.unchecked(worldId);
         var lookupWorld = parsedWorldId.withoutInstance();
-
-        // Prevent deletion in branches
-        if (lookupWorld.isBranch()) {
-            String positionKey = HexMathUtil.positionKey(hexPos);
-            log.warn("Attempted to delete hex grid at position '{}' in branch world '{}' - not allowed", positionKey, lookupWorld.getId());
-            throw new IllegalArgumentException("Hex grids cannot be deleted in branches: " + lookupWorld.getId());
-        }
 
         String positionKey = HexMathUtil.positionKey(hexPos);
 

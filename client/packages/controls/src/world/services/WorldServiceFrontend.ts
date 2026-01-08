@@ -15,7 +15,6 @@ export interface World {
   updatedAt: string;
   enabled: boolean;
   parent: string;
-  branch: string;
   groundLevel: number;
   waterLevel: number | null;
   groundBlockType: string;
@@ -33,7 +32,6 @@ export interface WorldRequest {
   publicData?: WorldInfo;
   enabled?: boolean;
   parent?: string;
-  branch?: string;
   groundLevel?: number;
   waterLevel?: number;
   groundBlockType?: string;

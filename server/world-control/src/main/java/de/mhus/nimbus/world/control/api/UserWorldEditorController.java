@@ -74,7 +74,7 @@ public class UserWorldEditorController {
         if (req.worldId() == null || req.worldId().isBlank()) return bad("worldId blank");
         WorldId worldId;
         try { worldId = WorldId.of(req.worldId()).get(); } catch (NoSuchElementException e) { return bad(e.getMessage()); }
-        if (worldId.isMain()) return bad("world must not be main (needs zone or branch)");
+        if (worldId.isMain()) return bad("world must not be main (needs zone)");
         // Haupt-Welt laden
         Optional<WWorld> mainOpt = worldService.getByWorldId(worldId);
         if (mainOpt.isEmpty()) return bad("main world not found: " + worldId);
@@ -82,7 +82,7 @@ public class UserWorldEditorController {
         if (!main.getOwner().contains(userId)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error","not an owner of main world"));
         try {
             worldId = WorldId.of(req.worldId()).get(); // nochmal parsen um sicherzugehen
-            WWorld created = worldService.createWorld(worldId, main.getPublicData(), main.getWorldId(), worldId.isBranch() ? worldId.getBranch() : null, req.enabled());
+            WWorld created = worldService.createWorld(worldId, main.getPublicData(), main.getWorldId(), req.enabled());
             // publicFlag separat updaten falls gesetzt
             if (req.publicFlag() != null || req.enabled() != null) {
                 worldService.updateWorld(worldId, w -> {
@@ -163,7 +163,6 @@ public class UserWorldEditorController {
                 "worldId", w.getWorldId(),
                 "enabled", w.isEnabled(),
                 "parent", w.getParent(),
-                "branch", w.getBranch(),
                 "publicFlag", w.isPublicFlag(),
                 "owner", w.getOwner(),
                 "editor", w.getEditor(),

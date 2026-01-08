@@ -159,7 +159,7 @@ public class SAssetService {
      * WARNING: This loads ALL assets into memory. Use searchAssets() for large result sets.
      */
     public List<SAsset> findByWorldId(WorldId worldId) {
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        var lookupWorld = worldId.withoutInstanceAndZone();
         return repository.findByWorldId(lookupWorld.getId());
     }
 
@@ -174,7 +174,7 @@ public class SAssetService {
     public Optional<SAsset> findByPath(WorldId worldId, String path) {
 
         // world lookup - always use main world (no branches, no instances, no zones)
-        var lookupWorld = worldId.withoutInstanceAndZone().withoutBranchAndInstance();
+        var lookupWorld = worldId.withoutInstanceAndZone();
         var collection = WorldCollection.of(lookupWorld, path);
         return repository.findByWorldIdAndPath(collection.worldId().getId(), collection.path());
     }

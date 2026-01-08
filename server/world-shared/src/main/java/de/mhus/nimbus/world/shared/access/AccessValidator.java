@@ -163,18 +163,6 @@ public class AccessValidator {
     }
 
     /**
-     * Checks if the world is a branch.
-     *
-     * @param request The HTTP request
-     * @return true if world is a branch, false otherwise
-     */
-    public boolean isWorldBranch(HttpServletRequest request) {
-        return getWorldId(request)
-                .map(WorldId::isBranch)
-                .orElse(false);
-    }
-
-    /**
      * Checks if the world is a collection.
      *
      * @param request The HTTP request
