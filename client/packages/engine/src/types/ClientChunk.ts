@@ -86,14 +86,23 @@ export class ClientChunk {
 
   /**
    * Get height data for column (x, z) within chunk
-   * @param x block world x coordinate within chunk
-   * @param z block world z coordinate within chunk
+   * @param posX block world x coordinate
+   * @param posZ block world z coordinate
    * @returns ClientHeightData or undefined if not found
    */
   getHeightData(posX: number, posZ: number): ClientHeightData | undefined {
-    var x = Math.floor(posX);
-    var z = Math.floor(posZ);
-    return this.data?.hightData?.get(`${x},${z}`);
+    // Convert world coordinates to local chunk coordinates
+    const chunkCx = this.data.transfer.cx;
+    const chunkCz = this.data.transfer.cz;
+    const chunkSize = this.data.transfer.chunkSize || 16;
+
+    const worldX = Math.floor(posX);
+    const worldZ = Math.floor(posZ);
+
+    const localX = worldX - (chunkCx * chunkSize);
+    const localZ = worldZ - (chunkCz * chunkSize);
+
+    return this.data?.hightData?.get(`${localX},${localZ}`);
   }
 
   getHeightDataForPosition(position: Vector3) {

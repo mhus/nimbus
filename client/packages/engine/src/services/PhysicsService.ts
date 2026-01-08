@@ -340,7 +340,9 @@ export class PhysicsService {
       clearInterval(this.teleportCheckTimer);
     }
 
-    logger.debug('Teleportation pending - physics disabled, starting chunk check timer');
+    logger.debug('Teleportation pending - physics disabled, starting chunk check timer', {
+      targetPosition: { x: posX, y: posY, z: posZ }
+    });
 
     // Check every 1 second if chunk and heightData are ready
     this.teleportCheckTimer = setInterval(() => {
