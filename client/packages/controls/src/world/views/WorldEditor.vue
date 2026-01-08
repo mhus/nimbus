@@ -345,6 +345,8 @@
                @click="activeWorldInfoTab = 'basic'">Basic</a>
             <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'boundaries'}"
                @click="activeWorldInfoTab = 'boundaries'">Boundaries</a>
+            <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'entryPoint'}"
+               @click="activeWorldInfoTab = 'entryPoint'">Entry Point</a>
             <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'visual'}"
                @click="activeWorldInfoTab = 'visual'">Visual</a>
             <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'gameplay'}"
@@ -468,6 +470,109 @@
                 <div class="stat-title">Depth (Z)</div>
                 <div class="stat-value text-accent">{{ Math.abs(formData.publicData.stop.z - formData.publicData.start.z) }}</div>
                 <div class="stat-desc">blocks</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Entry Point -->
+          <div v-show="activeWorldInfoTab === 'entryPoint'" class="space-y-4 mt-4">
+            <p class="text-sm text-base-content/70">Define the spawn point for new players entering the world.</p>
+
+            <!-- Area Position -->
+            <div class="divider">Area Position</div>
+            <div class="grid grid-cols-3 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Position X</span></label>
+                <input v-model.number="formData.publicData.entryPoint.area.position.x" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">X coordinate of spawn area</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Position Y</span></label>
+                <input v-model.number="formData.publicData.entryPoint.area.position.y" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Y coordinate of spawn area</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Position Z</span></label>
+                <input v-model.number="formData.publicData.entryPoint.area.position.z" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Z coordinate of spawn area</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Area Size -->
+            <div class="divider">Area Size</div>
+            <div class="grid grid-cols-3 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Size X</span></label>
+                <input v-model.number="formData.publicData.entryPoint.area.size.x" type="number"
+                       min="1" class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Width of spawn area</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Size Y</span></label>
+                <input v-model.number="formData.publicData.entryPoint.area.size.y" type="number"
+                       min="1" class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Height of spawn area</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Size Z</span></label>
+                <input v-model.number="formData.publicData.entryPoint.area.size.z" type="number"
+                       min="1" class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Depth of spawn area</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Hex Grid -->
+            <div class="divider">Hex Grid Coordinates</div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Grid Q</span></label>
+                <input v-model.number="formData.publicData.entryPoint.grid.q" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Hex grid Q coordinate</span>
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label"><span class="label-text">Grid R</span></label>
+                <input v-model.number="formData.publicData.entryPoint.grid.r" type="number"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Hex grid R coordinate</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <div class="font-bold">Entry Point Summary</div>
+                <div class="text-sm mt-1">
+                  Players will spawn within the area from
+                  ({{ formData.publicData.entryPoint.area.position.x }}, {{ formData.publicData.entryPoint.area.position.y }}, {{ formData.publicData.entryPoint.area.position.z }})
+                  to
+                  ({{ formData.publicData.entryPoint.area.position.x + formData.publicData.entryPoint.area.size.x }},
+                   {{ formData.publicData.entryPoint.area.position.y + formData.publicData.entryPoint.area.size.y }},
+                   {{ formData.publicData.entryPoint.area.position.z + formData.publicData.entryPoint.area.size.z }})
+                  on hex grid ({{ formData.publicData.entryPoint.grid.q }}, {{ formData.publicData.entryPoint.grid.r }}).
+                </div>
               </div>
             </div>
           </div>
@@ -878,7 +983,7 @@ const newSupporter = ref('');
 const newPlayer = ref('');
 
 // Tab navigation for WorldInfo
-const activeWorldInfoTab = ref<'basic' | 'boundaries' | 'visual' | 'gameplay' | 'environment' | 'time'>('basic');
+const activeWorldInfoTab = ref<'basic' | 'boundaries' | 'entryPoint' | 'visual' | 'gameplay' | 'environment' | 'time'>('basic');
 
 const formData = ref({
   worldId: '',
@@ -917,6 +1022,13 @@ const formData = ref({
       x: 120000,
       y: 200,
       z: 128000
+    },
+    entryPoint: {
+      area: {
+        position: { x: 0, y: 0, z: 0 },
+        size: { x: 10, y: 10, z: 10 }
+      },
+      grid: { q: 0, r: 0 }
     },
     owner: {
       user: '',
@@ -996,6 +1108,13 @@ const loadWorld = () => {
           y: 200,
           z: 128000
         },
+        entryPoint: {
+          area: {
+            position: { x: 0, y: 0, z: 0 },
+            size: { x: 10, y: 10, z: 10 }
+          },
+          grid: { q: 0, r: 0 }
+        },
         owner: {
           user: '',
           title: '',
@@ -1055,6 +1174,13 @@ const loadWorld = () => {
       splashScreenAudio: worldData?.splashScreenAudio || '',
       start: worldData?.start || { x: -120000, y: -100, z: -128000 },
       stop: worldData?.stop || { x: 120000, y: 200, z: 128000 },
+      entryPoint: worldData?.entryPoint || {
+        area: {
+          position: { x: 0, y: 0, z: 0 },
+          size: { x: 10, y: 10, z: 10 }
+        },
+        grid: { q: 0, r: 0 }
+      },
       owner: worldData?.owner || { user: '', title: '', email: '' },
       settings: {
         maxPlayers: worldData?.settings?.maxPlayers || 100,

@@ -147,6 +147,7 @@ public class WWorldController extends BaseEditorController {
      *   - "regionCollections": Only @region + shared collections
      *   - "regionOnly": Only @region collection
      *   - "withCollections": Include main worlds + world collections
+     *   - "withCollectionsAndZones": Include main worlds + world collections + zones
      */
     @GetMapping
     public ResponseEntity<?> list(
@@ -173,6 +174,32 @@ public class WWorldController extends BaseEditorController {
 
                 // Combine both lists
                 worlds.addAll(collections);
+                result = worlds;
+            } else if ("withCollectionsAndZones".equals(filter)) {
+                // Get main worlds
+                List<WorldResponse> worlds = worldService.findByRegionId(regionId).stream()
+                        .filter(world -> matchesFilter(world, "mainOnly"))
+                        .map(this::toResponse)
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Get world collections
+                List<WorldResponse> collections = worldService.findWorldCollections().stream()
+                        .filter(worldId -> regionId.equals(worldId.getRegionId()))
+                        .map(this::toResponseFromWorldId)
+                        .toList();
+
+                // Get zones (worlds with parent reference)
+                List<WorldResponse> zones = worldService.findByRegionId(regionId).stream()
+                        .filter(world -> {
+                            WorldId worldId = WorldId.unchecked(world.getWorldId());
+                            return worldId.isZone();
+                        })
+                        .map(this::toResponse)
+                        .toList();
+
+                // Combine all three lists
+                worlds.addAll(collections);
+                worlds.addAll(zones);
                 result = worlds;
             } else {
                 result = worldService.findByRegionId(regionId).stream()

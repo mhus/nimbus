@@ -17,7 +17,8 @@ export type WorldFilter =
   | 'allWithoutInstances'
   | 'regionCollections'
   | 'regionOnly'
-  | 'withCollections';
+  | 'withCollections'
+  | 'withCollectionsAndZones';
 
 export class WorldService {
   /**

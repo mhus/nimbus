@@ -72,6 +72,7 @@ public class WorldController extends BaseEditorController {
      *   - "regionCollections": Only @region + shared collections
      *   - "regionOnly": Only @region collection
      *   - "withCollections": Include main worlds + world collections
+     *   - "withCollectionsAndZones": Include main worlds + world collections + zones
      */
     @GetMapping
     @Operation(summary = "List all worlds")
@@ -99,6 +100,32 @@ public class WorldController extends BaseEditorController {
 
                 // Combine both lists
                 worlds.addAll(collections);
+                dtos = worlds;
+            } else if ("withCollectionsAndZones".equals(filter)) {
+                // Get main worlds
+                List<WorldListDto> worlds = worldService.findAll().stream()
+                        .filter(world -> matchesFilter(world, "mainOnly"))
+                        .map(this::toListDto)
+                        .collect(Collectors.toList());
+
+                // Get world collections
+                List<WorldListDto> collections = worldService.findWorldCollections().stream()
+                        .map(this::toListDtoFromWorldId)
+                        .toList();
+
+                // Get zones (worlds with parent reference)
+                List<WorldListDto> zones = worldService.findAll().stream()
+                        .filter(world -> {
+                            de.mhus.nimbus.shared.types.WorldId worldId =
+                                de.mhus.nimbus.shared.types.WorldId.unchecked(world.getWorldId());
+                            return worldId.isZone();
+                        })
+                        .map(this::toListDto)
+                        .toList();
+
+                // Combine all three lists
+                worlds.addAll(collections);
+                worlds.addAll(zones);
                 dtos = worlds;
             } else if (filter != null && !filter.isBlank()) {
                 // Apply filter to regular worlds

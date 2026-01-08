@@ -215,7 +215,7 @@
         <!-- Manipulators Section -->
         <FlatManipulatorPanel
           v-if="flat"
-          :flatId="props.flatId"
+          :flatId="flat.flatId"
           :worldId="flat.worldId"
           @manipulator-completed="handleManipulatorCompleted"
         />
@@ -563,7 +563,7 @@ const startExport = async () => {
 
     // Build job parameters - only flatId is required
     const parameters: Record<string, string> = {
-      flatId: props.flatId,
+      flatId: flat.value.flatId,
     };
 
     // Create export job

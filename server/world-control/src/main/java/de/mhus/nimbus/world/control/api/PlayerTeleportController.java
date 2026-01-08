@@ -194,12 +194,28 @@ public class PlayerTeleportController {
                         playerId.getId()
                 );
 
-                var entryPosition = targetWorld.getPublicData().getEntryPoint().getArea().getPosition();
-                var position = Vector3.builder()
-                        .x(entryPosition.getX())
-                        .y(entryPosition.getY())
-                        .z(entryPosition.getZ())
-                        .build();
+                // Determine entry position - use world entry point or fallback to world start or default
+                Vector3 position;
+                var entryPoint = targetWorld.getPublicData().getEntryPoint();
+                if (entryPoint != null && entryPoint.getArea() != null && entryPoint.getArea().getPosition() != null) {
+                    // Use configured entry point
+                    var entryPosition = entryPoint.getArea().getPosition();
+                    position = Vector3.builder()
+                            .x(entryPosition.getX())
+                            .y(entryPosition.getY())
+                            .z(entryPosition.getZ())
+                            .build();
+                    log.debug("Using world entry point for cross-world teleport: {}", position);
+                } else if (targetWorld.getPublicData().getStart() != null) {
+                    // Fallback to world start position
+                    position = targetWorld.getPublicData().getStart();
+                    log.debug("Using world start position as fallback for cross-world teleport: {}", position);
+                } else {
+                    // Fallback to default spawn position
+                    position = Vector3.builder().x(0).y(64).z(0).build();
+                    log.warn("No entry point or start position configured for world {}, using default: {}",
+                            effectiveWorldId, position);
+                }
                 var rotation  = Rotation.builder().y(0).p(0).build();
 
                 WPlayerSession newPlayerSession = playerSessionService.createTeleportSession(

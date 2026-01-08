@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
     <!-- Header -->
-    <AppHeader title="Nimbus Layer Editor" world-filter="withCollections" />
+    <AppHeader title="Nimbus Layer Editor" world-filter="withCollectionsAndZones" />
 
     <!-- Main Content -->
     <main class="flex-1 container mx-auto px-4 py-6">
