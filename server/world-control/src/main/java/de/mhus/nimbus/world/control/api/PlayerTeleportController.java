@@ -5,6 +5,7 @@ import de.mhus.nimbus.generated.types.Vector3;
 import de.mhus.nimbus.shared.types.PlayerId;
 import de.mhus.nimbus.shared.types.WorldId;
 import de.mhus.nimbus.shared.user.ActorRoles;
+import de.mhus.nimbus.world.shared.access.AccessFilterBase;
 import de.mhus.nimbus.world.shared.access.AccessService;
 import de.mhus.nimbus.world.shared.access.AccessSettings;
 import de.mhus.nimbus.world.shared.dto.DevLoginResponse;
@@ -18,27 +19,25 @@ import de.mhus.nimbus.world.shared.world.WWorld;
 import de.mhus.nimbus.world.shared.world.WWorldInstance;
 import de.mhus.nimbus.world.shared.world.WWorldInstanceService;
 import de.mhus.nimbus.world.shared.world.WWorldService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * REST Controller for teleportation login.
  * Handles teleportation flow when player interacts with teleportation blocks.
+ * This controller is under /control/public because the session may already be CLOSED.
  */
 @RestController
-@RequestMapping("/control/player")
+@RequestMapping("/control/public")
 @RequiredArgsConstructor
 @Slf4j
 public class PlayerTeleportController {
@@ -65,10 +64,10 @@ public class PlayerTeleportController {
         log.debug("POST /control/player/teleport-login");
 
         try {
-            // Get sessionId from cookie
-            String sessionId = getSessionIdFromCookie(request);
+            // Get sessionId from request attributes (set by AccessFilter)
+            String sessionId = (String) request.getAttribute(AccessFilterBase.ATTR_SESSION_ID);
             if (sessionId == null || sessionId.isBlank()) {
-                log.warn("No sessionId cookie found for teleport-login");
+                log.warn("No sessionId in request attributes for teleport-login");
                 return ResponseEntity.status(400)
                         .body(Map.of("error", "No session found"));
             }
@@ -237,24 +236,6 @@ public class PlayerTeleportController {
             return ResponseEntity.status(500)
                     .body(Map.of("error", "Internal error: " + e.getMessage()));
         }
-    }
-
-    /**
-     * Get sessionId from cookie.
-     */
-    private String getSessionIdFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return null;
-        }
-
-        for (Cookie cookie : cookies) {
-            if ("sessionToken".equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-
-        return null;
     }
 
     /**

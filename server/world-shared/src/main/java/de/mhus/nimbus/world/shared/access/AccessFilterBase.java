@@ -57,6 +57,18 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
     protected abstract boolean shouldRequireAuthentication(String requestUri, String method);
 
     /**
+     * Determines if CLOSED sessions should be accepted for the given request path.
+     * Subclasses can override this to allow CLOSED sessions for specific paths (e.g., logout, teleport).
+     *
+     * @param requestUri The request URI
+     * @return true if CLOSED sessions are acceptable, false if they should be rejected
+     */
+    protected boolean shouldAcceptClosedSessions(String requestUri) {
+        // Default: reject CLOSED sessions
+        return false;
+    }
+
+    /**
      * Validates if the authenticated session claims are acceptable for this service.
      * Subclasses can override this to add additional validation (e.g., reject agent tokens).
      *
@@ -122,7 +134,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
                         } else {
                             // 5. If session login (agent=false), validate Redis session
                             if (!claims.agent() && claims.sessionId() != null) {
-                                boolean sessionValid = validateRedisSession(claims);
+                                boolean sessionValid = validateRedisSession(claims, request.getRequestURI());
                                 if (!sessionValid) {
                                     log.warn("Redis session validation failed - sessionId={}", claims.sessionId());
                                     request.setAttribute(ATTR_IS_AUTHENTICATED, false);
@@ -356,7 +368,7 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
     /**
      * Validates Redis session if this is a session login.
      */
-    private boolean validateRedisSession(SessionTokenClaims claims) {
+    private boolean validateRedisSession(SessionTokenClaims claims, String requestUri) {
         try {
             // Get session from Redis
             Optional<WSession> sessionOpt = sessionService.get(claims.sessionId());
@@ -367,10 +379,13 @@ public abstract class AccessFilterBase extends OncePerRequestFilter {
 
             WSession session = sessionOpt.get();
 
-            // Check status is not CLOSED
+            // Check status is not CLOSED (unless allowed for this path)
             if (session.getStatus() == WSessionStatus.CLOSED) {
-                log.warn("Session is CLOSED - sessionId={}", claims.sessionId());
-                return false;
+                if (!shouldAcceptClosedSessions(requestUri)) {
+                    log.warn("Session is CLOSED - sessionId={}", claims.sessionId());
+                    return false;
+                }
+                log.debug("Session is CLOSED but accepted for path: {}", requestUri);
             }
 
             // Check worldId matches

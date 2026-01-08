@@ -45,7 +45,7 @@ const loadingMessage = ref('Preparing teleportation...');
 const errorMessage = ref('');
 
 /**
- * Response from /control/player/teleport-login
+ * Response from /control/public/teleport-login
  */
 interface TeleportLoginResponse {
   accessToken: string;
@@ -65,7 +65,7 @@ async function performTeleportLogin() {
   try {
     // Call teleport-login endpoint
     const apiUrl = apiService.getBaseUrl();
-    const response = await fetch(`${apiUrl}/control/player/teleport-login`, {
+    const response = await fetch(`${apiUrl}/control/public/teleport-login`, {
       method: 'POST',
       credentials: 'include',
       headers: {

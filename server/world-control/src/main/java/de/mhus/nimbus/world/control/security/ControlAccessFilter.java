@@ -40,6 +40,10 @@ public class ControlAccessFilter extends AccessFilterBase {
         if (requestUri.startsWith("/control/aaa/status")) {
             return false;
         }
+        // Allow access to public endpoints (session data is loaded but not validated strictly)
+        if (requestUri.startsWith("/control/public/")) {
+            return false;
+        }
 //        // Allow DELETE on /control/aaa/login (logout)
 //        if (requestUri.startsWith("/control/aaa/login") && "DELETE".equals(method)) {
 //            return false;
@@ -47,6 +51,15 @@ public class ControlAccessFilter extends AccessFilterBase {
 
         // All other endpoints require authentication
         return true;
+    }
+
+    @Override
+    protected boolean shouldAcceptClosedSessions(String requestUri) {
+        // Accept CLOSED sessions for public endpoints (e.g., teleport-login)
+        if (requestUri.startsWith("/control/public/")) {
+            return true;
+        }
+        return false;
     }
 
     @Override
