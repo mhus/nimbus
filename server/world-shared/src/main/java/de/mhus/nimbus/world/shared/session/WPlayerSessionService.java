@@ -22,20 +22,35 @@ public class WPlayerSessionService {
     private final WPlayerSessionRepository repository;
 
     /**
-     * Save or update player session (upsert).
-     * This method is idempotent and safe to call repeatedly.
-     * Creates a new session if it doesn't exist, or updates an existing session.
+     * Normalize playerId to ensure it always starts with '@'.
+     * Format: @userId:characterId
+     */
+    private String normalizePlayerId(String playerId) {
+        if (playerId == null || playerId.isBlank()) {
+            return playerId;
+        }
+        // If playerId doesn't start with @, add it
+        if (!playerId.startsWith("@")) {
+            return "@" + playerId;
+        }
+        return playerId;
+    }
+
+    /**
+     * Update player session position and rotation.
+     * This method ONLY updates position/rotation and does NOT touch previousWorldId/Position/Rotation.
+     * If no session exists, it creates a new one (for regular world entry without teleport).
      *
      * @param worldId The full worldId (including instance)
      * @param playerId The playerId
      * @param position The player position
      * @param rotation The player rotation
-     * @return The saved session
+     * @return The updated session
      * @throws IllegalArgumentException if worldId or playerId is null or blank
      */
     @Transactional
-    public WPlayerSession saveSession(String worldId, String playerId,
-                                       Vector3 position, Rotation rotation) {
+    public WPlayerSession updateSession(String worldId, String playerId,
+                                         Vector3 position, Rotation rotation) {
         // Validation
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId cannot be null or blank");
@@ -44,19 +59,27 @@ public class WPlayerSessionService {
             throw new IllegalArgumentException("playerId cannot be null or blank");
         }
 
-        // Upsert: find existing or create new
+        // Normalize playerId to ensure it starts with @
+        playerId = normalizePlayerId(playerId);
+
+        // Normalize legacy entries (without '@' prefix) if they exist
+        normalizeLegacyPlayerIds(worldId, playerId);
+
+        // Find existing session
         Optional<WPlayerSession> existingOpt = repository.findFirstByWorldIdAndPlayerIdOrderByUpdatedAtDesc(worldId, playerId);
 
         WPlayerSession session;
         if (existingOpt.isPresent()) {
-            // Update existing
+            // Update existing - ONLY position and rotation, keep previousWorldId/Position/Rotation
             session = existingOpt.get();
             session.setPosition(position);
             session.setRotation(rotation);
             session.touchUpdate();
-            log.debug("Updated player session: worldId={}, playerId={}", worldId, playerId);
+            log.info("Updated player session position/rotation: id={}, worldId={}, playerId={}, position={}, rotation={}, previousWorldId={}, previousPosition={}",
+                    session.getId(), worldId, playerId, position, rotation,
+                    session.getPreviousWorldId(), session.getPreviousPosition());
         } else {
-            // Create new
+            // Create new session (regular world entry without teleport)
             session = WPlayerSession.builder()
                     .worldId(worldId)
                     .playerId(playerId)
@@ -64,23 +87,61 @@ public class WPlayerSessionService {
                     .rotation(rotation)
                     .build();
             session.touchCreate();
-            log.debug("Created player session: worldId={}, playerId={}", worldId, playerId);
+            log.info("Created new player session (no teleport): worldId={}, playerId={}, position={}, rotation={}",
+                    worldId, playerId, position, rotation);
         }
 
         repository.save(session);
+        log.debug("Saved player session to MongoDB: id={}", session.getId());
         return session;
     }
 
     /**
      * Load player session by worldId and playerId.
+     * If duplicates exist, automatically cleans them up and keeps only the newest.
      *
      * @param worldId The full worldId (including instance)
      * @param playerId The playerId
      * @return Optional containing the session if found
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<WPlayerSession> loadSession(String worldId, String playerId) {
+        // Normalize playerId to ensure it starts with @
+        playerId = normalizePlayerId(playerId);
+
+        // Normalize legacy entries (without '@' prefix) if they exist
+        normalizeLegacyPlayerIds(worldId, playerId);
+
         return repository.findFirstByWorldIdAndPlayerIdOrderByUpdatedAtDesc(worldId, playerId);
+    }
+
+    /**
+     * Normalize legacy player session entries by updating playerId to include '@' prefix.
+     * Does NOT delete any sessions - each world keeps its own player session.
+     *
+     * @param worldId The full worldId (including instance)
+     * @param playerId The playerId (normalized with '@' prefix)
+     */
+    private void normalizeLegacyPlayerIds(String worldId, String playerId) {
+        // Check for legacy format without '@' prefix
+        if (playerId.startsWith("@")) {
+            String legacyPlayerId = playerId.substring(1); // Remove '@' prefix
+            List<WPlayerSession> legacySessions = repository.findByWorldIdAndPlayerIdOrderByUpdatedAtDesc(worldId, legacyPlayerId);
+
+            if (!legacySessions.isEmpty()) {
+                log.info("Found {} legacy player sessions (without '@') for worldId={}, playerId={} - normalizing",
+                        legacySessions.size(), worldId, legacyPlayerId);
+
+                // Update all legacy entries to use normalized playerId
+                for (WPlayerSession session : legacySessions) {
+                    log.info("Normalizing playerId from '{}' to '{}' in session {} (previousWorldId={})",
+                            session.getPlayerId(), playerId, session.getId(), session.getPreviousWorldId());
+                    session.setPlayerId(playerId);
+                    session.touchUpdate();
+                    repository.save(session);
+                }
+            }
+        }
     }
 
     /**
@@ -92,6 +153,9 @@ public class WPlayerSessionService {
      */
     @Transactional
     public boolean deleteSession(String worldId, String playerId) {
+        // Normalize playerId to ensure it starts with @
+        playerId = normalizePlayerId(playerId);
+
         if (repository.existsByWorldIdAndPlayerId(worldId, playerId)) {
             repository.deleteByWorldIdAndPlayerId(worldId, playerId);
             log.debug("Deleted player session: worldId={}, playerId={}", worldId, playerId);
@@ -164,9 +228,12 @@ public class WPlayerSessionService {
     @Transactional
     public WPlayerSession createTeleportSession(String worldId, String playerId,
                                                   String sessionId, String actor,
+                                                  Vector3 position,
+                                                  Rotation rotation,
                                                   String previousWorldId,
                                                   Vector3 previousPosition,
-                                                  Rotation previousRotation) {
+                                                  Rotation previousRotation
+                                                ) {
         // Validation
         if (worldId == null || worldId.isBlank()) {
             throw new IllegalArgumentException("worldId cannot be null or blank");
@@ -175,24 +242,49 @@ public class WPlayerSessionService {
             throw new IllegalArgumentException("playerId cannot be null or blank");
         }
 
-        // Create new session with previous values
-        WPlayerSession session = WPlayerSession.builder()
-                .worldId(worldId)
-                .playerId(playerId)
-                .sessionId(sessionId)
-                .actor(actor)
-                .position(null) // Will be set when player enters world
-                .rotation(null) // Will be set when player enters world
-                .previousWorldId(previousWorldId)
-                .previousPosition(previousPosition)
-                .previousRotation(previousRotation)
-                .build();
-        session.touchCreate();
+        // Normalize playerId to ensure it starts with @
+        playerId = normalizePlayerId(playerId);
+
+        // Normalize legacy entries (without '@' prefix) if they exist
+        normalizeLegacyPlayerIds(worldId, playerId);
+
+        // Upsert: find existing or create new
+        Optional<WPlayerSession> existingOpt = repository.findFirstByWorldIdAndPlayerIdOrderByUpdatedAtDesc(worldId, playerId);
+
+        WPlayerSession session;
+        if (existingOpt.isPresent()) {
+            // Update existing session for teleportation
+            session = existingOpt.get();
+            session.setSessionId(sessionId);
+            session.setActor(actor);
+            session.setPosition(position);
+            session.setRotation(rotation);
+            session.setPreviousWorldId(previousWorldId);
+            session.setPreviousPosition(previousPosition);
+            session.setPreviousRotation(previousRotation);
+            session.touchUpdate();
+            log.info("Updated existing player session for teleport: id={}, worldId={}, playerId={}, previousWorldId={}",
+                    session.getId(), worldId, playerId, previousWorldId);
+        } else {
+            // Create new session with previous values
+            session = WPlayerSession.builder()
+                    .worldId(worldId)
+                    .playerId(playerId)
+                    .sessionId(sessionId)
+                    .actor(actor)
+                    .position(null) // Will be set when player enters world
+                    .rotation(null) // Will be set when player enters world
+                    .previousWorldId(previousWorldId)
+                    .previousPosition(previousPosition)
+                    .previousRotation(previousRotation)
+                    .build();
+            session.touchCreate();
+            log.info("Created new teleport player session: worldId={}, playerId={}, previousWorldId={}",
+                    worldId, playerId, previousWorldId);
+        }
 
         repository.save(session);
-
-        log.info("Created teleport player session: worldId={}, playerId={}, previousWorldId={}",
-                worldId, playerId, previousWorldId);
+        log.debug("Saved teleport session to MongoDB: id={}", session.getId());
 
         return session;
     }

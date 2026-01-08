@@ -26,6 +26,16 @@ public interface WPlayerSessionRepository extends MongoRepository<WPlayerSession
     Optional<WPlayerSession> findFirstByWorldIdAndPlayerIdOrderByUpdatedAtDesc(String worldId, String playerId);
 
     /**
+     * Find all player sessions by worldId and playerId, ordered by updatedAt descending.
+     * Used for duplicate cleanup.
+     *
+     * @param worldId The full worldId (including instance)
+     * @param playerId The playerId
+     * @return List of sessions ordered by updatedAt DESC
+     */
+    List<WPlayerSession> findByWorldIdAndPlayerIdOrderByUpdatedAtDesc(String worldId, String playerId);
+
+    /**
      * Check if a session exists for worldId and playerId.
      *
      * @param worldId The full worldId (including instance)

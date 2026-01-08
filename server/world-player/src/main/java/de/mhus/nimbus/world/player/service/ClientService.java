@@ -80,4 +80,50 @@ public class ClientService {
 
         sendCommand(session, "redirect", commandData);
     }
+
+    /**
+     * Send notification to client via WebSocket.
+     * Notification Command: notification <source> <title> <text> [icon]
+     * - source: 0 = System, 1 = Player, 2 = World
+     * - title: Notification title
+     * - text: Notification text
+     * - icon: Optional icon path (e.g., "textures/magic/blue_crystal.png")
+     *
+     * @param session PlayerSession
+     * @param source Notification source (0=System, 1=Player, 2=World)
+     * @param title Notification title
+     * @param text Notification text
+     * @param icon Optional icon path (can be null)
+     */
+    public void sendNotification(PlayerSession session, int source, String title, String text, String icon) {
+        var argsArray = objectMapper.createArrayNode()
+                .add(String.valueOf(source))
+                .add(title)
+                .add(text);
+
+        if (icon != null && !icon.isBlank()) {
+            argsArray.add(icon);
+        }
+
+        ObjectNode commandData = objectMapper.createObjectNode();
+        commandData.put("cmd", "notification");
+        commandData.set("args", argsArray);
+        commandData.put("oneway", true); // No response expected
+
+        sendCommand(session, "notification", commandData);
+        log.info("Sent notification to player: source={}, title={}, text={}, sessionId={}",
+                source, title, text, session.getWebSocketSession().getId());
+    }
+
+    /**
+     * Send system notification to client.
+     * Convenience method for sending system notifications (source=0).
+     *
+     * @param session PlayerSession
+     * @param title Notification title
+     * @param text Notification text
+     */
+    public void sendSystemNotification(PlayerSession session, String title, String text) {
+        sendNotification(session, 0, title, text, null);
+    }
 }

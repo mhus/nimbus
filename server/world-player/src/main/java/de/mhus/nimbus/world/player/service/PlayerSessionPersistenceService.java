@@ -162,7 +162,7 @@ public class PlayerSessionPersistenceService implements SessionAuthenticatedCons
             Vector3 position = session.getLastPosition();
             Rotation rotation = session.getLastRotation();
 
-            sessionService.saveSession(worldId, playerId, position, rotation);
+            sessionService.updateSession(worldId, playerId, position, rotation);
             log.info("Saved player session ({}): worldId={}, playerId={}",
                     trigger, worldId, playerId);
         } catch (Exception e) {

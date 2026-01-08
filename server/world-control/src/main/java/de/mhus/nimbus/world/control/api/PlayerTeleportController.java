@@ -141,25 +141,38 @@ public class PlayerTeleportController {
                         instance.getInstanceId(), target.worldId, playerId.getId());
             }
 
-            // Load old WPlayerSession to get previous position/rotation
-            Optional<WPlayerSession> oldPlayerSessionOpt = playerSessionService.loadSession(
-                    wSession.getWorldId(),
-                    playerId.getId()
-            );
+            // Check if this is a teleportation to a different world or within the same world
+            String sourceWorldId = wSession.getWorldId();
+            boolean isCrossWorldTeleport = !sourceWorldId.equals(effectiveWorldId);
 
+            // Load old WPlayerSession to get previous position/rotation (only for cross-world teleport)
             String previousWorldId = null;
             Vector3 previousPosition = null;
             Rotation previousRotation = null;
 
-            if (oldPlayerSessionOpt.isPresent()) {
-                WPlayerSession oldPlayerSession = oldPlayerSessionOpt.get();
-                previousWorldId = oldPlayerSession.getWorldId();
-                previousPosition = oldPlayerSession.getPosition();
-                previousRotation = oldPlayerSession.getRotation();
-                log.debug("Loaded old player session for teleport: previousWorldId={}, previousPosition={}",
-                        previousWorldId, previousPosition);
+            if (isCrossWorldTeleport) {
+                Optional<WPlayerSession> oldPlayerSessionOpt = playerSessionService.loadSession(
+                        sourceWorldId,
+                        playerId.getId()
+                );
+
+                if (oldPlayerSessionOpt.isPresent()) {
+                    WPlayerSession oldPlayerSession = oldPlayerSessionOpt.get();
+                    previousWorldId = oldPlayerSession.getWorldId();
+                    previousPosition = oldPlayerSession.getPosition();
+                    previousRotation = oldPlayerSession.getRotation();
+                    log.debug("Loaded old player session for cross-world teleport: previousWorldId={}, previousPosition={}",
+                            previousWorldId, previousPosition);
+                } else {
+                    // First teleport - use source worldId as previousWorldId (the world we're leaving)
+                    previousWorldId = sourceWorldId;
+                    log.debug("No previous player session found for cross-world teleport - using source worldId as previous: {}",
+                            previousWorldId);
+                }
+
+                log.info("Cross-world teleportation: from {} to {}", sourceWorldId, effectiveWorldId);
             } else {
-                log.debug("No previous player session found for teleport");
+                log.info("Same-world teleportation within: {}", sourceWorldId);
             }
 
             // Create new WSession with effective worldId
@@ -173,23 +186,47 @@ public class PlayerTeleportController {
                         newSession.getId(), target.entryPoint);
             }
 
-            // Create new WPlayerSession with previous values
-            WPlayerSession newPlayerSession = playerSessionService.createTeleportSession(
-                    effectiveWorldId,
-                    playerId.getId(),
-                    newSession.getId(),
-                    actor,
-                    previousWorldId,
-                    previousPosition,
-                    previousRotation
-            );
+            // Create/update WPlayerSession
+            if (isCrossWorldTeleport) {
+                // Cross-world teleportation: Create new player session with previous data
+                Optional<WPlayerSession> oldPlayerSessionOpt = playerSessionService.loadSession(
+                        sourceWorldId,
+                        playerId.getId()
+                );
 
-            // Merge player status data from old session to new session
-            if (oldPlayerSessionOpt.isPresent()) {
-                log.debug("Merging player data from old session to new session");
-                playerSessionService.mergePlayerData(newPlayerSession, oldPlayerSessionOpt.get());
+                var entryPosition = targetWorld.getPublicData().getEntryPoint().getArea().getPosition();
+                var position = Vector3.builder()
+                        .x(entryPosition.getX())
+                        .y(entryPosition.getY())
+                        .z(entryPosition.getZ())
+                        .build();
+                var rotation  = Rotation.builder().y(0).p(0).build();
+
+                WPlayerSession newPlayerSession = playerSessionService.createTeleportSession(
+                        effectiveWorldId,
+                        playerId.getId(),
+                        newSession.getId(),
+                        actor,
+                        position,
+                        rotation,
+                        previousWorldId,
+                        previousPosition,
+                        previousRotation
+                );
+
+                // Merge player status data from old session to new session
+                if (oldPlayerSessionOpt.isPresent()) {
+                    log.debug("Merging player data from old session to new session");
+                    playerSessionService.mergePlayerData(newPlayerSession, oldPlayerSessionOpt.get());
+                } else {
+                    log.debug("No old player session found, skipping merge");
+                }
+
+                log.info("Created player session for cross-world teleport: newWorldId={}, previousWorldId={}",
+                        effectiveWorldId, previousWorldId);
             } else {
-                log.debug("No old player session found, skipping merge");
+                // Same-world teleportation: Just update entry point, player session will be updated when player enters
+                log.debug("Skipping player session creation for same-world teleport - will be updated on entry");
             }
 
             // Create JWT token for new session
