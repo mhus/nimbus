@@ -23,15 +23,15 @@ public class WWorldInstanceService {
     private final List<WWorldInstanceListener> listeners;
 
     /**
-     * Constructor with lazy listener initialization to avoid circular dependencies.
+     * Constructor with lazy initialization to avoid circular dependencies.
      *
      * @param repository The repository
-     * @param worldService The world service
+     * @param worldService The world service (lazy to break circular dependency)
      * @param listeners List of listeners (lazy initialized)
      */
     public WWorldInstanceService(
             WWorldInstanceRepository repository,
-            WWorldService worldService,
+            @Lazy WWorldService worldService,
             @Lazy List<WWorldInstanceListener> listeners) {
         this.repository = repository;
         this.worldService = worldService;

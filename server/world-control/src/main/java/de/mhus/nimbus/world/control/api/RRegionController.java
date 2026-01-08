@@ -3,7 +3,9 @@ package de.mhus.nimbus.world.control.api;
 import de.mhus.nimbus.world.shared.region.RRegion;
 import de.mhus.nimbus.world.shared.region.RRegionService;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
+import de.mhus.nimbus.world.shared.world.WWorldCollectionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +21,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/control/regions")
 @RequiredArgsConstructor
+@Slf4j
 public class RRegionController extends BaseEditorController {
 
     private final RRegionService regionService;
+    private final WWorldCollectionService collectionService;
 
     // DTOs
     public record RegionRequest(String name, String maintainers) {}
@@ -69,6 +73,7 @@ public class RRegionController extends BaseEditorController {
     /**
      * Create new region
      * POST /control/region
+     * Automatically creates @public:<regionId> and @region:<regionId> collections
      */
     @PostMapping
     public ResponseEntity<?> create(@RequestBody RegionRequest request) {
@@ -78,6 +83,38 @@ public class RRegionController extends BaseEditorController {
 
         try {
             RRegion created = regionService.create(request.name(), request.maintainers());
+
+            // Auto-create world collections for this region
+            String regionId = created.getName();
+
+            // Create @public:<regionId> collection
+            String publicCollectionId = "@public:" + regionId;
+            try {
+                collectionService.create(
+                        publicCollectionId,
+                        "Public Collection - " + regionId,
+                        "Auto-created public collection for region " + regionId
+                );
+                log.info("Created public collection for region {}: {}", regionId, publicCollectionId);
+            } catch (IllegalStateException e) {
+                // Collection already exists, that's ok
+                log.debug("Public collection already exists: {}", publicCollectionId);
+            }
+
+            // Create @region:<regionId> collection
+            String regionCollectionId = "@region:" + regionId;
+            try {
+                collectionService.create(
+                        regionCollectionId,
+                        "Region Collection - " + regionId,
+                        "Auto-created region collection for region " + regionId
+                );
+                log.info("Created region collection for region {}: {}", regionId, regionCollectionId);
+            } catch (IllegalStateException e) {
+                // Collection already exists, that's ok
+                log.debug("Region collection already exists: {}", regionCollectionId);
+            }
+
             return ResponseEntity.created(URI.create("/control/region/" + created.getId()))
                     .body(toResponse(created));
         } catch (IllegalArgumentException e) {
