@@ -21,15 +21,167 @@ public class WWorldService {
 
     private final WWorldRepository repository;
     private final WWorldCollectionRepository worldCollectionRepository;
+    private final WWorldInstanceService instanceService;
 
     @Transactional(readOnly = true)
     public Optional<WWorld> getByWorldId(WorldId worldId) {
-        return repository.findByWorldId(worldId.getId());
+        return getByWorldId(worldId.getId());
     }
 
     @Transactional(readOnly = true)
     public Optional<WWorld> getByWorldId(String worldId) {
-        return repository.findByWorldId(worldId);
+        if (worldId == null || worldId.isBlank()) {
+            return Optional.empty();
+        }
+
+        // Parse worldId using WorldId class
+        WorldId parsedWorldId = WorldId.unchecked(worldId);
+
+        // Check if this is an instance world (format: worldId!instance per WorldId spec)
+        if (parsedWorldId.isInstance()) {
+            return loadInstanceWorld(worldId);
+        }
+
+        Optional<WWorld> world = repository.findByWorldId(worldId);
+
+        // Enrich zone worlds with base world data
+        if (parsedWorldId.isZone()) {
+            return world.map(w -> enrichZoneWithBaseWorldData(parsedWorldId, w));
+        }
+
+        // Regular world (no zone, no instance)
+        return world;
+    }
+
+    /**
+     * Loads an instance world.
+     * Steps:
+     * 1. Validate instance exists and extract base worldId from instance
+     * 2. Load base world (with zone enrichment if applicable)
+     * 3. Load instance data
+     * 4. Override worldId in WWorld with full instance ID
+     *
+     * @param fullInstanceId The full instance ID (format: worldId!instance, e.g. "main:terra!abc" or "main:terra:zone!abc")
+     * @return The enriched world with instance data
+     */
+    private Optional<WWorld> loadInstanceWorld(String fullInstanceId) {
+        try {
+            // Load and validate instance data
+            Optional<WWorldInstance> instanceOpt = instanceService.findByInstanceIdWithValidation(fullInstanceId);
+
+            if (instanceOpt.isEmpty()) {
+                log.warn("Instance not found or validation failed: {}", fullInstanceId);
+                return Optional.empty();
+            }
+
+            WWorldInstance instance = instanceOpt.get();
+            String baseWorldId = instance.getWorldId();
+
+            log.debug("Loading instance world: instanceId={}, baseWorldId={}", fullInstanceId, baseWorldId);
+
+            // Load base world (this will handle zone enrichment automatically)
+            Optional<WWorld> baseWorldOpt = getByWorldId(baseWorldId);
+
+            if (baseWorldOpt.isEmpty()) {
+                log.warn("Base world not found for instance {}: {}", fullInstanceId, baseWorldId);
+                return Optional.empty();
+            }
+
+            WWorld world = baseWorldOpt.get();
+
+            // Override worldId in WWorld with the full instance ID
+            world.setWorldId(fullInstanceId);
+
+            log.debug("Enriched world with instance data: instanceId={}, title={}, creator={}",
+                    fullInstanceId, instance.getTitle(), instance.getCreator());
+
+            return Optional.of(world);
+
+        } catch (Exception e) {
+            log.error("Error loading instance world {}: {}", fullInstanceId, e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Enriches a zone world with time system and season data from the base world.
+     * Copies: Time System (worldTime), seasonStatus, seasonProgress
+     *
+     * @param zoneWorldId The parsed zone worldId
+     * @param zoneWorld The loaded zone world
+     * @return The zone world enriched with base world data
+     */
+    private WWorld enrichZoneWithBaseWorldData(WorldId zoneWorldId, WWorld zoneWorld) {
+        try {
+            // Get base worldId (without zone and instance)
+            WorldId baseWorldId = zoneWorldId.withoutInstanceAndZone();
+
+            // Load base world
+            Optional<WWorld> baseWorldOpt = repository.findByWorldId(baseWorldId.getId());
+
+            if (baseWorldOpt.isEmpty()) {
+                log.warn("Base world not found for zone {}: {}", zoneWorldId.getId(), baseWorldId.getId());
+                return zoneWorld;
+            }
+
+            WWorld baseWorld = baseWorldOpt.get();
+
+            // Check if both worlds have publicData
+            if (zoneWorld.getPublicData() == null || baseWorld.getPublicData() == null) {
+                log.warn("Cannot enrich zone world - missing publicData: zone={}, base={}",
+                        zoneWorld.getPublicData() == null, baseWorld.getPublicData() == null);
+                return zoneWorld;
+            }
+
+            // Copy time system data from base to zone
+            copyTimeSystemData(baseWorld, zoneWorld);
+
+            log.debug("Enriched zone world {} with data from base world {}", zoneWorldId.getId(), baseWorldId.getId());
+
+            return zoneWorld;
+
+        } catch (Exception e) {
+            log.error("Error enriching zone world {}: {}", zoneWorldId.getId(), e.getMessage(), e);
+            return zoneWorld; // Return zone world as-is on error
+        }
+    }
+
+    /**
+     * Copies time system and season data from base world to zone world.
+     * Copies:
+     * - worldTime (entire time system configuration)
+     * - seasonStatus
+     * - seasonProgress
+     *
+     * @param baseWorld The base world (source)
+     * @param zoneWorld The zone world (target, will be modified)
+     */
+    private void copyTimeSystemData(WWorld baseWorld, WWorld zoneWorld) {
+        var basePublicData = baseWorld.getPublicData();
+        var zonePublicData = zoneWorld.getPublicData();
+
+        // Copy seasonStatus (primitive byte, always copy)
+        zonePublicData.setSeasonStatus(basePublicData.getSeasonStatus());
+
+        // Copy seasonProgress (primitive double, always copy)
+        zonePublicData.setSeasonProgress(basePublicData.getSeasonProgress());
+
+        // Copy worldTime settings
+        if (basePublicData.getSettings() != null && basePublicData.getSettings().getWorldTime() != null) {
+            // Ensure zone has settings structure
+            if (zonePublicData.getSettings() == null) {
+                zonePublicData.setSettings(new de.mhus.nimbus.generated.types.WorldInfoSettingsDTO());
+            }
+
+            // Copy the entire worldTime object
+            var baseWorldTime = basePublicData.getSettings().getWorldTime();
+            zonePublicData.getSettings().setWorldTime(baseWorldTime);
+
+            log.debug("Copied time system data: seasonStatus={}, seasonProgress={}, currentEra={}",
+                    basePublicData.getSeasonStatus(),
+                    basePublicData.getSeasonProgress(),
+                    baseWorldTime.getCurrentEra());
+        }
     }
 
     /**

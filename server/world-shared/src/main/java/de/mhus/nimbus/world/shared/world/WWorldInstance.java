@@ -4,6 +4,7 @@ import de.mhus.nimbus.shared.annotations.GenerateTypeScript;
 import de.mhus.nimbus.shared.annotations.TypeScript;
 import de.mhus.nimbus.shared.persistence.ActualSchemaVersion;
 import de.mhus.nimbus.shared.types.Identifiable;
+import de.mhus.nimbus.shared.types.WorldId;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -78,8 +79,21 @@ public class WWorldInstance implements Identifiable {
     @Builder.Default
     private List<String> players = new ArrayList<>();
 
+    /**
+     * List of PlayerIds currently active in this instance.
+     * Used to track active sessions and cleanup when empty.
+     */
+    @Builder.Default
+    private List<String> activePlayers = new ArrayList<>();
+
     private Instant createdAt;
     private Instant updatedAt;
+
+    /**
+     * Last time a player accessed this instance.
+     * Updated when players join or leave.
+     */
+    private Instant lastAccessTime;
 
     /**
      * Soft delete flag.
@@ -166,5 +180,69 @@ public class WWorldInstance implements Identifiable {
         }
 
         return players.remove(playerId);
+    }
+
+    /**
+     * Add a player to the active players list.
+     *
+     * @param playerId The playerId to add
+     * @return true if player was added, false if already present
+     */
+    public boolean addActivePlayer(String playerId) {
+        if (playerId == null || playerId.isBlank()) {
+            return false;
+        }
+
+        if (activePlayers == null) {
+            activePlayers = new ArrayList<>();
+        }
+
+        if (activePlayers.contains(playerId)) {
+            return false;
+        }
+
+        activePlayers.add(playerId);
+        lastAccessTime = Instant.now();
+        return true;
+    }
+
+    /**
+     * Remove a player from the active players list.
+     *
+     * @param playerId The playerId to remove
+     * @return true if player was removed, false if not present
+     */
+    public boolean removeActivePlayer(String playerId) {
+        if (playerId == null || activePlayers == null) {
+            return false;
+        }
+
+        boolean removed = activePlayers.remove(playerId);
+        if (removed) {
+            lastAccessTime = Instant.now();
+        }
+        return removed;
+    }
+
+    /**
+     * Check if there are any active players in this instance.
+     *
+     * @return true if no active players, false otherwise
+     */
+    public boolean hasNoActivePlayers() {
+        return activePlayers == null || activePlayers.isEmpty();
+    }
+
+    /**
+     * Get the count of active players.
+     *
+     * @return Number of active players
+     */
+    public int getActivePlayerCount() {
+        return activePlayers == null ? 0 : activePlayers.size();
+    }
+
+    public String getWorldWithInstanceId() {
+        return WorldId.worldWithInstance(getWorldId(), getInstanceId());
     }
 }

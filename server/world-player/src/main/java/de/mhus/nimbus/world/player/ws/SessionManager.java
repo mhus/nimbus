@@ -31,6 +31,7 @@ public class SessionManager {
 
     private final WSessionService wSessionService;
     private final LocationService locationService;
+    private final de.mhus.nimbus.world.shared.client.WorldClientService worldClientService;
 
     @Autowired
     @Lazy
@@ -44,9 +45,12 @@ public class SessionManager {
     @Lazy
     private List<SessionClosedConsumer> sessionClosedConsumers;
 
-    public SessionManager(WSessionService wSessionService, LocationService locationService) {
+    public SessionManager(WSessionService wSessionService,
+                         LocationService locationService,
+                         de.mhus.nimbus.world.shared.client.WorldClientService worldClientService) {
         this.wSessionService = wSessionService;
         this.locationService = locationService;
+        this.worldClientService = worldClientService;
     }
 
     private final Map<String, PlayerSession> sessionsByWebSocketId = new ConcurrentHashMap<>();
@@ -140,6 +144,7 @@ public class SessionManager {
      * Remove session on disconnect.
      * Updates WSession in Redis to DEPRECATED.
      * Notifies SessionClosedConsumers for cleanup.
+     * Notifies world-control for instance cleanup (fire-and-forget).
      */
     public void removeSession(String webSocketId) {
         PlayerSession session = sessionsByWebSocketId.remove(webSocketId);
@@ -152,6 +157,14 @@ public class SessionManager {
                 // Update WSession to DEPRECATED in Redis
                 wSessionService.updateStatus(sessionId, WSessionStatus.CLOSED);
                 log.info("Updated WSession to DEPRECATED on disconnect: sessionId={}", sessionId);
+
+                // Notify world-control for instance cleanup (fire-and-forget)
+                if (session.getWorldId() != null && session.getEntityId() != null) {
+                    worldClientService.notifySessionClosed(
+                            session.getWorldId().getId(),
+                            session.getEntityId()
+                    );
+                }
             }
 
             // Notify SessionClosedConsumers for cleanup
@@ -177,6 +190,7 @@ public class SessionManager {
     /**
      * Mark session as deprecated (connection lost, but keep session data).
      * Updates WSession in Redis to DEPRECATED.
+     * Notifies world-control for instance cleanup (fire-and-forget).
      */
     public void deprecateSession(String webSocketId) {
         getByWebSocketId(webSocketId).ifPresent(session -> {
@@ -187,6 +201,14 @@ public class SessionManager {
             if (sessionId != null) {
                 wSessionService.updateStatus(sessionId, WSessionStatus.CLOSED);
                 log.info("Updated WSession to DEPRECATED: sessionId={}", sessionId);
+
+                // Notify world-control for instance cleanup (fire-and-forget)
+                if (session.getWorldId() != null && session.getEntityId() != null) {
+                    worldClientService.notifySessionClosed(
+                            session.getWorldId().getId(),
+                            session.getEntityId()
+                    );
+                }
             }
 
             log.debug("Deprecated session for WebSocket: {}", webSocketId);

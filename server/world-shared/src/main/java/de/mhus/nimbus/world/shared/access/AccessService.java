@@ -16,6 +16,7 @@ import de.mhus.nimbus.world.shared.region.RegionSettings;
 import de.mhus.nimbus.world.shared.session.WSession;
 import de.mhus.nimbus.world.shared.session.WSessionStatus;
 import de.mhus.nimbus.world.shared.world.WWorld;
+import de.mhus.nimbus.world.shared.world.WWorldInstance;
 import de.mhus.nimbus.world.shared.world.WWorldService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -52,6 +53,7 @@ public class AccessService {
     private final RCharacterService characterService;
     private final de.mhus.nimbus.world.shared.sector.RUserService userService;
     private final de.mhus.nimbus.world.shared.session.WSessionService sessionService;
+    private final de.mhus.nimbus.world.shared.world.WWorldInstanceService worldInstanceService;
     private final JwtService jwtService;
     private final AccessSettings properties;
     private final Base64Service base64Service;
@@ -237,7 +239,7 @@ public class AccessService {
      * @return DevLoginResponse with token, URLs, sessionId, and playerId
      * @throws IllegalArgumentException if validation fails
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public DevLoginResponse devSessionLogin(DevSessionLoginRequest request) {
         log.info("Dev session login: user={}, world={}, character={}, actor={}",
                 request.getUserId(), request.getWorldId(), request.getCharacterId(), request.getActor());
@@ -262,13 +264,35 @@ public class AccessService {
         PlayerId playerId = PlayerId.of(request.getUserId(), request.getCharacterId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid userId or characterId"));
 
-        WSession session = sessionService.create(worldId, playerId, String.valueOf(request.getActor()));
+        // Determine effective worldId (might be an instanceId for instanceable worlds)
+        String effectiveWorldId = worldId.getId();
+
+        // Auto-create instance for PLAYER actors in instanceable worlds
+        if (world.isInstanceable() && request.getActor() == ActorRoles.PLAYER) {
+            // TODO check if user is in Team and maybe tehre is already a running instance for the team
+            // if not add all team memebers to the new instance - requires a lock on instance creation
+            // do this in the service layer
+            WWorldInstance instance = worldInstanceService.createInstanceForPlayer(
+                    worldId.getId(),
+                    world.getName(),
+                    playerId.getId(),
+                    character.getDisplay()
+            );
+
+            effectiveWorldId = instance.getWorldWithInstanceId();
+            log.info("Auto-created world instance for player: instanceId={}, worldId={}, playerId={}",
+                    instance.getInstanceId(), worldId.getId(), playerId.getId());
+        }
+
+        // Create session with effective worldId (original worldId or instanceId)
+        WorldId sessionWorldId = WorldId.unchecked(effectiveWorldId);
+        WSession session = sessionService.create(sessionWorldId, playerId, String.valueOf(request.getActor()));
 
         // Create JWT token
         String token = createSessionToken(
                 world.getRegionId(),
                 playerId.getUserId(),
-                worldId.getId(),
+                effectiveWorldId,
                 playerId.getCharacterId(),
                 request.getActor().name(),
                 session.getId()
@@ -278,15 +302,15 @@ public class AccessService {
         return DevLoginResponse.builder()
                 .accessToken(token)
                 .accessUrls(properties.getAccessUrls())
-                .jumpUrl(findJumpUrl(properties,request, session.getId()))
+                .jumpUrl(findJumpUrl(properties, request, session.getId(), effectiveWorldId))
                 .sessionId(session.getId())
                 .playerId(playerId.getId())
                 .build();
     }
 
-    private String findJumpUrl(AccessSettings properties, DevSessionLoginRequest request, String sessionId) {
+    private String findJumpUrl(AccessSettings properties, DevSessionLoginRequest request, String sessionId, String effectiveWorldId) {
         var url = request.getActor() == ActorRoles.EDITOR ? properties.getJumpUrlEditor() : properties.getJumpUrlViewer();
-        url = url.replace("{worldId}", request.getWorldId());
+        url = url.replace("{worldId}", effectiveWorldId);
         url = url.replace("{session}", sessionId);
         url = url.replace("{userId}", request.getUserId());
         url = url.replace("{characterId}", request.getCharacterId());

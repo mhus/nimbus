@@ -247,4 +247,57 @@ public class WorldClientService {
     private String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
+
+    /**
+     * Fire-and-forget: Notify world-control that a session has closed.
+     * Used when a session transitions to CLOSED state to cleanup world instances.
+     * Does not wait for response (async, no retry on failure).
+     *
+     * @param worldId The worldId (or instanceId) of the closed session
+     * @param playerId The playerId of the closed session
+     */
+    public void notifySessionClosed(String worldId, String playerId) {
+        // Only send if we're in world-player
+        if (!locationService.isWorldPlayer()) {
+            log.debug("Not sending session-closed notification - not running in world-player");
+            return;
+        }
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                String controlBaseUrl = properties.getControlBaseUrl();
+                String url = controlBaseUrl + "/control/session-lifecycle/session-closed";
+
+                // Create request body
+                Map<String, String> requestBody = Map.of(
+                        "worldId", worldId,
+                        "playerId", playerId
+                );
+
+                // Set headers (no auth token needed for internal server-to-server)
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Content-Type", "application/json");
+
+                HttpEntity<Map<String, String>> httpEntity = new HttpEntity<>(requestBody, headers);
+
+                log.debug("Sending session-closed notification to world-control: worldId={}, playerId={}, url={}",
+                        worldId, playerId, url);
+
+                // Fire-and-forget POST (don't care about response)
+                restTemplate.postForEntity(
+                        URI.create(url),
+                        httpEntity,
+                        Void.class
+                );
+
+                log.info("Session-closed notification sent successfully: worldId={}, playerId={}",
+                        worldId, playerId);
+
+            } catch (Exception e) {
+                // Log error but don't propagate (fire-and-forget)
+                log.warn("Failed to send session-closed notification to world-control: worldId={}, playerId={}, error={}",
+                        worldId, playerId, e.getMessage());
+            }
+        });
+    }
 }

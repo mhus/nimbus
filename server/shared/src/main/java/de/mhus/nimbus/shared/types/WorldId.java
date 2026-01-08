@@ -32,6 +32,14 @@ public class WorldId implements Comparable<WorldId> {
         return new WorldId(worldId);
     }
 
+    public static String worldWithInstance(String worldId, String instanceId) {
+        // TODO validate output
+        if (instanceId == null || instanceId.isBlank()) {
+            return worldId;
+        }
+        return worldId + "!" + instanceId;
+    }
+
     public String getRegionId() {
         parseId();
         return regionId;
@@ -148,6 +156,25 @@ public class WorldId implements Comparable<WorldId> {
         if (instance == null && zone == null) return this;
         StringBuilder sb = new StringBuilder();
         sb.append(regionId).append(":").append(worldName);
+        return new WorldId(sb.toString());
+    }
+
+    /**
+     * Creates a new WorldId with the given instance identifier.
+     * If this WorldId already has an instance, it will be replaced.
+     *
+     * @param instanceId The instance identifier to add
+     * @return A new WorldId with the instance part set
+     */
+    public WorldId withInstance(String instanceId) {
+        if (instanceId == null || instanceId.isBlank()) {
+            throw new IllegalArgumentException("instanceId cannot be null or blank");
+        }
+        parseId();
+        StringBuilder sb = new StringBuilder();
+        sb.append(regionId).append(":").append(worldName);
+        if (zone != null) sb.append(":").append(zone);
+        sb.append("!").append(instanceId);
         return new WorldId(sb.toString());
     }
 

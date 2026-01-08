@@ -202,4 +202,49 @@ public class LocationService {
         }
     }
 
+    /**
+     * Check if this service is running as world-control.
+     *
+     * @return true if running as world-control, false otherwise
+     */
+    public boolean isWorldControl() {
+        return getMeServer() == SERVER.CONTROL;
+    }
+
+    /**
+     * Check if this service is running as world-player.
+     *
+     * @return true if running as world-player, false otherwise
+     */
+    public boolean isWorldPlayer() {
+        return getMeServer() == SERVER.PLAYER;
+    }
+
+    /**
+     * Check if this service is running as world-life.
+     *
+     * @return true if running as world-life, false otherwise
+     */
+    public boolean isWorldLife() {
+        return getMeServer() == SERVER.LIFE;
+    }
+
+    /**
+     * Check if this service is running as universe.
+     *
+     * @return true if running as universe, false otherwise
+     */
+    public boolean isUniverse() {
+        return getMeServer() == SERVER.UNIVERSE;
+    }
+
+    /**
+     * Check if this service is running as region.
+     *
+     * @return true if running as region, false otherwise
+     */
+    public boolean isRegion() {
+        return getMeServer() == SERVER.REGION;
+    }
+
 }
