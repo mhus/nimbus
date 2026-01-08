@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * MongoDB Speicherung eines Welt-Chunks.
@@ -46,6 +47,13 @@ public class WChunk implements Identifiable {
 
     @Builder.Default
     private boolean compressed = false;
+
+    /**
+     * Server-side metadata for blocks in this chunk.
+     * Key: Block coordinate "x,y,z"
+     * Value: Server metadata map from BlockMetadata.server
+     */
+    private Map<String, Map<String, String>> infoServer;
 
     private Instant createdAt;
     private Instant updatedAt;

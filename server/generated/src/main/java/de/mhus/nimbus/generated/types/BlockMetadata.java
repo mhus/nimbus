@@ -17,5 +17,9 @@ public class BlockMetadata {
     private String title;
     @com.fasterxml.jackson.annotation.JsonProperty("groupId")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private int groupId;
+    private String groupId;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.util.Map<String, String> server;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private java.util.Map<String, String> client;
 }

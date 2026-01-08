@@ -354,20 +354,114 @@
                 />
               </div>
 
-              <!-- Group ID and other fields in grid -->
-              <div class="grid grid-cols-2 gap-4">
-                <!-- Group ID -->
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">Group ID</span>
-                  </label>
-                  <input
-                    v-model.number="blockData.metadata.groupId"
-                    type="number"
-                    class="input input-bordered input-sm"
-                    placeholder="Optional"
-                  />
+              <!-- Group ID -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Group ID</span>
+                  <span class="label-text-alt">Group identifier</span>
+                </label>
+                <input
+                  v-model="blockData.metadata.groupId"
+                  type="text"
+                  class="input input-bordered input-sm"
+                  placeholder="Optional group ID"
+                />
+              </div>
+
+              <!-- Server Metadata -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Server Properties</span>
+                  <span class="label-text-alt">Not sent to client</span>
+                </label>
+
+                <!-- Existing server properties -->
+                <div v-if="blockData.metadata.server && Object.keys(blockData.metadata.server).length > 0" class="space-y-2">
+                  <div
+                    v-for="(value, key) in blockData.metadata.server"
+                    :key="`server-${key}`"
+                    class="flex gap-2 items-center"
+                  >
+                    <input
+                      :value="key"
+                      @input="updateServerKey(key, ($event.target as HTMLInputElement).value, value)"
+                      type="text"
+                      class="input input-bordered input-sm flex-1"
+                      placeholder="Key"
+                    />
+                    <input
+                      v-model="blockData.metadata.server[key]"
+                      type="text"
+                      class="input input-bordered input-sm flex-1"
+                      placeholder="Value"
+                    />
+                    <button
+                      @click="deleteServerProperty(key)"
+                      class="btn btn-xs btn-error btn-ghost"
+                      title="Delete property"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
+
+                <!-- Add new server property -->
+                <button
+                  @click="addServerProperty"
+                  class="btn btn-xs btn-outline w-full mt-2"
+                >
+                  + Add Server Property
+                </button>
+              </div>
+
+              <!-- Client Metadata -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Client Properties</span>
+                  <span class="label-text-alt">Block properties for client</span>
+                </label>
+
+                <!-- Existing client properties -->
+                <div v-if="blockData.metadata.client && Object.keys(blockData.metadata.client).length > 0" class="space-y-2">
+                  <div
+                    v-for="(value, key) in blockData.metadata.client"
+                    :key="`client-${key}`"
+                    class="flex gap-2 items-center"
+                  >
+                    <input
+                      :value="key"
+                      @input="updateClientKey(key, ($event.target as HTMLInputElement).value, value)"
+                      type="text"
+                      class="input input-bordered input-sm flex-1"
+                      placeholder="Key"
+                    />
+                    <input
+                      v-model="blockData.metadata.client[key]"
+                      type="text"
+                      class="input input-bordered input-sm flex-1"
+                      placeholder="Value"
+                    />
+                    <button
+                      @click="deleteClientProperty(key)"
+                      class="btn btn-xs btn-error btn-ghost"
+                      title="Delete property"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Add new client property -->
+                <button
+                  @click="addClientProperty"
+                  class="btn btn-xs btn-outline w-full mt-2"
+                >
+                  + Add Client Property
+                </button>
               </div>
             </div>
           </CollapsibleSection>
@@ -1505,4 +1599,102 @@ const showBlockOrigin = async () => {
     loadingOrigin.value = false;
   }
 };
+
+/**
+ * Server property management
+ */
+function addServerProperty() {
+  if (!blockData.value.metadata) {
+    blockData.value.metadata = {};
+  }
+  if (!blockData.value.metadata.server) {
+    blockData.value.metadata.server = {};
+  }
+
+  // Find unique key name
+  let counter = 1;
+  let newKey = 'key';
+  while (blockData.value.metadata.server[newKey]) {
+    newKey = `key${counter}`;
+    counter++;
+  }
+
+  blockData.value.metadata.server[newKey] = '';
+}
+
+function deleteServerProperty(key: string) {
+  if (blockData.value.metadata?.server) {
+    delete blockData.value.metadata.server[key];
+
+    // Clean up empty object
+    if (Object.keys(blockData.value.metadata.server).length === 0) {
+      blockData.value.metadata.server = undefined;
+    }
+  }
+}
+
+function updateServerKey(oldKey: string, newKey: string, value: string) {
+  if (!blockData.value.metadata?.server || oldKey === newKey) {
+    return;
+  }
+
+  // Check if new key already exists
+  if (blockData.value.metadata.server[newKey]) {
+    console.warn('Key already exists:', newKey);
+    return;
+  }
+
+  // Delete old key and add new one
+  delete blockData.value.metadata.server[oldKey];
+  blockData.value.metadata.server[newKey] = value;
+}
+
+/**
+ * Client property management
+ */
+function addClientProperty() {
+  if (!blockData.value.metadata) {
+    blockData.value.metadata = {};
+  }
+  if (!blockData.value.metadata.client) {
+    blockData.value.metadata.client = {};
+  }
+
+  // Find unique key name
+  let counter = 1;
+  let newKey = 'key';
+  while (blockData.value.metadata.client[newKey]) {
+    newKey = `key${counter}`;
+    counter++;
+  }
+
+  blockData.value.metadata.client[newKey] = '';
+}
+
+function deleteClientProperty(key: string) {
+  if (blockData.value.metadata?.client) {
+    delete blockData.value.metadata.client[key];
+
+    // Clean up empty object
+    if (Object.keys(blockData.value.metadata.client).length === 0) {
+      blockData.value.metadata.client = undefined;
+    }
+  }
+}
+
+function updateClientKey(oldKey: string, newKey: string, value: string) {
+  if (!blockData.value.metadata?.client || oldKey === newKey) {
+    return;
+  }
+
+  // Check if new key already exists
+  if (blockData.value.metadata.client[newKey]) {
+    console.warn('Key already exists:', newKey);
+    return;
+  }
+
+  // Delete old key and add new one
+  delete blockData.value.metadata.client[oldKey];
+  blockData.value.metadata.client[newKey] = value;
+}
 </script>

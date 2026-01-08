@@ -25,5 +25,18 @@ export interface BlockMetadata {
    * Group ID for organization/categorization
    * Deprecated?
    */
-  groupId?: number; // javaType: int
+  groupId?: string;
+
+    /**
+     * Metadata for server
+     */
+  server?: Record<string, string>;
+    /**
+     * Metadata for client
+     *
+     * Known fields:
+     * - confirm: Text for confirmation dialog when interacting with block (Space key)
+     */
+  client?: Record<string, string>;
+
 }

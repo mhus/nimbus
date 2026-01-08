@@ -437,8 +437,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useModal } from '@/composables/useModal';
-import { EditAction, type PaletteBlockDefinition, type Block, type BlockType } from '@nimbus/shared';
+import { EditAction, type PaletteBlockDefinition, type Block, type BlockType, getLogger } from '@nimbus/shared';
 import { apiService } from '@/services/ApiService';
+
+const logger = getLogger('EditConfigApp');
 
 // Get all edit actions from enum
 const editActions = Object.values(EditAction);
@@ -1189,7 +1191,7 @@ async function savePalette() {
 
 // Poll marked block content
 async function pollMarkedBlockContent() {
-  console.log('[Polling] Checking marked block...', {
+  logger.debug('[Polling] Checking marked block...', {
     markedBlockPosition: markedBlock.value,
     worldId: worldId.value,
     sessionId: sessionId.value
@@ -1198,18 +1200,18 @@ async function pollMarkedBlockContent() {
   try {
     // Always try to fetch - server will return 404 if no block marked
     const url = `${apiUrl.value}/control/editor/${worldId.value}/session/${sessionId.value}/blockRegister`;
-    console.log('[Polling] Fetching:', url);
+    logger.debug('[Polling] Fetching:', url);
 
     const response = await fetch(url, {
       credentials: 'include'
     });
 
-    console.log('[Polling] Response status:', response.status);
+    logger.debug('[Polling] Response status:', response.status);
 
     if (!response.ok) {
       // No marked block or error - clear content
       if (markedBlockContent.value !== null) {
-        console.log('[Polling] Clearing marked block content (status not ok)');
+        logger.debug('[Polling] Clearing marked block content (status not ok)');
         markedBlockContent.value = null;
         markedBlockIcon.value = null;
       }
@@ -1217,14 +1219,14 @@ async function pollMarkedBlockContent() {
     }
 
     const responseData = await response.json();
-    console.log('[Polling] Received response data:', responseData);
+    logger.debug('[Polling] Received response data:', responseData);
 
     // Check if response contains an error
     if (responseData.error) {
-      console.log('[Polling] Server returned error:', responseData.error);
+      logger.debug('[Polling] Server returned error:', responseData.error);
       // Clear content when error is present
       if (markedBlockContent.value !== null) {
-        console.log('[Polling] Clearing marked block content (error in response)');
+        logger.debug('[Polling] Clearing marked block content (error in response)');
         markedBlockContent.value = null;
         markedBlockIcon.value = null;
       }
@@ -1233,11 +1235,11 @@ async function pollMarkedBlockContent() {
 
     const blockData: Block = responseData;
 
-    console.info('[Polling] Full block data received:', JSON.stringify(blockData, null, 2));
+    logger.debug('[Polling] Full block data received:', JSON.stringify(blockData, null, 2));
 
     // Check if content changed (compare blockTypeId)
     if (markedBlockContent.value?.blockTypeId === blockData.blockTypeId) {
-      console.log('[Polling] Content unchanged, skipping update');
+      logger.debug('[Polling] Content unchanged, skipping update');
       return;
     }
 
@@ -1247,11 +1249,11 @@ async function pollMarkedBlockContent() {
     // First, try to get texture directly from block modifiers
     const firstBlockModifier = blockData.modifiers?.[0];
     if (firstBlockModifier) {
-      console.info('[Polling] Block has modifier[0], checking:', JSON.stringify(firstBlockModifier, null, 2));
+      logger.debug('[Polling] Block has modifier[0], checking:', JSON.stringify(firstBlockModifier, null, 2));
 
       if (firstBlockModifier.visibility?.textures) {
         const textures = firstBlockModifier.visibility.textures;
-        console.info('[Polling] Found textures in block modifier:', JSON.stringify(textures, null, 2));
+        logger.debug('[Polling] Found textures in block modifier:', JSON.stringify(textures, null, 2));
 
         // Get first available texture from numeric keys (0, 1, 2, ...)
         for (let i = 0; i < 6; i++) {
@@ -1259,7 +1261,7 @@ async function pollMarkedBlockContent() {
           if (texture) {
             // If texture is a string, use it directly, otherwise get path from TextureDefinition
             icon = typeof texture === 'string' ? texture : texture.path;
-            console.info('[Polling] Selected icon from block modifier key', i, ':', icon);
+            logger.debug('[Polling] Selected icon from block modifier key', i, ':', icon);
             break;
           }
         }
@@ -1268,32 +1270,32 @@ async function pollMarkedBlockContent() {
 
     // Only fetch BlockType if we don't have an icon yet
     if (!icon) {
-      console.info('[Polling] No texture in block, fetching BlockType...');
+      logger.debug('[Polling] No texture in block, fetching BlockType...');
 
       try {
         const blockTypeUrl = `${apiUrl.value}/control/worlds/${worldId.value}/blocktypes/type/${blockData.blockTypeId}`;
-        console.info('[Polling] Fetching BlockType from:', blockTypeUrl);
+        logger.debug('[Polling] Fetching BlockType from:', blockTypeUrl);
 
         const blockTypeResponse = await fetch(blockTypeUrl, {
           credentials: 'include'
         });
 
-        console.info('[Polling] BlockType response status:', blockTypeResponse.status);
+        logger.debug('[Polling] BlockType response status:', blockTypeResponse.status);
 
         if (blockTypeResponse.ok) {
           const blockType: BlockType = await blockTypeResponse.json();
-          console.info('[Polling] BlockType data:', JSON.stringify(blockType, null, 2));
+          logger.debug('[Polling] BlockType data:', JSON.stringify(blockType, null, 2));
           blockTypeName = blockType.description || blockTypeName;
 
           // Try to get texture from first modifier's visibility
           const firstModifier = blockType.modifiers?.[0];
-          console.info('[Polling] First modifier:', JSON.stringify(firstModifier, null, 2));
+          logger.debug('[Polling] First modifier:', JSON.stringify(firstModifier, null, 2));
 
           if (firstModifier?.visibility?.textures) {
             const textures = firstModifier.visibility.textures;
-            console.info('[Polling] Textures object:', JSON.stringify(textures, null, 2));
-            console.info('[Polling] Textures type:', typeof textures);
-            console.info('[Polling] Textures keys:', Object.keys(textures));
+            logger.debug('[Polling] Textures object:', JSON.stringify(textures, null, 2));
+            logger.debug('[Polling] Textures type:', typeof textures);
+            logger.debug('[Polling] Textures keys:', Object.keys(textures));
 
             // Get first available texture from numeric keys (0, 1, 2, ...)
             for (let i = 0; i < 6; i++) {
@@ -1301,27 +1303,27 @@ async function pollMarkedBlockContent() {
               if (texture) {
                 // If texture is a string, use it directly, otherwise get path from TextureDefinition
                 icon = typeof texture === 'string' ? texture : texture.path;
-                console.info('[Polling] Selected icon from BlockType key', i, ':', icon);
+                logger.debug('[Polling] Selected icon from BlockType key', i, ':', icon);
                 break;
               }
             }
 
             if (!icon) {
-              console.info('[Polling] No texture found in numeric keys');
+              logger.debug('[Polling] No texture found in numeric keys');
             }
           } else {
-            console.info('[Polling] No textures found in first modifier');
+            logger.debug('[Polling] No textures found in first modifier');
           }
         } else {
-          console.info('[Polling] BlockType fetch failed with status:', blockTypeResponse.status);
+          logger.debug('[Polling] BlockType fetch failed with status:', blockTypeResponse.status);
           const errorText = await blockTypeResponse.text();
-          console.info('[Polling] Error response:', errorText);
+          logger.debug('[Polling] Error response:', errorText);
         }
       } catch (err) {
-        console.error('[Polling] Failed to fetch BlockType details for marked block:', err);
+        logger.error('[Polling] Failed to fetch BlockType details for marked block:', err);
       }
     } else {
-      console.info('[Polling] Using texture from block data, skipping BlockType fetch');
+      logger.debug('[Polling] Using texture from block data, skipping BlockType fetch');
     }
 
     // Truncate name if too long
@@ -1337,22 +1339,22 @@ async function pollMarkedBlockContent() {
     };
     markedBlockIcon.value = icon;
 
-    console.log('Marked block content updated:', blockTypeName);
+    logger.debug('Marked block content updated:', blockTypeName);
 
   } catch (err) {
     // Silent fail - polling will retry
-    console.debug('Failed to poll marked block content:', err);
+    logger.debug('Failed to poll marked block content:', err);
   }
 }
 
 // Start marked block polling
 function startMarkedBlockPolling() {
   if (markedBlockPollingInterval !== null) {
-    console.log('[Polling] Already running, skipping start');
+    logger.debug('[Polling] Already running, skipping start');
     return;
   }
 
-  console.log('[Polling] Starting marked block polling (interval: 2s)');
+  logger.debug('[Polling] Starting marked block polling (interval: 2s)');
 
   // Initial poll
   pollMarkedBlockContent();

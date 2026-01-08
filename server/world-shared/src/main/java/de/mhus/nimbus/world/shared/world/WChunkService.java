@@ -20,7 +20,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -71,6 +73,9 @@ public class WChunkService {
         if (data == null) throw new IllegalArgumentException("ChunkData erforderlich");
 
         var lookupWorld = worldId.withoutInstance();
+
+        // Extract server metadata from blocks and store in separate map
+        Map<String, Map<String, String>> infoServer = extractServerMetadata(data);
 
         // Felder 'status' und 'i' vor Serialisierung null setzen
         data.setStatus(null);
@@ -127,6 +132,7 @@ public class WChunkService {
             throw new IllegalStateException("Speichern ChunkData fehlgeschlagen", e);
         }
 
+        entity.setInfoServer(infoServer.isEmpty() ? null : infoServer);
         entity.touchUpdate();
         return repository.save(entity);
     }
@@ -500,6 +506,69 @@ public class WChunkService {
         }
 
         return null;
+    }
+
+    /**
+     * Extract server metadata from blocks and remove it from block metadata.
+     * Server metadata is stored separately in WChunk.infoServer to prevent sending it to clients.
+     *
+     * @param chunkData Chunk data containing blocks
+     * @return Map of block coordinates to server metadata
+     */
+    private Map<String, Map<String, String>> extractServerMetadata(ChunkData chunkData) {
+        Map<String, Map<String, String>> infoServer = new HashMap<>();
+
+        if (chunkData.getBlocks() == null) {
+            return infoServer;
+        }
+
+        for (Block block : chunkData.getBlocks()) {
+            if (block.getMetadata() == null || block.getMetadata().getServer() == null) {
+                continue;
+            }
+
+            // Extract position
+            Vector3Int position = block.getPosition();
+            if (position == null) {
+                continue;
+            }
+
+            String coordinate = position.getX() + "," + position.getY() + "," + position.getZ();
+
+            // Store server metadata
+            Map<String, String> serverData = block.getMetadata().getServer();
+            if (serverData != null && !serverData.isEmpty()) {
+                infoServer.put(coordinate, new HashMap<>(serverData));
+            }
+
+            // Remove server metadata from block
+            block.getMetadata().setServer(null);
+
+            // Check if metadata is now empty (all fields null)
+            if (isMetadataEmpty(block.getMetadata())) {
+                block.setMetadata(null);
+            }
+        }
+
+        return infoServer;
+    }
+
+    /**
+     * Check if all fields in BlockMetadata are null.
+     *
+     * @param metadata BlockMetadata to check
+     * @return true if all fields are null
+     */
+    private boolean isMetadataEmpty(de.mhus.nimbus.generated.types.BlockMetadata metadata) {
+        if (metadata == null) {
+            return true;
+        }
+
+        return metadata.getId() == null
+                && metadata.getTitle() == null
+                && metadata.getGroupId() == null
+                && metadata.getServer() == null
+                && metadata.getClient() == null;
     }
 
     private boolean blank(String s) { return s == null || s.isBlank(); }

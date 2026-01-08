@@ -296,6 +296,19 @@ export class WebInputController implements InputController {
               );
               logger.info('Sent entity interaction for space key', { entityId: selectedEntity.id });
             } else if (selectedBlock) {
+              // Check if block requires confirmation
+              const confirmText = selectedBlock.block.metadata?.client?.confirm;
+              if (confirmText) {
+                logger.info('Block requires confirmation', { confirmText });
+                const confirmed = window.confirm(confirmText);
+                if (!confirmed) {
+                  logger.info('User cancelled block interaction');
+                  event.preventDefault();
+                  return;
+                }
+                logger.info('User confirmed block interaction');
+              }
+
               // Send block interaction (b.int)
               const pos = selectedBlock.block.position;
               networkService.sendBlockInteraction(

@@ -2201,11 +2201,25 @@
         "comment" : null
       }, {
         "name" : "groupId",
-        "type" : "number",
+        "type" : "string",
         "optional" : true,
         "visibility" : null,
-        "javaTypeHint" : "int",
-        "comment" : "// javaType: int"
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "server",
+        "type" : "Record<string, string>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
+      }, {
+        "name" : "client",
+        "type" : "Record<string, string>",
+        "optional" : true,
+        "visibility" : null,
+        "javaTypeHint" : null,
+        "comment" : null
       } ],
       "methods" : [ ]
     } ],
