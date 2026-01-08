@@ -10,7 +10,7 @@ const logger = getLogger('WorldTimeConfigCommand');
 
 /**
  * WorldTimeConfig command - Configure World Time settings
- * Usage: worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>
+ * Usage: worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear>
  */
 export class WorldTimeConfigCommand extends CommandHandler {
   private appContext: AppContext;
@@ -25,7 +25,7 @@ export class WorldTimeConfigCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Configure World Time settings (minuteScaling, minutesPerHour, hoursPerDay, daysPerMonth, monthsPerYear, yearsPerEra)';
+    return 'Configure World Time settings (minuteScaling, minutesPerHour, hoursPerDay, daysPerMonth, monthsPerYear)';
   }
 
   execute(parameters: any[]): any {
@@ -36,14 +36,14 @@ export class WorldTimeConfigCommand extends CommandHandler {
     }
 
     // Parse parameters
-    if (parameters.length !== 6) {
+    if (parameters.length !== 5) {
       logger.error(
-        'Usage: worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>'
+        'Usage: worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear>'
       );
       return {
         error: 'Invalid parameters',
         usage:
-          'worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>',
+          'worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear>',
       };
     }
 
@@ -52,7 +52,6 @@ export class WorldTimeConfigCommand extends CommandHandler {
     const hoursPerDay = toNumber(parameters[2]);
     const daysPerMonth = toNumber(parameters[3]);
     const monthsPerYear = toNumber(parameters[4]);
-    const yearsPerEra = toNumber(parameters[5]);
 
     // Validate parameters
     if (
@@ -60,8 +59,7 @@ export class WorldTimeConfigCommand extends CommandHandler {
       isNaN(minutesPerHour) ||
       isNaN(hoursPerDay) ||
       isNaN(daysPerMonth) ||
-      isNaN(monthsPerYear) ||
-      isNaN(yearsPerEra)
+      isNaN(monthsPerYear)
     ) {
       logger.error('All parameters must be valid numbers');
       return { error: 'All parameters must be valid numbers' };
@@ -73,8 +71,7 @@ export class WorldTimeConfigCommand extends CommandHandler {
       minutesPerHour,
       hoursPerDay,
       daysPerMonth,
-      monthsPerYear,
-      yearsPerEra
+      monthsPerYear
     );
 
     const config = environmentService.getWorldTimeConfig();
@@ -85,7 +82,6 @@ export class WorldTimeConfigCommand extends CommandHandler {
     logger.debug(`  @Hours per Day     : ${config.hoursPerDay}`);
     logger.debug(`  @Days per Month    : ${config.daysPerMonth}`);
     logger.debug(`  @Months per Year   : ${config.monthsPerYear}`);
-    logger.debug(`  @Years per Era     : ${config.yearsPerEra}`);
     logger.debug('=================================');
 
     return { success: true, config };

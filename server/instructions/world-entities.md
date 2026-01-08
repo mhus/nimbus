@@ -68,6 +68,9 @@ mitgeteilt das der Player die Instanz verlässt. Ist es der Letzte Player in der
 - Estelle einen Plan was alles gesetzt werden kann und in welchen sektionen
 - Erweitere in world-editor den World dialog so das alle felder gesetzt werden können.
 
+- Wenn du WorldInfo mit dem Frontend austauschst, musst du EngineMapper anstelle von ObjectMapper benutzen.
+
+[x] EntryPoints kann aus WWorld entfernt werden. (nicht aus WorldInfo!)
 
 > WWorldInstanceListener wird für Entities und Items benötigt. Später klären was genau passieren muss.
 > Erweitere WWorld im die Eigenschaft instanceable : boolean - ob die Welt Instanzen erstellen muss.

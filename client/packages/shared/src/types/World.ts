@@ -198,11 +198,9 @@ export interface WorldInfo {
       daysPerMonth?: number; // javaType: Integer
       /** @Year: How many @Months in one @Year (default: 12) */
       monthsPerYear?: number; // javaType: Integer
-      /** @Era: How many @Years in one @Era (default: 10000) */
-      yearsPerEra?: number; // javaType: Integer
-      /** current Era - starting at time 0 + Era * 10000 * 12 * 30 * 24 * 60 = 5.184.000.000 (one Era in minutes)*/
+      /** current Era - starting at time 0 for the current era */
       currentEra?: number; // javaType: Integer
-      /** linuxEpocheDeltaMinutes - delta at linux timestamp 0 */
+      /** linuxEpocheDeltaMinutes - delta at linux timestamp 0 for the current era (currentEra) */
       linuxEpocheDeltaMinutes?: number; // javaType: Long
 
       /** Day section definitions (in @Hours) */

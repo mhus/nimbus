@@ -26,9 +26,6 @@ public class WorldInfoSettingsDTOWorldTimeDTO {
     @com.fasterxml.jackson.annotation.JsonProperty("monthsPerYear")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Integer monthsPerYear;
-    @com.fasterxml.jackson.annotation.JsonProperty("yearsPerEra")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    private Integer yearsPerEra;
     @com.fasterxml.jackson.annotation.JsonProperty("currentEra")
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Integer currentEra;

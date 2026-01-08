@@ -5879,20 +5879,6 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "yearsPerEra",
-        "type" : "number",
-        "optional" : true,
-        "visibility" : null,
-        "javaTypeHint" : "Integer",
-        "comment" : null
-      }, {
-        "name" : "// javaType",
-        "type" : "Integer",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "currentEra",
         "type" : "number",
         "optional" : true,

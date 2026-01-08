@@ -27,6 +27,7 @@ import java.util.Set;
 public class WWorldController extends BaseEditorController {
 
     private final WWorldService worldService;
+    private final de.mhus.nimbus.shared.engine.EngineMapper engineMapper;
 
     // DTOs
     public record WorldRequest(

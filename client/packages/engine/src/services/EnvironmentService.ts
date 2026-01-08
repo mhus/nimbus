@@ -110,8 +110,6 @@ export interface WorldTimeConfig {
   daysPerMonth: number;
   /** @Year: How many @Months in one @Year */
   monthsPerYear: number;
-  /** @Era: How many @Years in one @Era */
-  yearsPerEra: number;
 }
 
 /**
@@ -1132,7 +1130,6 @@ export class EnvironmentService {
       hoursPerDay: worldTime?.hoursPerDay ?? 24,
       daysPerMonth: worldTime?.daysPerMonth ?? 30,
       monthsPerYear: worldTime?.monthsPerYear ?? 12,
-      yearsPerEra: worldTime?.yearsPerEra ?? 10000,
     };
   }
 
@@ -1169,15 +1166,14 @@ export class EnvironmentService {
 
   /**
    * Set World Time configuration
-   * Command: worldTimeConfig <minuteScaling> <hoursPerDay> <daysPerMonth> <monthsPerYear> <yearsPerEra>
+   * Command: worldTimeConfig <minuteScaling> <minutesPerHour> <hoursPerDay> <daysPerMonth> <monthsPerYear>
    */
   setWorldTimeConfig(
     minuteScaling: number,
     minutesPerHour: number,
     hoursPerDay: number,
     daysPerMonth: number,
-    monthsPerYear: number,
-    yearsPerEra: number
+    monthsPerYear: number
   ): void {
     this.worldTimeConfig = {
       minuteScaling: Math.max(0.1, minuteScaling),
@@ -1185,7 +1181,6 @@ export class EnvironmentService {
       hoursPerDay: Math.max(1, hoursPerDay),
       daysPerMonth: Math.max(1, daysPerMonth),
       monthsPerYear: Math.max(1, monthsPerYear),
-      yearsPerEra: Math.max(1, yearsPerEra),
     };
 
     logger.debug('World Time config updated', this.worldTimeConfig);
@@ -1199,26 +1194,16 @@ export class EnvironmentService {
   }
 
   setUnixEpochWorldTimeOffset(era : number, offsetMinutes: number): void {
-    // calculate deta to naw and call startWorldTime with that value
-    // if era > 0: also add era offset, its (era - 1) * yearsPerEra * monthsPerYear * daysPerMonth * hoursPerDay * minutesPerHour
+    // calculate delta to now and call startWorldTime with that value
+    // offsetMinutes is now only for the current era (no need to add era offset)
     const now = Date.now();
     const realElapsedMinutes = now / (1000 * 60);
-    if (era > 0) {
-      const eraOffsetMinutes =
-        (era - 1) *
-          this.worldTimeConfig.yearsPerEra *
-        this.worldTimeConfig.monthsPerYear *
-        this.worldTimeConfig.daysPerMonth *
-        this.worldTimeConfig.hoursPerDay *
-        this.worldTimeConfig.minutesPerHour;
-      offsetMinutes += eraOffsetMinutes;
-    }
     const worldElapsedMinutes = realElapsedMinutes * this.worldTimeConfig.minuteScaling;
     const currentWorldMinute = offsetMinutes + worldElapsedMinutes;
 
     this.startWorldTime(currentWorldMinute);
 
-    logger.debug('Unix Epoch World Time offset set', { offsetMinutes });
+    logger.debug('Unix Epoch World Time offset set', { era, offsetMinutes });
   }
 
   /**
@@ -1329,7 +1314,7 @@ export class EnvironmentService {
    * Format world time in minutes to string
    * Format: @era, @year.@month.@day, @hour:@minute
    *
-   * @param worldMinute World time in @Minutes
+   * @param worldMinute World time in @Minutes (since start of current era)
    */
   private formatWorldTime(worldMinute: number): string {
     const config = this.worldTimeConfig;
@@ -1349,8 +1334,11 @@ export class EnvironmentService {
     const month = (remainingMinutes % config.monthsPerYear) + 1; // Months start at 1
     remainingMinutes = Math.floor(remainingMinutes / config.monthsPerYear);
 
-    const year = (remainingMinutes % config.yearsPerEra) + 1; // Years start at 1
-    const era = Math.floor(remainingMinutes / config.yearsPerEra) + 1; // Eras start at 1
+    // Year is now calculated since start of current era
+    const year = remainingMinutes + 1; // Years start at 1
+
+    // Era comes from WorldInfo (current era)
+    const era = this.appContext.worldInfo?.settings?.worldTime?.currentEra ?? 1;
 
     return `@${era}, @${year}.${month}.${day}, ${hour}:${minute.toString().padStart(2, '0')}`;
   }

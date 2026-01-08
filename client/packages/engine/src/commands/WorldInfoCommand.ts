@@ -255,8 +255,8 @@ export class WorldInfoCommand extends CommandHandler {
       if (wt.monthsPerYear) {
         lines.push(`  Months/Year     : ${wt.monthsPerYear}`);
       }
-      if (wt.yearsPerEra) {
-        lines.push(`  Years/Era       : ${wt.yearsPerEra}`);
+      if (wt.currentEra) {
+        lines.push(`  Current Era     : ${wt.currentEra}`);
       }
 
       if (wt.daySections) {

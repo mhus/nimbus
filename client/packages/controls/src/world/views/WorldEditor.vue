@@ -163,16 +163,6 @@
               </label>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="card-actions justify-end mt-6">
-              <button type="button" class="btn btn-ghost" @click="handleBack">
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-primary" :disabled="saving">
-                <span v-if="saving" class="loading loading-spinner loading-sm"></span>
-                <span v-else>{{ isNew ? 'Create' : 'Save' }}</span>
-              </button>
-            </div>
           </form>
         </div>
       </div>
@@ -343,6 +333,351 @@
           </div>
         </div>
       </div>
+
+      <!-- World Info Settings Card -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h3 class="card-title">World Info Settings</h3>
+
+          <!-- Tab Navigation -->
+          <div class="tabs tabs-boxed">
+            <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'basic'}"
+               @click="activeWorldInfoTab = 'basic'">Basic</a>
+            <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'visual'}"
+               @click="activeWorldInfoTab = 'visual'">Visual</a>
+            <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'gameplay'}"
+               @click="activeWorldInfoTab = 'gameplay'">Gameplay</a>
+            <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'environment'}"
+               @click="activeWorldInfoTab = 'environment'">Environment</a>
+            <a class="tab" :class="{'tab-active': activeWorldInfoTab === 'time'}"
+               @click="activeWorldInfoTab = 'time'">Time System</a>
+          </div>
+
+          <!-- Tab: Basic -->
+          <div v-show="activeWorldInfoTab === 'basic'" class="space-y-4 mt-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text">Chunk Size</span></label>
+              <input v-model.number="formData.publicData.chunkSize" type="number"
+                     class="input input-bordered" />
+              <label class="label">
+                <span class="label-text-alt">Size of chunks in blocks (default: 16)</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Hex Grid Size</span></label>
+              <input v-model.number="formData.publicData.hexGridSize" type="number"
+                     class="input input-bordered" />
+              <label class="label">
+                <span class="label-text-alt">Size of hexagonal grid (default: 16)</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">World Icon</span></label>
+              <input v-model="formData.publicData.worldIcon" type="text"
+                     placeholder="Asset path (e.g., textures/world-icon.png)"
+                     class="input input-bordered" />
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Status</span></label>
+              <select v-model.number="formData.publicData.status" class="select select-bordered">
+                <option :value="0">Active</option>
+                <option :value="1">Inactive</option>
+                <option :value="2">Maintenance</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tab: Visual -->
+          <div v-show="activeWorldInfoTab === 'visual'" class="space-y-4 mt-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text">Season Status</span></label>
+              <select v-model.number="formData.publicData.seasonStatus" class="select select-bordered">
+                <option :value="0">None</option>
+                <option :value="1">Winter</option>
+                <option :value="2">Spring</option>
+                <option :value="3">Summer</option>
+                <option :value="4">Autumn</option>
+              </select>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Season Progress (0-1)</span></label>
+              <input v-model.number="formData.publicData.seasonProgress" type="number"
+                     step="0.01" min="0" max="1" class="input input-bordered" />
+              <label class="label">
+                <span class="label-text-alt">Progress within the current season (0.0 to 1.0)</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Splash Screen</span></label>
+              <input v-model="formData.publicData.splashScreen" type="text"
+                     placeholder="Asset path for splash screen image"
+                     class="input input-bordered" />
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Splash Screen Audio</span></label>
+              <input v-model="formData.publicData.splashScreenAudio" type="text"
+                     placeholder="Asset path for splash screen audio"
+                     class="input input-bordered" />
+            </div>
+          </div>
+
+          <!-- Tab: Gameplay -->
+          <div v-show="activeWorldInfoTab === 'gameplay'" class="space-y-4 mt-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text">Max Players</span></label>
+              <input v-model.number="formData.publicData.settings.maxPlayers" type="number"
+                     min="1" class="input input-bordered" />
+              <label class="label">
+                <span class="label-text-alt">Maximum number of concurrent players</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-4">
+                <span class="label-text">Allow Guests</span>
+                <input v-model="formData.publicData.settings.allowGuests" type="checkbox"
+                       class="toggle" />
+              </label>
+              <label class="label">
+                <span class="label-text-alt">Allow non-authenticated users to join</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-4">
+                <span class="label-text">PvP Enabled</span>
+                <input v-model="formData.publicData.settings.pvpEnabled" type="checkbox"
+                       class="toggle toggle-warning" />
+              </label>
+              <label class="label">
+                <span class="label-text-alt">Enable player-vs-player combat</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Ping Interval (ms)</span></label>
+              <input v-model.number="formData.publicData.settings.pingInterval" type="number"
+                     min="1000" step="1000" class="input input-bordered" />
+              <label class="label">
+                <span class="label-text-alt">Network ping interval in milliseconds</span>
+              </label>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text">Default Movement Mode</span></label>
+              <input v-model="formData.publicData.settings.defaultMovementMode" type="text"
+                     placeholder="e.g., walk, fly, spectate"
+                     class="input input-bordered" />
+            </div>
+          </div>
+
+          <!-- Tab: Environment -->
+          <div v-show="activeWorldInfoTab === 'environment'" class="space-y-4 mt-4">
+
+            <!-- Clear Color -->
+            <div class="form-control">
+              <label class="label"><span class="label-text">Clear Color (RGB)</span></label>
+              <div class="grid grid-cols-3 gap-2">
+                <input v-model.number="formData.publicData.settings.environment.clearColor.r"
+                       type="number" step="0.01" min="0" max="1" placeholder="R"
+                       class="input input-bordered" />
+                <input v-model.number="formData.publicData.settings.environment.clearColor.g"
+                       type="number" step="0.01" min="0" max="1" placeholder="G"
+                       class="input input-bordered" />
+                <input v-model.number="formData.publicData.settings.environment.clearColor.b"
+                       type="number" step="0.01" min="0" max="1" placeholder="B"
+                       class="input input-bordered" />
+              </div>
+              <label class="label">
+                <span class="label-text-alt">Background clear color (RGB values 0.0 to 1.0)</span>
+              </label>
+            </div>
+
+            <!-- Camera Max Z -->
+            <div class="form-control">
+              <label class="label"><span class="label-text">Camera Max Z</span></label>
+              <input v-model.number="formData.publicData.settings.environment.cameraMaxZ"
+                     type="number" class="input input-bordered" />
+              <label class="label">
+                <span class="label-text-alt">Maximum camera distance</span>
+              </label>
+            </div>
+
+            <!-- Sun Settings Collapsible -->
+            <div class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" />
+              <div class="collapse-title font-medium">Sun Settings</div>
+              <div class="collapse-content space-y-2">
+                <div class="form-control">
+                  <label class="label cursor-pointer justify-start gap-4">
+                    <span class="label-text">Sun Enabled</span>
+                    <input v-model="formData.publicData.settings.environment.sunEnabled"
+                           type="checkbox" class="toggle" />
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Sun Texture</span></label>
+                  <input v-model="formData.publicData.settings.environment.sunTexture"
+                         type="text" placeholder="Asset path"
+                         class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Sun Size</span></label>
+                  <input v-model.number="formData.publicData.settings.environment.sunSize"
+                         type="number" class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Sun Angle Y</span></label>
+                  <input v-model.number="formData.publicData.settings.environment.sunAngleY"
+                         type="number" step="0.1" class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Sun Elevation</span></label>
+                  <input v-model.number="formData.publicData.settings.environment.sunElevation"
+                         type="number" step="0.1" class="input input-bordered input-sm" />
+                </div>
+                <!-- Sun Color RGB -->
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Sun Color (RGB)</span></label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <input v-model.number="formData.publicData.settings.environment.sunColor.r"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                    <input v-model.number="formData.publicData.settings.environment.sunColor.g"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                    <input v-model.number="formData.publicData.settings.environment.sunColor.b"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SkyBox Settings Collapsible -->
+            <div class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" />
+              <div class="collapse-title font-medium">SkyBox Settings</div>
+              <div class="collapse-content space-y-2">
+                <div class="form-control">
+                  <label class="label cursor-pointer justify-start gap-4">
+                    <span class="label-text">SkyBox Enabled</span>
+                    <input v-model="formData.publicData.settings.environment.skyBoxEnabled"
+                           type="checkbox" class="toggle" />
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">SkyBox Mode</span></label>
+                  <input v-model="formData.publicData.settings.environment.skyBoxMode"
+                         type="text" placeholder="e.g., texture, color"
+                         class="input input-bordered input-sm" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">SkyBox Color (RGB)</span></label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <input v-model.number="formData.publicData.settings.environment.skyBoxColor.r"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                    <input v-model.number="formData.publicData.settings.environment.skyBoxColor.g"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                    <input v-model.number="formData.publicData.settings.environment.skyBoxColor.b"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                  </div>
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">SkyBox Texture Path</span></label>
+                  <input v-model="formData.publicData.settings.environment.skyBoxTexturePath"
+                         type="text" placeholder="Asset path for skybox texture"
+                         class="input input-bordered input-sm" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Tab: Time System -->
+          <div v-show="activeWorldInfoTab === 'time'" class="space-y-4 mt-4">
+            <p class="text-sm text-base-content/70">Configure the world's time system and calendar.</p>
+
+            <!-- Time Scaling -->
+            <div class="form-control">
+              <label class="label"><span class="label-text">Minute Scaling</span></label>
+              <input v-model.number="formData.publicData.settings.worldTime.minuteScaling"
+                     type="number" min="1" class="input input-bordered" />
+              <label class="label">
+                <span class="label-text-alt">How fast time passes (1 = real-time)</span>
+              </label>
+            </div>
+
+            <!-- Time Units -->
+            <div class="divider">Time Units</div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Minutes per Hour</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.minutesPerHour"
+                       type="number" min="1" class="input input-bordered" />
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Hours per Day</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.hoursPerDay"
+                       type="number" min="1" class="input input-bordered" />
+              </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="divider">Calendar</div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Days per Month</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.daysPerMonth"
+                       type="number" min="1" class="input input-bordered" />
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Months per Year</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.monthsPerYear"
+                       type="number" min="1" class="input input-bordered" />
+              </div>
+            </div>
+
+            <!-- Epoch -->
+            <div class="divider">Time Sync</div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Linux Epoch Delta (Minutes)</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.linuxEpocheDeltaMinutes"
+                       type="number" class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Offset from Unix epoch in minutes for the current era</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Current Era</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.currentEra"
+                       type="number" min="1" class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Current era number</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="card-actions justify-end mt-6">
+        <button type="button" class="btn btn-ghost" @click="handleBack">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" :disabled="saving" @click="handleSave">
+          <span v-if="saving" class="loading loading-spinner loading-sm"></span>
+          <span v-else>{{ isNew ? 'Create' : 'Save' }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Success Message -->
@@ -358,7 +693,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRegion } from '@/composables/useRegion';
-import { worldServiceFrontend, type World } from '../services/WorldServiceFrontend';
+import { worldServiceFrontend, type World, type WorldInfo } from '../services/WorldServiceFrontend';
 
 const props = defineProps<{
   world: World | 'new';
@@ -383,6 +718,9 @@ const newEditor = ref('');
 const newSupporter = ref('');
 const newPlayer = ref('');
 
+// Tab navigation for WorldInfo
+const activeWorldInfoTab = ref<'basic' | 'visual' | 'gameplay' | 'environment' | 'time'>('basic');
+
 const formData = ref({
   worldId: '',
   name: '',
@@ -399,6 +737,54 @@ const formData = ref({
   waterLevel: null as number | null,
   groundBlockType: 'r/grass',
   waterBlockType: 'r/ocean',
+  publicData: {
+    worldId: '',
+    name: '',
+    description: '',
+    chunkSize: 16,
+    hexGridSize: 16,
+    worldIcon: '',
+    status: 0,
+    seasonStatus: 0,
+    seasonProgress: 0,
+    splashScreen: '',
+    splashScreenAudio: '',
+    owner: {
+      user: '',
+      title: '',
+      email: ''
+    },
+    settings: {
+      maxPlayers: 100,
+      allowGuests: true,
+      pvpEnabled: false,
+      pingInterval: 30000,
+      defaultMovementMode: 'walk',
+      environment: {
+        clearColor: { r: 0.5, g: 0.7, b: 1.0 },
+        cameraMaxZ: 1000,
+        sunEnabled: true,
+        sunTexture: '',
+        sunSize: 100,
+        sunAngleY: 0,
+        sunElevation: 45,
+        sunColor: { r: 1.0, g: 1.0, b: 0.9 },
+        skyBoxEnabled: true,
+        skyBoxMode: 'texture',
+        skyBoxColor: { r: 0.5, g: 0.7, b: 1.0 },
+        skyBoxTexturePath: ''
+      },
+      worldTime: {
+        minuteScaling: 1,
+        minutesPerHour: 60,
+        hoursPerDay: 24,
+        daysPerMonth: 30,
+        monthsPerYear: 12,
+        currentEra: 1,
+        linuxEpocheDeltaMinutes: 0
+      }
+    }
+  }
 });
 
 const loadWorld = () => {
@@ -419,12 +805,109 @@ const loadWorld = () => {
       waterLevel: null,
       groundBlockType: 'r/grass',
       waterBlockType: 'r/ocean',
+      publicData: {
+        worldId: '',
+        name: '',
+        description: '',
+        chunkSize: 16,
+        hexGridSize: 16,
+        worldIcon: '',
+        status: 0,
+        seasonStatus: 0,
+        seasonProgress: 0,
+        splashScreen: '',
+        splashScreenAudio: '',
+        owner: {
+          user: '',
+          title: '',
+          email: ''
+        },
+        settings: {
+          maxPlayers: 100,
+          allowGuests: true,
+          pvpEnabled: false,
+          pingInterval: 30000,
+          defaultMovementMode: 'walk',
+          environment: {
+            clearColor: { r: 0.5, g: 0.7, b: 1.0 },
+            cameraMaxZ: 1000,
+            sunEnabled: true,
+            sunTexture: '',
+            sunSize: 100,
+            sunAngleY: 0,
+            sunElevation: 45,
+            sunColor: { r: 1.0, g: 1.0, b: 0.9 },
+            skyBoxEnabled: true,
+            skyBoxMode: 'texture',
+            skyBoxColor: { r: 0.5, g: 0.7, b: 1.0 },
+            skyBoxTexturePath: ''
+          },
+          worldTime: {
+            minuteScaling: 1,
+            minutesPerHour: 60,
+            hoursPerDay: 24,
+            daysPerMonth: 30,
+            monthsPerYear: 12,
+            currentEra: 1,
+            linuxEpocheDeltaMinutes: 0
+          }
+        }
+      }
     };
     return;
   }
 
   // Load from props
   const world = props.world as World;
+
+  // Helper to merge publicData with defaults
+  const mergePublicData = (worldData: any) => {
+    return {
+      worldId: worldData?.worldId || '',
+      name: worldData?.name || '',
+      description: worldData?.description || '',
+      chunkSize: worldData?.chunkSize || 16,
+      hexGridSize: worldData?.hexGridSize || 16,
+      worldIcon: worldData?.worldIcon || '',
+      status: worldData?.status || 0,
+      seasonStatus: worldData?.seasonStatus || 0,
+      seasonProgress: worldData?.seasonProgress || 0,
+      splashScreen: worldData?.splashScreen || '',
+      splashScreenAudio: worldData?.splashScreenAudio || '',
+      owner: worldData?.owner || { user: '', title: '', email: '' },
+      settings: {
+        maxPlayers: worldData?.settings?.maxPlayers || 100,
+        allowGuests: worldData?.settings?.allowGuests ?? true,
+        pvpEnabled: worldData?.settings?.pvpEnabled ?? false,
+        pingInterval: worldData?.settings?.pingInterval || 30000,
+        defaultMovementMode: worldData?.settings?.defaultMovementMode || 'walk',
+        environment: {
+          clearColor: worldData?.settings?.environment?.clearColor || { r: 0.5, g: 0.7, b: 1.0 },
+          cameraMaxZ: worldData?.settings?.environment?.cameraMaxZ || 1000,
+          sunEnabled: worldData?.settings?.environment?.sunEnabled ?? true,
+          sunTexture: worldData?.settings?.environment?.sunTexture || '',
+          sunSize: worldData?.settings?.environment?.sunSize || 100,
+          sunAngleY: worldData?.settings?.environment?.sunAngleY || 0,
+          sunElevation: worldData?.settings?.environment?.sunElevation || 45,
+          sunColor: worldData?.settings?.environment?.sunColor || { r: 1.0, g: 1.0, b: 0.9 },
+          skyBoxEnabled: worldData?.settings?.environment?.skyBoxEnabled ?? true,
+          skyBoxMode: worldData?.settings?.environment?.skyBoxMode || 'texture',
+          skyBoxColor: worldData?.settings?.environment?.skyBoxColor || { r: 0.5, g: 0.7, b: 1.0 },
+          skyBoxTexturePath: worldData?.settings?.environment?.skyBoxTexturePath || ''
+        },
+        worldTime: {
+          minuteScaling: worldData?.settings?.worldTime?.minuteScaling || 1,
+          minutesPerHour: worldData?.settings?.worldTime?.minutesPerHour || 60,
+          hoursPerDay: worldData?.settings?.worldTime?.hoursPerDay || 24,
+          daysPerMonth: worldData?.settings?.worldTime?.daysPerMonth || 30,
+          monthsPerYear: worldData?.settings?.worldTime?.monthsPerYear || 12,
+          currentEra: worldData?.settings?.worldTime?.currentEra || 1,
+          linuxEpocheDeltaMinutes: worldData?.settings?.worldTime?.linuxEpocheDeltaMinutes || 0
+        }
+      }
+    };
+  };
+
   formData.value = {
     worldId: world.worldId,
     name: world.name,
@@ -441,6 +924,7 @@ const loadWorld = () => {
     waterLevel: world.waterLevel,
     groundBlockType: world.groundBlockType,
     waterBlockType: world.waterBlockType,
+    publicData: mergePublicData(world.publicData)
   };
 };
 
@@ -503,6 +987,7 @@ const handleSave = async () => {
       editor: formData.value.editor.length > 0 ? formData.value.editor : undefined,
       supporter: formData.value.supporter.length > 0 ? formData.value.supporter : undefined,
       player: formData.value.player.length > 0 ? formData.value.player : undefined,
+      publicData: formData.value.publicData,
       groundLevel: formData.value.groundLevel,
       waterLevel: formData.value.waterLevel ?? undefined,
       groundBlockType: formData.value.groundBlockType,

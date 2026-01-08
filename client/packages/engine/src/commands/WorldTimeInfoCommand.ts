@@ -58,7 +58,6 @@ export class WorldTimeInfoCommand extends CommandHandler {
     logger.debug(`  Hours/Day      : ${config.hoursPerDay}`);
     logger.debug(`  Days/Month     : ${config.daysPerMonth}`);
     logger.debug(`  Months/Year    : ${config.monthsPerYear}`);
-    logger.debug(`  Years/Era      : ${config.yearsPerEra}`);
     logger.debug('=====================');
 
     return {

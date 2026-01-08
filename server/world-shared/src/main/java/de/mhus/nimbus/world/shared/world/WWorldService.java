@@ -83,18 +83,55 @@ public class WWorldService {
         return repository.findByRegionId(regionId);
     }
 
+    /**
+     * Initializes Era 1 for a new world by setting currentEra to 1
+     * and linuxEpocheDeltaMinutes to the current time.
+     *
+     * @param info The WorldInfo to initialize (must not be null)
+     */
+    private void initializeEra(WorldInfo info) {
+        if (info == null) {
+            return;
+        }
+
+        // Ensure settings exist
+        if (info.getSettings() == null) {
+            info.setSettings(new de.mhus.nimbus.generated.types.WorldInfoSettingsDTO());
+        }
+
+        // Ensure worldTime exists
+        if (info.getSettings().getWorldTime() == null) {
+            info.getSettings().setWorldTime(new de.mhus.nimbus.generated.types.WorldInfoSettingsDTOWorldTimeDTO());
+        }
+
+        var worldTime = info.getSettings().getWorldTime();
+
+        // Set Era 1
+        worldTime.setCurrentEra(1);
+
+        // Set epoch delta to current time (start of Era 1)
+        long currentUnixMinutes = System.currentTimeMillis() / 60000L;
+        worldTime.setLinuxEpocheDeltaMinutes(currentUnixMinutes);
+
+        log.debug("Initialized Era 1 with epoch delta: {}", currentUnixMinutes);
+    }
+
     @Transactional
     public WWorld createWorld(WorldId worldId, WorldInfo info) {
         if (repository.existsByWorldId(worldId.getId())) {
             throw new IllegalStateException("WorldId bereits vorhanden: " + worldId);
         }
+
+        // Initialize Era 1 with current time
+        initializeEra(info);
+
         WWorld entity = WWorld.builder()
                 .worldId(worldId.getId())
                 .publicData(info)
                 .build();
         entity.touchForCreate();
         repository.save(entity);
-        log.debug("WWorld angelegt: {}", worldId);
+        log.debug("WWorld angelegt: {} (Era 1 started)", worldId);
         return entity;
     }
 
@@ -103,6 +140,10 @@ public class WWorldService {
         if (repository.existsByWorldId(worldId.getId())) {
             throw new IllegalStateException("WorldId bereits vorhanden: " + worldId);
         }
+
+        // Initialize Era 1 with current time
+        initializeEra(info);
+
         WWorld entity = WWorld.builder()
                 .worldId(worldId.getId())
                 .publicData(info)
@@ -111,7 +152,7 @@ public class WWorldService {
                 .build();
         entity.touchForCreate();
         repository.save(entity);
-        log.debug("WWorld angelegt (extended): {}", worldId);
+        log.debug("WWorld angelegt (extended): {} (Era 1 started)", worldId);
         return entity;
     }
 
@@ -210,6 +251,176 @@ public class WWorldService {
         return worldCollectionRepository.findByWorldId(worldId.getId())
                 .map(WWorldCollection::getTitle)
                 .orElse(null);
+    }
+
+    /**
+     * Increments the current era for a world and resets the time epoch.
+     * This sets the current time as the start of the new era by updating linuxEpocheDeltaMinutes
+     * to the current Unix time in minutes. The duration of the completed era is recorded in eraHistory.
+     *
+     * @param worldId The WorldId to increment the era for
+     * @return The updated WWorld, or empty if world not found or worldTime not configured
+     * @throws IllegalStateException if publicData or worldTime settings are not configured
+     */
+    @Transactional
+    public Optional<WWorld> incrementEra(WorldId worldId) {
+        Optional<WWorld> worldOpt = repository.findByWorldId(worldId.getId());
+        if (worldOpt.isEmpty()) {
+            log.warn("Cannot increment era: World not found: {}", worldId);
+            return Optional.empty();
+        }
+
+        WWorld world = worldOpt.get();
+        WorldInfo publicData = world.getPublicData();
+
+        if (publicData == null) {
+            throw new IllegalStateException("Cannot increment era: publicData is null for world: " + worldId);
+        }
+
+        if (publicData.getSettings() == null || publicData.getSettings().getWorldTime() == null) {
+            throw new IllegalStateException("Cannot increment era: worldTime settings not configured for world: " + worldId);
+        }
+
+        var worldTime = publicData.getSettings().getWorldTime();
+
+        // Calculate current Unix time in minutes
+        long currentUnixMinutes = System.currentTimeMillis() / 60000L;
+
+        // Get current era (default to 1 if not set)
+        Integer currentEra = worldTime.getCurrentEra();
+        int newEra = (currentEra != null ? currentEra : 1) + 1;
+
+        // Calculate era duration and add to history
+        Long previousEpochDelta = worldTime.getLinuxEpocheDeltaMinutes();
+        if (previousEpochDelta != null) {
+            long eraDurationMinutes = currentUnixMinutes - previousEpochDelta;
+
+            // Add to eraHistory (create mutable list if needed)
+            List<Long> eraHistory = world.getEraHistory();
+            if (eraHistory == null || eraHistory.isEmpty()) {
+                eraHistory = new java.util.ArrayList<>();
+            } else {
+                eraHistory = new java.util.ArrayList<>(eraHistory);
+            }
+            eraHistory.add(eraDurationMinutes);
+            world.setEraHistory(eraHistory);
+
+            log.info("Era {} completed for world {}: duration {} minutes ({} days)",
+                    currentEra, worldId, eraDurationMinutes, eraDurationMinutes / 1440.0);
+        } else {
+            log.warn("Cannot calculate era duration for world {}: no previous epoch delta", worldId);
+        }
+
+        // Update worldTime: increment era and set new epoch delta
+        worldTime.setCurrentEra(newEra);
+        worldTime.setLinuxEpocheDeltaMinutes(currentUnixMinutes);
+
+        // Save changes
+        world.touchForUpdate();
+        repository.save(world);
+
+        log.info("Incremented era for world {}: Era {} -> Era {}, new epoch delta: {} minutes",
+                worldId, currentEra, newEra, currentUnixMinutes);
+
+        return Optional.of(world);
+    }
+
+    /**
+     * Skips time in a world by adjusting the linuxEpocheDeltaMinutes backwards.
+     * This makes the world time advance without real time passing.
+     * Uses the world's time configuration (minutesPerHour, hoursPerDay, etc.) for conversion.
+     *
+     * @param worldId The WorldId to skip time for
+     * @param minutes Minutes to skip (optional, default 0)
+     * @param hours Hours to skip (optional, default 0)
+     * @param days Days to skip (optional, default 0)
+     * @param months Months to skip (optional, default 0)
+     * @param years Years to skip (optional, default 0)
+     * @return The updated WWorld, or empty if world not found
+     * @throws IllegalStateException if publicData or worldTime settings are not configured
+     */
+    @Transactional
+    public Optional<WWorld> skipTime(WorldId worldId,
+                                     Integer minutes,
+                                     Integer hours,
+                                     Integer days,
+                                     Integer months,
+                                     Integer years) {
+        Optional<WWorld> worldOpt = repository.findByWorldId(worldId.getId());
+        if (worldOpt.isEmpty()) {
+            log.warn("Cannot skip time: World not found: {}", worldId);
+            return Optional.empty();
+        }
+
+        WWorld world = worldOpt.get();
+        WorldInfo publicData = world.getPublicData();
+
+        if (publicData == null) {
+            throw new IllegalStateException("Cannot skip time: publicData is null for world: " + worldId);
+        }
+
+        if (publicData.getSettings() == null || publicData.getSettings().getWorldTime() == null) {
+            throw new IllegalStateException("Cannot skip time: worldTime settings not configured for world: " + worldId);
+        }
+
+        var worldTime = publicData.getSettings().getWorldTime();
+
+        // Get time configuration (with defaults)
+        int minutesPerHour = worldTime.getMinutesPerHour() != null ? worldTime.getMinutesPerHour() : 60;
+        int hoursPerDay = worldTime.getHoursPerDay() != null ? worldTime.getHoursPerDay() : 24;
+        int daysPerMonth = worldTime.getDaysPerMonth() != null ? worldTime.getDaysPerMonth() : 30;
+        int monthsPerYear = worldTime.getMonthsPerYear() != null ? worldTime.getMonthsPerYear() : 12;
+
+        // Calculate total minutes to skip
+        long totalMinutes = 0;
+
+        if (minutes != null && minutes > 0) {
+            totalMinutes += minutes;
+        }
+
+        if (hours != null && hours > 0) {
+            totalMinutes += (long) hours * minutesPerHour;
+        }
+
+        if (days != null && days > 0) {
+            totalMinutes += (long) days * minutesPerHour * hoursPerDay;
+        }
+
+        if (months != null && months > 0) {
+            totalMinutes += (long) months * daysPerMonth * minutesPerHour * hoursPerDay;
+        }
+
+        if (years != null && years > 0) {
+            totalMinutes += (long) years * monthsPerYear * daysPerMonth * minutesPerHour * hoursPerDay;
+        }
+
+        if (totalMinutes == 0) {
+            log.warn("Cannot skip time: no time specified for world: {}", worldId);
+            return Optional.of(world);
+        }
+
+        // Get current epoch delta (initialize if not set)
+        Long currentEpochDelta = worldTime.getLinuxEpocheDeltaMinutes();
+        if (currentEpochDelta == null) {
+            // Initialize to current time if not set
+            currentEpochDelta = System.currentTimeMillis() / 60000L;
+            log.info("Initializing linuxEpocheDeltaMinutes for world {}: {}", worldId, currentEpochDelta);
+        }
+
+        // Reduce epoch delta to advance world time
+        long newEpochDelta = currentEpochDelta - totalMinutes;
+        worldTime.setLinuxEpocheDeltaMinutes(newEpochDelta);
+
+        // Save changes
+        world.touchForUpdate();
+        repository.save(world);
+
+        log.info("Skipped time for world {}: {} minutes ({} hours, {} days) - epoch delta: {} -> {}",
+                worldId, totalMinutes, totalMinutes / (double) minutesPerHour,
+                totalMinutes / (double) (minutesPerHour * hoursPerDay),
+                currentEpochDelta, newEpochDelta);
+
+        return Optional.of(world);
     }
 
     /**

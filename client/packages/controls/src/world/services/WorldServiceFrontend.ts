@@ -30,6 +30,17 @@ export interface WorldInfoEnvironment {
   skyBoxTexturePath?: string;
 }
 
+// WorldTime settings
+export interface WorldInfoWorldTime {
+  minuteScaling?: number;
+  minutesPerHour?: number;
+  hoursPerDay?: number;
+  daysPerMonth?: number;
+  monthsPerYear?: number;
+  currentEra?: number;
+  linuxEpocheDeltaMinutes?: number;
+}
+
 // WorldInfo settings (nested structure)
 export interface WorldInfoSettings {
   maxPlayers?: number;
@@ -41,6 +52,7 @@ export interface WorldInfoSettings {
   deadAmbientAudio?: string;
   swimStepAudio?: string;
   environment?: WorldInfoEnvironment;
+  worldTime?: WorldInfoWorldTime;
 }
 
 // Main WorldInfo interface

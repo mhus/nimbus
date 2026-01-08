@@ -77,9 +77,6 @@ public class WWorld implements Identifiable {
     @Builder.Default
     private boolean instanceable = false;
 
-    @Builder.Default
-    private List<WEntryPoint> entryPoints = List.of();
-
     /**
      * Default ground level for chunk generation (Y coordinate).
      * Used when no chunk data exists in database.
@@ -106,6 +103,15 @@ public class WWorld implements Identifiable {
      */
     @Builder.Default
     private String waterBlockType = "n:o";
+
+    /**
+     * History of era durations in minutes.
+     * Each entry represents the duration of a completed era.
+     * Index 0 = Era 1, Index 1 = Era 2, etc.
+     * Updated when an era ends (incrementEra is called).
+     */
+    @Builder.Default
+    private List<Long> eraHistory = List.of();
 
     public void touchForCreate() {
         Instant now = Instant.now();

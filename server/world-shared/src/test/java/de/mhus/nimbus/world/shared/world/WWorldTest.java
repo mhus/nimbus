@@ -16,8 +16,7 @@ class WWorldTest {
         assertNotNull(w.getOwner());
         assertTrue(w.getOwner().isEmpty());
         assertFalse(w.isPublicFlag());
-        assertNotNull(w.getEntryPoints());
-        assertTrue(w.getEntryPoints().isEmpty());
+        assertFalse(w.isInstanceable());
     }
 
 }
