@@ -65,4 +65,21 @@ public class WChunk implements Identifiable {
     }
 
     public void touchUpdate() { updatedAt = Instant.now(); }
+
+    /**
+     * Get server metadata for a specific block position.
+     *
+     * @param x Block x coordinate
+     * @param y Block y coordinate
+     * @param z Block z coordinate
+     * @return Server metadata map for the block, or null if not found
+     */
+    public Map<String, String> getServerInfoForBlock(int x, int y, int z) {
+        if (infoServer == null) {
+            return null;
+        }
+
+        String coordinate = x + "," + y + "," + z;
+        return infoServer.get(coordinate);
+    }
 }

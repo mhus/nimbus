@@ -15,6 +15,7 @@ import de.mhus.nimbus.world.shared.region.RCharacterService;
 import de.mhus.nimbus.world.shared.region.RUserItemsService;
 import de.mhus.nimbus.world.shared.sector.RUser;
 import de.mhus.nimbus.world.shared.sector.RUserService;
+import de.mhus.nimbus.world.shared.world.WWorldService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class PlayerService implements SessionPingConsumer {
     private final RCharacterService rCharacterService;
     private final RUserItemsService rUserItemsService;
     private final WorldRedisService worldRedisService;
+    private final WWorldService worldService;
 
     /**
      * Get player data for a specific region.
@@ -106,5 +108,73 @@ public class PlayerService implements SessionPingConsumer {
 //                .health(400)
                 .build();
         return Optional.of(result);
+    }
+
+    /**
+     * Teleport player to target location.
+     * Sets teleportation in session for /teleport redirect.
+     * <p>
+     * Format: &lt;worldId&gt;#&lt;position&gt; or worldId#grid:q,r or worldId or #&lt;position&gt; or #grid:q,r
+     * - worldId can be empty, then only position: #&lt;position&gt; or #grid:q,r
+     * - worldId can be a full WorldId (without instance part)
+     *
+     * @param session PlayerSession
+     * @param target  Teleportation target string
+     * @return true if teleportation was set, false if validation failed
+     */
+    public boolean teleportPlayer(PlayerSession session, String target) {
+        if (target == null || target.isBlank()) {
+            log.warn("Teleportation target is empty");
+            return false;
+        }
+
+        // Parse target string: <worldId>#<position> or worldId or #<position>
+        String worldIdPart = null;
+        String positionPart = null;
+
+        int hashIndex = target.indexOf('#');
+        if (hashIndex >= 0) {
+            // Format: worldId#position or #position
+            worldIdPart = target.substring(0, hashIndex);
+            positionPart = target.substring(hashIndex + 1);
+
+            // Empty worldId part is allowed (e.g., "#grid:1,2")
+            if (worldIdPart.isBlank()) {
+                worldIdPart = null;
+            }
+        } else {
+            // Format: worldId only
+            worldIdPart = target;
+        }
+
+        // Validate worldId if present
+        if (worldIdPart != null && !worldIdPart.isBlank()) {
+            // Parse WorldId (without instance)
+            Optional<WorldId> worldIdOpt = WorldId.of(worldIdPart);
+            if (worldIdOpt.isEmpty()) {
+                log.warn("Invalid worldId format in teleportation target: {}", worldIdPart);
+                return false;
+            }
+
+            WorldId worldId = worldIdOpt.get();
+
+            // Ensure no instance part
+            if (worldId.hasInstance()) {
+                log.warn("WorldId in teleportation target should not have instance part: {}", worldIdPart);
+                return false;
+            }
+
+            // Check if world exists
+            if (worldService.getByWorldId(worldId.getId()).isEmpty()) {
+                log.warn("World does not exist for teleportation: {}", worldId.getId());
+                return false;
+            }
+        }
+
+        // Set teleportation in session
+        session.setTeleportation(target);
+        log.info("Teleportation set for player {}: target={}", session.getPlayer(), target);
+
+        return true;
     }
 }
