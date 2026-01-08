@@ -376,12 +376,16 @@ public class WWorldService {
         }
 
         // Copy world data
+        // Copy publicData and update worldId to match zone worldId
+        de.mhus.nimbus.generated.types.WorldInfo zonePublicData = sourceWorld.getPublicData();
+        zonePublicData.setWorldId(zoneWorldId.getId());
+
         WWorld zoneWorld = WWorld.builder()
                 .worldId(zoneWorldId.getId())
                 .regionId(sourceWorld.getRegionId())
                 .name(sourceWorld.getName() + " (Zone: " + zoneName + ")")
                 .description(sourceWorld.getDescription())
-                .publicData(sourceWorld.getPublicData())  // Copy publicData
+                .publicData(zonePublicData)  // Copy publicData with updated worldId
                 .enabled(sourceWorld.isEnabled())
                 .parent(sourceWorld.getParent())
                 .instanceable(sourceWorld.isInstanceable())
