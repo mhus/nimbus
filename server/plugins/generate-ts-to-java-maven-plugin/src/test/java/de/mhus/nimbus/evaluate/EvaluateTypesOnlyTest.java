@@ -59,7 +59,9 @@ public class EvaluateTypesOnlyTest {
         // verify that additionalClassAnnotations were emitted on at least one generated class
         File anyGenerated = javaFiles.stream().filter(f -> f.getPath().contains(expectedPkgPath)).findFirst().orElse(null);
         assertNotNull(anyGenerated, "No generated file found in expected package");
+        System.out.println("Checking additionalClassAnnotations in file: " + anyGenerated);
         String content = Files.readString(anyGenerated.toPath());
+        System.out.println("Content:\n" + content + "\n---");
         assertTrue(content.contains("@Deprecated"),
                 "Expected additional annotation @Deprecated to be present in generated class");
 
