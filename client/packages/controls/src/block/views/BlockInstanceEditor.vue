@@ -384,7 +384,7 @@
                   >
                     <input
                       :value="key"
-                      @input="updateServerKey(key, ($event.target as HTMLInputElement).value, value)"
+                      @blur="updateServerKey(key, ($event.target as HTMLInputElement).value, value)"
                       type="text"
                       class="input input-bordered input-sm flex-1"
                       placeholder="Key"
@@ -432,7 +432,7 @@
                   >
                     <input
                       :value="key"
-                      @input="updateClientKey(key, ($event.target as HTMLInputElement).value, value)"
+                      @blur="updateClientKey(key, ($event.target as HTMLInputElement).value, value)"
                       type="text"
                       class="input input-bordered input-sm flex-1"
                       placeholder="Key"
