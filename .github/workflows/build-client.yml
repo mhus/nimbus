@@ -17,6 +17,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Skip build if commit message starts with wip
+        if: >-
+          ${
+            github.event_name == 'push' && startsWith(github.event.head_commit.message, 'wip:') ||
+            github.event_name == 'pull_request' && startsWith(github.event.pull_request.title, 'wip:')
+          }
+        run: |
+          echo "Build skipped due to wip: commit message."
+          exit 0
       - name: Debug Check for lockfile
         run: |
           ls -l client/pnpm-lock.yaml
