@@ -378,23 +378,23 @@ export class PhysicsService {
     }
 
     // Check if heightData exists
-    const heightData = chunk.getHeightDataForPosition(entity.position);
-    if (!heightData) {
-      logger.debug('Waiting for heightData at position', entity.position);
-      return;
-    }
+//     const heightData = chunk.getHeightDataForPosition(entity.position);
+//     if (!heightData) {
+//       logger.debug('Waiting for heightData at position', entity.position);
+//       return;
+//     }
 
     // Everything is ready - position player and enable physics
-    const oldY = entity.position.y;
-    const targetY = heightData[4]; // 4 = groundLevel
+//    const oldY = entity.position.y;
+//    const targetY = heightData[4]; // 4 = groundLevel
 
-    logger.debug('Teleportation ready - positioning player', {
-      entityId,
-      oldY,
-      targetY,
-      playerX: entity.position.x,
-      playerZ: entity.position.z
-    });
+//     logger.debug('Teleportation ready - positioning player', {
+//       entityId,
+//      oldY,
+//      targetY,
+//       playerX: entity.position.x,
+//       playerZ: entity.position.z
+//     });
 
 //    entity.position.y = targetY;
     entity.velocity.y = 0; // Reset vertical velocity
