@@ -193,7 +193,10 @@ export class CompassService {
         const x = Math.round(playerPosition.x);
         const y = Math.round(playerPosition.y);
         const z = Math.round(playerPosition.z);
-        this.positionDisplay.textContent = `X: ${x} Y: ${y} Z: ${z}`;
+        const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
+        const chunkX = Math.floor(playerPosition.x / chunkSize);
+        const chunkZ = Math.floor(playerPosition.z / chunkSize);
+        this.positionDisplay.textContent = `X: ${x} Y: ${y} Z: ${z} | ${chunkX}:${chunkZ}`;
       }
     } catch (error) {
       ExceptionHandler.handle(error, 'Failed to update compass');
