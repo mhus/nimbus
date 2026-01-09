@@ -1,5 +1,6 @@
 package de.mhus.nimbus.world.control.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import de.mhus.nimbus.shared.persistence.SSettings;
 import de.mhus.nimbus.shared.service.SSettingsService;
 import de.mhus.nimbus.world.shared.rest.BaseEditorController;
@@ -184,6 +185,7 @@ public class SettingsController extends BaseEditorController {
     /**
      * Request for updating an existing setting.
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record UpdateSettingRequest(
             String value,
             String type,
