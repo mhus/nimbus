@@ -10,7 +10,7 @@ if [ "$1" = "ts" ]; then
   cd docker-ts
   ./build-all.sh "${@:2}"
   cd ..
-elif [ "$1" = "jvm" ]; then
+elif [ "$1" = "java" ]; then
   cd docker-jvm
   ./build-all.sh "${@:2}"
   cd ..

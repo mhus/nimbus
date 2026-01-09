@@ -125,6 +125,8 @@ services:
       - NIMBUS_SERVER_IP=world-control
     networks:
       - nimbus-network
+    volumes:
+      - ./tmp/world-control:/data
     depends_on:
       mongodb:
         condition: service_healthy
