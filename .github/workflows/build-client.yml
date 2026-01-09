@@ -14,9 +14,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./client
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,11 +28,16 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        working-directory: ./client
       - name: Build shared package
         run: pnpm --filter @nimbus/shared... build
+        working-directory: ./client
       - name: Build engine (viewer)
         run: pnpm --filter @nimbus/engine... build:viewer
+        working-directory: ./client
       - name: Build engine (editor)
         run: pnpm --filter @nimbus/engine... build:editor
+        working-directory: ./client
       - name: Build controls
         run: pnpm --filter @nimbus/controls... build
+        working-directory: ./client
