@@ -1,0 +1,41 @@
+name: Build Client
+
+on:
+  push:
+    paths:
+      - 'client/**'
+      - '.github/workflows/build-client.yml'
+  pull_request:
+    paths:
+      - 'client/**'
+      - '.github/workflows/build-client.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build shared package
+        run: pnpm --filter @nimbus/shared... build
+      - name: Build engine (viewer)
+        run: pnpm --filter @nimbus/engine... build:viewer
+      - name: Build engine (editor)
+        run: pnpm --filter @nimbus/engine... build:editor
+      - name: Build controls
+        run: pnpm --filter @nimbus/controls... build

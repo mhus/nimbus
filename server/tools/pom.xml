@@ -14,10 +14,12 @@
     <packaging>pom</packaging>
 
     <modules>
+        <!--
         <module>demo-setup</module>
         <module>local-cleanup</module>
         <module>world-test</module>
         <module>world-export</module>
         <module>world-import</module>
+        -->
     </modules>
 </project>
