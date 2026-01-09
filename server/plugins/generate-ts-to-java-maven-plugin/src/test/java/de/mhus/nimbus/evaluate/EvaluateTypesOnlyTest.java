@@ -57,7 +57,16 @@ public class EvaluateTypesOnlyTest {
         assertTrue(foundInPkg, "Expected generated Java under package 'de.mhus.nimbus.evaluate.generated.types'");
 
         // verify that additionalClassAnnotations were emitted on at least one generated class
-        File anyGenerated = javaFiles.stream().filter(f -> f.getPath().contains(expectedPkgPath)).findFirst().orElse(null);
+        File anyGenerated = javaFiles.stream().filter(f -> f.getPath().contains(expectedPkgPath))
+                .filter(f -> {
+                    try {
+                        String content = Files.readString(f.toPath());
+                        return !content.contains("public enum ");
+                    } catch (IOException e) {
+                        return false;
+                    }
+                })
+                .findFirst().orElse(null);
         assertNotNull(anyGenerated, "No generated file found in expected package");
         System.out.println("Checking additionalClassAnnotations in file: " + anyGenerated);
         String content = Files.readString(anyGenerated.toPath());
