@@ -110,6 +110,12 @@ FILTERS:
 BIAS:
   Bias: ${bias}
   Normal Bias: ${normalBias}
+
+CASCADED SHADOW MAP (CSM):
+  Stabilize Cascades: ${info.stabilizeCascades ?? 'unknown'}
+  Auto Calc Depth Bounds: ${info.autoCalcDepthBounds ?? 'unknown'}
+  Lambda: ${info.lambda?.toFixed(2) ?? 'unknown'}
+  Num Cascades: ${info.numCascades ?? 'unknown'}
     `.trim();
   }
 }

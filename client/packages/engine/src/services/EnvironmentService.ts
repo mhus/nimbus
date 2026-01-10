@@ -524,11 +524,18 @@ export class EnvironmentService {
 
       // Create CascadedShadowGenerator
       const cascadedGen = new CascadedShadowGenerator(mapSize, this.sunLight, true, this.appContext.services?.camera?.getCamera() );
-      cascadedGen.lambda = 0.1;
+      cascadedGen.lambda = 0.5; // Optimized for better near-distance shadow quality
       cascadedGen.filter = 0;
       cascadedGen.numCascades = 2;
       cascadedGen.transparencyShadow = true;
       cascadedGen.darkness = darkness;
+
+      // CRITICAL: Stabilize cascades to prevent shadow jumping during camera rotation
+      cascadedGen.stabilizeCascades = true;
+
+      // Disable autoCalcDepthBounds to prevent shadow wobbling
+      cascadedGen.autoCalcDepthBounds = false;
+
       this.shadowGenerator = cascadedGen;
       this.shadowQuality = quality;
       this.shadowEnabled = true;
@@ -544,6 +551,9 @@ export class EnvironmentService {
         mapSize: mapSize,
         quality: quality,
         distance: distance,
+        stabilizeCascades: true,
+        autoCalcDepthBounds: false,
+        lambda: cascadedGen.lambda
       });
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'EnvironmentService.initializeShadows');
@@ -716,10 +726,17 @@ export class EnvironmentService {
 
       // Create new CascadedShadowGenerator (same as initializeShadows)
       const cascadedGen = new CascadedShadowGenerator(newMapSize, this.sunLight);
-      cascadedGen.lambda = 0.2;
+      cascadedGen.lambda = 0.5; // Optimized for better near-distance shadow quality
       cascadedGen.filter = 0;
       cascadedGen.numCascades = 2;
       cascadedGen.transparencyShadow = true;
+
+      // CRITICAL: Stabilize cascades to prevent shadow jumping during camera rotation
+      cascadedGen.stabilizeCascades = true;
+
+      // Disable autoCalcDepthBounds to prevent shadow wobbling
+      cascadedGen.autoCalcDepthBounds = false;
+
       this.shadowGenerator = cascadedGen;
 
       // Restore render list (push directly, not via addShadowCaster)
@@ -730,6 +747,12 @@ export class EnvironmentService {
 
       // Call splitFrustum for CascadedShadowGenerator
       cascadedGen.splitFrustum();
+
+      logger.debug('Shadow stabilization reapplied after quality change', {
+        stabilizeCascades: true,
+        autoCalcDepthBounds: false,
+        lambda: cascadedGen.lambda
+      });
     }
 
     // Apply quality settings
@@ -760,6 +783,10 @@ export class EnvironmentService {
     activeCasters: number;
     darkness: number;
     refreshRate: number;
+    stabilizeCascades?: boolean;
+    autoCalcDepthBounds?: boolean;
+    lambda?: number;
+    numCascades?: number;
   } {
     if (!this.shadowGenerator) {
       return {
@@ -775,6 +802,13 @@ export class EnvironmentService {
     const shadowMap = this.shadowGenerator.getShadowMap();
     const darkness = this.shadowGenerator.getDarkness();
 
+    // CSM-specific properties
+    const cascadedGen = this.shadowGenerator as any;
+    const stabilizeCascades = cascadedGen.stabilizeCascades;
+    const autoCalcDepthBounds = cascadedGen.autoCalcDepthBounds;
+    const lambda = cascadedGen.lambda;
+    const numCascades = cascadedGen.numCascades;
+
     return {
       enabled: this.shadowEnabled,
       quality: this.shadowQuality,
@@ -782,6 +816,10 @@ export class EnvironmentService {
       activeCasters: shadowMap?.renderList?.length || 0,
       darkness: darkness,
       refreshRate: shadowMap?.refreshRate || 0,
+      stabilizeCascades,
+      autoCalcDepthBounds,
+      lambda,
+      numCascades,
     };
   }
 
