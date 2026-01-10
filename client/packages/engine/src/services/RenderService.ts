@@ -405,8 +405,7 @@ export class RenderService {
           );
           mesh.material = material;
 
-          // Disable backFaceCulling for shadow casting
-          material.backFaceCulling = false;
+          // Note: backFaceCulling is configured in MaterialService based on TextureDefinition.backFaceCulling
 
           meshMap.set(materialKey, mesh);
 
