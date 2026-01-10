@@ -113,7 +113,25 @@
   pointer-events: none;
 }
 
-/* Position Display (Editor mode only) */
+/* Time Display with Season (Editor mode only, left side) */
+.compass-time-display {
+  position: absolute;
+  left: -250px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow:
+    0 0 10px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Position Display (Editor mode only, right side) */
 .compass-position-display {
   position: absolute;
   right: -160px;

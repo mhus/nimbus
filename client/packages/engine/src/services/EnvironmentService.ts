@@ -1310,6 +1310,23 @@ export class EnvironmentService {
     return this.formatWorldTime(worldMinute);
   }
 
+  getCurrentSeassonAsString() : string {
+      const progress = ((this.appContext.worldInfo?.seasonProgress || 0) * 100).toFixed(1);
+      switch (this.appContext.worldInfo?.seasonStatus) {
+          case 1:
+              return `Winter ${progress}%`;
+          case 2:
+              return `Spring ${progress}%`;
+          case 3:
+              return `Summer ${progress}%`;
+          case 4:
+              return `Autumn ${progress}%`;
+          case 0:
+          default:
+              return "?";
+      }
+  }
+
   /**
    * Format world time in minutes to string
    * Format: @era, @year.@month.@day, @hour:@minute
