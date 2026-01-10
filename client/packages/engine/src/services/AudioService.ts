@@ -1059,7 +1059,7 @@ export class AudioService implements IDisposable {
 
         if (this.isAudioUnlocked()) {
           // Create sound if not created yet (async operation)
-          if (!deferredWrapper._sound) {
+          if (deferredWrapper && !deferredWrapper._sound) {
             await deferredWrapper._createSound();
           }
 
