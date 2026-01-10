@@ -139,7 +139,7 @@ export function createAllStackModifiers(appContext: AppContext): void {
         sunService.setSunPositionOnCircle(angleY);
       }
     },
-    createLinearNumberAnimation(1.0), // Linear animation, 1 degree per step
+    createLinearNumberAnimation(0.2), // Linear animation, 1 degree per step
     100 // Default wait time: 100ms
   );
 

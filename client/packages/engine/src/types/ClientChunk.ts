@@ -72,12 +72,19 @@ export class ClientChunk {
   /** Whether chunk has been rendered */
   isRendered: boolean;
 
-  /** Last time chunk was accessed (for LRU) */
+  /** Whether chunk has been loaded */
+  isLoaded: boolean;
+
+  chunkSize: number;
+
+    /** Last time chunk was accessed (for LRU) */
   lastAccessTime: number;
 
-    constructor(data: ClientChunkData) {
+    constructor(data: ClientChunkData, chunkSize : number) {
         this.data = data;
         this.isRendered = false;
+        this.isLoaded = false;
+        this.chunkSize = chunkSize;
         this.lastAccessTime = Date.now();
     }
 
@@ -94,13 +101,12 @@ export class ClientChunk {
     // Convert world coordinates to local chunk coordinates
     const chunkCx = this.data.transfer.cx;
     const chunkCz = this.data.transfer.cz;
-    const chunkSize = this.data.transfer.chunkSize || 16;
 
     const worldX = Math.floor(posX);
     const worldZ = Math.floor(posZ);
 
-    const localX = worldX - (chunkCx * chunkSize);
-    const localZ = worldZ - (chunkCz * chunkSize);
+    const localX = worldX - (chunkCx * this.chunkSize);
+    const localZ = worldZ - (chunkCz * this.chunkSize);
 
     return this.data?.hightData?.get(`${localX},${localZ}`);
   }

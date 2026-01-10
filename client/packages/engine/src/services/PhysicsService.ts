@@ -372,37 +372,37 @@ export class PhysicsService {
 
     // Check if chunk is loaded
     const chunk = this.chunkService.getChunkForBlockPosition(entity.position);
-    if (!chunk) {
+    if (!chunk || !chunk.isLoaded) {
       logger.debug('Waiting for chunk to load at position', entity.position);
       return;
     }
 
-    // Check if heightData exists
-//     const heightData = chunk.getHeightDataForPosition(entity.position);
-//     if (!heightData) {
-//       logger.debug('Waiting for heightData at position', entity.position);
-//       return;
-//     }
+    // Try to get heightData for better positioning
+    const heightData = chunk.getHeightDataForPosition(entity.position);
 
-    // Everything is ready - position player and enable physics
-//    const oldY = entity.position.y;
-//    const targetY = heightData[4]; // 4 = groundLevel
+    if (heightData) {
+      // We have heightData - use groundLevel for precise positioning
+      const oldY = entity.position.y;
+      const targetY = heightData[4]; // 4 = groundLevel
 
-//     logger.debug('Teleportation ready - positioning player', {
-//       entityId,
-//      oldY,
-//      targetY,
-//       playerX: entity.position.x,
-//       playerZ: entity.position.z
-//     });
+      logger.debug('Teleportation ready - positioning player with heightData', {
+        entityId,
+        oldY,
+        targetY,
+        playerX: entity.position.x,
+        playerZ: entity.position.z
+      });
 
-//    entity.position.y = targetY;
+      entity.position.y = targetY;
+    } else {
+      // No heightData available - just enable physics and let player fall/spawn naturally
+      logger.debug('Teleportation ready - no heightData, enabling physics', {
+        entityId,
+        position: entity.position,
+      });
+    }
+
     entity.velocity.y = 0; // Reset vertical velocity
-
-    logger.debug('Teleportation complete - player positioned', {
-      entityId,
-      newY: entity.position.y,
-    });
 
     // Clear timer and re-enable physics
     this.cancelTeleportation();
@@ -528,19 +528,27 @@ export class PhysicsService {
       return;
     }
 
-    // SWIM state (priority 30) - enabled when in water
-    this.swimModifier.setEnabled(entity.inWater);
+    // Only allow automatic state modifiers (JUMP, FALL, SWIM) when in WALK mode
+    // For manually chosen modes (FLY, SPRINT, CROUCH), disable automatic modifiers to respect player choice
+    const allowAutoModifiers = entity.movementMode === 'walk';
 
-    // JUMP state (priority 10 - highest) - enabled during jump
+    // SWIM state (priority 30) - only enable as fallback for WALK mode
+    this.swimModifier.setEnabled(entity.inWater && allowAutoModifiers);
+
+    // JUMP state (priority 10 - highest) - enabled during jump (only in WALK mode)
     // Jump is active if jumpRequested was set this frame (handled by controller)
     // We keep it enabled until player is grounded again
-    if (entity.jumpRequested) {
-      this.jumpModifier.setEnabled(true);
-    } else if (entity.grounded) {
+    if (allowAutoModifiers) {
+      if (entity.jumpRequested) {
+        this.jumpModifier.setEnabled(true);
+      } else if (entity.grounded) {
+        this.jumpModifier.setEnabled(false);
+      }
+    } else {
       this.jumpModifier.setEnabled(false);
     }
 
-    // FALL state (priority 20) - enabled when falling
+    // FALL state (priority 20) - enabled when falling (only in WALK mode)
     const FALL_THRESHOLD = 2.0; // blocks - minimum fall distance to trigger FALL state
 
     // Track fall distance when falling
@@ -549,9 +557,11 @@ export class PhysicsService {
       entity.fallDistance += Math.abs(entity.velocity.y) * deltaTime;
       entity.wasFalling = true;
 
-      // Enable FALL state if threshold exceeded
-      if (entity.fallDistance > FALL_THRESHOLD) {
+      // Enable FALL state if threshold exceeded (only in WALK mode)
+      if (allowAutoModifiers && entity.fallDistance > FALL_THRESHOLD) {
         this.fallModifier.setEnabled(true);
+      } else if (!allowAutoModifiers) {
+        this.fallModifier.setEnabled(false);
       }
     } else if (entity.grounded && entity.wasFalling) {
       // Just landed - handle landing event

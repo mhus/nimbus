@@ -979,6 +979,77 @@
               </div>
             </div>
 
+            <!-- Celestial Bodies Automation -->
+            <div class="divider">Celestial Bodies Automation</div>
+            <p class="text-sm text-base-content/70 mb-4">Automatically update sun and moon positions based on world time</p>
+
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-4">
+                <span class="label-text">Enable Automatic Celestial Bodies</span>
+                <input v-model="formData.publicData.settings.worldTime.celestialBodies.enabled"
+                       type="checkbox" class="toggle" />
+              </label>
+              <label class="label">
+                <span class="label-text-alt">Automatically update sun and moon positions based on world time</span>
+              </label>
+            </div>
+
+            <div v-if="formData.publicData.settings.worldTime.celestialBodies.enabled" class="space-y-4 ml-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Update Interval (seconds)</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.celestialBodies.updateIntervalSeconds"
+                       type="number" min="1" max="60" class="input input-bordered input-sm" />
+                <label class="label">
+                  <span class="label-text-alt">How often to update positions (default: 10)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Active Moons (0-3)</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.celestialBodies.activeMoons"
+                       type="number" min="0" max="3" class="input input-bordered input-sm" />
+                <label class="label">
+                  <span class="label-text-alt">Number of moons to animate (default: 0)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Sun Rotation Hours</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.celestialBodies.sunRotationHours"
+                       type="number" min="1" class="input input-bordered input-sm" />
+                <label class="label">
+                  <span class="label-text-alt">World hours for full sun rotation (default: 24 = one day)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Moon 0 Rotation Hours</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.celestialBodies.moon0RotationHours"
+                       type="number" min="1" class="input input-bordered input-sm" />
+                <label class="label">
+                  <span class="label-text-alt">World hours for full moon 0 rotation (default: 672 = 28 days)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Moon 1 Rotation Hours</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.celestialBodies.moon1RotationHours"
+                       type="number" min="1" class="input input-bordered input-sm" />
+                <label class="label">
+                  <span class="label-text-alt">World hours for full moon 1 rotation (default: 504 = 21 days)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Moon 2 Rotation Hours</span></label>
+                <input v-model.number="formData.publicData.settings.worldTime.celestialBodies.moon2RotationHours"
+                       type="number" min="1" class="input input-bordered input-sm" />
+                <label class="label">
+                  <span class="label-text-alt">World hours for full moon 2 rotation (default: 336 = 14 days)</span>
+                </label>
+              </div>
+            </div>
+
           </div>
 
           <!-- Tab: Time System -->
@@ -1331,7 +1402,16 @@ const formData = ref({
         daysPerMonth: 30,
         monthsPerYear: 12,
         currentEra: 1,
-        linuxEpocheDeltaMinutes: 0
+        linuxEpocheDeltaMinutes: 0,
+        celestialBodies: {
+          enabled: false,
+          updateIntervalSeconds: 10,
+          activeMoons: 0,
+          sunRotationHours: 24,
+          moon0RotationHours: 672,
+          moon1RotationHours: 504,
+          moon2RotationHours: 336
+        }
       }
     }
   }
@@ -1423,7 +1503,16 @@ const loadWorld = () => {
             daysPerMonth: 30,
             monthsPerYear: 12,
             currentEra: 1,
-            linuxEpocheDeltaMinutes: 0
+            linuxEpocheDeltaMinutes: 0,
+            celestialBodies: {
+              enabled: false,
+              updateIntervalSeconds: 10,
+              activeMoons: 0,
+              sunRotationHours: 24,
+              moon0RotationHours: 672,
+              moon1RotationHours: 504,
+              moon2RotationHours: 336
+            }
           }
         }
       }
@@ -1492,7 +1581,16 @@ const loadWorld = () => {
           daysPerMonth: worldData?.settings?.worldTime?.daysPerMonth || 30,
           monthsPerYear: worldData?.settings?.worldTime?.monthsPerYear || 12,
           currentEra: worldData?.settings?.worldTime?.currentEra || 1,
-          linuxEpocheDeltaMinutes: worldData?.settings?.worldTime?.linuxEpocheDeltaMinutes || 0
+          linuxEpocheDeltaMinutes: worldData?.settings?.worldTime?.linuxEpocheDeltaMinutes || 0,
+          celestialBodies: {
+            enabled: worldData?.settings?.worldTime?.celestialBodies?.enabled || false,
+            updateIntervalSeconds: worldData?.settings?.worldTime?.celestialBodies?.updateIntervalSeconds || 10,
+            activeMoons: worldData?.settings?.worldTime?.celestialBodies?.activeMoons || 0,
+            sunRotationHours: worldData?.settings?.worldTime?.celestialBodies?.sunRotationHours || 24,
+            moon0RotationHours: worldData?.settings?.worldTime?.celestialBodies?.moon0RotationHours || 672,
+            moon1RotationHours: worldData?.settings?.worldTime?.celestialBodies?.moon1RotationHours || 504,
+            moon2RotationHours: worldData?.settings?.worldTime?.celestialBodies?.moon2RotationHours || 336
+          }
         }
       }
     };

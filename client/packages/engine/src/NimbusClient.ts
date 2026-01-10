@@ -498,13 +498,7 @@ async function postCoreServiceInitialization(appContext: AppContext): Promise<vo
 async function postEngineInitialization(appContext: AppContext): Promise<void> {
   // set time if defined (synchronous)
   if (appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes !== undefined) {
-    appContext.services.environment?.setUnixEpochWorldTimeOffset(
-        appContext.worldInfo?.settings?.worldTime?.currentEra || 1,
-        appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes);
-    logger.info('World time initialized from worldInfo', {
-      era: appContext.worldInfo?.settings?.worldTime?.currentEra,
-      offsetMinutes: appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes
-    });
+    appContext.services.environment?.startEnvironment();
   }
 
   // set shortcuts if defined (asynchronous - fire and forget)

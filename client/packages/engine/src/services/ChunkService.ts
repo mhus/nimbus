@@ -323,6 +323,7 @@ export class ChunkService {
           // Replace chunk data
           existingChunk.data = clientChunkData;
           existingChunk.isRendered = false;
+          existingChunk.isLoaded = true; // All data (blocks + heightData) fully loaded
 
           // Emit event for re-rendering
           this.emit('chunk:updated', existingChunk);
@@ -342,9 +343,12 @@ export class ChunkService {
           });
         } else {
           // Create new chunk
-          const clientChunk: ClientChunk = new ClientChunk(clientChunkData);
+          const clientChunk: ClientChunk = new ClientChunk(clientChunkData, this.appContext.worldInfo?.chunkSize || 16);
 
           this.chunks.set(key, clientChunk);
+
+          // Mark as loaded AFTER adding to map to ensure atomicity
+          clientChunk.isLoaded = true; // All data (blocks + heightData) fully loaded
 
           // Emit event for rendering
           this.emit('chunk:loaded', clientChunk);

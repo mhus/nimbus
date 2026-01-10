@@ -324,6 +324,24 @@ export class ModifierStack<T> {
   }
 
   /**
+   * Set the current value directly (without modifiers)
+   * This bypasses the modifier system and sets the value immediately.
+   * Used for initialization to avoid animation from default to initial value.
+   * @param value The value to set
+   */
+  setCurrentValue(value: T): void {
+    this._currentValue = value;
+    try {
+      this._action(value);
+    } catch (error) {
+      ExceptionHandler.handle(error, 'ModifierStack.setCurrentValue', {
+        stackName: this._stackName,
+        value,
+      });
+    }
+  }
+
+  /**
    * Get the current value (alias for currentValue getter)
    */
   getValue(): T {

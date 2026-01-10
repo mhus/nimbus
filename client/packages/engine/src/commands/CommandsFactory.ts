@@ -138,6 +138,7 @@ import {StopEnvironmentScriptCommand} from "./StopEnvironmentScriptCommand";
 import {GetCurrentEnvironmentScriptCommand} from "./GetCurrentEnvironmentScriptCommand";
 import {ListEnvironmentScriptsCommand} from "./ListEnvironmentScriptsCommand";
 import {ResetEnvironmentCommand} from "./ResetEnvironmentCommand";
+import {StartEnvironmentCommand} from "./StartEnvironmentCommand";
 import {WorldTimeConfigCommand} from "./WorldTimeConfigCommand";
 import {WorldTimeStartCommand} from "./WorldTimeStartCommand";
 import {WorldTimeStopCommand} from "./WorldTimeStopCommand";
@@ -335,6 +336,7 @@ export class CommandsFactory {
         commandService.registerHandler(new GetCurrentEnvironmentScriptCommand(appContext));
         commandService.registerHandler(new ListEnvironmentScriptsCommand(appContext));
         commandService.registerHandler(new ResetEnvironmentCommand(appContext));
+        commandService.registerHandler(new StartEnvironmentCommand(appContext));
 
         // Register World Time commands
         commandService.registerHandler(new WorldTimeConfigCommand(appContext));

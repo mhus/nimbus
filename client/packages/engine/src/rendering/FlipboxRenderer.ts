@@ -78,7 +78,7 @@ export class FlipboxRenderer extends BlockRenderer {
     const rotationX = block.rotation?.x ?? 0;
     const rotationY = block.rotation?.y ?? 0;
 
-    logger.info('FlipboxRenderer transformations', {
+    logger.debug('FlipboxRenderer transformations', {
       position: block.position,
       scaling: { x: scalingX, y: scalingY, z: scalingZ },
       rotation: { x: rotationX, y: rotationY },
@@ -273,7 +273,7 @@ export class FlipboxRenderer extends BlockRenderer {
     // Get effect parameters
     const effectParameters = modifier.visibility?.effectParameters;
 
-    logger.info('FlipboxRenderer: Creating material', {
+    logger.debug('FlipboxRenderer: Creating material', {
       texturePath,
       effectParameters,
       textureLoaded: !!texture,

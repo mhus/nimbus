@@ -202,7 +202,7 @@ export class CompassService {
       if (typeof __EDITOR__ !== 'undefined' && __EDITOR__ && this.timeDisplay) {
         const environmentService = this.appContext.services.environment;
         if (environmentService) {
-          const seasonString = environmentService.getCurrentSeassonAsString?.() || 'Season';
+          const seasonString = environmentService.getCurrentSeasonAsString?.() || 'Season';
           const timeString = environmentService.getWorldTimeCurrentAsString?.() || '00:00';
           this.timeDisplay.textContent = `${seasonString} | ${timeString}`;
         }

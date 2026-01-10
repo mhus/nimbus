@@ -471,6 +471,9 @@ export class RenderService {
         chunkMeshes: meshMap.size,
         separateMeshes: separateMeshBlocks.length,
       });
+
+      // Mark chunk as rendered
+      clientChunk.isRendered = true;
     } catch (error) {
       throw ExceptionHandler.handleAndRethrow(error, 'RenderService.renderChunk', {
         cx: chunk.cx,

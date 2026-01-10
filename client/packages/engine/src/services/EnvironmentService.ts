@@ -1207,6 +1207,39 @@ export class EnvironmentService {
     return { ...this.worldTimeConfig };
   }
 
+  startEnvironment(): void {
+      if (!this.isWorldTimeRunning()) {
+          this.appContext.services.environment?.setUnixEpochWorldTimeOffset(
+              this.appContext.worldInfo?.settings?.worldTime?.currentEra || 1,
+              this.appContext.worldInfo?.settings?.worldTime?.linuxEpocheDeltaMinutes || 0);
+      }
+      if (!this.isWorldTimeRunning()) {
+          return;
+      }
+
+      // Enable celestial bodies if configured in WorldInfo
+      if (this.appContext.worldInfo?.settings?.worldTime?.celestialBodies?.enabled) {
+          this.celestialBodiesConfig.enabled = true;
+      }
+
+      // Calculate current season and season progress from worldInfo.seasonMonths
+      this.calculateAndUpdateSeason(
+          this.getWorldTimeCurrent()
+      );
+
+      // Initialize celestial bodies positions immediately (without animation)
+      if (this.celestialBodiesConfig.enabled) {
+          this.initializeCelestialPositions();
+      }
+
+      logger.info('Environment initialized ', {
+          time: this.getWorldTimeCurrentAsString() || 'unknown',
+          season: this.getCurrentSeasonAsString() || 'unknown',
+          celestialBodiesEnabled: this.celestialBodiesConfig.enabled
+      });
+
+  }
+
     /**
      * Start World Time based on Unix Epoch offset
      * Command: worldTimeUnixEpochOffset <era> <offsetMinutes>
@@ -1229,9 +1262,6 @@ export class EnvironmentService {
     this.startWorldTime(currentWorldMinute);
 
     logger.debug('Unix Epoch World Time offset set', { era, offsetMinutes });
-
-    // Calculate current season and season progress from worldInfo.seasonMonths
-    this.calculateAndUpdateSeason(currentWorldMinute);
 
   }
 
@@ -1427,7 +1457,7 @@ export class EnvironmentService {
     return this.formatWorldTime(worldMinute);
   }
 
-  getCurrentSeassonAsString() : string {
+  getCurrentSeasonAsString() : string {
       const progress = ((this.appContext.worldInfo?.seasonProgress || 0) * 100).toFixed(1);
       switch (this.appContext.worldInfo?.seasonStatus) {
           case 1:
@@ -1556,13 +1586,73 @@ export class EnvironmentService {
   }
 
   /**
+   * Initialize celestial bodies positions immediately (without animation)
+   * Called once during startEnvironment() to set initial positions
+   */
+  private initializeCelestialPositions(): void {
+    const modifierService = this.appContext.services.modifier;
+    if (!modifierService) {
+      return;
+    }
+
+    // Get current world time
+    const currentWorldMinute = this.getWorldTimeCurrent();
+    const currentWorldHour = currentWorldMinute / this.worldTimeConfig.minutesPerHour;
+
+    // Initialize sun position
+    const sunRotationHours = this.celestialBodiesConfig.sunRotationHours;
+    const sunAngle = (currentWorldHour / sunRotationHours) * 360;
+    const sunAngleNormalized = sunAngle % 360;
+
+    const sunPositionStack = modifierService.getModifierStack('sunPosition');
+    if (sunPositionStack) {
+      // Set currentValue directly without animation
+      sunPositionStack.setCurrentValue(sunAngleNormalized);
+      logger.debug('Sun position initialized', { angle: sunAngleNormalized });
+    }
+
+    // Initialize moon positions
+    for (let i = 0; i < this.celestialBodiesConfig.activeMoons && i < 3; i++) {
+      let moonRotationHours: number;
+      let stackName: string;
+
+      switch (i) {
+        case 0:
+          moonRotationHours = this.celestialBodiesConfig.moon0RotationHours;
+          stackName = 'moon0Position';
+          break;
+        case 1:
+          moonRotationHours = this.celestialBodiesConfig.moon1RotationHours;
+          stackName = 'moon1Position';
+          break;
+        case 2:
+          moonRotationHours = this.celestialBodiesConfig.moon2RotationHours;
+          stackName = 'moon2Position';
+          break;
+        default:
+          continue;
+      }
+
+      const moonAngle = (currentWorldHour / moonRotationHours) * 360;
+      const moonAngleNormalized = moonAngle % 360;
+
+      const moonPositionStack = modifierService.getModifierStack(stackName);
+      if (moonPositionStack) {
+        // Set currentValue directly without animation
+        moonPositionStack.setCurrentValue(moonAngleNormalized);
+        logger.debug(`Moon ${i} position initialized`, { angle: moonAngleNormalized });
+      }
+    }
+  }
+
+  /**
    * Update celestial bodies positions (sun and moons)
    * Called every frame but only updates at configured intervals
    *
    * @param deltaTime Time since last frame in seconds
    */
   private updateCelestialBodies(deltaTime: number): void {
-    if (!this.celestialBodiesConfig.enabled) {
+    if (!this.celestialBodiesConfig.enabled || !this.isWorldTimeRunning()) {
       return;
     }
 
@@ -1596,6 +1686,9 @@ export class EnvironmentService {
     }
 
     // Removed debug log for performance
+      logger.info('Celestial bodies updated', {
+          worldTime: this.getWorldTimeCurrentAsString(),
+      });
   }
 
   /**

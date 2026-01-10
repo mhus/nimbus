@@ -882,7 +882,7 @@ export class ShaderService {
     shaderParameters: string | undefined,
     name: string = 'flipboxMaterial'
   ): ShaderMaterial | null {
-    logger.info('createFlipboxMaterial called', { name, shaderParameters, hasTexture: !!texture, hasScene: !!this.scene });
+    logger.debug('createFlipboxMaterial called', { name, shaderParameters, hasTexture: !!texture, hasScene: !!this.scene });
 
     if (!this.scene) {
       logger.error('Cannot create flipbox material: Scene not initialized');
@@ -932,7 +932,7 @@ export class ShaderService {
       mode = 'rotate';
     }
 
-    logger.info('Creating flipbox material', { name, flipDirection, frameCount, delayMs, mode });
+    logger.debug('Creating flipbox material', { name, flipDirection, frameCount, delayMs, mode });
 
     const material = new ShaderMaterial(
       name,
@@ -1017,7 +1017,7 @@ export class ShaderService {
       }
     });
 
-    logger.info('Flipbox material created successfully', { name, materialCreated: !!material });
+    logger.debug('Flipbox material created successfully', { name, materialCreated: !!material });
     return material;
   }
 
