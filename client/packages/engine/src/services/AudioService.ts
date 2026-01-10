@@ -9,7 +9,7 @@
  */
 
 import { getLogger, type AudioDefinition, type ClientEntity, AudioType } from '@nimbus/shared';
-import { Vector3 } from '@babylonjs/core';
+import {IDisposable, Vector3} from '@babylonjs/core';
 import type { AppContext } from '../AppContext';
 import { Scene, Sound, Engine, CreateAudioEngineAsync, CreateSoundAsync } from '@babylonjs/core';
 import type { AudioEngine, StaticSound } from '@babylonjs/core';
@@ -58,6 +58,30 @@ interface AudioCacheEntry {
   loadedAt: number;
   /** Is sound ready to play (set in ready callback) */
   isReady: boolean;
+}
+
+/**
+ * Deferred sound wrapper interface - compatible with IDisposable
+ */
+interface DeferredSoundWrapper extends IDisposable {
+  _sound: any;
+  _disposed: boolean;
+  _playPending: boolean;
+  _config?: {
+    name: string;
+    url: string;
+    scene: Scene;
+    position: Vector3;
+    volume: number;
+    loop: boolean;
+    maxDistance: number;
+  };
+  _createSound?: () => Promise<void>;
+  _needsRecreate?: boolean;
+  play(): void | Promise<void>;
+  stop(): void;
+  setPosition?(position: any): void;
+  setVolume?(volume: number): void;
 }
 
 /**
@@ -298,7 +322,7 @@ class AudioPool {
  * Loads audio files as Babylon.js Sound objects and caches them for reuse.
  * Integrates with NetworkService to fetch audio assets.
  */
-export class AudioService {
+export class AudioService implements IDisposable {
   private audioCache: Map<string, AudioCacheEntry> = new Map(); // Legacy cache for non-spatial sounds
   private soundPools: Map<string, AudioPool> = new Map(); // Pool system for spatial sounds
   private loadingPromises: Map<string, Promise<void>> = new Map(); // Cache for in-progress loading operations
@@ -859,7 +883,7 @@ export class AudioService {
    * Wrapper for Sound that automatically plays when audio engine is unlocked
    * Stores sound configuration and creates/recreates the sound after unlock
    */
-  private createDeferredSound(sound: any): any {
+  private createDeferredSound(sound: any): DeferredSoundWrapper {
     const wrapper = {
       _sound: sound,
       _disposed: false,
@@ -935,7 +959,7 @@ export class AudioService {
    * @param audioDef Audio definition with path, volume, loop, etc.
    * @returns Wrapper object that creates sound after audio unlock
    */
-  async createPermanentSoundForBlock(block: ClientBlock, audioDef: AudioDefinition): Promise<any> {
+  async createPermanentSoundForBlock(block: ClientBlock, audioDef: AudioDefinition): Promise<DeferredSoundWrapper | null> {
     if (!this.scene) {
       logger.error('Scene not initialized');
       return null;
@@ -951,7 +975,7 @@ export class AudioService {
     const blockPosition = new Vector3(blockPos.x, blockPos.y, blockPos.z);
 
     // Create a deferred sound wrapper that will create the actual sound after unlock
-    const deferredWrapper = {
+    const deferredWrapper : DeferredSoundWrapper = {
       _sound: null as any,
       _disposed: false,
       _playPending: false,
@@ -966,7 +990,7 @@ export class AudioService {
       },
 
       _createSound: async () => {
-        if (deferredWrapper._sound || deferredWrapper._disposed) return;
+        if (deferredWrapper._sound || deferredWrapper._disposed || !deferredWrapper._config) return;
 
         logger.debug('Creating permanent sound for block', {
           path: audioDef.path,
@@ -1085,14 +1109,18 @@ export class AudioService {
       },
 
       setPosition: (position: any) => {
-        deferredWrapper._config.position = position;
+        if (deferredWrapper._config) {
+          deferredWrapper._config.position = position;
+        }
         if (deferredWrapper._sound && deferredWrapper._sound.spatial) {
           deferredWrapper._sound.spatial.position = position;
         }
       },
 
       setVolume: (volume: number) => {
-        deferredWrapper._config.volume = volume;
+        if (deferredWrapper._config) {
+          deferredWrapper._config.volume = volume;
+        }
         if (deferredWrapper._sound) {
           deferredWrapper._sound.volume = volume;
         }
