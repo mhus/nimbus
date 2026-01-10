@@ -227,6 +227,8 @@ export class OceanRenderer extends BlockRenderer {
       );
     }
 
+    renderContext.resourcesToDispose.add(plane);
+
     logger.debug('Ocean block added to shared mesh', {
       sharedMeshName,
       position: `${block.position.x},${block.position.y},${block.position.z}`,
