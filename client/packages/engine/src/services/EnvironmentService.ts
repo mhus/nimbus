@@ -14,7 +14,7 @@ import {
   CascadedShadowGenerator,
   RenderTargetTexture,
 } from '@babylonjs/core';
-import { getLogger, ExceptionHandler } from '@nimbus/shared';
+import { getLogger, ExceptionHandler, SeasonStatus } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
 import type { ScriptActionDefinition } from '@nimbus/shared';
 
@@ -200,6 +200,7 @@ export class EnvironmentService {
   private daySectionConfig: DaySectionConfig;
   private worldTimeState: WorldTimeState;
   private currentDaySection: DaySection | null = null;
+  private currentSeason: SeasonStatus = SeasonStatus.NONE;
 
   // Celestial bodies automatic update
   private celestialBodiesConfig: CelestialBodiesConfig;
@@ -1193,7 +1194,18 @@ export class EnvironmentService {
     return { ...this.worldTimeConfig };
   }
 
+    /**
+     * Start World Time based on Unix Epoch offset
+     * Command: worldTimeUnixEpochOffset <era> <offsetMinutes>
+     * @param era
+     * @param offsetMinutes if 0 stops world time
+     */
   setUnixEpochWorldTimeOffset(era : number, offsetMinutes: number): void {
+      if (offsetMinutes === 0) {
+            logger.debug('Unix Epoch World Time offset is zero, no action taken', { era, offsetMinutes });
+            this.stopWorldTime();
+            return;
+      }
     // calculate delta to now and call startWorldTime with that value
     // offsetMinutes is now only for the current era (no need to add era offset)
     const now = Date.now();
@@ -1204,6 +1216,96 @@ export class EnvironmentService {
     this.startWorldTime(currentWorldMinute);
 
     logger.debug('Unix Epoch World Time offset set', { era, offsetMinutes });
+
+    // Calculate current season and season progress from worldInfo.seasonMonths
+    this.calculateAndUpdateSeason(currentWorldMinute);
+
+  }
+
+  /**
+   * Calculate and update current season and season progress
+   *
+   * @param worldMinute Current world time in minutes
+   */
+  private calculateAndUpdateSeason(worldMinute: number): void {
+    if (!this.appContext.worldInfo) {
+      logger.warn('WorldInfo not available, cannot calculate season');
+      return;
+    }
+
+    const config = this.worldTimeConfig;
+
+    // Calculate current month (0-based)
+    let remainingMinutes = Math.floor(worldMinute);
+    remainingMinutes = Math.floor(remainingMinutes / config.minutesPerHour);
+    remainingMinutes = Math.floor(remainingMinutes / config.hoursPerDay);
+    remainingMinutes = Math.floor(remainingMinutes / config.daysPerMonth);
+    const currentMonth = remainingMinutes % config.monthsPerYear; // 0-based month
+
+    // Calculate day of month for progress calculation
+    let dayMinutes = Math.floor(worldMinute);
+    dayMinutes = Math.floor(dayMinutes / config.minutesPerHour);
+    dayMinutes = Math.floor(dayMinutes / config.hoursPerDay);
+    const currentDayOfMonth = (dayMinutes % config.daysPerMonth); // 0-based day
+
+    // Get seasonMonths from worldInfo or use default [0,3,6,9]
+    let seasonMonths = this.appContext.worldInfo.seasonMonths;
+    if (!seasonMonths || seasonMonths.length !== 4) {
+      logger.debug('Invalid or missing seasonMonths, using default [0,3,6,9]');
+      seasonMonths = [0, 3, 6, 9]; // Winter, Spring, Summer, Autumn
+    }
+
+    // Determine current season
+    // seasonMonths = [winterStart, springStart, summerStart, autumnStart]
+    let seasonStatus = SeasonStatus.WINTER; // Default
+    let seasonStartMonth = seasonMonths[0];
+    let seasonEndMonth = seasonMonths[1];
+
+    if (currentMonth >= seasonMonths[3]) {
+      // Autumn (wraps to next year)
+      seasonStatus = SeasonStatus.AUTUMN;
+      seasonStartMonth = seasonMonths[3];
+      seasonEndMonth = (seasonMonths[0] + config.monthsPerYear) % config.monthsPerYear;
+    } else if (currentMonth >= seasonMonths[2]) {
+      // Summer
+      seasonStatus = SeasonStatus.SUMMER;
+      seasonStartMonth = seasonMonths[2];
+      seasonEndMonth = seasonMonths[3];
+    } else if (currentMonth >= seasonMonths[1]) {
+      // Spring
+      seasonStatus = SeasonStatus.SPRING;
+      seasonStartMonth = seasonMonths[1];
+      seasonEndMonth = seasonMonths[2];
+    } else {
+      // Winter
+      seasonStatus = SeasonStatus.WINTER;
+      seasonStartMonth = seasonMonths[0];
+      seasonEndMonth = seasonMonths[1];
+    }
+
+    // Calculate season progress (0.0 to 1.0)
+    const monthsInSeason = seasonStatus === SeasonStatus.AUTUMN
+      ? (seasonEndMonth + config.monthsPerYear - seasonStartMonth)
+      : (seasonEndMonth - seasonStartMonth);
+    const monthsIntoCurrent = currentMonth - seasonStartMonth;
+    const daysPerMonthFloat = config.daysPerMonth;
+
+    // Progress = (months into season + day progress) / total months in season
+    const seasonProgress = Math.min(1.0, Math.max(0.0,
+      (monthsIntoCurrent + (currentDayOfMonth / daysPerMonthFloat)) / monthsInSeason
+    ));
+
+    // Update worldInfo
+    this.appContext.worldInfo.seasonStatus = seasonStatus;
+    this.appContext.worldInfo.seasonProgress = seasonProgress;
+
+    logger.debug('Season calculated', {
+      currentMonth,
+      currentDayOfMonth,
+      seasonStatus,
+      seasonProgress: seasonProgress.toFixed(3),
+      seasonMonths,
+    });
   }
 
   /**
@@ -1240,6 +1342,7 @@ export class EnvironmentService {
       if (seasonName) {
         const seasonScriptName = `season_${seasonName}`;
         this.startEnvironmentScript(seasonScriptName);
+        this.currentSeason = seasonStatus; // Track current season
         logger.debug('Started season script', { seasonStatus, seasonScriptName });
       }
     }
@@ -1272,6 +1375,7 @@ export class EnvironmentService {
     };
 
     this.currentDaySection = null;
+    this.currentSeason = SeasonStatus.NONE;
 
     logger.debug('World Time stopped', {
       stoppedAt: currentWorldTime,
@@ -1411,6 +1515,27 @@ export class EnvironmentService {
       // Start corresponding environment script
       const scriptName = `daytime_change_${newDaySection}`;
       this.startEnvironmentScript(scriptName);
+
+      // Also check for season change when day section changes
+      const currentWorldMinute = this.getWorldTimeCurrent();
+      this.calculateAndUpdateSeason(currentWorldMinute);
+
+      // Check if season changed and trigger season script
+      const newSeason = this.appContext.worldInfo?.seasonStatus || SeasonStatus.NONE;
+      if (this.currentSeason !== newSeason && newSeason !== SeasonStatus.NONE) {
+        const seasonNames = ['', 'winter', 'spring', 'summer', 'autumn'];
+        const seasonName = seasonNames[newSeason];
+        if (seasonName) {
+          const seasonScriptName = `season_${seasonName}`;
+          this.startEnvironmentScript(seasonScriptName);
+          logger.debug('Season changed, started season script', {
+            from: this.currentSeason,
+            to: newSeason,
+            seasonScriptName
+          });
+        }
+        this.currentSeason = newSeason;
+      }
     }
 
     // Update celestial bodies positions if enabled

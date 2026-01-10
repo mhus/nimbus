@@ -56,6 +56,12 @@ export interface WorldInfo {
   /** Season progress (0.0 to 1.0, representing progress through current season) */
   seasonProgress: number;
 
+  /** Exakt 4 Values from 0-xx representing the months for each season (winter, spring, summer, autumn)
+   seasonMonths = [0,3,6,9]  0=January, 3=April, 6=July, 9=October
+   Every season starts at the first day of the month given in the array.
+   */
+  seasonMonths: Array<number>;
+
   /** Creation timestamp */
   createdAt: string;
 

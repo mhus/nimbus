@@ -781,6 +781,157 @@
               </div>
             </div>
 
+            <!-- Moon Settings Collapsible -->
+            <div class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" />
+              <div class="collapse-title font-medium">Moon Settings (up to 3 moons)</div>
+              <div class="collapse-content space-y-4">
+                <!-- Moon 1 -->
+                <div class="divider text-sm">Moon 1</div>
+                <div class="space-y-2">
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-4">
+                      <span class="label-text">Moon 1 Enabled</span>
+                      <input v-model="formData.publicData.settings.environment.moons[0].enabled"
+                             type="checkbox" class="toggle toggle-sm" />
+                    </label>
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Size</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[0].size"
+                           type="number" placeholder="60"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Position on Circle (0-360°)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[0].positionOnCircle"
+                           type="number" min="0" max="360"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Height Over Camera (-90 to 90°)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[0].heightOverCamera"
+                           type="number" min="-90" max="90"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Distance</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[0].distance"
+                           type="number" placeholder="450"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Phase (0.0 = new, 1.0 = full)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[0].phase"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Texture Path</span></label>
+                    <input v-model="formData.publicData.settings.environment.moons[0].texture"
+                           type="text" placeholder="textures/moon/moon1.png"
+                           class="input input-bordered input-sm" />
+                  </div>
+                </div>
+
+                <!-- Moon 2 -->
+                <div class="divider text-sm">Moon 2</div>
+                <div class="space-y-2">
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-4">
+                      <span class="label-text">Moon 2 Enabled</span>
+                      <input v-model="formData.publicData.settings.environment.moons[1].enabled"
+                             type="checkbox" class="toggle toggle-sm" />
+                    </label>
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Size</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[1].size"
+                           type="number" placeholder="60"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Position on Circle (0-360°)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[1].positionOnCircle"
+                           type="number" min="0" max="360"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Height Over Camera (-90 to 90°)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[1].heightOverCamera"
+                           type="number" min="-90" max="90"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Distance</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[1].distance"
+                           type="number" placeholder="450"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Phase (0.0 = new, 1.0 = full)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[1].phase"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Texture Path</span></label>
+                    <input v-model="formData.publicData.settings.environment.moons[1].texture"
+                           type="text" placeholder="textures/moon/moon2.png"
+                           class="input input-bordered input-sm" />
+                  </div>
+                </div>
+
+                <!-- Moon 3 -->
+                <div class="divider text-sm">Moon 3</div>
+                <div class="space-y-2">
+                  <div class="form-control">
+                    <label class="label cursor-pointer justify-start gap-4">
+                      <span class="label-text">Moon 3 Enabled</span>
+                      <input v-model="formData.publicData.settings.environment.moons[2].enabled"
+                             type="checkbox" class="toggle toggle-sm" />
+                    </label>
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Size</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[2].size"
+                           type="number" placeholder="60"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Position on Circle (0-360°)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[2].positionOnCircle"
+                           type="number" min="0" max="360"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Height Over Camera (-90 to 90°)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[2].heightOverCamera"
+                           type="number" min="-90" max="90"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Distance</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[2].distance"
+                           type="number" placeholder="450"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Phase (0.0 = new, 1.0 = full)</span></label>
+                    <input v-model.number="formData.publicData.settings.environment.moons[2].phase"
+                           type="number" step="0.01" min="0" max="1"
+                           class="input input-bordered input-sm" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label"><span class="label-text">Texture Path</span></label>
+                    <input v-model="formData.publicData.settings.environment.moons[2].texture"
+                           type="text" placeholder="textures/moon/moon3.png"
+                           class="input input-bordered input-sm" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- Tab: Time System -->
@@ -854,32 +1005,83 @@
               </div>
             </div>
 
+            <!-- Season Months -->
+            <div class="divider">Seasons</div>
+            <p class="text-sm text-base-content/70 mb-4">Define the starting month for each season (0-based, 0 = first month of year)</p>
+
+            <div class="grid grid-cols-4 gap-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text">Winter Start Month</span></label>
+                <input v-model.number="formData.publicData.seasonMonths[0]"
+                       type="number" min="0" :max="formData.publicData.settings.worldTime.monthsPerYear - 1"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Default: 0 (Jan)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Spring Start Month</span></label>
+                <input v-model.number="formData.publicData.seasonMonths[1]"
+                       type="number" min="0" :max="formData.publicData.settings.worldTime.monthsPerYear - 1"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Default: 3 (Apr)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Summer Start Month</span></label>
+                <input v-model.number="formData.publicData.seasonMonths[2]"
+                       type="number" min="0" :max="formData.publicData.settings.worldTime.monthsPerYear - 1"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Default: 6 (Jul)</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text">Autumn Start Month</span></label>
+                <input v-model.number="formData.publicData.seasonMonths[3]"
+                       type="number" min="0" :max="formData.publicData.settings.worldTime.monthsPerYear - 1"
+                       class="input input-bordered" />
+                <label class="label">
+                  <span class="label-text-alt">Default: 9 (Oct)</span>
+                </label>
+              </div>
+            </div>
+
             <!-- Current World Time Display -->
             <div class="divider">Current World Time</div>
-            <div class="alert alert-info">
+            <div class="alert" :class="formData.publicData.settings.worldTime.linuxEpocheDeltaMinutes === 0 ? 'alert-warning' : 'alert-info'">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div class="w-full">
-                <div class="font-bold text-lg mb-3">{{ currentWorldTimeFormatted }}</div>
-                <div class="grid grid-cols-5 gap-2 text-sm">
-                  <div>
-                    <span class="font-medium">Era:</span> {{ currentWorldTimeComponents.era }}
-                  </div>
-                  <div>
-                    <span class="font-medium">Year:</span> {{ currentWorldTimeComponents.year }}
-                  </div>
-                  <div>
-                    <span class="font-medium">Month:</span> {{ currentWorldTimeComponents.month }}
-                  </div>
-                  <div>
-                    <span class="font-medium">Day:</span> {{ currentWorldTimeComponents.day }}
-                  </div>
-                  <div>
-                    <span class="font-medium">Time:</span> {{ currentWorldTimeComponents.hour }}:{{ currentWorldTimeComponents.minute.toString().padStart(2, '0') }}
-                  </div>
+                <div v-if="formData.publicData.settings.worldTime.linuxEpocheDeltaMinutes === 0" class="font-bold text-lg mb-3">
+                  World Time: disabled
                 </div>
-                <div class="text-xs mt-2 opacity-70">Based on current configuration and Unix epoch offset</div>
+                <template v-else>
+                  <div class="font-bold text-lg mb-3">{{ currentWorldTimeFormatted }}</div>
+                  <div class="grid grid-cols-5 gap-2 text-sm">
+                    <div>
+                      <span class="font-medium">Era:</span> {{ currentWorldTimeComponents.era }}
+                    </div>
+                    <div>
+                      <span class="font-medium">Year:</span> {{ currentWorldTimeComponents.year }}
+                    </div>
+                    <div>
+                      <span class="font-medium">Month:</span> {{ currentWorldTimeComponents.month }}
+                    </div>
+                    <div>
+                      <span class="font-medium">Day:</span> {{ currentWorldTimeComponents.day }}
+                    </div>
+                    <div>
+                      <span class="font-medium">Time:</span> {{ currentWorldTimeComponents.hour }}:{{ currentWorldTimeComponents.minute.toString().padStart(2, '0') }}
+                    </div>
+                  </div>
+                  <div class="text-xs mt-2 opacity-70">Based on current configuration and Unix epoch offset</div>
+                </template>
               </div>
             </div>
           </div>
@@ -938,6 +1140,19 @@ let timeUpdateInterval: number | null = null;
 // Computed: Current world time components
 const currentWorldTimeComponents = computed(() => {
   const config = formData.value.publicData.settings.worldTime;
+
+  // Check if world time is disabled
+  if (config.linuxEpocheDeltaMinutes === 0) {
+    return {
+      era: 0,
+      year: 0,
+      month: 0,
+      day: 0,
+      hour: 0,
+      minute: 0,
+      formatted: 'disabled'
+    };
+  }
 
   // Calculate current world time (use currentTime.value to make it reactive)
   const now = currentTime.value;
@@ -1011,6 +1226,7 @@ const formData = ref({
     status: 0,
     seasonStatus: 0,
     seasonProgress: 0,
+    seasonMonths: [0, 3, 6, 9],
     splashScreen: '',
     splashScreenAudio: '',
     start: {
@@ -1053,7 +1269,12 @@ const formData = ref({
         skyBoxEnabled: true,
         skyBoxMode: 'texture',
         skyBoxColor: { r: 0.5, g: 0.7, b: 1.0 },
-        skyBoxTexturePath: ''
+        skyBoxTexturePath: '',
+        moons: [
+          { enabled: false, size: 60, positionOnCircle: 0, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
+          { enabled: false, size: 60, positionOnCircle: 120, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
+          { enabled: false, size: 60, positionOnCircle: 240, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' }
+        ]
       },
       worldTime: {
         minuteScaling: 1,
@@ -1096,6 +1317,7 @@ const loadWorld = () => {
         status: 0,
         seasonStatus: 0,
         seasonProgress: 0,
+        seasonMonths: [0, 3, 6, 9],
         splashScreen: '',
         splashScreenAudio: '',
         start: {
@@ -1138,7 +1360,12 @@ const loadWorld = () => {
             skyBoxEnabled: true,
             skyBoxMode: 'texture',
             skyBoxColor: { r: 0.5, g: 0.7, b: 1.0 },
-            skyBoxTexturePath: ''
+            skyBoxTexturePath: '',
+            moons: [
+              { enabled: false, size: 60, positionOnCircle: 0, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
+              { enabled: false, size: 60, positionOnCircle: 120, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
+              { enabled: false, size: 60, positionOnCircle: 240, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' }
+            ]
           },
           worldTime: {
             minuteScaling: 1,
@@ -1170,6 +1397,7 @@ const loadWorld = () => {
       status: worldData?.status || 0,
       seasonStatus: worldData?.seasonStatus || 0,
       seasonProgress: worldData?.seasonProgress || 0,
+      seasonMonths: worldData?.seasonMonths || [0, 3, 6, 9],
       splashScreen: worldData?.splashScreen || '',
       splashScreenAudio: worldData?.splashScreenAudio || '',
       start: worldData?.start || { x: -120000, y: -100, z: -128000 },
@@ -1200,7 +1428,12 @@ const loadWorld = () => {
           skyBoxEnabled: worldData?.settings?.environment?.skyBoxEnabled ?? true,
           skyBoxMode: worldData?.settings?.environment?.skyBoxMode || 'texture',
           skyBoxColor: worldData?.settings?.environment?.skyBoxColor || { r: 0.5, g: 0.7, b: 1.0 },
-          skyBoxTexturePath: worldData?.settings?.environment?.skyBoxTexturePath || ''
+          skyBoxTexturePath: worldData?.settings?.environment?.skyBoxTexturePath || '',
+          moons: worldData?.settings?.environment?.moons || [
+            { enabled: false, size: 60, positionOnCircle: 0, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
+            { enabled: false, size: 60, positionOnCircle: 120, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
+            { enabled: false, size: 60, positionOnCircle: 240, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' }
+          ]
         },
         worldTime: {
           minuteScaling: worldData?.settings?.worldTime?.minuteScaling || 1,
