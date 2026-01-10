@@ -781,8 +781,55 @@
               </div>
             </div>
 
+            <!-- Environment Scripts -->
+            <div class="divider">Environment Scripts</div>
+            <p class="text-sm text-base-content/70 mb-4">Map action names to scripts (optional). If not defined here, scripts will be started by action name directly.</p>
+
+            <!-- Existing scripts -->
+            <div v-if="formData.publicData.settings.environmentScripts && formData.publicData.settings.environmentScripts.length > 0" class="space-y-2 mb-4">
+              <div
+                v-for="(scriptDef, index) in formData.publicData.settings.environmentScripts"
+                :key="`script-${index}`"
+                class="flex gap-2 items-center"
+              >
+                <input
+                  v-model="scriptDef.name"
+                  type="text"
+                  placeholder="Action name (e.g., custom_weather)"
+                  class="input input-bordered input-sm flex-1"
+                />
+                <input
+                  v-model="scriptDef.script"
+                  type="text"
+                  placeholder="Script name (e.g., weather_rain)"
+                  class="input input-bordered input-sm flex-1"
+                />
+                <button
+                  @click="removeEnvironmentScript(index)"
+                  class="btn btn-xs btn-error btn-ghost"
+                  title="Delete script"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Add new script button -->
+            <button
+              @click="addEnvironmentScript"
+              type="button"
+              class="btn btn-sm btn-primary"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Environment Script
+            </button>
+
             <!-- Moon Settings Collapsible -->
-            <div class="collapse collapse-arrow bg-base-200">
+            <div class="collapse collapse-arrow bg-base-200 mt-4">
               <input type="checkbox" />
               <div class="collapse-title font-medium">Moon Settings (up to 3 moons)</div>
               <div class="collapse-content space-y-4">
@@ -1274,7 +1321,8 @@ const formData = ref({
           { enabled: false, size: 60, positionOnCircle: 0, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
           { enabled: false, size: 60, positionOnCircle: 120, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
           { enabled: false, size: 60, positionOnCircle: 240, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' }
-        ]
+        ],
+        environmentScripts: []
       },
       worldTime: {
         minuteScaling: 1,
@@ -1365,7 +1413,8 @@ const loadWorld = () => {
               { enabled: false, size: 60, positionOnCircle: 0, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
               { enabled: false, size: 60, positionOnCircle: 120, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
               { enabled: false, size: 60, positionOnCircle: 240, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' }
-            ]
+            ],
+            environmentScripts: []
           },
           worldTime: {
             minuteScaling: 1,
@@ -1433,7 +1482,8 @@ const loadWorld = () => {
             { enabled: false, size: 60, positionOnCircle: 0, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
             { enabled: false, size: 60, positionOnCircle: 120, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' },
             { enabled: false, size: 60, positionOnCircle: 240, heightOverCamera: 45, distance: 450, phase: 0.5, texture: '' }
-          ]
+          ],
+          environmentScripts: worldData?.settings?.environment?.environmentScripts || []
         },
         worldTime: {
           minuteScaling: worldData?.settings?.worldTime?.minuteScaling || 1,
@@ -1502,6 +1552,24 @@ const formatDate = (dateString: string | undefined): string => {
     return new Date(dateString).toLocaleString();
   } catch {
     return 'Invalid date';
+  }
+};
+
+// Helper method to add environment script
+const addEnvironmentScript = () => {
+  if (!formData.value.publicData.settings.environmentScripts) {
+    formData.value.publicData.settings.environmentScripts = [];
+  }
+  formData.value.publicData.settings.environmentScripts.push({
+    name: '',
+    script: ''
+  });
+};
+
+// Helper method to remove environment script
+const removeEnvironmentScript = (index: number) => {
+  if (formData.value.publicData.settings.environmentScripts) {
+    formData.value.publicData.settings.environmentScripts.splice(index, 1);
   }
 };
 

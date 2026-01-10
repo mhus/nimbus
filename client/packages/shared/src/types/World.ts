@@ -3,7 +3,6 @@
  */
 
 import type { Vector3 } from './Vector3';
-import type { ScriptActionDefinition } from '../scrawl/ScriptActionDefinition';
 import {HexVector2} from "./HexVector2";
 import {Area} from "./Area";
 
@@ -184,12 +183,10 @@ export interface WorldInfo {
 
     /** Environment scripts (optional) */
     environmentScripts?: Array<{
-      /** Script name (unique identifier) */
+      /** Action name (unique identifier) */
       name: string;
-      /** Script group (e.g., 'environment', 'weather', 'daytime') */
-      group: string;
-      /** Script action definition */
-      script: ScriptActionDefinition;
+      /** Script name to execute (reference to script in script registry) */
+      script: string;
     }>;
 
     /** World Time configuration (optional) */

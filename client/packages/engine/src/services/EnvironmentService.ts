@@ -66,28 +66,22 @@ export interface WindParameters {
 
 /**
  * Environment script definition
- * Scripts are stored by name and can be executed in groups
+ * Scripts are stored by action name
  */
 export interface EnvironmentScript {
-  /** Script name (key) */
+  /** Action name (unique identifier) */
   name: string;
 
-  /** Script group (e.g., 'environment', 'weather', 'daytime') */
-  group: string;
-
-  /** Script action definition */
-  script: ScriptActionDefinition;
+  /** Script name to execute (reference to script in script registry) */
+  script: string;
 }
 
 /**
  * Running environment script information
  */
 interface RunningEnvironmentScript {
-  /** Script name */
+  /** Action name */
   name: string;
-
-  /** Script group */
-  group: string;
 
   /** Executor ID from ScrawlService */
   executorId: string;
@@ -935,11 +929,11 @@ export class EnvironmentService {
     const scripts = worldInfo.settings.environmentScripts;
     if (Array.isArray(scripts)) {
       for (const scriptDef of scripts) {
-        if (scriptDef.name && scriptDef.group && scriptDef.script) {
+        if (scriptDef.name && scriptDef.script) {
           this.environmentScripts.set(scriptDef.name, scriptDef);
           logger.debug('Loaded environment script from WorldInfo', {
             name: scriptDef.name,
-            group: scriptDef.group,
+            script: scriptDef.script,
           });
         }
       }
@@ -950,19 +944,17 @@ export class EnvironmentService {
   /**
    * Create/register an environment script
    *
-   * @param name Script name (unique identifier)
-   * @param group Script group (e.g., 'environment', 'weather')
-   * @param script Script action definition
+   * @param name Action name (unique identifier)
+   * @param scriptName Script name to execute (reference to script in script registry)
    */
-  createEnvironmentScript(name: string, group: string, script: ScriptActionDefinition): void {
+  createEnvironmentScript(name: string, scriptName: string): void {
     const environmentScript: EnvironmentScript = {
       name,
-      group,
-      script,
+      script: scriptName,
     };
 
     this.environmentScripts.set(name, environmentScript);
-    logger.debug('Environment script created', { name, group });
+    logger.debug('Environment script created', { name, script: scriptName });
   }
 
   /**
@@ -998,54 +990,60 @@ export class EnvironmentService {
 
   /**
    * Start an environment script
-   * If a script is already running in the same group, it will be stopped first
+   * If a script with the same action name is already running, it will be stopped first
+   * If the script is not found in environmentScripts, it will try to start it directly by name
    *
-   * @param name Script name
-   * @returns Executor ID or null if script not found or ScrawlService unavailable
+   * @param name Action name (or script name if not in environmentScripts)
+   * @returns Executor ID or null if ScrawlService unavailable or script execution failed
    */
   async startEnvironmentScript(name: string): Promise<string | null> {
-    const scriptDef = this.environmentScripts.get(name);
-    if (!scriptDef) {
-      logger.error('Environment script not found', { name });
-      return null;
-    }
-
     const scrawlService = this.appContext.services.scrawl;
     if (!scrawlService) {
       logger.error('ScrawlService not available');
       return null;
     }
 
-    // Stop any running script in the same group
-    await this.stopEnvironmentScriptByGroup(scriptDef.group);
+    // Stop any running script with the same action name
+    await this.stopEnvironmentScript(name);
 
     try {
-      // Use script action definition directly (already has script field)
-      // Ensure it's executed locally only
-      const scriptAction: ScriptActionDefinition = {
-        ...scriptDef.script,
-        sendToServer: false, // Override: Always execute locally
-      };
+      const scriptDef = this.environmentScripts.get(name);
+      let scriptId: string;
 
-      logger.debug('Starting environment script', {
-        name: scriptDef.name,
-        group: scriptDef.group,
-      });
+      if (scriptDef) {
+        // Use script from environmentScripts mapping
+        scriptId = scriptDef.script;
+        logger.debug('Starting environment script from mapping', {
+          name: scriptDef.name,
+          scriptId: scriptDef.script,
+        });
+      } else {
+        // Try to start script directly by name
+        scriptId = name;
+        logger.debug('Starting environment script directly by name', {
+          scriptId: name,
+        });
+      }
+
+      // Get script from script registry by ID
+      const scriptAction: ScriptActionDefinition = {
+        scriptId: scriptId,
+        sendToServer: false, // Execute locally only
+      };
 
       const executorId = await scrawlService.executeAction(scriptAction);
 
       const runningScript: RunningEnvironmentScript = {
-        name: scriptDef.name,
-        group: scriptDef.group,
+        name: name,
         executorId,
         startTime: Date.now(),
       };
 
-      this.runningScripts.set(scriptDef.group, runningScript);
+      this.runningScripts.set(name, runningScript);
 
       logger.debug('Environment script started', {
-        name: scriptDef.name,
-        group: scriptDef.group,
+        name: name,
+        scriptId: scriptId,
         executorId,
       });
 
@@ -1060,14 +1058,31 @@ export class EnvironmentService {
   }
 
   /**
-   * Stop environment script by group
+   * Start environment script if not in EDITOR mode
+   * This is a wrapper around startEnvironmentScript that checks for EDITOR mode
    *
-   * @param group Script group
+   * @param name Action name
+   * @returns Executor ID or null if in EDITOR mode or if script execution failed
    */
-  async stopEnvironmentScriptByGroup(group: string): Promise<boolean> {
-    const runningScript = this.runningScripts.get(group);
+  private async startEnvironmentScriptIfNotEditor(name: string): Promise<string | null> {
+    // @ts-ignore - __EDITOR__ is defined by Vite
+    if (typeof __EDITOR__ !== 'undefined' && __EDITOR__) {
+      logger.debug('Skipping environment script in EDITOR mode', { name });
+      return null;
+    }
+
+    return this.startEnvironmentScript(name);
+  }
+
+  /**
+   * Stop environment script by action name
+   *
+   * @param name Action name
+   */
+  async stopEnvironmentScript(name: string): Promise<boolean> {
+    const runningScript = this.runningScripts.get(name);
     if (!runningScript) {
-      logger.debug('No running script in group', { group });
+      logger.debug('No running script with name', { name });
       return false;
     }
 
@@ -1079,18 +1094,17 @@ export class EnvironmentService {
 
     const cancelled = scrawlService.cancelExecutor(runningScript.executorId);
     if (cancelled) {
-      this.runningScripts.delete(group);
+      this.runningScripts.delete(name);
 
       logger.debug('Environment script stopped', {
         name: runningScript.name,
-        group: runningScript.group,
         executorId: runningScript.executorId,
       });
 
       return true;
     } else {
       logger.error('Failed to stop environment script', {
-        group,
+        name,
         executorId: runningScript.executorId,
       });
       return false;
@@ -1098,14 +1112,13 @@ export class EnvironmentService {
   }
 
   /**
-   * Get current running script name for a group
+   * Check if an environment script is currently running
    *
-   * @param group Script group
-   * @returns Script name or null if no script is running in the group
+   * @param name Action name
+   * @returns true if script is running, false otherwise
    */
-  getCurrentEnvironmentScriptName(group: string): string | null {
-    const runningScript = this.runningScripts.get(group);
-    return runningScript?.name ?? null;
+  isEnvironmentScriptRunning(name: string): boolean {
+    return this.runningScripts.has(name);
   }
 
   /**
@@ -1329,11 +1342,11 @@ export class EnvironmentService {
     // Set initial day section
     this.currentDaySection = this.getWorldDayTimeSection();
 
-    // Start script for initial day section
+    // Start script for initial day section (unless in EDITOR mode)
     const dayScriptName = `daytime_change_${this.currentDaySection}`;
-    this.startEnvironmentScript(dayScriptName);
+    this.startEnvironmentScriptIfNotEditor(dayScriptName);
 
-    // Start script for current season
+    // Start script for current season (unless in EDITOR mode)
     const seasonStatus = this.appContext.worldInfo?.seasonStatus;
     if (seasonStatus !== undefined && seasonStatus !== 0) {
       // Map season status to script name
@@ -1341,7 +1354,7 @@ export class EnvironmentService {
       const seasonName = seasonNames[seasonStatus];
       if (seasonName) {
         const seasonScriptName = `season_${seasonName}`;
-        this.startEnvironmentScript(seasonScriptName);
+        this.startEnvironmentScriptIfNotEditor(seasonScriptName);
         this.currentSeason = seasonStatus; // Track current season
         logger.debug('Started season script', { seasonStatus, seasonScriptName });
       }
@@ -1514,7 +1527,7 @@ export class EnvironmentService {
 
       // Start corresponding environment script
       const scriptName = `daytime_change_${newDaySection}`;
-      this.startEnvironmentScript(scriptName);
+      this.startEnvironmentScriptIfNotEditor(scriptName);
 
       // Also check for season change when day section changes
       const currentWorldMinute = this.getWorldTimeCurrent();
@@ -1527,7 +1540,7 @@ export class EnvironmentService {
         const seasonName = seasonNames[newSeason];
         if (seasonName) {
           const seasonScriptName = `season_${seasonName}`;
-          this.startEnvironmentScript(seasonScriptName);
+          this.startEnvironmentScriptIfNotEditor(seasonScriptName);
           logger.debug('Season changed, started season script', {
             from: this.currentSeason,
             to: newSeason,
@@ -1709,8 +1722,8 @@ export class EnvironmentService {
     }
 
     // Stop all running scripts
-    for (const group of this.runningScripts.keys()) {
-      this.stopEnvironmentScriptByGroup(group);
+    for (const name of this.runningScripts.keys()) {
+      this.stopEnvironmentScript(name);
     }
 
     // Dispose shadow generator
