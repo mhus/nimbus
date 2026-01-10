@@ -33,8 +33,6 @@ import { DisposableResources } from '../rendering/DisposableResources';
 import {
   worldToChunk,
   getChunkKey,
-  getBrowserSpecificRenderDistance,
-  getBrowserSpecificUnloadDistance,
 } from '../utils/ChunkUtils';
 import { mergeBlockModifier, getBlockPositionKey } from '../utils/BlockModifierMerge';
 
@@ -98,10 +96,11 @@ export class ChunkService {
     private networkService: NetworkService,
     private appContext: AppContext
   ) {
-    this.renderDistance = getBrowserSpecificRenderDistance();
-    this.unloadDistance = getBrowserSpecificUnloadDistance();
+    // Load render and unload distance from config (from URL query parameters)
+    this.renderDistance = appContext.config?.renderDistance ?? 1;
+    this.unloadDistance = appContext.config?.unloadDistance ?? 2;
 
-    logger.debug('ChunkService initialized', {
+    logger.info('ChunkService initialized', {
       renderDistance: this.renderDistance,
       unloadDistance: this.unloadDistance,
     });
@@ -151,8 +150,10 @@ export class ChunkService {
     try {
       const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
       const playerChunk = worldToChunk(worldX, worldZ, chunkSize);
+      const chunkX = playerChunk.cx;
+      const chunkZ = playerChunk.cz;
 
-      this.registerChunks(worldX, worldZ);
+      this.registerChunks(chunkX, chunkZ);
       this.unloadDistantChunks(playerChunk.cx, playerChunk.cz);
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.updateChunksAroundPosition', {

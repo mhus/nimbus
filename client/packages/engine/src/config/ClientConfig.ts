@@ -43,6 +43,18 @@ export interface ClientConfig {
    * Loaded from config.json or .env
    */
   exitUrl: string;
+
+  /**
+   * Render distance for chunks (in chunks)
+   * Loaded from URL query parameter 'renderDistance', defaults to 1
+   */
+  renderDistance: number;
+
+  /**
+   * Unload distance for chunks (in chunks)
+   * Loaded from URL query parameter 'unloadDistance', defaults to 2
+   */
+  unloadDistance: number;
 }
 
 /**
@@ -80,6 +92,13 @@ export async function loadClientConfig(): Promise<ClientConfig> {
 
   // Get worldId from URL parameter (required)
   const worldId = urlParams.get('worldId');
+
+  // Get renderDistance and unloadDistance from URL parameters (optional, with defaults)
+  const renderDistanceParam = urlParams.get('renderDistance');
+  const unloadDistanceParam = urlParams.get('unloadDistance');
+
+  const renderDistance = renderDistanceParam ? parseInt(renderDistanceParam, 10) : 1;
+  const unloadDistance = unloadDistanceParam ? parseInt(unloadDistanceParam, 10) : 2;
 
   if (usernameFromUrl) {
     logger.info('Username overridden by URL query parameter', { username: usernameFromUrl });
@@ -119,6 +138,8 @@ export async function loadClientConfig(): Promise<ClientConfig> {
     worldId: worldId!,
     exitUrl: exitUrl!,
     logToConsole,
+    renderDistance,
+    unloadDistance,
   };
 
   logger.info('Initial client configuration loaded', {
@@ -126,6 +147,8 @@ export async function loadClientConfig(): Promise<ClientConfig> {
     worldId,
     exitUrl,
     logToConsole,
+    renderDistance,
+    unloadDistance,
     note: 'websocketUrl will be loaded from server config',
   });
 

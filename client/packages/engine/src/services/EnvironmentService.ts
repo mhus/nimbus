@@ -1724,7 +1724,7 @@ export class EnvironmentService {
     }
 
     // Removed debug log for performance
-      logger.info('Celestial bodies updated', {
+      logger.debug('Celestial bodies updated', {
           worldTime: this.getWorldTimeCurrentAsString(),
       });
   }
