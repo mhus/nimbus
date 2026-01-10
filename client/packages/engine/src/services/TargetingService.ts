@@ -29,7 +29,7 @@ interface ClientBlock {
     position: { x: number; y: number; z: number };
     metadata?: {
       id?: string;
-      groupId?: number;
+      groupId?: string;
       [key: string]: any;
     };
     [key: string]: any;

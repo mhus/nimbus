@@ -11,5 +11,8 @@ package de.mhus.nimbus.generated.network.messages;
 @lombok.NoArgsConstructor
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class ChunkRegisterData {
-    private java.util.List<ChunkCoordinate> c;
+    private int cx;
+    private int cz;
+    private int hr;
+    private int lr;
 }

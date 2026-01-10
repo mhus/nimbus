@@ -1,5 +1,5 @@
 /**
- * GetCurrentEnvironmentScriptCommand - Get current running script name for a group
+ * GetCurrentEnvironmentScriptCommand - Check if an environment script is running
  */
 
 import { CommandHandler } from './CommandHandler';
@@ -12,16 +12,16 @@ const logger = getLogger('GetCurrentEnvironmentScriptCommand');
  * Get current environment script command
  *
  * Usage:
- *   getCurrentEnvironmentScript <group>
+ *   getCurrentEnvironmentScript <name>
  *
  * Parameters:
- *   group - Script group (e.g., 'environment', 'weather', 'daytime')
+ *   name - Action name to check
  *
  * Examples:
- *   getCurrentEnvironmentScript("weather")
- *   getCurrentEnvironmentScript("daytime")
+ *   getCurrentEnvironmentScript("rain_storm")
+ *   getCurrentEnvironmentScript("day_cycle")
  *
- * Returns: Current running script name or null if no script is running in the group
+ * Returns: Whether the script is running
  */
 export class GetCurrentEnvironmentScriptCommand extends CommandHandler {
   private appContext: AppContext;
@@ -36,7 +36,7 @@ export class GetCurrentEnvironmentScriptCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Get current running script name for a group';
+    return 'Check if an environment script is running by name';
   }
 
   execute(parameters: any[]): any {
@@ -49,39 +49,30 @@ export class GetCurrentEnvironmentScriptCommand extends CommandHandler {
 
     // Validate parameters
     if (parameters.length < 1) {
-      logger.error('Usage: getCurrentEnvironmentScript <group>');
+      logger.error('Usage: getCurrentEnvironmentScript <name>');
       return {
-        error: 'Missing parameters. Usage: getCurrentEnvironmentScript <group>',
+        error: 'Missing parameters. Usage: getCurrentEnvironmentScript <name>',
       };
     }
 
-    const group = parameters[0];
+    const name = parameters[0];
 
-    // Validate group
-    if (typeof group !== 'string' || group.trim() === '') {
-      logger.error('Script group must be a non-empty string');
-      return { error: 'Script group must be a non-empty string' };
+    // Validate name
+    if (typeof name !== 'string' || name.trim() === '') {
+      logger.error('Action name must be a non-empty string');
+      return { error: 'Action name must be a non-empty string' };
     }
 
-    // Get current script name
-    const scriptName = environmentService.getCurrentEnvironmentScriptName(group);
+    // Check if script is running
+    const isRunning = environmentService.isEnvironmentScriptRunning(name);
 
-    if (scriptName) {
-      const message = `Current script for group ${group}: ${scriptName}`;
-      logger.debug(message);
-      return {
-        group,
-        scriptName,
-        message,
-      };
-    } else {
-      const message = `No running script for group: ${group}`;
-      logger.debug(message);
-      return {
-        group,
-        scriptName: null,
-        message,
-      };
-    }
+    const message = `Script ${name} is ${isRunning ? 'running' : 'not running'}`;
+    logger.debug(message);
+
+    return {
+      name,
+      isRunning,
+      message,
+    };
   }
 }

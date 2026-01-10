@@ -5127,7 +5127,7 @@
     } ]
   }, {
     "path" : "/Users/hummel/sources/mhus/nimbus-server/server/generated/../client_shared_src/types/World.ts",
-    "imports" : [ "./Vector3", "../scrawl/ScriptActionDefinition", "./HexVector2", "./Area" ],
+    "imports" : [ "./Vector3", "./HexVector2", "./Area" ],
     "interfaces" : [ {
       "name" : "WorldInfo",
       "extendsList" : [ ],
@@ -5654,15 +5654,8 @@
         "javaTypeHint" : null,
         "comment" : null
       }, {
-        "name" : "group",
-        "type" : "string",
-        "optional" : false,
-        "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
-      }, {
         "name" : "script",
-        "type" : "ScriptActionDefinition",
+        "type" : "string",
         "optional" : false,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -6390,7 +6383,7 @@
         "comment" : null
       }, {
         "name" : "groupId",
-        "type" : "number",
+        "type" : "string",
         "optional" : true,
         "visibility" : null,
         "javaTypeHint" : null,
@@ -7330,12 +7323,33 @@
       "name" : "ChunkRegisterData",
       "extendsList" : [ ],
       "properties" : [ {
-        "name" : "c",
-        "type" : "ChunkCoordinate[]",
+        "name" : "cx",
+        "type" : "number",
         "optional" : false,
         "visibility" : null,
-        "javaTypeHint" : null,
-        "comment" : null
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      }, {
+        "name" : "cz",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      }, {
+        "name" : "hr",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
+      }, {
+        "name" : "lr",
+        "type" : "number",
+        "optional" : false,
+        "visibility" : null,
+        "javaTypeHint" : "int",
+        "comment" : "// javaType: int"
       } ],
       "methods" : [ ]
     }, {

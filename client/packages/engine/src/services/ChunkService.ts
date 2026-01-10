@@ -86,8 +86,6 @@ type EventListener = (...args: any[]) => void;
  */
 export class ChunkService {
   private chunks = new Map<string, ClientChunk>();
-  private registeredChunks = new Set<string>();
-  private lastRegistration: ChunkCoordinate[] = [];
   private eventListeners: Map<string, EventListener[]> = new Map();
 
   private renderDistance: number;
@@ -108,10 +106,6 @@ export class ChunkService {
       unloadDistance: this.unloadDistance,
     });
 
-    // Listen for session restoration to re-register chunks
-    this.networkService.on('session:restore', () => {
-      this.onSessionRestore();
-    });
   }
 
   /**
@@ -120,50 +114,27 @@ export class ChunkService {
    * Server will automatically send chunk data for registered chunks.
    * Filters out already-registered chunks to avoid duplicate requests.
    *
-   * @param coords - Chunk coordinates to register
+   * @param cx
    */
-  async registerChunks(coords: ChunkCoordinate[]): Promise<void> {
+  async registerChunks(cx:number, cz: number): Promise<void> {
+      const d = {
+          cx: cx,
+          cz: cz,
+          hr: this.renderDistance,
+          lr: this.unloadDistance
+      }
     try {
-      if (coords.length === 0) {
-        return;
-      }
-
-      // Filter to only new chunks
-      const newCoords = coords.filter(c => {
-        const key = getChunkKey(c.cx, c.cz);
-        return !this.registeredChunks.has(key);
-      });
-
-      if (newCoords.length === 0) {
-        logger.debug('All chunks already registered');
-        return;
-      }
-
-      // Add to registered set
-      newCoords.forEach(c => {
-        const key = getChunkKey(c.cx, c.cz);
-        this.registeredChunks.add(key);
-      });
-
       // Send registration message (send all coords, not just new ones)
       const message: BaseMessage<ChunkRegisterData> = {
         t: MessageType.CHUNK_REGISTER,
-        d: { c: coords },
+        d: d
       };
 
       this.networkService.send(message);
 
-      // Save for reconnect
-      this.lastRegistration = coords;
-
-      logger.debug('Registered chunks', {
-        total: coords.length,
-        new: newCoords.length,
-      });
+      logger.debug('Registered chunks', d);
     } catch (error) {
-      throw ExceptionHandler.handleAndRethrow(error, 'ChunkService.registerChunks', {
-        count: coords.length,
-      });
+      throw ExceptionHandler.handleAndRethrow(error, 'ChunkService.registerChunks', d);
     }
   }
 
@@ -181,17 +152,7 @@ export class ChunkService {
       const chunkSize = this.appContext.worldInfo?.chunkSize || 16;
       const playerChunk = worldToChunk(worldX, worldZ, chunkSize);
 
-      const coords: ChunkCoordinate[] = [];
-      for (let dx = -this.renderDistance; dx <= this.renderDistance; dx++) {
-        for (let dz = -this.renderDistance; dz <= this.renderDistance; dz++) {
-          coords.push({
-            cx: playerChunk.cx + dx,
-            cz: playerChunk.cz + dz,
-          });
-        }
-      }
-
-      this.registerChunks(coords);
+      this.registerChunks(worldX, worldZ);
       this.unloadDistantChunks(playerChunk.cx, playerChunk.cz);
     } catch (error) {
       ExceptionHandler.handle(error, 'ChunkService.updateChunksAroundPosition', {
@@ -234,7 +195,6 @@ export class ChunkService {
 
         // Now delete the chunk
         this.chunks.delete(key);
-        this.registeredChunks.delete(key);
 
         logger.debug('Unloaded chunk', {
           cx,
@@ -313,7 +273,7 @@ export class ChunkService {
 
         if (existingChunk) {
           // Update existing chunk
-          logger.info('Updating existing chunk with new data', {
+          logger.debug('Updating existing chunk with new data', {
             cx: chunkData.cx,
             cz: chunkData.cz,
             oldBlocks: existingChunk.data.data.size,
@@ -1312,18 +1272,6 @@ export class ChunkService {
   }
 
   /**
-   * Resend last chunk registration (called after reconnect)
-   */
-  resendLastRegistration(): void {
-    if (this.lastRegistration.length > 0) {
-      logger.debug('Resending last chunk registration after reconnect', {
-        count: this.lastRegistration.length,
-      });
-      this.registerChunks(this.lastRegistration);
-    }
-  }
-
-  /**
    * Get current render distance
    */
   getRenderDistance(): number {
@@ -1721,30 +1669,4 @@ export class ChunkService {
     }
   }
 
-  /**
-   * Handle session restoration after reconnect
-   *
-   * Re-registers all chunks that were previously registered before disconnect.
-   * This ensures the client receives updates for chunks it was tracking.
-   */
-  private onSessionRestore(): void {
-    try {
-      logger.debug('Session restored, re-registering chunks', {
-        chunksToRegister: this.lastRegistration.length,
-        registeredChunks: this.registeredChunks.size,
-      });
-
-      // Clear registered chunks set to allow re-registration
-      this.registeredChunks.clear();
-
-      // Re-register all chunks from last registration
-      if (this.lastRegistration.length > 0) {
-        this.registerChunks(this.lastRegistration).catch(error => {
-          ExceptionHandler.handle(error, 'ChunkService.onSessionRestore');
-        });
-      }
-    } catch (error) {
-      ExceptionHandler.handle(error, 'ChunkService.onSessionRestore');
-    }
-  }
 }

@@ -584,7 +584,7 @@ export class NetworkService {
     action: string = 'click',
     params?: Record<string, any>,
     id?: string,
-    gId?: number
+    gId?: string
   ): void {
     const message: RequestMessage<any> = {
       i: this.generateMessageId(),

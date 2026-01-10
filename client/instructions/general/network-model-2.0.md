@@ -136,14 +136,35 @@ Chunks sind immer Colums mit X und Z Koordinate (cx, cz). Die Y-Richtung wird im
 
 Der Client registriert die Chunks, die er vom Server empfangen möchte, basierend auf seiner Position und Sichtweite.
 
-Die Registrierung wird als Liste von Chunk-Koordinaten (cx, cz) gesendet, alle nicht aufgeführten Chunks werden vom Server
-nicht mehr gesendet.
+Die Registrierung wird mit einer zentralen Chunk-Koordinaten (cx, cz) und einem Radius für high definition und low definition Chunks gesendet.
 
 ```json
-{"t": "c.r", "d": {"c": [{"x":0,"z":0},{"x":1,"z":0},{"x":0,"z":2}]}}
+{"t": "c.r", "d": 
+  {
+    "cx": 0,      // central chunk x coordinate
+    "cz": 0,      // central chunk z coordinate
+    "hr": 2, // radius for high definition chunks
+    "lr": 5   // radius for low definition chunks
+  }
+}
 ```
 
-**Hinweis:** Im JSON bleiben die kurzen Namen `x`, `z` für Netzwerk-Optimierung. Im Code verwenden wir `cx`, `cz`.
+Beispiel:
+
+```json
+{"t": "c.r", "d": {"cx":0,"cz":0,"hr":2,"lr":5}}
+```
+
+Radius ist immer der Radius um die zentrale Chunk-Koordinate. In diesem Beispiel werden die folgenden Chunks registriert:
+
+```text
+High Definition Chunks (hr=2):
+(-2,-2), (-1,-2), (0,-2), (1,-2), (2,-2)
+(-2,-1), (-1,-1), (0,-1), (1,-1), (2,-1)
+(-2, 0), (-1, 0), (0, 0), (1, 0), (2, 0)
+(-2, 1), (-1, 1), (0, 1), (1, 1), (2, 1)
+(-2, 2), (-1, 2), (0, 2), (1, 2), (2, 2)
+```
 
 Für alle Chunks, die noch nicht registriert waren, sendet der Server automatisch die Chunk Daten.
 

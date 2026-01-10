@@ -1,5 +1,5 @@
 /**
- * StopEnvironmentScriptCommand - Stop an environment script by group
+ * StopEnvironmentScriptCommand - Stop an environment script by name
  */
 
 import { CommandHandler } from './CommandHandler';
@@ -12,14 +12,14 @@ const logger = getLogger('StopEnvironmentScriptCommand');
  * Stop environment script command
  *
  * Usage:
- *   stopEnvironmentScript <group>
+ *   stopEnvironmentScript <name>
  *
  * Parameters:
- *   group - Script group to stop (e.g., 'environment', 'weather', 'daytime')
+ *   name - Action name to stop (e.g., 'rain_storm', 'day_cycle')
  *
  * Examples:
- *   stopEnvironmentScript("weather")
- *   stopEnvironmentScript("daytime")
+ *   stopEnvironmentScript("rain_storm")
+ *   stopEnvironmentScript("day_cycle")
  */
 export class StopEnvironmentScriptCommand extends CommandHandler {
   private appContext: AppContext;
@@ -34,7 +34,7 @@ export class StopEnvironmentScriptCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Stop an environment script by group';
+    return 'Stop an environment script by name';
   }
 
   async execute(parameters: any[]): Promise<any> {
@@ -47,36 +47,36 @@ export class StopEnvironmentScriptCommand extends CommandHandler {
 
     // Validate parameters
     if (parameters.length < 1) {
-      logger.error('Usage: stopEnvironmentScript <group>');
+      logger.error('Usage: stopEnvironmentScript <name>');
       return {
-        error: 'Missing parameters. Usage: stopEnvironmentScript <group>',
+        error: 'Missing parameters. Usage: stopEnvironmentScript <name>',
       };
     }
 
-    const group = parameters[0];
+    const name = parameters[0];
 
-    // Validate group
-    if (typeof group !== 'string' || group.trim() === '') {
-      logger.error('Script group must be a non-empty string');
-      return { error: 'Script group must be a non-empty string' };
+    // Validate name
+    if (typeof name !== 'string' || name.trim() === '') {
+      logger.error('Action name must be a non-empty string');
+      return { error: 'Action name must be a non-empty string' };
     }
 
     // Stop the script
-    const stopped = await environmentService.stopEnvironmentScriptByGroup(group);
+    const stopped = await environmentService.stopEnvironmentScript(name);
 
     if (stopped) {
-      const message = `Environment script stopped for group: ${group}`;
+      const message = `Environment script stopped: ${name}`;
       logger.debug(message);
       return {
-        group,
+        name,
         stopped: true,
         message,
       };
     } else {
-      const message = `No running script found for group: ${group}`;
+      const message = `No running script found: ${name}`;
       logger.debug(message);
       return {
-        group,
+        name,
         stopped: false,
         message,
       };

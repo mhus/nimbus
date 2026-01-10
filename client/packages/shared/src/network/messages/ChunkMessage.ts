@@ -63,7 +63,10 @@ export interface ChunkDataTransferObject {
  * All non-listed chunks will no longer be sent by server
  */
 export interface ChunkRegisterData {
-  c: ChunkCoordinate[];
+    cx: number; // javaType: int
+    cz: number; // javaType: int
+    hr: number; // javaType: int
+    lr: number; // javaType: int
 }
 
 export type ChunkRegisterMessage = BaseMessage<ChunkRegisterData>;

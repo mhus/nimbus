@@ -5,7 +5,6 @@
 import { CommandHandler } from './CommandHandler';
 import { getLogger } from '@nimbus/shared';
 import type { AppContext } from '../AppContext';
-import type { ScriptActionDefinition } from '@nimbus/shared';
 
 const logger = getLogger('CreateEnvironmentScriptCommand');
 
@@ -13,16 +12,15 @@ const logger = getLogger('CreateEnvironmentScriptCommand');
  * Create environment script command
  *
  * Usage:
- *   createEnvironmentScript <name> <group> <scriptDefinition>
+ *   createEnvironmentScript <name> <scriptName>
  *
  * Parameters:
- *   name             - Script name (unique identifier)
- *   group            - Script group (e.g., 'environment', 'weather', 'daytime')
- *   scriptDefinition - Script action definition (JSON object or inline object)
+ *   name       - Action name (unique identifier, e.g., 'custom_weather')
+ *   scriptName - Script name to execute (reference to script in script registry)
  *
  * Examples:
- *   createEnvironmentScript("rain_storm", "weather", {script:{id:"rain",root:{kind:"Play",effectId:"rain"}}})
- *   createEnvironmentScript("day_cycle", "daytime", {scriptId:"daytime_day"})
+ *   createEnvironmentScript("rain_storm", "weather_rain")
+ *   createEnvironmentScript("day_cycle", "daytime_day")
  */
 export class CreateEnvironmentScriptCommand extends CommandHandler {
   private appContext: AppContext;
@@ -37,7 +35,7 @@ export class CreateEnvironmentScriptCommand extends CommandHandler {
   }
 
   description(): string {
-    return 'Create/register an environment script (name group scriptDefinition)';
+    return 'Create/register an environment script (name scriptName)';
   }
 
   execute(parameters: any[]): any {
@@ -49,52 +47,37 @@ export class CreateEnvironmentScriptCommand extends CommandHandler {
     }
 
     // Validate parameters
-    if (parameters.length < 3) {
-      logger.error('Usage: createEnvironmentScript <name> <group> <scriptDefinition>');
+    if (parameters.length < 2) {
+      logger.error('Usage: createEnvironmentScript <name> <scriptName>');
       return {
-        error: 'Missing parameters. Usage: createEnvironmentScript <name> <group> <scriptDefinition>',
+        error: 'Missing parameters. Usage: createEnvironmentScript <name> <scriptName>',
       };
     }
 
     const name = parameters[0];
-    const group = parameters[1];
-    let scriptDefinition: ScriptActionDefinition;
+    const scriptName = parameters[1];
 
     // Validate name
     if (typeof name !== 'string' || name.trim() === '') {
+      logger.error('Action name must be a non-empty string');
+      return { error: 'Action name must be a non-empty string' };
+    }
+
+    // Validate scriptName
+    if (typeof scriptName !== 'string' || scriptName.trim() === '') {
       logger.error('Script name must be a non-empty string');
       return { error: 'Script name must be a non-empty string' };
     }
 
-    // Validate group
-    if (typeof group !== 'string' || group.trim() === '') {
-      logger.error('Script group must be a non-empty string');
-      return { error: 'Script group must be a non-empty string' };
-    }
-
-    // Parse script definition
-    try {
-      if (typeof parameters[2] === 'object' && parameters[2] !== null) {
-        scriptDefinition = parameters[2] as ScriptActionDefinition;
-      } else if (typeof parameters[2] === 'string') {
-        scriptDefinition = JSON.parse(parameters[2]);
-      } else {
-        throw new Error('Invalid script definition format');
-      }
-    } catch (error: any) {
-      logger.error('Failed to parse script definition', { error: error.message });
-      return { error: `Failed to parse script definition: ${error.message}` };
-    }
-
     // Create the script
-    environmentService.createEnvironmentScript(name, group, scriptDefinition);
+    environmentService.createEnvironmentScript(name, scriptName);
 
-    const message = `Environment script created: ${name} (group: ${group})`;
+    const message = `Environment script created: ${name} -> ${scriptName}`;
     logger.debug(message);
 
     return {
       name,
-      group,
+      scriptName,
       message,
     };
   }

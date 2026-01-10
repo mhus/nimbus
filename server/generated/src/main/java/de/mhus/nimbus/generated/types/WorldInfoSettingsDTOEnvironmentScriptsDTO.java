@@ -12,6 +12,5 @@ package de.mhus.nimbus.generated.types;
 @lombok.AllArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 public class WorldInfoSettingsDTOEnvironmentScriptsDTO {
     private String name;
-    private String group;
-    private de.mhus.nimbus.generated.scrawl.ScriptActionDefinition script;
+    private String script;
 }

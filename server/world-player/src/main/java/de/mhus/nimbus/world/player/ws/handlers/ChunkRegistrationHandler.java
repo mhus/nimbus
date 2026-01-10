@@ -3,6 +3,7 @@ package de.mhus.nimbus.world.player.ws.handlers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import de.mhus.nimbus.generated.network.messages.ChunkRegisterData;
 import de.mhus.nimbus.generated.types.EntityPathway;
 import de.mhus.nimbus.world.player.ws.ChunkSenderService;
 import de.mhus.nimbus.world.player.ws.ChunkSenderService.ChunkCoord;
@@ -25,6 +26,10 @@ import java.util.List;
  * Registration is based on player position and view distance.
  * Only registered chunks receive updates.
  *
+ * Supports two formats:
+ * - New format: {cx, cz, lr, hr} - center position + load range (creates rectangle)
+ * - Old format: {c: [...]} - explicit array of chunk coordinates (for compatibility)
+ *
  * Delta-based: Only newly registered chunks are sent to client.
  */
 @Component
@@ -46,19 +51,30 @@ public class ChunkRegistrationHandler implements MessageHandler {
     public void handle(PlayerSession session, NetworkMessage message) throws Exception {
         JsonNode data = message.getD();
 
-        if (!data.has("c") || !data.get("c").isArray()) {
-            log.warn("Invalid chunk registration: missing 'c' array");
-            return;
-        }
-
-        // Parse requested chunks
-        JsonNode chunksArray = data.get("c");
         List<ChunkCoord> requestedChunks = new ArrayList<>();
 
-        for (JsonNode chunkNode : chunksArray) {
-            int cx = chunkNode.has("cx") ? chunkNode.get("cx").asInt() : 0;
-            int cz = chunkNode.has("cz") ? chunkNode.get("cz").asInt() : 0;
-            requestedChunks.add(new ChunkCoord(cx, cz));
+        // Check for new format: cx, cz, lr (center + low (density) range)
+        // TODO support hr (high (density) range) if needed
+        if (data.has("cx") && data.has("cz") && data.has("lr")) {
+            ChunkRegisterData registerData = objectMapper.treeToValue(data, ChunkRegisterData.class);
+
+            int centerX = registerData.getCx();
+            int centerZ = registerData.getCz();
+            int lowDensityRange = registerData.getLr();
+
+            // Create rectangle of chunks from center ± loadRange
+            for (int x = centerX - lowDensityRange; x <= centerX + lowDensityRange; x++) {
+                for (int z = centerZ - lowDensityRange; z <= centerZ + lowDensityRange; z++) {
+                    requestedChunks.add(new ChunkCoord(x, z));
+                }
+            }
+
+            log.debug("Chunk registration (new format): center=({}, {}), loadRange={}, total chunks={}",
+                    centerX, centerZ, lowDensityRange, requestedChunks.size());
+
+        } else {
+            log.warn("Invalid chunk registration: missing 'cx/cz/lr'");
+            return;
         }
 
         // Calculate delta (new chunks = requested - already registered)

@@ -328,7 +328,7 @@ export class WorldInfoCommand extends CommandHandler {
     if (worldInfo.settings?.environmentScripts && worldInfo.settings.environmentScripts.length > 0) {
       lines.push('Environment Scripts:');
       worldInfo.settings.environmentScripts.forEach((script, index) => {
-        lines.push(`  ${index + 1}. ${script.name} (${script.group})`);
+        lines.push(`  ${index + 1}. ${script.name} -> ${script.script}`);
       });
       lines.push('');
     }

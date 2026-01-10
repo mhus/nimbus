@@ -14,7 +14,7 @@ const logger = getLogger('ListEnvironmentScriptsCommand');
  * Usage:
  *   listEnvironmentScripts
  *
- * Returns: List of all registered environment scripts with their names, groups, and running status
+ * Returns: List of all registered environment scripts with their names and running status
  *
  * Examples:
  *   listEnvironmentScripts
@@ -47,30 +47,21 @@ export class ListEnvironmentScriptsCommand extends CommandHandler {
     const allScripts = environmentService.getAllEnvironmentScripts();
     const runningScripts = environmentService.getRunningEnvironmentScripts();
 
-    // Create a map of running scripts by group
-    const runningByGroup = new Map<string, string>();
-    for (const running of runningScripts) {
-      runningByGroup.set(running.group, running.name);
-    }
+    // Create a set of running script names
+    const runningNames = new Set(runningScripts.map((r) => r.name));
 
     // Build result list
     const scriptList = allScripts.map((script) => {
-      const isRunning = runningByGroup.get(script.group) === script.name;
+      const isRunning = runningNames.has(script.name);
       return {
         name: script.name,
-        group: script.group,
+        scriptName: script.script,
         running: isRunning,
-        scriptId: script.script.scriptId || '(inline)',
       };
     });
 
-    // Sort by group, then by name
-    scriptList.sort((a, b) => {
-      if (a.group !== b.group) {
-        return a.group.localeCompare(b.group);
-      }
-      return a.name.localeCompare(b.name);
-    });
+    // Sort by name
+    scriptList.sort((a, b) => a.name.localeCompare(b.name));
 
     // Log summary
     logger.debug(`Total environment scripts: ${scriptList.length}`);
@@ -83,7 +74,7 @@ export class ListEnvironmentScriptsCommand extends CommandHandler {
       logger.debug('Environment scripts:');
       for (const script of scriptList) {
         const status = script.running ? '[RUNNING]' : '[STOPPED]';
-        logger.debug(`  ${status} ${script.name} (group: ${script.group}, scriptId: ${script.scriptId})`);
+        logger.debug(`  ${status} ${script.name} -> ${script.scriptName}`);
       }
     }
 

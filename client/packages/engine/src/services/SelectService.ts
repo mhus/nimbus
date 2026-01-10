@@ -1436,7 +1436,7 @@ export class SelectService {
       let targetPosition: { x: number; y: number; z: number } | undefined;
       let entityId: string | undefined;
       let blockId: string | undefined;
-      let blockGroupId: number | undefined;
+      let blockGroupId: string | undefined;
       let blockX: number | undefined;
       let blockY: number | undefined;
       let blockZ: number | undefined;

@@ -30,7 +30,7 @@ interface EntityDimensions {
 /**
  * Collision event callback
  */
-export type CollisionEventCallback = (x: number, y: number, z: number, action: string, id?: string, gId?: number) => void;
+export type CollisionEventCallback = (x: number, y: number, z: number, action: string, id?: string, gId?: string) => void;
 
 /**
  * CollisionDetector - Handles all collision detection

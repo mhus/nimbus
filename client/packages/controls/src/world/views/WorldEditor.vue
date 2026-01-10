@@ -828,6 +828,67 @@
               Add Environment Script
             </button>
 
+            <!-- Shadow Settings Collapsible -->
+            <div class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" />
+              <div class="collapse-title font-medium">Shadow Settings</div>
+              <div class="collapse-content space-y-2">
+                <div class="form-control">
+                  <label class="label cursor-pointer justify-start gap-4">
+                    <span class="label-text">Shadows Enabled</span>
+                    <input v-model="formData.publicData.settings.shadows.enabled"
+                           type="checkbox" class="toggle" />
+                  </label>
+                  <label class="label">
+                    <span class="label-text-alt">Enable shadow rendering system</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Shadow Darkness (0.0 - 1.0)</span></label>
+                  <input v-model.number="formData.publicData.settings.shadows.darkness"
+                         type="number" step="0.1" min="0" max="1"
+                         class="input input-bordered input-sm" />
+                  <label class="label">
+                    <span class="label-text-alt">0.0 = very dark shadows, 1.0 = no shadows (default: 0.6)</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Max Shadow Distance (blocks)</span></label>
+                  <input v-model.number="formData.publicData.settings.shadows.maxDistance"
+                         type="number" min="1"
+                         class="input input-bordered input-sm" />
+                  <label class="label">
+                    <span class="label-text-alt">Maximum distance for shadow culling (default: 50)</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Shadow Map Size</span></label>
+                  <select v-model.number="formData.publicData.settings.shadows.mapSize"
+                          class="select select-bordered select-sm">
+                    <option :value="512">512</option>
+                    <option :value="1024">1024</option>
+                    <option :value="2048">2048</option>
+                    <option :value="4096">4096</option>
+                  </select>
+                  <label class="label">
+                    <span class="label-text-alt">Shadow map resolution (default: 512)</span>
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Shadow Quality</span></label>
+                  <select v-model="formData.publicData.settings.shadows.quality"
+                          class="select select-bordered select-sm">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                  <label class="label">
+                    <span class="label-text-alt">Shadow quality preset (default: low)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <!-- Moon Settings Collapsible -->
             <div class="collapse collapse-arrow bg-base-200 mt-4">
               <input type="checkbox" />
@@ -1412,6 +1473,13 @@ const formData = ref({
           moon1RotationHours: 504,
           moon2RotationHours: 336
         }
+      },
+      shadows: {
+        enabled: false,
+        darkness: 0.6,
+        maxDistance: 50,
+        mapSize: 512,
+        quality: 'low'
       }
     }
   }
@@ -1513,6 +1581,13 @@ const loadWorld = () => {
               moon1RotationHours: 504,
               moon2RotationHours: 336
             }
+          },
+          shadows: {
+            enabled: false,
+            darkness: 0.6,
+            maxDistance: 50,
+            mapSize: 512,
+            quality: 'low'
           }
         }
       }
@@ -1591,6 +1666,13 @@ const loadWorld = () => {
             moon1RotationHours: worldData?.settings?.worldTime?.celestialBodies?.moon1RotationHours || 504,
             moon2RotationHours: worldData?.settings?.worldTime?.celestialBodies?.moon2RotationHours || 336
           }
+        },
+        shadows: {
+          enabled: worldData?.settings?.shadows?.enabled ?? false,
+          darkness: worldData?.settings?.shadows?.darkness ?? 0.6,
+          maxDistance: worldData?.settings?.shadows?.maxDistance ?? 50,
+          mapSize: worldData?.settings?.shadows?.mapSize ?? 512,
+          quality: worldData?.settings?.shadows?.quality || 'low'
         }
       }
     };
