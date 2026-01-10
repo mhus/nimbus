@@ -366,6 +366,18 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </EditorCard>
+
+        <!-- Storage Editor -->
+        <EditorCard
+          v-if="hasAccess('STORAGE_EDITOR')"
+          title="Storage Editor"
+          description="Browse and download binary storage data (chunks, assets, layers)"
+          url="/controls/storage-editor.html"
+        >
+          <svg class="w-8 h-8 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+          </svg>
+        </EditorCard>
       </div>
     </main>
 
@@ -432,6 +444,7 @@ const editorRoleMap: Record<string, string[]> = {
   'JOB_CONTROLLER': ['SECTOR_ADMIN', 'JOB_CONTROLLER', 'WORLD_EDITOR'],
   'ANYTHING_EDITOR': ['SECTOR_ADMIN', 'ANYTHING_EDITOR', 'WORLD_EDITOR'],
   'SETTINGS_EDITOR': ['SECTOR_ADMIN'],
+  'STORAGE_EDITOR': ['SECTOR_ADMIN', 'STORAGE_EDITOR'],
 };
 
 /**

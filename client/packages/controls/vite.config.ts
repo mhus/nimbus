@@ -52,6 +52,7 @@ export default defineConfig({
         'entitymodel-editor': resolve(__dirname, 'entitymodel-editor.html'),
         'backdrop-editor': resolve(__dirname, 'backdrop-editor.html'),
         'settings-editor': resolve(__dirname, 'settings-editor.html'),
+        'storage-editor': resolve(__dirname, 'storage-editor.html'),
         'job-editor': resolve(__dirname, 'job-editor.html'),
         'flat-editor': resolve(__dirname, 'flat-editor.html'),
         'chest-editor': resolve(__dirname, 'chest-editor.html'),
