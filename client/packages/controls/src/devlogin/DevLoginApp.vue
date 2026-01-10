@@ -202,6 +202,24 @@
                 </select>
               </div>
 
+              <!-- View Distance Selection (shown after character selected) -->
+              <div v-if="selectedCharacter" class="form-control">
+                <label class="label">
+                  <span class="label-text">View Distance</span>
+                </label>
+                <div class="flex gap-2 justify-center">
+                  <button
+                    v-for="distance in [2, 3, 4]"
+                    :key="distance"
+                    class="btn btn-sm flex-1"
+                    :class="{ 'btn-primary': viewDistance === distance, 'btn-outline': viewDistance !== distance }"
+                    @click="viewDistance = distance"
+                  >
+                    {{ distance }}
+                  </button>
+                </div>
+              </div>
+
               <!-- Entry Point Selection (shown after character selected) -->
               <div v-if="selectedCharacter" class="form-control">
                 <label class="label">
@@ -362,6 +380,9 @@
               <div v-if="loginType === 'session'">
                 <strong>Actor:</strong> {{ selectedActor }}
               </div>
+              <div v-if="loginType === 'session'">
+                <strong>View Distance:</strong> {{ viewDistance }} (Render: {{ viewDistance - 1 }}, Unload: {{ viewDistance }})
+              </div>
               <div v-if="loginType === 'agent'">
                 <strong>User:</strong> {{ selectedAgentUser?.username }}
               </div>
@@ -404,6 +425,7 @@ const STORAGE_KEY_AGENT_USER = 'nimbus-devlogin-agent-user';
 const STORAGE_KEY_ENTRY_POINT = 'nimbus-devlogin-entrypoint';
 const STORAGE_KEY_GRID_Q = 'nimbus-devlogin-grid-q';
 const STORAGE_KEY_GRID_R = 'nimbus-devlogin-grid-r';
+const STORAGE_KEY_VIEW_DISTANCE = 'nimbus-devlogin-view-distance';
 
 // ===== STATE =====
 
@@ -435,6 +457,9 @@ const selectedActor = ref<ActorType>('PLAYER');
 const entryPoint = ref<'last' | 'grid' | 'world'>('world');
 const gridQ = ref<string>('0');
 const gridR = ref<string>('0');
+
+// Session Login - View Distance
+const viewDistance = ref<number>(2);
 
 // Agent Login - Users
 const agentUsers = ref<User[]>([]);
@@ -491,6 +516,9 @@ const saveToLocalStorage = () => {
     localStorage.setItem(STORAGE_KEY_ENTRY_POINT, entryPoint.value);
     localStorage.setItem(STORAGE_KEY_GRID_Q, gridQ.value);
     localStorage.setItem(STORAGE_KEY_GRID_R, gridR.value);
+
+    // Save view distance
+    localStorage.setItem(STORAGE_KEY_VIEW_DISTANCE, viewDistance.value.toString());
   } catch (e) {
     console.error('[DevLogin] Failed to save to localStorage:', e);
   }
@@ -565,6 +593,15 @@ const loadFromLocalStorage = async () => {
               const savedGridR = localStorage.getItem(STORAGE_KEY_GRID_R);
               if (savedGridR) {
                 gridR.value = savedGridR;
+              }
+
+              // Load view distance
+              const savedViewDistance = localStorage.getItem(STORAGE_KEY_VIEW_DISTANCE);
+              if (savedViewDistance) {
+                const distance = parseInt(savedViewDistance, 10);
+                if (distance === 2 || distance === 3 || distance === 4) {
+                  viewDistance.value = distance;
+                }
               }
             }
           }
@@ -790,8 +827,17 @@ const handleLogin = async () => {
       await devLoginService.authorize(response.accessUrls, response.accessToken);
     }
 
+    // Append view distance parameters to jumpUrl (for session login only)
+    let jumpUrl = response.jumpUrl;
+    if (loginType.value === 'session') {
+      const renderDistance = viewDistance.value - 1;
+      const unloadDistance = viewDistance.value;
+      const separator = jumpUrl.includes('?') ? '&' : '?';
+      jumpUrl = `${jumpUrl}${separator}renderDistance=${renderDistance}&unloadDistance=${unloadDistance}`;
+    }
+
     // Redirect to jump URL
-    window.location.href = response.jumpUrl;
+    window.location.href = jumpUrl;
   } catch (e) {
     loginError.value = e instanceof Error ? e.message : 'Login failed';
     console.error('[DevLogin] Login failed:', e);

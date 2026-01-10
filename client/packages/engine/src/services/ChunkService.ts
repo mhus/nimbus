@@ -265,6 +265,7 @@ export class ChunkService {
               cz: chunkData.cz,
               error: (error as Error).message,
             });
+            console.error(error);
             continue;
           }
         }
