@@ -74,6 +74,7 @@ services:
       - NIMBUS_POD_LIFE_BASE_URL=http://world-life:9044
       - NIMBUS_POD_GENERATOR_BASE_URL=http://world-generator:9045
       - NIMBUS_SERVER_IP=world-player
+      - NIMBUS_TELEPORT_URL=http://${NIMBUS_PUBLIC_HOST:-localhost:3002}/controls/teleport-login.html
     networks:
       - nimbus-network
     depends_on:

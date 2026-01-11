@@ -33,6 +33,8 @@ nimbus:
     playerBaseUrl: ${NIMBUS_POD_PLAYER_BASE_URL:}
     lifeBaseUrl: ${NIMBUS_POD_LIFE_BASE_URL:}
     generatorBaseUrl: ${NIMBUS_POD_GENERATOR_BASE_URL:}
+  access:
+    teleportUrl: ${NIMBUS_TELEPORT_URL:}
 
 world:
   player:
