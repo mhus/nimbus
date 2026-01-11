@@ -1105,7 +1105,7 @@ export class EnvironmentService {
   private async startEnvironmentScriptIfNotEditor(name: string): Promise<string | null> {
     // @ts-ignore - __EDITOR__ is defined by Vite
     if (typeof __EDITOR__ !== 'undefined' && __EDITOR__) {
-      logger.debug('Skipping environment script in EDITOR mode', { name });
+      logger.info('Skipping environment script in EDITOR mode', { name });
       return null;
     }
 

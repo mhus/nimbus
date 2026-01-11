@@ -189,7 +189,7 @@ Folgende Idee:
 - Am anfanbg beim laden solle die komplette struktur aus, incl. _defined ...
 - Beim speichern reduziere die struktur auf das noetigste. Entferne alle _defined ...
 
-[ ] WLayer.ts und WLayerModel.ts in generated/types muss weg
+[x] WLayer.ts und WLayerModel.ts in generated/types muss weg
 [-] Es gibt in BlockModifier den effekt WIND am Block und an Texture. Eins muss weg. - ist sinnvoll so
 [-] Der effekt FLIPBOX an BlockModifier muss weg, ist jetzt shape - ist schon weg
 
@@ -204,9 +204,23 @@ Folgende Idee:
   [x] rotation direkt im block
 
 
-[ ] Cneanup Service fuer Storage
+[ ] Cleanup Service fuer Storage
 - Lösche storage ohne referenzierte items - achtung! Könnte in progress sein!
 - Lösche storage ohne final entity - achtung! Könnte in progress sein!
 
 [ ] world-generator macht wieder kein mongoDB Listener für schemas
+
+[ ] In ChunkService:
+    private renderDistance: number;
+    private unloadDistance: number;
+  Umbenennen in 
+    private highDensityDistance: number;
+    private lowDensityDistance: number;
+  Auch im dev-login.html
+
+[ ] highDensityDistance, lowDensityDistance bei teleportation mitgeben
+
+[ ] highDefinitionDistance in ChunkRegistrationHandler nutzen. z.b. um Entities zu laden
+
+[ ] Im control bei rückgabe vin textures etc auch den prefix mit davor, also nicht 'textures/bla' sondern 'r:textures/bla' oder 'w:textures/bla'
 
